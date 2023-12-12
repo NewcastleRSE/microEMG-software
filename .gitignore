@@ -3,3 +3,5 @@
 .sp
 .mat
 __pycache__/
+.spyproject/*
+data/*
