@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "intanutil"
+version = "0.1.0"
+description = ""
+authors = ["Gabrielle M. Schroeder <8205451+gmschroe@users.noreply.github.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
