@@ -10,6 +10,7 @@ A set of classes for representing EMG recordings
 
 import os # see pathlib as alternative for 
 import numpy as np
+import matplotlib.pyplot as plt
 import intanutil.header as intan_header
 
 class EMGFiles:
@@ -115,6 +116,7 @@ class EMGData:
         
         '''
         # re-order channels to match electrode design (TODO)
+        # TODO: will this re-ordering change the channel names?
         match self.n_chan:
             case 32:
 
@@ -138,11 +140,64 @@ class EMGData:
         # Not stored as an attribute (for now) to conserve memory
         emg_t = np.arange(1, self.n_samples+1)/self.fs
         return emg_t
+    
+    def plot_emg_ts(self, start_t=0, stop_t=None,
+                    offset=1000, ax=None, lw=0.5, figsize=(7,7),
+                    yticklabel_size=6, xticklabel_size=8):
+        # plot multivariate time series
+        # TODO: put offset in terms of gain (at least for GUI)
+        # TODO: design alterations (e.g., default colors and color options)
+        
+        # default end (stop) time is the segment's duration
+        if stop_t is None:
+            stop_t=self.emg_dur
+        else:
+            # confirm that end (stop) time is not longer than segment duration
+            assert stop_t <= self.emg_dur, (
+                'The end of the time range, stop_t, must be less than or '
+                f'equal to the duration of the segment, {self.emg_dur} seconds'
+                )
+        
+        # confirm that start time is before stop time
+        assert start_t < stop_t, (
+            'The start of the time range, start_t, must be less than the end '
+            'of the time range, stop_t'
+            )
+        
+        # create new figure with specified size if no axis provided
+        if ax is None:
+            fig, ax = plt.subplots(figsize = figsize)
+        else:
+            fig = None   
+            
+        
+        # time vector for x axis
+        emg_t = self.get_emg_t()
 
+        # get indices corresponding to requested time segment
+        plot_idx = np.arange(np.round(start_t*self.fs), 
+                             np.round(stop_t*self.fs))
+        plot_idx = plot_idx.astype('int')
+    
+        # plot each channel's signal, staggered by the specified offset 
+        for i in range(self.n_chan):
+            ax.plot(emg_t[plot_idx], self.emg_ts[i,plot_idx] - offset*i,
+                    lw=lw)
+
+        # channel labels
+        chan_y = np.arange(0, self.n_chan*offset*-1, offset*-1)
+        ax.set_yticks(chan_y)
+        ax.set_yticklabels(self.chan.chan_names)
+        ax.tick_params(axis='y', which='major', labelsize=yticklabel_size)
+    
+        # x axis labels and font size
+        ax.set_xlabel('time (seconds)')
+        ax.tick_params(axis='x', which='major', labelsize=xticklabel_size)
+        
+        return fig, ax
         
     '''
     
-    channels (object)
     bandpass filter (none)
     removemains (false)
    
