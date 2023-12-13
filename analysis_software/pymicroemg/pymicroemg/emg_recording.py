@@ -112,28 +112,65 @@ class EMGData:
         # TODO: reorder channels (emg_ts and chan_names)
         
         self.n_chan, self.n_samples = emg_ts.shape
-        
-        '''
-        # re-order channels to match electrode design (TODO)
-        # TODO: will this re-ordering change the channel names?
-        match self.n_chan:
-            case 32:
-
-            case 64:
-
-            case _:
-                # throw error - only 32 or 64 channels
-        '''
-        # TODO: reorder emg_ts and chan_names
-        
-        self.emg_ts = emg_ts 
         self.fs = fs
-    
+        
+        # Compute duration of EMG segment
+        self.emg_dur = self.n_samples/self.fs 
+        
+        # Reorder channels (in emg_ts and chan_names) based on electrode design 
+        # Will make it easier to set x,y coordinates
+        sort_idx = self._reorder_chan_idx()
+        self.emg_ts = emg_ts[sort_idx,:]
+        chan_names = [chan_names[i] for i in sort_idx]
         self.chan = EMGChannels(chan_names) 
         
-        self.emg_dur = self.n_samples/self.fs # duration of EMG segment
+        # TODO: are different channel names needed after the re-ordering? 
     
-    
+    def _reorder_chan_idx(self):
+        # indices for reordering channels
+        
+        sort_idx = np.zeros(self.n_chan).astype(int)
+        
+        # Indices depend on the electrode design, which can be determined by 
+        # they number of channels.
+        match self.n_chan:
+            case 32:
+                # odd indices are descending from 15 to 0
+                sort_idx[np.arange(0, self.n_chan, 2)] = np.arange(
+                    (self.n_chan/2)-1, -1, -1
+                    )
+
+                # even indices are ascending from 16 to 31
+                sort_idx[np.arange(1, self.n_chan, 2)] = np.arange(
+                    (self.n_chan/2), self.n_chan
+                    )
+            case 64:
+                # first quarter is descending from 15 to 0
+                sort_idx[np.arange(0, self.n_chan//4)] = np.arange(
+                    self.n_chan//4 - 1, -1, -1
+                    )
+
+                # second quarter + 2 channels is ascending starting at 17, 
+                # with 2 subtracted from odd indices 
+                # (e.g., 17 16 19 18...)
+                temp_idx = np.arange(self.n_chan//4 + 1, self.n_chan//2 + 3)
+                temp_idx[np.arange(1, len(temp_idx), 2)] = (
+                    temp_idx[np.arange(1, len(temp_idx), 2)] - 2
+                    )
+                sort_idx[np.arange(self.n_chan//4, self.n_chan//2 + 2)] = temp_idx
+                
+                # last half - 2 channels is descending from 63 to 34
+                sort_idx[np.arange(self.n_chan//2 + 2, self.n_chan)] = (
+                    np.arange(self.n_chan - 1, self.n_chan//2 + 1 , -1)
+                    )
+            case _:
+                raise Exception(
+                    f'The EMG recording has {self.n_chan} channels; only 32 or' 
+                    '64 channel recordings are allowed.'
+                    )
+            
+        return sort_idx
+        
     def get_emg_t(self):
         # Creates time vector from 1/fs to emg_dur (useful for plots)
         # Not stored as an attribute (for now) to conserve memory
