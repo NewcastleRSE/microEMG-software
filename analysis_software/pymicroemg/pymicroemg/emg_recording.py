@@ -135,12 +135,12 @@ class EMGData:
         # they number of channels.
         match self.n_chan:
             case 32:
-                # odd indices are descending from 15 to 0
+                # even indices are descending from 15 to 0
                 sort_idx[np.arange(0, self.n_chan, 2)] = np.arange(
                     (self.n_chan/2)-1, -1, -1
                     )
 
-                # even indices are ascending from 16 to 31
+                # odd indices are ascending from 16 to 31
                 sort_idx[np.arange(1, self.n_chan, 2)] = np.arange(
                     (self.n_chan/2), self.n_chan
                     )
