@@ -1,27 +1,31 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Dec 12 14:57:12 2023
+Load and plot example EMG data. 
 
 @author: Gabrielle
 """
 
 import os
-import intanutil.data as intan_data
-import intanutil.header as intan_header
 import pymicroemg.emg_recording as emg_recording
 
-import matplotlib.pyplot as plt
-import numpy as np
+#import matplotlib.pyplot as plt
+#import numpy as np
 
+# Directory containing example data
 emg_dir = os.path.join('data', 'sample_data_20231124', 'real',
                        'Low quality', 'low amplitude- 20150324', 'raw')
 
-#emg_header_file = os.path.join(emg_dir, 'info.rhd')
-
-
+# Instantiate EMG files object for emg_dir - will use to load data
 emg_files = emg_recording.EMGFiles(emg_dir)
+
+# Load data
 emg_data = emg_files.load_emg_data()
+
+# Plot segment
+fig, ax = emg_data.plot_emg_ts(start_t=5, stop_t=12)
+
+#%%
 
 #%%
 """
