@@ -127,9 +127,19 @@ class EMGData:
         
         self.emg_ts = emg_ts 
         self.fs = fs
-        
-        self.chan = EMGChannels(chan_names) 
     
+        self.chan = EMGChannels(chan_names) 
+        
+        self.emg_dur = self.n_samples/self.fs # duration of EMG segment
+    
+    
+    def get_emg_t(self):
+        # Creates time vector from 1/fs to emg_dur (useful for plots)
+        # Not stored as an attribute (for now) to conserve memory
+        emg_t = np.arange(1, self.n_samples+1)/self.fs
+        return emg_t
+
+        
     '''
     
     channels (object)
