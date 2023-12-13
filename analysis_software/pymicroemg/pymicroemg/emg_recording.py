@@ -84,9 +84,8 @@ class EMGFiles:
         # Load data
         for i in range(n_chan):
             chan_path = os.path.join(self.emg_dir, self.chan_fnames[i])
-            with open(chan_path, 'rb') as fid:
-                emg_ts[i,:] = np.fromfile(chan_path, dtype=np.int16, 
-                                           count=n_samples)
+            emg_ts[i,:] = np.fromfile(chan_path, dtype=np.int16, 
+                                      count=n_samples)
 
         # Convert to microvolts
         emg_ts *= INTAN2uV
