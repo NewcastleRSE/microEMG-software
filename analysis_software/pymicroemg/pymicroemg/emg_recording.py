@@ -278,9 +278,24 @@ class EMGData:
                                 'cutoff_freq': cutoff_freq, 
                                 'order': order,
                                 'filter_type': filter_type}
-    '''
     
-    bandpass filter (none)
+    def compute_pxx(self, window_size):
+        # compute power spectral density using Welch's method
+        # window size in seconds
+        # default overlap (50%) between windows
+        # Not stored as attribute since used for exploratory data analysis/
+        # visual confirmation of preprocessing - not used for downstream analysis
+        
+        freq, pxx = scipy.signal.welch(x=self.emg_ts, fs=self.fs,
+                                       nperseg=self.fs*window_size, axis=1)
+        
+        # store output as EMGPxx class
+        emg_pxx = EMGPxx(freq=freq, pxx=pxx, chan = self.chan,
+                         window_size=window_size)
+        
+        return emg_pxx
+          
+    '''
     removemains (false)
    
     methods:
@@ -328,8 +343,59 @@ class EMGChannels:
         self.chan_xy[:,1] = CHAN_SPACING_Y/2
         self.chan_xy[np.arange(1,n_chan+1,2),1] *= -1
         
+        # names
+        # low quality (automatic)
+        # low quality (visual inspection)
 
-    # names
+        
+class EMGPxx:
+    
+    def __init__(self, freq, pxx, chan, window_size):
+        self.freq = freq
+        self.pxx = pxx
+        self.chan = chan
+        self.window_size = window_size
+        self.n_chan = len(self.chan.chan_names)
+        
+    def plot_pxx(self, start_freq, stop_freq, ax=None, plot_chan=None,
+                 figsize=(5,5), lw=0.5):
+        
+        # Check validity of start and stop frequencies
+        assert start_freq < stop_freq, (
+            'The first frequency to plot, start_freq, must be less than '
+            'the final frequency to plot, stop_freq'
+            )
+        
+        # Check validity of channel to plot
+        if plot_chan:
+            assert plot_chan <= self.n_chan, (
+                f'Cannot plot channel {plot_chan}: the EMG data only contains '
+                f'{self.n_chan} channels'
+                )
+        
+        # create new figure with specified size if no axis provided
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+        else:
+            fig = None
 
-    # low quality (automatic)
-    # low quality (visual inspection)
+        # Find frequencies to plot
+        plot_bool = np.all([self.freq >= start_freq, 
+                            self.freq <= stop_freq], 
+                           axis=0)
+        
+        # Plot all channels or specified channel
+        if plot_chan is None:
+            for i in range(self.n_chan):
+                ax.plot(self.freq[plot_bool], self.pxx[i,plot_bool],
+                        lw=lw)
+        else:
+            ax.plot(self.freq[plot_bool], self.pxx[plot_chan-1,plot_bool],
+                    lw=lw)
+            ax.set_title(f'Channel {self.chan.chan_names[plot_chan-1]}')
+        
+        # Axis labels
+        ax.set_xlabel('Frequency (Hz)')
+        ax.set_ylabel('PSD')
+        
+    
