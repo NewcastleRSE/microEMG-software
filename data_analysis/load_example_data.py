@@ -12,6 +12,8 @@ import pymicroemg.emg_recording as emg_recording
 import matplotlib.pyplot as plt
 import numpy as np
 
+import scipy.signal
+
 # increase figure resolution (needed for Spyder IDE)
 plt.rcParams['figure.dpi'] = 600
 
@@ -43,12 +45,15 @@ fig, ax = emg_data.plot_emg_ts(start_t=start_t, stop_t=stop_t)
 ax.set_title(f'{recording_ID} raw')
 
 #%% Bandpass filter
-emg_data = emg_files.load_emg_data()
 emg_data.butterworth_filter()
 
 #%% Plot part of segment, after filtering
 fig, ax = emg_data.plot_emg_ts(start_t=start_t, stop_t=stop_t)
 ax.set_title(f'{recording_ID} filtered')
+
+#%% Compute and plot PSD
+emg_pxx = emg_data.compute_pxx(100)
+emg_pxx.plot_pxx(400, 2500, plot_chan=20)
 
 #%%
 #plt.rcParams['figure.dpi'] = 300
