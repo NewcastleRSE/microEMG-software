@@ -12,7 +12,7 @@ import os # see pathlib as alternative for
 import numpy as np
 import matplotlib.pyplot as plt
 import intanutil.header as intan_header
-
+import scipy.signal
 
 class EMGFiles:
     '''
@@ -128,6 +128,10 @@ class EMGData:
 
         # TODO: are different channel names needed after the re-ordering?
 
+        # Initial preprocessing settings (none)
+        self.filtered = False
+        self.filter_settings = {}
+        
     def _reorder_chan_idx(self):
         # indices for reordering channels
 
@@ -237,6 +241,43 @@ class EMGData:
 
         return fig, ax
 
+    def butterworth_filter(self, cutoff_freq = None, order = 6, 
+                        filter_type = 'bandpass'):
+        # TODO: add checks for inputs
+        # Note - overwrites original time series, emg_ts
+        # zero-phase butterworth filter (default is bandpass)
+        
+        assert order % 2 == 0, 'The filter order must be an even integer.'
+        
+        # Only allow filtering once - currently do not have way to create 
+        # record of repeated filters. 
+        # If need to change filter settings, load and filter original data.
+        if self.filtered:
+            raise Exception(
+                'The EMG signal has already been filtered - cannot filter again.'
+                )
+        
+        # Default cutoff frequencies 
+        # TODO: different defaults depending on filter type
+        # may also want to check that frequencies are compatible with sampling frequency
+        if cutoff_freq is None:
+            cutoff_freq = [500, 2000]
+        
+        # Design filter
+        sos = scipy.signal.butter(N = order//2, Wn = cutoff_freq, 
+                                  btype = filter_type, analog = False,
+                                  output = "sos", fs = self.fs)
+        
+        # Filter each channel's signal
+        for i in range(self.n_chan):
+            self.emg_ts[i,:] = scipy.signal.sosfiltfilt(sos, self.emg_ts[i,:])
+
+        # Save filter settings
+        self.filtered = True
+        self.filter_settings = {'filter_name': 'Butterworth',
+                                'cutoff_freq': cutoff_freq, 
+                                'order': order,
+                                'filter_type': filter_type}
     '''
     
     bandpass filter (none)
