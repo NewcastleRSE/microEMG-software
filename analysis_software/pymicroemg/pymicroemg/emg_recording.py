@@ -258,12 +258,37 @@ class EMGChannels:
 
     def __init__(self, chan_names):
         self.chan_names = chan_names
-
-    # def get_chan_xy(self):
+        self._get_chan_xy() # x, y coordinates
+        
+        
+    def _get_chan_xy(self):
         # get channel xy coordinates based on number of channels
+        # TODO: confirm needle spacing is the same for 32 and 64 channel designs
+
+        # Channel layout (in mm)
+        CHAN_SPACING_X = 0.3    # spacing along length (defined as x axis)
+        CHAN_SPACING_Y = 0.36   # spacing along width (defined as y axis)
+        CHAN_SHIFT_X = 0.3      # value used to shift x axis positions
+        
+        n_chan = len(self.chan_names)
+        
+        # First column will be x coordinates (position along length)
+        # Second column will be y coordinates (position along width)
+        self.chan_xy = np.zeros((n_chan, 2))
+
+        # Set x - evenly spaced starting at CHAN_START_X
+        self.chan_xy[:,0] = np.arange(
+            CHAN_SPACING_X, 
+            CHAN_SPACING_X*(n_chan+1), 
+            CHAN_SPACING_X
+            ) + CHAN_SHIFT_X
+
+        # Set y - alternating positive and negative to form zig-zag
+        self.chan_xy[:,1] = CHAN_SPACING_Y/2
+        self.chan_xy[np.arange(1,n_chan+1,2),1] *= -1
+        
 
     # names
-    # x,y coordinates
 
     # low quality (automatic)
     # low quality (visual inspection)
