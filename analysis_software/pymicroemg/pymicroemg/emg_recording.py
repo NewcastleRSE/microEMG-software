@@ -34,8 +34,22 @@ class EMGFiles:
     '''
 
     def __init__(self, emg_dir: str):
-        # initialise
+        '''
+        Initialise EMGFiles object.
 
+        Parameters
+        ----------
+        emg_dir : str
+            Directory (including path to directory) containing Intan recording 
+            outputs. Must include amplifier .dat files and a header file 
+            'info.rhd'.
+
+        Returns
+        -------
+        None.
+
+        '''
+        
         self.emg_dir = emg_dir
         self.header_fname = 'info.rhd'
 
@@ -43,11 +57,21 @@ class EMGFiles:
         self._get_chan_fnames()
 
     def _get_chan_fnames(self):
-        # get channel file names (amplifier channels only)
+        '''
+        Gets the names of the Intan .dat files for all amplifier channels and
+        adds the file names as an attribute. These files will have the prefix 
+        'amp'.
+        
+        Note that this method assumes that the channels were not renamed during
+        the recording session.
 
+        Returns
+        -------
+        None.
+
+        '''
         # TODO: generalise for other chan_types? depends if other files needed
         # TODO: add check that channel name numbers go from 0 to n channels
-        # Note: assumes channels are not renamed/relabelled during recording
 
         chan_prefix = 'amp'  # recorded data is from amplifier channels
         chan_fnames = [f for f in os.listdir(
@@ -56,9 +80,17 @@ class EMGFiles:
 
         self.chan_fnames = chan_fnames
 
-    def read_header(self):
+    def read_header(self) -> dict:
+        '''
+        Reads the Intan header file 'info.rhd' using the intanutil package 
+        provided by Intan.
 
-        # read header file (creates dict)
+        Returns
+        -------
+        emg_header : dict
+            Dictionary of all information contained in the Intan header file.
+
+        '''
 
         # Full path to header file
         header_path = os.path.join(self.emg_dir, self.header_fname)
@@ -70,7 +102,16 @@ class EMGFiles:
         return emg_header
 
     def load_emg_data(self) -> EMGData:
-        # load emg time series data; creates instance of EMGData class
+        '''
+        Load the EMG time series data and corresponding attributes from the
+        EMG files.
+
+        Returns
+        -------
+        EMGData
+            EMG time series and corresponding attributes.
+
+        '''
 
         # Multiplier to convert from Intan units to microvolts
         INTAN2uV = 0.195
@@ -115,9 +156,26 @@ class EMGData:
 
     def __init__(self, emg_ts: npt.NDArray[np.float64], fs: float, 
                  chan_names: list[str]):
-        # initialise (time series, sampling frequency, and channel names)
+        '''
+        Initialise EMGData object.
+
+        Parameters
+        ----------
+        emg_ts : npt.NDArray[np.float64]
+            2D array containing the multivariate EMG time series. Each row
+            correspondings to the signal from one EMG channel.
+        fs : float
+            Sampling frequency (Hz).
+        chan_names : list[str]
+            Channel names that correspond to each row of emg_ts, derived from 
+            the channel file names.
+
+        Returns
+        -------
+        None.
+
+        '''
         # TODO: add check that length of channel names matches ts dimensions
-        # TODO: reorder channels (emg_ts and chan_names)
 
         self.n_chan, self.n_samples = emg_ts.shape
         self.fs = fs
@@ -139,11 +197,28 @@ class EMGData:
         self.filter_settings = {}
         
     def _reorder_chan_idx(self) -> npt.NDArray[np.int64]:
-        # indices for reordering channels
+        '''
+        Create indices for reordering channels so that the channel order 
+        corresponds to their spatial layout.
+        
+        Channel order is determined by the electrode design, which varies 
+        depending on the number of channels. Only 32 and 64 channel designs are
+        provided.
 
+        Raises
+        ------
+        Exception
+            Raises exception if the number of channels is not 32 or 64.
+
+        Returns
+        -------
+        sort_idx : 1D numpy NDArray[np.int64]
+            Indices for reordering channels.
+
+        '''
 
         # Indices depend on the electrode design, which can be determined by
-        # they number of channels.
+        # the number of channels.
         match self.n_chan:
             case 32:
                 
@@ -188,23 +263,71 @@ class EMGData:
         return sort_idx
 
     def get_emg_t(self) -> npt.NDArray[np.float64]:
-        # Creates time vector from 1/fs to emg_dur (useful for plots)
-        # Not stored as an attribute (for now) to conserve memory
+        '''
+        Create a vector of the time corresponding to each sample in the EMG
+        time series. Time is defined as the number of seconds elapsed since the
+        start of the recording. The first time point is defined as 1/Fs, where
+        Fs is the sampling frequency, and the last time point is equal to the 
+        EMG segment's duration in seconds.
+
+        Returns
+        -------
+        emg_t : 1D numpy NDArray[np.float64] 
+            Vector of the time of each EMG sample, defined as seconds elapsed 
+            since the start of the recording.
+
+        '''
+
         emg_t = np.arange(1, self.n_samples+1)/self.fs
+        
         return emg_t
 
     def plot_emg_ts(self, start_t=0, stop_t=None,
                     offset=1000, ax=None, lw=0.5, figsize=(7, 7),
                     yticklabel_size=6, xticklabel_size=8):
-        # plot multivariate time series
+        '''
+        Plot the specified segment of the EMG time series, with each channel's
+        signal staggered vertically by the specified offset.
+
+        Parameters
+        ----------
+        start_t : float, optional
+            First time point to plot, in seconds. The default is 0.
+        stop_t : float, optional
+            Last time point to plot, in seconds. The default is the segment's 
+            duration.
+        offset : float, optional
+            Vertical spacing between the EMG signals. Must be positive. The 
+            default is 1000.
+        ax : matplotlib axes, optional
+            Axes in which to plot the figure. If none provided, a new figure is
+            generated.
+        lw : float, optional
+            Linewidth of each signal's line plot. The default is 0.5.
+        figsize : tuple, optional
+            Figure size in inches (only used if a new figure is created). The 
+            default is (7, 7).
+        yticklabel_size : float, optional
+            Font size of the y-tick labels. The default is 6.
+        xticklabel_size : float, optional
+            Font size of the x-tick labels. The default is 8.
+
+        Returns
+        -------
+        fig : matplotlib figure
+            Figure handle.
+        ax : matplotlib axes
+            Axis handle.
+
+        '''
         # TODO: put offset in terms of gain (at least for GUI)
         # TODO: design alterations (e.g., default colors and color options)
 
-        # default end (stop) time is the segment's duration
+        # Default end (stop) time is the segment's duration
         if stop_t is None:
             stop_t = self.emg_dur
         else:
-            # confirm that end (stop) time is not longer than segment duration
+            # Confirm that end (stop) time is not longer than segment duration
             assert stop_t <= self.emg_dur, (
                 'The end of the time range, stop_t, must be less than or '
                 f'equal to the duration of the segment, {self.emg_dur} seconds'
@@ -215,27 +338,30 @@ class EMGData:
             'The start of the time range, start_t, must be less than the end '
             'of the time range, stop_t'
         )
+        
+        # Offset must be positive to ensure that channels are correctly labelled.
+        assert offset > 0, ('The vertical spacing, offset, must be positive')
 
-        # create new figure with specified size if no axis provided
+        # Create new figure with specified size if no axis provided
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
         else:
             fig = None
 
-        # time vector for x axis
+        # Time vector for x axis
         emg_t = self.get_emg_t()
 
-        # get indices corresponding to requested time segment
+        # Get indices corresponding to requested time segment
         plot_idx = np.arange(np.round(start_t*self.fs),
                              np.round(stop_t*self.fs))
         plot_idx = plot_idx.astype('int')
 
-        # plot each channel's signal, staggered by the specified offset
+        # Plot each channel's signal, staggered by the specified offset
         for i in range(self.n_chan):
             ax.plot(emg_t[plot_idx], self.emg_ts[i, plot_idx] - offset*i,
                     lw=lw)
 
-        # channel labels
+        # Channel labels
         chan_y = np.arange(0, self.n_chan*offset*-1, offset*-1)
         ax.set_yticks(chan_y)
         ax.set_yticklabels(self.chan.chan_names)
@@ -249,6 +375,41 @@ class EMGData:
 
     def butterworth_filter(self, cutoff_freq: None|list[float]|float=None,
                            order: int=6, filter_type: str = 'bandpass'):
+        '''
+        Filters each channel's signal in the EMG time series using a 
+        Butterworth filter. See scipy.signal.butter for filter details.
+        
+        Overwrites the original time series and saves the filter settings as 
+        attributes.
+        
+        Only one filter can only be applied to a given instance of EMGData.
+
+        Parameters
+        ----------
+        cutoff_freq : None|list[float]|float, optional
+            Filter cutoff frequencies. The default is [500, 200] if filter_type
+            is bandpass; otherwise, must be specified.
+        order : int, optional
+            Filter order - must be even to allow zero-phase filtering. The 
+            default is 6.
+        filter_type : str, optional
+            Filter type - see scipy.signal.butter options. The default is 
+            'bandpass'.
+
+        Raises
+        ------
+        Exception
+            Raises exception if the EMG signal has already been filtered.
+        
+        Exception
+            Raises exception if cutoff_freq is not specified when filter_type 
+            is not 'bandpass'.
+
+        Returns
+        -------
+        None.
+
+        '''
         # Note - overwrites original time series, emg_ts
         # zero-phase butterworth filter (default is bandpass)
         
@@ -289,19 +450,36 @@ class EMGData:
                                 'filter_type': filter_type}
     
     def compute_pxx(self, window_size: float) -> EMGPxx:
-        # compute power spectral density using Welch's method
-        # window size in seconds
-        # default overlap (50%) between windows
-        # Not stored as attribute since used for exploratory data analysis/
-        # visual confirmation of preprocessing - not used for downstream analysis
+        '''
+        Computes the power spectral density (PSD) of each channel's signal in
+        the EMG time series using Welch's method. See scipy.signal.welch for
+        computational details.
+
+        Parameters
+        ----------
+        window_size : float
+            Size of the window to use for Welch's method, in seconds. Windows 
+            will overlap 50%.
+
+        Returns
+        -------
+        EMGPxx
+            EMGPxx object containing the PSD, frequencies, and corresponding 
+            attributes.
+
+        '''
         
+        # Compute PSD
         freq, pxx = scipy.signal.welch(x=self.emg_ts, fs=self.fs,
                                        nperseg=self.fs*window_size, axis=1)
         
-        # store output as EMGPxx class
+        # Store output as EMGPxx class
         emg_pxx = EMGPxx(freq=freq, pxx=pxx, chan = self.chan,
                          window_size=window_size)
         
+        # Not stored as an EMGData attribute since not used for downstream 
+        # analysis; also allows multiple PSDs to be created at different
+        # preprocessing steps.
         return emg_pxx
           
     '''
@@ -309,25 +487,43 @@ class EMGData:
    
     methods:
     remove mains noise
-    bandpass filter
     detect low amplitude channels
     detect high frequency noise
     mark bad channels (based on visual inspection)
     
-    
-    plot (staggered vertically)
     '''
 
 
 class EMGChannels:
 
     def __init__(self, chan_names: list[str]):
+        '''
+        Initialise EMGChannels object for modelling EMG channels.
+
+        Parameters
+        ----------
+        chan_names : list[str]
+            List of channel names.
+
+        Returns
+        -------
+        None.
+
+        '''
         self.chan_names = chan_names
         self._get_chan_xy() # x, y coordinates
         
         
     def _get_chan_xy(self):
-        # get channel xy coordinates based on number of channels
+        '''
+        Get the channel (x, y) coordinates based on the number of channels, 
+        which determines the electrode's design.
+
+        Returns
+        -------
+        None.
+
+        '''
         # TODO: confirm needle spacing is the same for 32 and 64 channel designs
 
         # Channel layout (in mm)
@@ -362,6 +558,27 @@ class EMGPxx:
     def __init__(self, freq: npt.NDArray[np.float64], 
                  pxx: npt.NDArray[np.float64], chan: EMGChannels, 
                  window_size: float):
+        '''
+        Initialise EMGPxx object for modelling EMG's power spectral density 
+        (PSD).
+
+        Parameters
+        ----------
+        freq : 1D npt.NDArray[np.float64]
+            Vector of PSD frequencies.
+        pxx : 2D npt.NDArray[np.float64]
+            PSD of each channel's signal. Each row corresponds to one channel. 
+            Columns correspond to the frequencies in freq.
+        chan : EMGChannels
+            EMGChannels object for the corresponding EMG channels.
+        window_size : float
+            Size of window used to compute the PSD using Welch's method.
+
+        Returns
+        -------
+        None.
+
+        '''
         self.freq = freq
         self.pxx = pxx
         self.chan = chan
@@ -370,6 +587,37 @@ class EMGPxx:
         
     def plot_pxx(self, start_freq, stop_freq, ax=None, plot_chan=None,
                  figsize=(5,5), lw=0.5):
+        '''
+        Plot the power spectral density (PSD) of one or all channels. If all
+        channels' PSDs are plotted, plots will be overlaid in one figure.
+
+        Parameters
+        ----------
+        start_freq : float
+            Beginning of the frequency range to plot.
+        stop_freq : float
+            End of the frequency range to plot. If higher than the frequencies
+            in the PSD, all frequencies will be plotted.
+        ax : matplotlib axes, optional
+            Axes in which to plot the figure. If none provided, a new figure is
+            generated.
+        plot_chan : int, optional
+            Channel to plot (counting from 1). The default is None, in which 
+            case all channels' PSDs are plotted.
+        figsize : tuple, optional
+            Figure size in inches (only used if a new figure is created). The 
+            default is (5,5).
+        lw : float, optional
+            Linewidth of each PSD's line plot. The default is 0.5.
+
+        Returns
+        -------
+        fig : matplotlib figure
+            Figure handle.
+        ax : matplotlib axes
+            Axis handle.
+
+        '''
         
         # Check validity of start and stop frequencies
         assert start_freq < stop_freq, (
@@ -408,5 +656,7 @@ class EMGPxx:
         # Axis labels
         ax.set_xlabel('Frequency (Hz)')
         ax.set_ylabel('PSD')
+        
+        return fig, ax
         
     
