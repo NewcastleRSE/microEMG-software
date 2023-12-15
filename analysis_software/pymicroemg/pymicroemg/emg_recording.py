@@ -249,7 +249,6 @@ class EMGData:
 
     def butterworth_filter(self, cutoff_freq: None|list[float]|float=None,
                            order: int=6, filter_type: str = 'bandpass'):
-        # TODO: add checks for inputs
         # Note - overwrites original time series, emg_ts
         # zero-phase butterworth filter (default is bandpass)
         
@@ -263,11 +262,15 @@ class EMGData:
                 'The EMG signal has already been filtered - cannot filter again.'
                 )
         
-        # Default cutoff frequencies 
-        # TODO: different defaults depending on filter type
-        # may also want to check that frequencies are compatible with sampling frequency
+        # Default cutoff frequencies - only for bandpass filter
         if cutoff_freq is None:
-            cutoff_freq = [500, 2000]
+            if filter_type == 'bandpass':
+                cutoff_freq = [500, 2000]
+            else:
+                raise Exception(
+                    'Cutoff frequencies cutoff_freq must be specified if '
+                    'filter_type is not bandpass'
+                    )
         
         # Design filter
         sos = scipy.signal.butter(N = order//2, Wn = cutoff_freq, 
