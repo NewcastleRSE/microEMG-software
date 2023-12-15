@@ -7,12 +7,17 @@ A set of classes for representing EMG recordings
 """
 # TODO: add class, method docstrings (see numpy, google, pep8 styles)
 # TODO: consider making each class a separate file
+from __future__ import annotations
 
 import os # see pathlib as alternative for
 import numpy as np
+import numpy.typing as npt
 import matplotlib.pyplot as plt
-import intanutil.header as intan_header
 import scipy.signal
+from typing import Union
+
+import intanutil.header as intan_header
+
 
 class EMGFiles:
     '''
@@ -28,7 +33,7 @@ class EMGFiles:
 
     '''
 
-    def __init__(self, emg_dir):
+    def __init__(self, emg_dir: str):
         # initialise
 
         self.emg_dir = emg_dir
@@ -64,7 +69,7 @@ class EMGFiles:
 
         return emg_header
 
-    def load_emg_data(self):
+    def load_emg_data(self) -> EMGData:
         # load emg time series data; creates instance of EMGData class
 
         # Multiplier to convert from Intan units to microvolts
@@ -108,7 +113,8 @@ class EMGFiles:
 
 class EMGData:
 
-    def __init__(self, emg_ts, fs, chan_names):
+    def __init__(self, emg_ts: npt.NDArray[np.float64], fs: float, 
+                 chan_names: list[str]):
         # initialise (time series, sampling frequency, and channel names)
         # TODO: add check that length of channel names matches ts dimensions
         # TODO: reorder channels (emg_ts and chan_names)
@@ -132,7 +138,7 @@ class EMGData:
         self.filtered = False
         self.filter_settings = {}
         
-    def _reorder_chan_idx(self):
+    def _reorder_chan_idx(self) -> npt.NDArray[np.int64]:
         # indices for reordering channels
 
 
@@ -178,10 +184,10 @@ class EMGData:
                     f'The EMG recording has {self.n_chan} channels; only 32 or'
                     '64 channel recordings are allowed.'
                 )
-
+        
         return sort_idx
 
-    def get_emg_t(self):
+    def get_emg_t(self) -> npt.NDArray[np.float64]:
         # Creates time vector from 1/fs to emg_dur (useful for plots)
         # Not stored as an attribute (for now) to conserve memory
         emg_t = np.arange(1, self.n_samples+1)/self.fs
@@ -241,8 +247,8 @@ class EMGData:
 
         return fig, ax
 
-    def butterworth_filter(self, cutoff_freq = None, order = 6, 
-                        filter_type = 'bandpass'):
+    def butterworth_filter(self, cutoff_freq: None|list[float]|float=None,
+                           order: int=6, filter_type: str = 'bandpass'):
         # TODO: add checks for inputs
         # Note - overwrites original time series, emg_ts
         # zero-phase butterworth filter (default is bandpass)
@@ -279,7 +285,7 @@ class EMGData:
                                 'order': order,
                                 'filter_type': filter_type}
     
-    def compute_pxx(self, window_size):
+    def compute_pxx(self, window_size: float) -> EMGPxx:
         # compute power spectral density using Welch's method
         # window size in seconds
         # default overlap (50%) between windows
@@ -312,7 +318,7 @@ class EMGData:
 
 class EMGChannels:
 
-    def __init__(self, chan_names):
+    def __init__(self, chan_names: list[str]):
         self.chan_names = chan_names
         self._get_chan_xy() # x, y coordinates
         
@@ -346,11 +352,13 @@ class EMGChannels:
         # names
         # low quality (automatic)
         # low quality (visual inspection)
-
+        
         
 class EMGPxx:
     
-    def __init__(self, freq, pxx, chan, window_size):
+    def __init__(self, freq: npt.NDArray[np.float64], 
+                 pxx: npt.NDArray[np.float64], chan: EMGChannels, 
+                 window_size: float):
         self.freq = freq
         self.pxx = pxx
         self.chan = chan
