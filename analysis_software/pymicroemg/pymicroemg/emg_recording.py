@@ -195,7 +195,7 @@ class EMGData:
         # Record segment of the original recording (lower and upper bounds, in 
         # seconds) that this time series corresponds to.
         # [-inf, inf] indicates that entire recording is used.
-        self.segment_of_recording = np.array((np.inf, -1*np.inf))
+        self.segment_of_recording = np.array((-1*np.inf, np.inf))
 
         # Reorder channels (in emg_ts and chan_names) based on electrode design
         # Will make it easier to set x,y coordinates
@@ -351,11 +351,10 @@ class EMGData:
 
         Parameters
         ----------
-        start_t : float, optional
-            First time point to plot, in seconds. The default is 0.
-        stop_t : float, optional
-            Last time point to plot, in seconds. The default is the segment's 
-            duration.
+        start_t : float
+            First time point to plot, in seconds.
+        stop_t : float
+            Last time point to plot, in seconds.
 
         Returns
         -------
@@ -372,6 +371,61 @@ class EMGData:
         t_idx = t_idx.astype('int')
         
         return t_idx
+    
+    def trim_emg_ts(self, start_t: float, stop_t: float):
+        '''
+        Trim the EMG time series to the desired time interval.
+        
+        Updates the recording's number of samples, duration, and corresponding
+        segment in the original recording accordingly.
+
+        Parameters
+        ----------
+        start_t : float
+            First time point to plot, in seconds.
+        stop_t : float
+            Last time point to plot, in seconds.
+
+        Raises
+        ------
+        Exception
+            Raises exception if EMG time series has already been trimmed.
+
+        Returns
+        -------
+        None.
+
+        '''
+        # TODO: determine how to allow segment trimmed to be changed;
+        # will depend on when trimming occurs relative to preprocessing.
+        # TODO: could also allow time segment to be further trimmed - would need to 
+        # calculate corresponding segment in original recording.
+        
+        # Only allow trimming if time series has not been trimmed yet
+        # (i.e., segment_of_recording bounds are inf)
+        if sum(np.isinf(self.segment_of_recording)) == 2:
+            
+            # Validate start and stop times
+            self._validate_t_range(start_t, stop_t)
+            
+            # Get indices in time series corresponding to requested time segment
+            t_idx = self._get_t_idx(start_t, stop_t)
+            
+            # Extract requested time segment
+            self.emg_ts = self.emg_ts[:,t_idx]
+            
+            # Update corresponding attributes.
+            # The time labels, computed from get_emg_t, are not an attribute and
+            # therefore do not need to be update.
+            self.segment_of_recording = np.array((start_t, stop_t))
+            self.n_samples = self.emg_ts.shape[1]
+            self.emg_dur = self.n_samples/self.fs
+            
+        else:
+            raise Exception(
+                'The EMG time series has already been trimmed - '
+                'cannot trim again.'
+            )
     
     def plot_emg_ts(self, start_t=0, stop_t=None,
                     offset=1000, ax=None, lw=0.5, figsize=(7, 7),
