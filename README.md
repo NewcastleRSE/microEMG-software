@@ -33,7 +33,9 @@ This section is intended to list the frameworks and tools you're using to develo
 ### Prerequisites
 
 Developed using Python 3.11
+
 Dependencies are managed using Python package [Poetry](https://python-poetry.org/), version 1.4.0
+
 See pyproject.toml file for list of Python package dependencies.
 
 ### Installation
@@ -66,7 +68,7 @@ Alternatively, using [Anaconda](https://anaconda.org/):
 conda install poetry==1.4.0
 ```
 
-[Install the packages using poetry](https://python-poetry.org/docs/basic-usage/#installing-dependencies) (run within the project directory):
+Next, [install the packages using poetry](https://python-poetry.org/docs/basic-usage/#installing-dependencies) (run within the project directory):
 
 ```
 poetry install
