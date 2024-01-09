@@ -140,13 +140,13 @@ class EMGFiles:
         # (e.g., sampling frequency)
         emg_header = self.read_header()
 
-        # Get channel names by removing file extensions from chan_fnames
-        chan_names = [os.path.splitext(f)[0] for f in self.chan_fnames]
+        # Get Intan channel names by removing file extensions from chan_fnames
+        intan_chan_names = [os.path.splitext(f)[0] for f in self.chan_fnames]
 
         # Create EMGData object with EMG time series and associated metadata
         emg_data = EMGData(emg_ts=emg_ts,
                            fs=emg_header['sample_rate'],
-                           chan_names=chan_names)
+                           intan_chan_names=intan_chan_names)
 
         return emg_data
 
@@ -154,7 +154,7 @@ class EMGFiles:
 class EMGData:
 
     def __init__(self, emg_ts: npt.NDArray[np.float64], fs: float, 
-                 chan_names: list[str]):
+                 intan_chan_names: list[str]):
         '''
         Initialise EMGData object.
 
@@ -165,9 +165,9 @@ class EMGData:
             correspondings to the signal from one EMG channel.
         fs : float
             Sampling frequency (Hz).
-        chan_names : list[str]
+        intan_chan_names : list[str]
             Channel names that correspond to each row of emg_ts, derived from 
-            the channel file names.
+            the Intan channel file names.
 
         Returns
         -------
@@ -186,10 +186,13 @@ class EMGData:
         # Will make it easier to set x,y coordinates
         sort_idx = self._reorder_chan_idx()
         self.emg_ts = emg_ts[sort_idx, :]
-        chan_names = [chan_names[i] for i in sort_idx]
-        self.chan = EMGChannels(chan_names)
-
-        # TODO: are different channel names needed after the re-ordering?
+        intan_chan_names = [intan_chan_names[i] for i in sort_idx]
+        
+        # Channel information, including Intan channel names, is saved in 
+        # EMGChannels object.
+        # EMGChannels will also create new channel names using the new channel 
+        # order.
+        self.chan = EMGChannels(intan_chan_names)
 
         # Initial preprocessing settings (none)
         self.filtered = False
@@ -495,7 +498,7 @@ class EMGData:
 
 class EMGChannels:
 
-    def __init__(self, chan_names: list[str]):
+    def __init__(self, intan_chan_names: list[str]):
         '''
         Initialise EMGChannels object for modelling EMG channels.
 
@@ -509,10 +512,17 @@ class EMGChannels:
         None.
 
         '''
-        self.chan_names = chan_names
-        self._get_chan_xy() # x, y coordinates
+        # original channel names
+        self.intan_chan_names = intan_chan_names 
         
+        # Create new channel labels using the channel order 
+        # (i.e., label channels from 1 to n channels)
+        self.chan_names = ['channel ' + str(i) 
+                           for i in np.arange(1, len(intan_chan_names) + 1)]
         
+        # x, y coordinates
+        self._get_chan_xy()                      
+
     def _get_chan_xy(self):
         '''
         Get the channel (x, y) coordinates based on the number of channels, 
@@ -523,7 +533,6 @@ class EMGChannels:
         None.
 
         '''
-        # TODO: confirm needle spacing is the same for 32 and 64 channel designs
 
         # Channel layout (in mm)
         CHAN_SPACING_X = 0.3    # spacing along length (defined as x axis)
@@ -650,7 +659,7 @@ class EMGPxx:
         else:
             ax.plot(self.freq[plot_bool], self.pxx[plot_chan-1,plot_bool],
                     lw=lw)
-            ax.set_title(f'Channel {self.chan.chan_names[plot_chan-1]}')
+            ax.set_title(self.chan.chan_names[plot_chan-1])
         
         # Axis labels
         ax.set_xlabel('Frequency (Hz)')
