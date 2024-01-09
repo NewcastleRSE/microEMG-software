@@ -70,7 +70,6 @@ class EMGFiles:
         None.
 
         '''
-        # TODO: generalise for other chan_types? depends if other files needed
         # TODO: add check that channel name numbers go from 0 to n channels
 
         chan_prefix = 'amp'  # recorded data is from amplifier channels
