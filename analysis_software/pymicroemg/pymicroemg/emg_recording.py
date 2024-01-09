@@ -339,6 +339,40 @@ class EMGData:
             )        
         
     
+    def _get_t_idx(self, start_t: float, stop_t: float) -> npt.NDArray[np.int64]:
+        '''
+        Get indices in EMGData time series that correspond to the requested 
+        time range. 
+        
+        Note that although the first time point is labelled as 1/fs seconds,
+        time 0 seconds will return the first time point. If the indexing were
+        shifted by 1/fs, plot_idx would return an out-of-bounds index when
+        stop_t = self.emg_dur.
+
+        Parameters
+        ----------
+        start_t : float, optional
+            First time point to plot, in seconds. The default is 0.
+        stop_t : float, optional
+            Last time point to plot, in seconds. The default is the segment's 
+            duration.
+
+        Returns
+        -------
+        t_idx : 1D numpy NDArray[np.int64]
+            Indices for extracting requested time range from EMGData time 
+            series.
+
+        '''
+        
+        # TODO: consider moving validation (using _validate_t_range) call to this method
+
+        t_idx = np.arange(np.round(start_t*self.fs),
+                             np.round(stop_t*self.fs))
+        t_idx = t_idx.astype('int')
+        
+        return t_idx
+    
     def plot_emg_ts(self, start_t=0, stop_t=None,
                     offset=1000, ax=None, lw=0.5, figsize=(7, 7),
                     yticklabel_size=6, xticklabel_size=8):
@@ -403,13 +437,7 @@ class EMGData:
         emg_t = self.get_emg_t()
 
         # Get indices corresponding to requested time segment.
-        # Note that although the first time point is labelled as 1/fs seconds,
-        # time 0 seconds will return the first time point. If the indexing were
-        # shifted by 1/fs, plot_idx would return an out-of-bounds index when
-        # stop_t = self.emg_dur.
-        plot_idx = np.arange(np.round(start_t*self.fs),
-                             np.round(stop_t*self.fs))
-        plot_idx = plot_idx.astype('int')
+        plot_idx = self._get_t_idx(start_t, stop_t)
 
         # Plot each channel's signal, staggered by the specified offset
         for i in range(self.n_chan):
