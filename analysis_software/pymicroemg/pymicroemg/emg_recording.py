@@ -152,6 +152,16 @@ class EMGFiles:
 
 
 class EMGData:
+    '''
+    Class for representing EMG recording (as a multivariate time series)
+    
+    Methods to add:
+    remove mains noise
+    detect low amplitude channels
+    detect high frequency noise
+    mark bad channels (based on visual inspection)
+
+    '''
 
     def __init__(self, emg_ts: npt.NDArray[np.float64], fs: float, 
                  intan_chan_names: list[str]):
@@ -484,21 +494,18 @@ class EMGData:
         # analysis; also allows multiple PSDs to be created at different
         # preprocessing steps.
         return emg_pxx
-          
-    '''
-    removemains (false)
-   
-    methods:
-    remove mains noise
-    detect low amplitude channels
-    detect high frequency noise
-    mark bad channels (based on visual inspection)
-    
-    '''
 
 
 class EMGChannels:
-
+    '''
+    Class for representing EMG recording channels.
+    
+    attributes to add:
+    low quality channels (automatic detection)
+    low quality channels (visual inspection)
+    
+    '''
+    
     def __init__(self, intan_chan_names: list[str]):
         '''
         Initialise EMGChannels object for modelling EMG channels.
@@ -557,21 +564,23 @@ class EMGChannels:
         self.chan_xy[:,1] = CHAN_SPACING_Y/2
         self.chan_xy[np.arange(1,n_chan+1,2),1] *= -1
         
-        # names
-        # low quality (automatic)
-        # low quality (visual inspection)
         
 class EMGPreprocSettings:
     '''
     Class for storing EMG preprocessing settings.
+    
+    Attributes to add:
+    mains noise removal, automatic bad channel detection
+    Consider keeping the channels removed/labelled as "bad" a channel attribute
+    (limit this class to settings that can directly be applied to any EMG 
+     recording)
+        
     '''
     
     def __init__(self, filtered: bool=False, 
                  filter_settings: None|dict = None):
         # Initialise preprocessing settings
         # Default is no preprocessing settings applied
-        # more to settings to add: mains noise removal, automatic bad channel detection
-        # Consider keeping the channels removed/labelled as "bad" a channel property
         
         # Filter settings
         self.filtered = filtered
@@ -582,6 +591,10 @@ class EMGPreprocSettings:
             
         
 class EMGPxx:
+    '''
+    Class for representing power spectral density (PSD) computed from EMG 
+    recording.
+    '''
     
     def __init__(self, freq: npt.NDArray[np.float64], 
                  pxx: npt.NDArray[np.float64], chan: EMGChannels, 
