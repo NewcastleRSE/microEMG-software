@@ -195,8 +195,7 @@ class EMGData:
         self.chan = EMGChannels(intan_chan_names)
 
         # Initial preprocessing settings (none)
-        self.filtered = False
-        self.filter_settings = {}
+        self.preproc_settings = EMGPreprocSettings()
         
     def _reorder_chan_idx(self) -> npt.NDArray[np.int64]:
         '''
@@ -420,7 +419,7 @@ class EMGData:
         # Only allow filtering once - currently do not have way to create 
         # record of repeated filters. 
         # If need to change filter settings, load and filter original data.
-        if self.filtered:
+        if self.preproc_settings.filtered:
             raise Exception(
                 'The EMG signal has already been filtered - cannot filter again.'
                 )
@@ -445,11 +444,13 @@ class EMGData:
             self.emg_ts[i,:] = scipy.signal.sosfiltfilt(sos, self.emg_ts[i,:])
 
         # Save filter settings
-        self.filtered = True
-        self.filter_settings = {'filter_name': 'Butterworth',
-                                'cutoff_freq': cutoff_freq, 
-                                'order': order,
-                                'filter_type': filter_type}
+        self.preproc_settings.filtered = True
+        self.preproc_settings.filter_settings = {
+            'filter_name': 'Butterworth',
+            'cutoff_freq': cutoff_freq, 
+            'order': order,
+            'filter_type': filter_type
+            }
     
     def compute_pxx(self, window_size: float) -> EMGPxx:
         '''
@@ -560,6 +561,25 @@ class EMGChannels:
         # low quality (automatic)
         # low quality (visual inspection)
         
+class EMGPreprocSettings:
+    '''
+    Class for storing EMG preprocessing settings.
+    '''
+    
+    def __init__(self, filtered: bool=False, 
+                 filter_settings: None|dict = None):
+        # Initialise preprocessing settings
+        # Default is no preprocessing settings applied
+        # more to settings to add: mains noise removal, automatic bad channel detection
+        # Consider keeping the channels removed/labelled as "bad" a channel property
+        
+        # Filter settings
+        self.filtered = filtered
+        if filter_settings is None:
+            self.filter_settings = {}
+        else:
+            self.filter_settings = filter_settings
+            
         
 class EMGPxx:
     
