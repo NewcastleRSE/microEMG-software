@@ -293,6 +293,44 @@ class EMGData:
         
         return emg_t
 
+    def _validate_t_range(self, start_t: float, stop_t: float):
+        '''
+        Validate start and stop times used to specify time ranges for EMGData
+        methods. Ensures both values are 1) within range [0, emg_dur], where 
+        emg_dur is the time series duration, and 2) the start time is less than
+        the stop time.
+        
+        Assumes times units are seconds.
+        '''
+        
+        # Confirm that start time is positive
+        if start_t < 0:
+            raise ValueError(
+                'The start of the time range must be positive.'
+            )
+            
+        # Confirm that end (stop) time is positive
+        if stop_t < 0:
+            raise ValueError(
+                'The end of the time range must be positive.'
+            )        
+            
+        # Confirm that end (stop) time is not longer than segment duration
+        if stop_t > self.emg_dur:
+            raise ValueError(
+                f'The end of the time range (currently {stop_t} seconds) is '
+                'too large. It must be less than or equal to the duration of '
+                f'the segment, {self.emg_dur} seconds.'
+            )
+        
+        # Confirm that start time is before stop time
+        if start_t >= stop_t:
+            raise ValueError(
+                f'The start of the time range (currently {start_t} seconds), '
+                'must be less than the end of the time range (currently '
+                f'{stop_t} seconds).'
+            )
+
     def plot_emg_ts(self, start_t=0, stop_t=None,
                     offset=1000, ax=None, lw=0.5, figsize=(7, 7),
                     yticklabel_size=6, xticklabel_size=8):
@@ -337,31 +375,9 @@ class EMGData:
         # Default end (stop) time is the segment's duration
         if stop_t is None:
             stop_t = self.emg_dur
-        else:
-            # Confirm that end (stop) time is not longer than segment duration
-            if stop_t > self.emg_dur:
-                raise ValueError(
-                    'The end of the time range, stop_t, must be less than or '
-                    f'equal to the duration of the segment, {self.emg_dur} seconds'
-                )
-            # Confirm that end (stop) time is positive
-            if stop_t < 0:
-                raise ValueError(
-                    'The end of the time range, stop_t, must be positive.'
-                )
         
-        # Confirm that start time is positive
-        if start_t < 0:
-            raise ValueError(
-                'The start of the time range, start_t, must be positive'
-            )
-        
-        # Confirm that start time is before stop time
-        if start_t >= stop_t:
-            raise ValueError(
-            'The start of the time range, start_t, must be less than the end '
-            'of the time range, stop_t'
-        )
+        # Validate start and stop times
+        self._validate_t_range(start_t, stop_t)
         
         # Offset must be positive to ensure that channels are correctly labelled.
         if offset < 0:
