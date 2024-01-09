@@ -339,19 +339,35 @@ class EMGData:
             stop_t = self.emg_dur
         else:
             # Confirm that end (stop) time is not longer than segment duration
-            assert stop_t <= self.emg_dur, (
-                'The end of the time range, stop_t, must be less than or '
-                f'equal to the duration of the segment, {self.emg_dur} seconds'
+            if stop_t > self.emg_dur:
+                raise ValueError(
+                    'The end of the time range, stop_t, must be less than or '
+                    f'equal to the duration of the segment, {self.emg_dur} seconds'
+                )
+            # Confirm that end (stop) time is positive
+            if stop_t < 0:
+                raise ValueError(
+                    'The end of the time range, stop_t, must be positive.'
+                )
+        
+        # Confirm that start time is positive
+        if start_t < 0:
+            raise ValueError(
+                'The start of the time range, start_t, must be positive'
             )
-
-        # confirm that start time is before stop time
-        assert start_t < stop_t, (
+        
+        # Confirm that start time is before stop time
+        if start_t >= stop_t:
+            raise ValueError(
             'The start of the time range, start_t, must be less than the end '
             'of the time range, stop_t'
         )
         
         # Offset must be positive to ensure that channels are correctly labelled.
-        assert offset > 0, ('The vertical spacing, offset, must be positive')
+        if offset < 0:
+            raise ValueError(
+                'The vertical spacing, offset, must be positive'
+            )
 
         # Create new figure with specified size if no axis provided
         if ax is None:
