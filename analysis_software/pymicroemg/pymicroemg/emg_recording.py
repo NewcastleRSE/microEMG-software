@@ -277,9 +277,11 @@ class EMGData:
         '''
         Create a vector of the time corresponding to each sample in the EMG
         time series. Time is defined as the number of seconds elapsed since the
-        start of the recording. The first time point is defined as 1/Fs, where
+        start of the recording. The first time point is labelled as 1/Fs, where
         Fs is the sampling frequency, and the last time point is equal to the 
         EMG segment's duration in seconds.
+        
+        Note that this time vector is only used for labelling. 
 
         Returns
         -------
@@ -394,7 +396,11 @@ class EMGData:
         # Time vector for x axis
         emg_t = self.get_emg_t()
 
-        # Get indices corresponding to requested time segment
+        # Get indices corresponding to requested time segment.
+        # Note that although the first time point is labelled as 1/fs seconds,
+        # time 0 seconds will return the first time point. If the indexing were
+        # shifted by 1/fs, plot_idx would return an out-of-bounds index when
+        # stop_t = self.emg_dur.
         plot_idx = np.arange(np.round(start_t*self.fs),
                              np.round(stop_t*self.fs))
         plot_idx = plot_idx.astype('int')
