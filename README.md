@@ -24,7 +24,7 @@ Newcastle University
 
 This section is intended to list the frameworks and tools you're using to develop this software. Please link to the home page or documentation in each case.
 
-[Framework 1](https://something.com)  
+[Python 3.11](https://www.python.org/)  
 [Framework 2](https://something.com)  
 [Framework 3](https://something.com)  
 
@@ -32,7 +32,9 @@ This section is intended to list the frameworks and tools you're using to develo
 
 ### Prerequisites
 
-Any tools or versions of languages needed to run code. For example, specific Python or Node versions. Minimum hardware requirements also go here.
+Developed using Python 3.11
+Dependencies are managed using Python package [Poetry](https://python-poetry.org/), version 1.4.0
+See pyproject.toml file for list of Python package dependencies.
 
 ### Installation
 
@@ -50,7 +52,26 @@ How to run tests on your local system.
 
 ### Local
 
-Deploying to a production-style setup but on the local system. Examples of this would include `venv`, `anaconda`, `Docker` or `minikube`. 
+(Local installation instructions TBC)
+
+First install poetry in your Python environment:
+
+Using pip:
+```
+pip install poetry==1.4.0
+```
+
+Alternatively, using [Anaconda](https://anaconda.org/):
+```
+conda install poetry==1.4.0
+```
+
+[Install the packages using poetry](https://python-poetry.org/docs/basic-usage/#installing-dependencies) (run within the project directory):
+
+```
+poetry install
+```
+
 
 ### Production
 
