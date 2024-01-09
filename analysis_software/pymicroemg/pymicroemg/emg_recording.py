@@ -191,6 +191,11 @@ class EMGData:
 
         # Compute duration of EMG segment
         self.emg_dur = self.n_samples/self.fs
+        
+        # Record segment of the original recording (lower and upper bounds, in 
+        # seconds) that this time series corresponds to.
+        # [-inf, inf] indicates that entire recording is used.
+        self.segment_of_recording = np.array((np.inf, -1*np.inf))
 
         # Reorder channels (in emg_ts and chan_names) based on electrode design
         # Will make it easier to set x,y coordinates
@@ -331,8 +336,9 @@ class EMGData:
                 f'The start of the time range (currently {start_t} seconds), '
                 'must be less than the end of the time range (currently '
                 f'{stop_t} seconds).'
-            )
-
+            )        
+        
+    
     def plot_emg_ts(self, start_t=0, stop_t=None,
                     offset=1000, ax=None, lw=0.5, figsize=(7, 7),
                     yticklabel_size=6, xticklabel_size=8):
