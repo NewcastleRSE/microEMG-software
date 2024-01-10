@@ -418,8 +418,6 @@ class EMGData:
         None.
 
         '''
-        # Note - overwrites original time series, emg_ts
-        # zero-phase butterworth filter (default is bandpass)
         
         assert order % 2 == 0, 'The filter order must be an even integer.'
         
@@ -509,6 +507,7 @@ class EMGPreprocSettings:
                  filter_settings: None|dict = None):
         # Initialise preprocessing settings
         # Default is no preprocessing settings applied
+        # TODO: documentation (once other preprocessing settings are added to initialisation)
         
         # Filter settings
         self.filtered = filtered
