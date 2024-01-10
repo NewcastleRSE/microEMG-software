@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-A set of classes for representing EMG times series data.
+A class, EMGData, for representing EMG times series data loaded from Intan
+recording files.
 
-Includes 
-- EMGData: the EMG time series
-- EMGPreprocSettings: the preprocessing settings of the EMG time series data
+Used to perform initial preprocessing steps and visualisations. 
 
 """
 # TODO: add class, method docstrings (see numpy, google, pep8 styles)
@@ -21,6 +20,7 @@ from typing import Union
 
 from pymicroemg.emg_channels import EMGChannels
 from pymicroemg.emg_pxx import EMGPxx
+from pymicroemg.emg_preproc_settings import EMGPreprocSettings
 
 class EMGData:
     '''
@@ -491,29 +491,6 @@ class EMGData:
         return emg_pxx
         
         
-class EMGPreprocSettings:
-    '''
-    Class for storing EMG preprocessing settings.
-    
-    Attributes to add:
-    mains noise removal, automatic bad channel detection
-    Consider keeping the channels removed/labelled as "bad" a channel attribute
-    (limit this class to settings that can directly be applied to any EMG 
-     recording)
-        
-    '''
-    
-    def __init__(self, filtered: bool=False, 
-                 filter_settings: None|dict = None):
-        # Initialise preprocessing settings
-        # Default is no preprocessing settings applied
-        # TODO: documentation (once other preprocessing settings are added to initialisation)
-        
-        # Filter settings
-        self.filtered = filtered
-        if filter_settings is None:
-            self.filter_settings = {}
-        else:
-            self.filter_settings = filter_settings
+
         
     
