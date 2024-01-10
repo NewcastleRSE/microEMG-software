@@ -79,11 +79,9 @@ class EMGDataRaw(EMGData):
         Filters each channel's signal in the EMG time series using a 
         Butterworth filter. See scipy.signal.butter for filter details.
         
-        Overwrites the original time series and saves the filter settings as 
-        attributes.
+        Validity of filter settings are checked when they are added to a 
+        PreprocSettings object in preparation for preprocessing.
         
-        Only one filter can only be applied to a given instance of EMGDataRaw.
-
         Parameters
         ----------
         cutoff_freq : None|list[float]|float, optional
@@ -96,41 +94,8 @@ class EMGDataRaw(EMGData):
             Filter type - see scipy.signal.butter options. The default is 
             'bandpass'.
 
-        Raises
-        ------
-        Exception
-            Raises exception if the EMG signal has already been filtered.
-        
-        Exception
-            Raises exception if cutoff_freq is not specified when filter_type 
-            is not 'bandpass'.
-
-        Returns
-        -------
-        None.
-
         '''
-        
-        assert order % 2 == 0, 'The filter order must be an even integer.'
-        
-        # Only allow filtering once - currently do not have way to create 
-        # record of repeated filters. 
-        # If need to change filter settings, load and filter original data.
-        # if self.preproc_settings.filtered:
-        #     raise Exception(
-        #         'The EMG signal has already been filtered - cannot filter again.'
-        #         )
-        
-        # Default cutoff frequencies - only for bandpass filter
-        if cutoff_freq is None:
-            if filter_type == 'bandpass':
-                cutoff_freq = [500, 2000]
-            else:
-                raise Exception(
-                    'Cutoff frequencies cutoff_freq must be specified if '
-                    'filter_type is not bandpass'
-                    )
-        
+
         # Design filter
         sos = scipy.signal.butter(N = order//2, Wn = cutoff_freq, 
                                   btype = filter_type, analog = False,
@@ -140,14 +105,7 @@ class EMGDataRaw(EMGData):
         for i in range(self.n_chan):
             self.emg_ts[i,:] = scipy.signal.sosfiltfilt(sos, self.emg_ts[i,:])
 
-        # # Save filter settings
-        # self.preproc_settings.filtered = True
-        # self.preproc_settings.filter_settings = {
-        #     'filter_name': 'Butterworth',
-        #     'cutoff_freq': cutoff_freq, 
-        #     'order': order,
-        #     'filter_type': filter_type
-        #     }
+
         
         
 
