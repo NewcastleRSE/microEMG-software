@@ -24,12 +24,6 @@ from pymicroemg.emg_preproc_settings import EMGPreprocSettings
 class EMGData:
     '''
     Class for representing EMG times series data (as a multivariate time series)
-    
-    Methods to add:
-    remove mains noise
-    detect low amplitude channels
-    detect high frequency noise
-    mark bad channels (based on visual inspection)
 
     '''
 
