@@ -23,7 +23,7 @@ class EMGChannels:
 
         Parameters
         ----------
-        intan_han_names : list[str]
+        intan_chan_names : list[str]
             List of original channel names (labelled by Intan hardware).
 
         Returns
