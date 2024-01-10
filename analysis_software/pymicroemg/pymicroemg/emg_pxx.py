@@ -10,7 +10,7 @@ import numpy as np
 import numpy.typing as npt
 import matplotlib.pyplot as plt
 
-from pymicroemg.emg_recording import EMGChannels
+from pymicroemg.emg_channels import EMGChannels
 
 class EMGPxx:
     '''

@@ -13,7 +13,7 @@ import os
 import numpy as np
 
 import intanutil.header as intan_header
-from pymicroemg.emg_recording import EMGData 
+from pymicroemg.emg_data import EMGData 
 
 class EMGFiles:
     '''
