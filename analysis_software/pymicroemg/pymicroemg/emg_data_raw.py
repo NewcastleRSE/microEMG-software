@@ -21,6 +21,7 @@ from pymicroemg.emg_data import EMGData
 from pymicroemg.emg_channels import EMGChannels
 from pymicroemg.emg_pxx import EMGPxx
 from pymicroemg.emg_preproc_settings import EMGPreprocSettings
+from pymicroemg.emg_data_preproc import EMGDataPreproc
 
 class EMGDataRaw(EMGData):
     '''
@@ -48,7 +49,7 @@ class EMGDataRaw(EMGData):
         ----------
         emg_ts : npt.NDArray[np.float64]
             2D array containing the multivariate EMG time series. Each row
-            correspondings to the signal from one EMG channel.
+            corresponds to the signal from one EMG channel.
         fs : float
             Sampling frequency (Hz).
         chan : EMGChannels
@@ -73,8 +74,28 @@ class EMGDataRaw(EMGData):
                          preproc_settings)
         
 
-    def butterworth_filter(self, cutoff_freq: None|list[float]|float=None,
-                           order: int=6, filter_type: str = 'bandpass'):
+    def preprocess(self, preproc_settings) -> EMGDataPreproc:
+        # Creates preprocessed EMG data (EMGDataPreproc object) by applying 
+        # preprocessing settings to raw EMG data
+        
+        # Deep copy of EMG time series so that original time series is retained
+        emg_ts = self.emg_ts.copy()
+        
+        # Apply Butterworth filter
+        if preproc_settings.butterworth_filter:
+            config = preproc_settings.butterworth_filter_settings
+            emg_ts = self._butterworth_filter(emg_ts, 
+                                              config['cutoff_freq'],
+                                              config['order'],
+                                              config['filter_type'])
+        # TODO: create EMGDataPreproc object from new time series and relevant EMGDataRaw attributes
+        # TODO: remove preproc_settings attribute from EMGData and EMGDataRaw
+        
+        
+    def _butterworth_filter(self, emg_ts: npt.NDArray[np.float64],
+                            cutoff_freq: None|list[float]|float=None,
+                            order: int=6, filter_type: str = 'bandpass'
+                            ) -> npt.NDArray[np.float64]:
         '''
         Filters each channel's signal in the EMG time series using a 
         Butterworth filter. See scipy.signal.butter for filter details.
@@ -82,8 +103,14 @@ class EMGDataRaw(EMGData):
         Validity of filter settings are checked when they are added to a 
         PreprocSettings object in preparation for preprocessing.
         
+        The time series is not passed as an attribute so that the original, raw
+        time series is retained in the EMGDataRaw object.
+        
         Parameters
         ----------
+        emg_ts : npt.NDArray[np.float64]
+            2D array containing the multivariate EMG time series. Each row
+            corresponds to the signal from one EMG channel.
         cutoff_freq : None|list[float]|float, optional
             Filter cutoff frequencies. The default is [500, 200] if filter_type
             is bandpass; otherwise, must be specified.
@@ -93,6 +120,11 @@ class EMGDataRaw(EMGData):
         filter_type : str, optional
             Filter type - see scipy.signal.butter options. The default is 
             'bandpass'.
+        
+        Returns
+        -------        
+        emg_ts : npt.NDArray[np.float64]
+            2D array containing the filtered multivariate EMG time series.
 
         '''
 
@@ -103,7 +135,9 @@ class EMGDataRaw(EMGData):
         
         # Filter each channel's signal
         for i in range(self.n_chan):
-            self.emg_ts[i,:] = scipy.signal.sosfiltfilt(sos, self.emg_ts[i,:])
+            emg_ts[i,:] = scipy.signal.sosfiltfilt(sos, emg_ts[i,:])
+            
+        return emg_ts
 
 
         
