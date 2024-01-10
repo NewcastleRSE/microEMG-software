@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-A set of classes for representing EMG recordings
+A set of classes for representing EMG times series data.
 
-@author: Gabrielle
+Includes 
+- EMGData: the EMG time series
+- EMGPreprocSettings: the preprocessing settings of the EMG time series data
+
 """
 # TODO: add class, method docstrings (see numpy, google, pep8 styles)
 
@@ -21,7 +24,7 @@ from pymicroemg.emg_pxx import EMGPxx
 
 class EMGData:
     '''
-    Class for representing EMG recording (as a multivariate time series)
+    Class for representing EMG times series data (as a multivariate time series)
     
     Methods to add:
     remove mains noise

@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-A class for representing EMG channels.
+A class, EMGChannels, for representing EMG channels.
 
-@author: Gabrielle
 """
 
 import numpy as np

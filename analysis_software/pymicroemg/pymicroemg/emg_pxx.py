@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-A class for representing EMG power spectral densities.
+A class, EMGPxx, for representing EMG power spectral densities.
 
-@author: Gabrielle
 """
 from __future__ import annotations
 

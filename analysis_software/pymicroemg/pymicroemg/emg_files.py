@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-A class for representing EMG Files
+A class, EMGFiles, for representing Intan EMG Files.
 
-@author: Gabrielle
+Each instance corresponds to the files of one EMG recording.
+
 """
 
 from __future__ import annotations
