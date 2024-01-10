@@ -4,14 +4,13 @@
 A class, EMGData, for representing EMG times series data loaded from Intan
 recording files.
 
-Used to perform initial preprocessing steps and visualisations. 
+Only child classes, EMGDataRaw and EMGDataPreproc, can be instantiated. This 
+class provides common methods for both child classes (e.g., for visualisation).
 
 """
-# TODO: add class, method docstrings (see numpy, google, pep8 styles)
 
 from __future__ import annotations
 
-import os # see pathlib as alternative for
 import numpy as np
 import numpy.typing as npt
 import matplotlib.pyplot as plt
@@ -35,7 +34,9 @@ class EMGData:
     '''
 
     def __init__(self, emg_ts: npt.NDArray[np.float64], fs: float, 
-                 intan_chan_names: list[str]):
+                 chan: EMGChannels,
+                 segment_of_recording: npt.NDArray[np.float64],
+                 preproc_settings: None|EMGPreprocSettings=None):
         '''
         Initialise EMGData object.
 
@@ -46,108 +47,32 @@ class EMGData:
             correspondings to the signal from one EMG channel.
         fs : float
             Sampling frequency (Hz).
-        intan_chan_names : list[str]
-            Channel names that correspond to each row of emg_ts, derived from 
-            the Intan channel file names.
+        chan : EMGChannels
+            EMGChannels object with information about channels, including names
+            and locations.
+        segment_of_recording : npt.NDArray[np.float64]
+            Segment of the original recording that the EMG time series 
+            corresponds to, stored as 
+            (start time in seconds, stop time in seconds). (-inf, inf) 
+            indicates that the time series corresponds to the entire original 
+            recording.
+        preproc_settings : None|EMGPreprocSettings, optional
+            Object containing the preprocessing settings. The default is None
+            (e.g., for raw data that has not been preprocessed).
 
         Returns
         -------
         None.
 
         '''
-        # TODO: add check that length of channel names matches ts dimensions
 
+        self.emg_ts = emg_ts
         self.n_chan, self.n_samples = emg_ts.shape
         self.fs = fs
-
-        # Compute duration of EMG segment
         self.emg_dur = self.n_samples/self.fs
-        
-        # Record segment of the original recording (lower and upper bounds, in 
-        # seconds) that this time series corresponds to.
-        # [-inf, inf] indicates that entire recording is used.
-        self.segment_of_recording = np.array((-1*np.inf, np.inf))
-
-        # Reorder channels (in emg_ts and chan_names) based on electrode design
-        # Will make it easier to set x,y coordinates
-        sort_idx = self._reorder_chan_idx()
-        self.emg_ts = emg_ts[sort_idx, :]
-        intan_chan_names = [intan_chan_names[i] for i in sort_idx]
-        
-        # Channel information, including Intan channel names, is saved in 
-        # EMGChannels object.
-        # EMGChannels will also create new channel names using the new channel 
-        # order.
-        self.chan = EMGChannels(intan_chan_names)
-
-        # Initial preprocessing settings (none)
-        self.preproc_settings = EMGPreprocSettings()
-        
-    def _reorder_chan_idx(self) -> npt.NDArray[np.int64]:
-        '''
-        Create indices for reordering channels so that the channel order 
-        corresponds to their spatial layout.
-        
-        Channel order is determined by the electrode design, which varies 
-        depending on the number of channels. Only 32 and 64 channel designs are
-        provided.
-
-        Raises
-        ------
-        Exception
-            Raises exception if the number of channels is not 32 or 64.
-
-        Returns
-        -------
-        sort_idx : 1D numpy NDArray[np.int64]
-            Indices for reordering channels.
-
-        '''
-
-        # Indices depend on the electrode design, which can be determined by
-        # the number of channels.
-        match self.n_chan:
-            case 32:
-                
-                sort_idx = np.zeros(self.n_chan).astype(int)
-
-                # even indices are descending from 15 to 0
-                sort_idx[np.arange(0, self.n_chan, 2)] = np.arange(
-                    (self.n_chan/2)-1, -1, -1
-                )
-
-                # odd indices are ascending from 16 to 31
-                sort_idx[np.arange(1, self.n_chan, 2)] = np.arange(
-                    (self.n_chan/2), self.n_chan
-                )
-            case 64:
-                
-                # first quarter is descending from 15 to 0
-                idx1 = np.arange(self.n_chan//4 - 1, -1, -1)
-
-                # second quarter + 2 channels is ascending starting at 17,
-                # with 2 subtracted from odd indices
-                # (e.g., 17 16 19 18...)
-                idx2 = np.arange(self.n_chan//4 + 1, self.n_chan//2 + 3)
-                idx2[np.arange(1, len(idx2), 2)] = (
-                    idx2[np.arange(1, len(idx2), 2)] - 2
-                )
-
-                # last half - 2 channels is descending from 63 to 34
-                idx3 = (
-                    np.arange(self.n_chan - 1, self.n_chan//2 + 1, -1)
-                )
-
-                # concatenate together to form full set of indices
-                sort_idx = np.concatenate((idx1, idx2, idx3))
-                
-            case _:
-                raise Exception(
-                    f'The EMG recording has {self.n_chan} channels; only 32 or'
-                    '64 channel recordings are allowed.'
-                )
-        
-        return sort_idx
+        self.segment_of_recording = segment_of_recording
+        self.chan = chan
+        self.preproc_settings = preproc_settings
 
     def get_emg_t(self) -> npt.NDArray[np.float64]:
         '''
@@ -380,82 +305,6 @@ class EMGData:
         ax.tick_params(axis='x', which='major', labelsize=xticklabel_size)
 
         return fig, ax
-
-    def butterworth_filter(self, cutoff_freq: None|list[float]|float=None,
-                           order: int=6, filter_type: str = 'bandpass'):
-        '''
-        Filters each channel's signal in the EMG time series using a 
-        Butterworth filter. See scipy.signal.butter for filter details.
-        
-        Overwrites the original time series and saves the filter settings as 
-        attributes.
-        
-        Only one filter can only be applied to a given instance of EMGData.
-
-        Parameters
-        ----------
-        cutoff_freq : None|list[float]|float, optional
-            Filter cutoff frequencies. The default is [500, 200] if filter_type
-            is bandpass; otherwise, must be specified.
-        order : int, optional
-            Filter order - must be even to allow zero-phase filtering. The 
-            default is 6.
-        filter_type : str, optional
-            Filter type - see scipy.signal.butter options. The default is 
-            'bandpass'.
-
-        Raises
-        ------
-        Exception
-            Raises exception if the EMG signal has already been filtered.
-        
-        Exception
-            Raises exception if cutoff_freq is not specified when filter_type 
-            is not 'bandpass'.
-
-        Returns
-        -------
-        None.
-
-        '''
-        
-        assert order % 2 == 0, 'The filter order must be an even integer.'
-        
-        # Only allow filtering once - currently do not have way to create 
-        # record of repeated filters. 
-        # If need to change filter settings, load and filter original data.
-        if self.preproc_settings.filtered:
-            raise Exception(
-                'The EMG signal has already been filtered - cannot filter again.'
-                )
-        
-        # Default cutoff frequencies - only for bandpass filter
-        if cutoff_freq is None:
-            if filter_type == 'bandpass':
-                cutoff_freq = [500, 2000]
-            else:
-                raise Exception(
-                    'Cutoff frequencies cutoff_freq must be specified if '
-                    'filter_type is not bandpass'
-                    )
-        
-        # Design filter
-        sos = scipy.signal.butter(N = order//2, Wn = cutoff_freq, 
-                                  btype = filter_type, analog = False,
-                                  output = "sos", fs = self.fs)
-        
-        # Filter each channel's signal
-        for i in range(self.n_chan):
-            self.emg_ts[i,:] = scipy.signal.sosfiltfilt(sos, self.emg_ts[i,:])
-
-        # Save filter settings
-        self.preproc_settings.filtered = True
-        self.preproc_settings.filter_settings = {
-            'filter_name': 'Butterworth',
-            'cutoff_freq': cutoff_freq, 
-            'order': order,
-            'filter_type': filter_type
-            }
     
     def compute_pxx(self, window_size: float) -> EMGPxx:
         '''
@@ -489,8 +338,6 @@ class EMGData:
         # analysis; also allows multiple PSDs to be created at different
         # preprocessing steps.
         return emg_pxx
-        
-        
 
         
     
