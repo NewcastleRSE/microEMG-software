@@ -74,6 +74,18 @@ class EMGData:
         self.chan = chan
         self.preproc_settings = preproc_settings
 
+    def __new__(cls, *args, **kwargs):
+        '''
+        Override "new" method to only allow children of EMGData to be 
+        instantiated.
+
+        '''
+        if cls is EMGData:
+            raise TypeError(
+                f'Only children of {cls.__name__} may be instantiated.'
+            )
+        return object.__new__(cls)
+    
     def get_emg_t(self) -> npt.NDArray[np.float64]:
         '''
         Create a vector of the time corresponding to each sample in the EMG
