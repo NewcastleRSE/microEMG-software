@@ -44,7 +44,7 @@ class EMGData:
         ----------
         emg_ts : npt.NDArray[np.float64]
             2D array containing the multivariate EMG time series. Each row
-            correspondings to the signal from one EMG channel.
+            corresponds to the signal from one EMG channel.
         fs : float
             Sampling frequency (Hz).
         chan : EMGChannels
