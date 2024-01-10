@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jan 10 11:34:11 2024
+A class for representing EMG channels.
 
 @author: Gabrielle
 """
