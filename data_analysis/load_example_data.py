@@ -6,12 +6,13 @@ Load, visualise, and preprocess example EMG data.
 """
 
 import os
-from pymicroemg.emg_files import EMGFiles
-
 import matplotlib.pyplot as plt
 import numpy as np
-
 import scipy.signal
+
+from pymicroemg.emg_files import EMGFiles
+from pymicroemg.emg_preproc_settings import EMGPreprocSettings
+
 
 # increase figure resolution (needed for Spyder IDE)
 plt.rcParams['figure.dpi'] = 600
@@ -57,23 +58,35 @@ stop_t = 10
 fig, ax = emg_data.plot_emg_ts(start_t=start_t, stop_t=stop_t, offset = 2000)
 ax.set_title(f'{recording_ID}, {start_t} to {stop_t} seconds of trimmed time series');
 
-#%% Filtering example
 
-# Plot part of segment, before filtering
+#%% Preprocessing example
+
+# Create and specify preprocessing settings using EMGPreprocSettings object
+preproc_settings = EMGPreprocSettings()
+preproc_settings.add_filter(cutoff_freq=[400, 2100], order=4, filter_type='bandpass') # filtering
+
+# Apply preprocessing settings to raw EMG data to generate preprocessed EMG data
+emg_data_preproc = emg_data.preprocess(preproc_settings) 
+
+# Plot part of segment, before and after preprocessing
 start_t = 30
 stop_t = 40
+
 fig, ax = emg_data.plot_emg_ts(start_t=start_t, stop_t=stop_t, offset = 2000)
 ax.set_title(f'{recording_ID} raw');
 
-# Bandpass filter
-emg_data.butterworth_filter()
-
-# Plot same segment, after filtering
-fig, ax = emg_data.plot_emg_ts(start_t=start_t, stop_t=stop_t)
-ax.set_title(f'{recording_ID} filtered')
+fig, ax = emg_data_preproc.plot_emg_ts(start_t=start_t, stop_t=stop_t)
+ax.set_title(f'{recording_ID} preprocessed');
 
 #%% PSD example
 
 # Compute and plot PSD
-emg_pxx = emg_data.compute_pxx(100)
-emg_pxx.plot_pxx(400, 2500, plot_chan=34)
+emg_pxx = emg_data_preproc.compute_pxx(100)
+emg_pxx.plot_pxx(250, 2500, plot_chan=34)
+
+#%% Demonstrate that parent class EMGData cannot be instatiated.
+
+from pymicroemg.emg_data import EMGData
+
+my_data = EMGData(emg_data.emg_ts, emg_data.fs, emg_data.chan, 
+                  emg_data.segment_of_recording)
