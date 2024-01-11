@@ -159,8 +159,7 @@ class EMGFiles:
             emg_ts = emg_ts, 
             fs = emg_header['sample_rate'], 
             chan = chan, 
-            segment_of_recording = segment_of_recording,
-            preproc_settings = None
+            segment_of_recording = segment_of_recording
         )
 
         return emg_data

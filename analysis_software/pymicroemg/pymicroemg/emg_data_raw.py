@@ -38,10 +38,11 @@ class EMGDataRaw(EMGData):
 
     '''
 
-    def __init__(self, emg_ts: npt.NDArray[np.float64], fs: float, 
+    def __init__(self, 
+                 emg_ts: npt.NDArray[np.float64], 
+                 fs: float, 
                  chan: EMGChannels,
-                 segment_of_recording: npt.NDArray[np.float64],
-                 preproc_settings: None|EMGPreprocSettings=None):
+                 segment_of_recording: npt.NDArray[np.float64]):
         '''
         Initialise EMGDataRaw object.
 
@@ -61,17 +62,13 @@ class EMGDataRaw(EMGData):
             (start time in seconds, stop time in seconds). (-inf, inf) 
             indicates that the time series corresponds to the entire original 
             recording.
-        preproc_settings : None|EMGPreprocSettings, optional
-            Object containing the preprocessing settings. The default is None
-            (e.g., for raw data that has not been preprocessed).
 
         Returns
         -------
         None.
 
         '''
-        super().__init__(emg_ts, fs, chan, segment_of_recording,
-                         preproc_settings)
+        super().__init__(emg_ts, fs, chan, segment_of_recording)
         
 
     def preprocess(self, preproc_settings) -> EMGDataPreproc:
@@ -88,10 +85,17 @@ class EMGDataRaw(EMGData):
                                               config['cutoff_freq'],
                                               config['order'],
                                               config['filter_type'])
-        # TODO: create EMGDataPreproc object from new time series and relevant EMGDataRaw attributes
-        # TODO: remove preproc_settings attribute from EMGData and EMGDataRaw
         
+        # Future preprocessing steps to be added...
         
+        # Create EMGDataPreproc object with preprocessed time series and
+        # associated metadata
+        emg_data_preproc = EMGDataPreproc(emg_ts, self.fs, self.chan, 
+                                          self.segment_of_recording, 
+                                          preproc_settings)
+        
+        return emg_data_preproc
+    
     def _butterworth_filter(self, emg_ts: npt.NDArray[np.float64],
                             cutoff_freq: None|list[float]|float=None,
                             order: int=6, filter_type: str = 'bandpass'

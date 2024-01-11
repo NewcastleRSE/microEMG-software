@@ -19,8 +19,7 @@ class EMGPreprocSettings:
         
     '''
     
-    def __init__(self, filtered: bool=False, 
-                 filter_settings: None|dict = None):
+    def __init__(self):
         # Initialise preprocessing settings
         # Default is no preprocessing settings applied
         # TODO: documentation (once other preprocessing settings are added to initialisation)

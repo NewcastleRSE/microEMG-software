@@ -27,10 +27,11 @@ class EMGData:
 
     '''
 
-    def __init__(self, emg_ts: npt.NDArray[np.float64], fs: float, 
+    def __init__(self, 
+                 emg_ts: npt.NDArray[np.float64], 
+                 fs: float, 
                  chan: EMGChannels,
-                 segment_of_recording: npt.NDArray[np.float64],
-                 preproc_settings: None|EMGPreprocSettings=None):
+                 segment_of_recording: npt.NDArray[np.float64]):
         '''
         Initialise EMGData object.
 
@@ -50,9 +51,6 @@ class EMGData:
             (start time in seconds, stop time in seconds). (-inf, inf) 
             indicates that the time series corresponds to the entire original 
             recording.
-        preproc_settings : None|EMGPreprocSettings, optional
-            Object containing the preprocessing settings. The default is None
-            (e.g., for raw data that has not been preprocessed).
 
         Returns
         -------
@@ -66,7 +64,6 @@ class EMGData:
         self.emg_dur = self.n_samples/self.fs
         self.segment_of_recording = segment_of_recording
         self.chan = chan
-        self.preproc_settings = preproc_settings
 
     def __new__(cls, *args, **kwargs):
         '''
