@@ -86,7 +86,9 @@ class EMGDataRaw(EMGData):
                                               config['order'],
                                               config['filter_type'])
         
+        
         # Future preprocessing steps to be added...
+        # TODO: add mains removal
         
         # Create EMGDataPreproc object with preprocessed time series and
         # associated metadata
@@ -144,8 +146,65 @@ class EMGDataRaw(EMGData):
         return emg_ts
 
 
+    def remove_mains_noise(self, emg_ts, freq_remove = 50, n_win_avg = 51):
+        # Remove mains noise (including harmonics)
+        # TODO: documentation
+
+        # Check that number of windows used to average noise is odd.
+        # Allows time period used to estimate noise to be centred around the window that is being denoised.
+        if n_win_avg%2 == 0:
+            raise ValueError(
+                'The number of windows used to estimate the noise signal, n_win_avg, must be odd.'
+                )
+
+        # Check that sampling frequency is an integer multiple of the frequency to be removed
+        if self.fs%freq_remove != 0:
+            raise ValueError(
+                'The time series sampling frequency must be an integer multiple of the frequency to remove, freq_remove'
+                )
+
+        # Number of samples per cycle of the frequency to remove, which determines the 
+        # window size. Will be 20 ms when the frequency to remove is 50 Hz.
+        # Can convert to integer since we have confirmed that the sampling frequency 
+        # is a multiple of freq_remove.
+        n_samples_per_win = int(self.fs/freq_remove)
+
+        # Determine number of complete windows in time series.
+        n_win = self.n_samples//n_samples_per_win
+
+        # Trim partial window from data
+        emg_ts = emg_ts[:, 0:n_win * n_samples_per_win]
+
+        # Start and stop of n_win_avg windows (inclusive endpoints) to use to estimate mains noise.
+        # First,  center around window to be denoised.
+        start_win = np.arange(0,n_win) - n_win_avg//2
+        stop_win = np.arange(0,n_win) + n_win_avg//2 
+
+        # Second, adjust indices at end of time series - instead use nearest n_win_avg windows.
+        adjust_idx = start_win < 0              # start indices before first time window
+        start_win[adjust_idx] = 0
+        stop_win[adjust_idx] = n_win_avg - 1
+        adjust_idx = stop_win > n_win  - 1      # stop indices after last time window
+        start_win[adjust_idx] = (n_win - 1) - n_win_avg + 1
+        stop_win[adjust_idx] = n_win - 1
+
+        # Estimate and remove noise in each recording channel 
+        for i in range(self.n_chan):
+            
+            # Extract channel signal and reshape to form windows (one window per row)
+            chan_ts = np.reshape(emg_ts[i,:], (n_win, n_samples_per_win))
+            
+            # Copy for holding original signal (needed to compute noise) 
+            chan_ts_original = chan_ts.copy()
+            
+            # For each window, estimate noise from surrounding windows; remove noise from signal.
+            for w in range(n_win):
+                noise_signal = np.mean(chan_ts_original[start_win[w]:(stop_win[w]+1)], axis = 0)
+                chan_ts[w,:] -= noise_signal
+            
+            emg_ts[i,:] = np.reshape(chan_ts, (1, n_win*n_samples_per_win))
         
-        
+        return emg_ts
 
         
     
