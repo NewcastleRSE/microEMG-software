@@ -24,6 +24,9 @@ class EMGPreprocSettings:
         # Default is no preprocessing settings applied
         # TODO: documentation (once other preprocessing settings are added to initialisation)
         
+        # Remove mains noise
+        self.remove_mains = False
+        self.remove_mains_settings = {}
         
         # Butterworth filter
         self.butterworth_filter = False
@@ -56,4 +59,15 @@ class EMGPreprocSettings:
             'cutoff_freq': cutoff_freq, 
             'order': order,
             'filter_type': filter_type
+            }
+    
+    def add_remove_mains(self, freq_remove: int=50, n_win_avg: int=51):
+        # Add settings for removing mains noise
+        # TODO: documentation
+        
+        # Save settings
+        self.remove_mains = True
+        self.remove_mains_settings = {
+            'freq_remove': freq_remove,
+            'n_win_avg': n_win_avg
             }

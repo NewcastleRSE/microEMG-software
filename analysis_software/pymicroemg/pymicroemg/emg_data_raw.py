@@ -71,16 +71,32 @@ class EMGDataRaw(EMGData):
         super().__init__(emg_ts, fs, chan, segment_of_recording)
         
 
-    def preprocess(self, preproc_settings) -> EMGDataPreproc:
+    def preprocess(self, preproc_settings: EMGPreprocSettings) -> EMGDataPreproc:
         # Creates preprocessed EMG data (EMGDataPreproc object) by applying 
         # preprocessing settings to raw EMG data
         
         # Deep copy of EMG time series so that original time series is retained
         emg_ts = self.emg_ts.copy()
         
+        # Remove mains noise
+        if preproc_settings.remove_mains:
+            config = preproc_settings.remove_mains_settings
+            print('Removing mains noise.')
+            emg_ts = self._remove_mains(
+                emg_ts, 
+                freq_remove = config['freq_remove'], 
+                n_win_avg = config['n_win_avg']
+            )
+            
+        # Note that after mains noise removal, the number of samples in emg_ts
+        # may differ from self.emg_ts.
+        # Do not use self.emg_dur or self.n_samples in downstream preprocessing
+        # steps.
+        
         # Apply Butterworth filter
         if preproc_settings.butterworth_filter:
             config = preproc_settings.butterworth_filter_settings
+            print('Applying Butterworth filter.')
             emg_ts = self._butterworth_filter(emg_ts, 
                                               config['cutoff_freq'],
                                               config['order'],
@@ -88,7 +104,6 @@ class EMGDataRaw(EMGData):
         
         
         # Future preprocessing steps to be added...
-        # TODO: add mains removal
         
         # Create EMGDataPreproc object with preprocessed time series and
         # associated metadata
@@ -146,7 +161,12 @@ class EMGDataRaw(EMGData):
         return emg_ts
 
 
-    def remove_mains_noise(self, emg_ts, freq_remove = 50, n_win_avg = 51):
+    def _remove_mains(
+            self, 
+            emg_ts: npt.NDArray[np.float64], 
+            freq_remove: int=50, 
+            n_win_avg: int=51
+        ) -> npt.NDArray[np.float64]:
         # Remove mains noise (including harmonics)
         # TODO: documentation
 
