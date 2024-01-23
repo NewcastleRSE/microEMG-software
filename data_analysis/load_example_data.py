@@ -1,18 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Load, visualise, and preprocess example EMG data. 
+Load, visualise, and preprocess example EMG data.
 
 """
 
 import os
 import matplotlib.pyplot as plt
-import numpy as np
-import scipy.signal
 
 from pymicroemg.emg_files import EMGFiles
 from pymicroemg.emg_preproc_settings import EMGPreprocSettings
-
+from pymicroemg.emg_data import EMGData
 
 # increase figure resolution (needed for Spyder IDE)
 plt.rcParams["figure.dpi"] = 600
@@ -65,8 +63,10 @@ ax.set_title(f"{recording_ID}, {start_t} to {stop_t} seconds of trimmed time ser
 
 # Create and specify preprocessing settings using EMGPreprocSettings object
 preproc_settings = EMGPreprocSettings()
-preproc_settings.add_filter()  # for defaults
-# preproc_settings.add_filter(cutoff_freq=[400, 2100], order=4, filter_type='bandpass') # filtering
+preproc_settings.add_butterworth_filter()  # for defaults
+# preproc_settings.add_butterworth_filter(
+#    cutoff_freq=[400, 2100], order=4, filter_type='bandpass'
+# )
 preproc_settings.add_remove_mains()
 
 # Apply preprocessing settings to raw EMG data to generate preprocessed EMG data
@@ -95,9 +95,7 @@ emg_pxx_preproc.plot_pxx(start_f, 2500, plot_chan=2)
 # %% header file
 
 hfile = emg_files.read_header()
-# %% Demonstrate that parent class EMGData cannot be instatiated.
-
-from pymicroemg.emg_data import EMGData
+# %% Demonstrate that parent class EMGData cannot be instatiated (will throw error)
 
 my_data = EMGData(
     emg_data.emg_ts, emg_data.fs, emg_data.chan, emg_data.segment_of_recording
