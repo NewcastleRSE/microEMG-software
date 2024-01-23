@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import os
 import numpy as np
+import numpy.typing as npt
 
 import intanutil.header as intan_header
 from pymicroemg.emg_data_raw import EMGDataRaw
