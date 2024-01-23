@@ -15,6 +15,9 @@ pymicroemg = {path = "analysis_software/pymicroemg", develop = true}
 intanutil = {path = "analysis_software/intanutil", develop = true}
 
 
+[tool.poetry.group.dev.dependencies]
+black = "^23.12.1"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
