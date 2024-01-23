@@ -169,8 +169,43 @@ class EMGDataRaw(EMGData):
         freq_remove: int = 50,
         n_win_avg: int = 51,
     ) -> npt.NDArray[np.float64]:
-        # Remove mains noise (including harmonics)
-        # TODO: documentation
+        """
+        Remove mains noise from the time series.
+
+        The signal is divided into windows containing one cycle of noise (e.g., 20ms for
+        50 Hz line noise). For each window, the mains signal is estimated by averaging
+        the surrounding n_win_avg windows. This estimate signal is then removed from the
+        window's signal. This approach therefore removes any other frequencies that are
+        phase-locked to the mains noise frequency (e.g., harmonics).
+
+        This approach is based on Digitimer's Hum Bug Noise Eliminator algorithm.
+
+        Parameters
+        ----------
+        emg_ts : npt.NDArray[np.float64]
+            2D array containing the multivariate EMG time series. Each row corresponds
+            to the signal from one EMG channel.
+        freq_remove : int, optional
+            The frequency to remove from the signal, in hertz (usually the mains
+            frequency). The sampling frequency of the time seriesmust be an integer
+            multiple of freq_remove. The default is 50.
+        n_win_avg : int, optional
+            the number of windows to average to estimate the noise signal. The default
+            is 51.
+
+        Raises
+        ------
+        ValueError
+            Raised if n_win_avg is not odd.
+            Raised if the sampling frequency is not an integer multiple of freq_remove.
+
+        Returns
+        -------
+        emg_ts : npt.NDArray[np.float64]
+            2D array containing the multivariate EMG time series after mains noise has
+            been removed.
+
+        """
 
         # Check that number of windows used to average noise is odd.
         # Allows time period used to estimate noise to be centred around the window that
