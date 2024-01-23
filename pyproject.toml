@@ -19,6 +19,7 @@ intanutil = {path = "analysis_software/intanutil", develop = true}
 black = "^23.12.1"
 pre-commit = "^3.6.0"
 mypy = "^1.8.0"
+flake8 = "^7.0.0"
 
 [build-system]
 requires = ["poetry-core"]
