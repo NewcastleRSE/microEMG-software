@@ -5,7 +5,7 @@ A class, EMGDataRaw for representing raw (not preprocessed) EMG data.
 
 Inherits from the class EMGData.
 
-Used to perform initial preprocessing steps and visualisations. 
+Used to perform initial preprocessing steps and visualisations.
 
 """
 
@@ -13,13 +13,10 @@ from __future__ import annotations
 
 import numpy as np
 import numpy.typing as npt
-import matplotlib.pyplot as plt
 import scipy.signal
-from typing import Union
 
 from pymicroemg.emg_data import EMGData
 from pymicroemg.emg_channels import EMGChannels
-from pymicroemg.emg_pxx import EMGPxx
 from pymicroemg.emg_preproc_settings import EMGPreprocSettings
 from pymicroemg.emg_data_preproc import EMGDataPreproc
 
@@ -176,16 +173,20 @@ class EMGDataRaw(EMGData):
         # TODO: documentation
 
         # Check that number of windows used to average noise is odd.
-        # Allows time period used to estimate noise to be centred around the window that is being denoised.
+        # Allows time period used to estimate noise to be centred around the window that
+        # is being denoised.
         if n_win_avg % 2 == 0:
             raise ValueError(
-                "The number of windows used to estimate the noise signal, n_win_avg, must be odd."
+                "The number of windows used to estimate the noise signal, n_win_avg, "
+                "must be odd."
             )
 
-        # Check that sampling frequency is an integer multiple of the frequency to be removed
+        # Check that sampling frequency is an integer multiple of the frequency to be
+        # removed
         if self.fs % freq_remove != 0:
             raise ValueError(
-                "The time series sampling frequency must be an integer multiple of the frequency to remove, freq_remove"
+                "The time series sampling frequency must be an integer multiple of the "
+                "frequency to remove, freq_remove"
             )
 
         # Number of samples per cycle of the frequency to remove, which determines the
@@ -200,12 +201,14 @@ class EMGDataRaw(EMGData):
         # Trim partial window from data
         emg_ts = emg_ts[:, 0 : n_win * n_samples_per_win]
 
-        # Start and stop of n_win_avg windows (inclusive endpoints) to use to estimate mains noise.
+        # Start and stop of n_win_avg windows (inclusive endpoints) to use to estimate
+        # mains noise.
         # First,  center around window to be denoised.
         start_win = np.arange(0, n_win) - n_win_avg // 2
         stop_win = np.arange(0, n_win) + n_win_avg // 2
 
-        # Second, adjust indices at end of time series - instead use nearest n_win_avg windows.
+        # Second, adjust indices at end of time series - instead use nearest n_win_avg
+        # windows.
         adjust_idx = start_win < 0  # start indices before first time window
         start_win[adjust_idx] = 0
         stop_win[adjust_idx] = n_win_avg - 1
@@ -221,7 +224,8 @@ class EMGDataRaw(EMGData):
             # Copy for holding original signal (needed to compute noise)
             chan_ts_original = chan_ts.copy()
 
-            # For each window, estimate noise from surrounding windows; remove noise from signal.
+            # For each window, estimate noise from surrounding windows; remove noise
+            # from signal.
             for w in range(n_win):
                 noise_signal = np.mean(
                     chan_ts_original[start_win[w] : (stop_win[w] + 1)], axis=0

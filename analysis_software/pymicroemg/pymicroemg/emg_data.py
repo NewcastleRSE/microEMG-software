@@ -4,7 +4,7 @@
 A class, EMGData, for representing EMG times series data loaded from Intan
 recording files.
 
-Only child classes, EMGDataRaw and EMGDataPreproc, can be instantiated. This 
+Only child classes, EMGDataRaw and EMGDataPreproc, can be instantiated. This
 class provides common methods for both child classes (e.g., for visualisation).
 
 """
@@ -15,11 +15,9 @@ import numpy as np
 import numpy.typing as npt
 import matplotlib.pyplot as plt
 import scipy.signal
-from typing import Union
 
 from pymicroemg.emg_channels import EMGChannels
 from pymicroemg.emg_pxx import EMGPxx
-from pymicroemg.emg_preproc_settings import EMGPreprocSettings
 
 
 class EMGData:
