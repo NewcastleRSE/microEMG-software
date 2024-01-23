@@ -63,14 +63,16 @@ ax.set_title(f'{recording_ID}, {start_t} to {stop_t} seconds of trimmed time ser
 
 # Create and specify preprocessing settings using EMGPreprocSettings object
 preproc_settings = EMGPreprocSettings()
-preproc_settings.add_filter(cutoff_freq=[400, 2100], order=4, filter_type='bandpass') # filtering
+preproc_settings.add_filter() # for defaults
+#preproc_settings.add_filter(cutoff_freq=[400, 2100], order=4, filter_type='bandpass') # filtering
+preproc_settings.add_remove_mains()
 
 # Apply preprocessing settings to raw EMG data to generate preprocessed EMG data
 emg_data_preproc = emg_data.preprocess(preproc_settings) 
 
-# Plot part of segment, before and after preprocessing
-start_t = 30
-stop_t = 40
+#%% Plot part of segment, before and after preprocessing
+start_t = 3
+stop_t = 4
 
 fig, ax = emg_data.plot_emg_ts(start_t=start_t, stop_t=stop_t, offset = 2000)
 ax.set_title(f'{recording_ID} raw');
@@ -79,11 +81,18 @@ fig, ax = emg_data_preproc.plot_emg_ts(start_t=start_t, stop_t=stop_t)
 ax.set_title(f'{recording_ID} preprocessed');
 
 #%% PSD example
+start_f = 500
 
 # Compute and plot PSD
-emg_pxx = emg_data_preproc.compute_pxx(100)
-emg_pxx.plot_pxx(250, 2500, plot_chan=34)
+emg_pxx = emg_data.compute_pxx(10)
+emg_pxx.plot_pxx(start_f, 2500, plot_chan=2)
 
+emg_pxx_preproc = emg_data_preproc.compute_pxx(10)
+emg_pxx_preproc.plot_pxx(start_f, 2500, plot_chan=2)
+
+#%% header file
+
+hfile = emg_files.read_header()
 #%% Demonstrate that parent class EMGData cannot be instatiated.
 
 from pymicroemg.emg_data import EMGData
