@@ -38,6 +38,18 @@ Dependencies are managed using Python package [Poetry](https://python-poetry.org
 
 See pyproject.toml file for list of Python package dependencies.
 
+
+#### Development tools
+
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) as a formatter
+
+[mypy](https://mypy.readthedocs.io/en/stable/) as a static type checker
+
+[Flake8](https://flake8.pycqa.org/en/latest/) as a linter
+
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit) for running checks on committed code (run `pre-commit install` to use the included pre-commit hooks)
+
+
 ### Installation
 
 How to build or install the application.
