@@ -18,6 +18,7 @@ intanutil = {path = "analysis_software/intanutil", develop = true}
 [tool.poetry.group.dev.dependencies]
 black = "^23.12.1"
 pre-commit = "^3.6.0"
+mypy = "^1.8.0"
 
 [build-system]
 requires = ["poetry-core"]
