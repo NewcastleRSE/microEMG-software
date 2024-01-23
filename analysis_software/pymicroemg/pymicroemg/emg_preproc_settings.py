@@ -20,10 +20,16 @@ class EMGPreprocSettings:
     """
 
     def __init__(self):
-        # Initialise preprocessing settings
-        # Default is no preprocessing settings applied
-        # TODO: documentation (once other preprocessing settings are added to
-        # initialisation)
+        """
+        Initialise preprocessing settings. When first initialised, the default
+        settings are none (i.e., set to false for whether to run each preprocessing
+        step).
+
+        Returns
+        -------
+        None.
+
+        """
 
         # Remove mains noise
         self.remove_mains = False
@@ -33,14 +39,41 @@ class EMGPreprocSettings:
         self.butterworth_filter = False
         self.butterworth_filter_settings = {}
 
-    def add_filter(
+    def add_butterworth_filter(
         self,
         cutoff_freq: None | list[float] | float = None,
         order: int = 6,
         filter_type: str = "bandpass",
     ):
-        # Add filter settings
-        # TODO: amend/finish documentation
+        """
+        Add filter settings for a zero-phase Butterworth filter. See scipy.signal.butter
+        for parameter details.
+
+        Parameters
+        ----------
+        cutoff_freq : None | list[float] | float, optional
+            Cutoff frequency or frequencies to pass to scipy.signal.butter. The default
+            is [500, 2000] if the filter type is "bandpass". The cutoff frequency must
+            be specified for other filter types.
+        order : int, optional
+            Filter order; must be even. The default is 6.
+        filter_type : str, optional
+            Type of filter - see scipy.signal.butter for options. The default is
+            "bandpass".
+
+        Raises
+        ------
+        ValueError
+            Raised if filter order is not even.
+        Exception
+            Raised if cutoff frequency is not provided when the filter type is not
+            bandpass.
+
+        Returns
+        -------
+        None.
+
+        """
 
         if order % 2 != 0:
             raise ValueError("The filter order must be an even integer.")
@@ -64,8 +97,35 @@ class EMGPreprocSettings:
         }
 
     def add_remove_mains(self, freq_remove: int = 50, n_win_avg: int = 51):
-        # Add settings for removing mains noise
-        # TODO: documentation
+        """
+        Add settings for removing mains noise. Settings will be passed to EMGDataRaw
+        method _remove_mains via the preprocess method.
+
+        Parameters
+        ----------
+        freq_remove : int, optional
+            The frequency to remove in hertz. The default is 50.
+        n_win_avg : int, optional
+            The number of windows to average to compute the mains noise signal.
+            The default is 51.
+
+        Raises
+        ------
+        ValueError
+            Raised if n_win_avg is not odd.
+
+        Returns
+        -------
+        None.
+
+        """
+
+        # Check that number of windows used to average noise is odd.
+        if n_win_avg % 2 == 0:
+            raise ValueError(
+                "The number of windows used to estimate the noise signal, n_win_avg, "
+                "must be odd."
+            )
 
         # Save settings
         self.remove_mains = True
