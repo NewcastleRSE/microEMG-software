@@ -22,7 +22,8 @@ class EMGPreprocSettings:
     def __init__(self):
         # Initialise preprocessing settings
         # Default is no preprocessing settings applied
-        # TODO: documentation (once other preprocessing settings are added to initialisation)
+        # TODO: documentation (once other preprocessing settings are added to
+        # initialisation)
 
         # Remove mains noise
         self.remove_mains = False

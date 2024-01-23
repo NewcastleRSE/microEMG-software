@@ -76,7 +76,7 @@ class EMGFiles:
 
         chan_prefix = "amp"  # recorded data is from amplifier channels
         chan_fnames = [f for f in os.listdir(self.emg_dir) if f.startswith(chan_prefix)]
-        chan_fnames.sort()  # order by channel name to ensure imported in the correct order
+        chan_fnames.sort()  # sort to ensure imported in the correct order
 
         return chan_fnames
 
