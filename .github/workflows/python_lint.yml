@@ -5,6 +5,9 @@ on:
     branches:
       - dev
       - main
+  pull_request:
+      - dev
+      - main
 
 jobs:
   lint:
