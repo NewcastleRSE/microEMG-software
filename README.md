@@ -45,7 +45,7 @@ See pyproject.toml file for list of Python package dependencies.
 
 [mypy](https://mypy.readthedocs.io/en/stable/) as a static type checker
 
-[Flake8](https://flake8.pycqa.org/en/latest/) as a linter
+[Flake8](https://flake8.pycqa.org/en/latest/) (including the [bugbear](https://github.com/PyCQA/flake8-bugbear) plugin) as a linter
 
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit) for running checks on committed code (run `pre-commit install` to use the included pre-commit hooks)
 
