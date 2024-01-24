@@ -1,0 +1,41 @@
+[tool.poetry]
+name = "microemg-software"
+version = "0.1.0"
+description = ""
+authors = ["Gabrielle M. Schroeder <8205451+gmschroe@users.noreply.github.com>"]
+readme = "README.md"
+packages = [{include = "microemg_software"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+numpy = "^1.26.3"
+matplotlib = "^3.8.2"
+scipy = "^1.11.4"
+pymicroemg = {path = "analysis_software/pymicroemg", develop = true}
+intanutil = {path = "analysis_software/intanutil", develop = true}
+flake8-bugbear = "^24.1.17"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.12.1"
+pre-commit = "^3.6.0"
+mypy = "^1.8.0"
+flake8 = "^7.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.mypy]
+exclude = ["analysis_software/intanutil/"]
+ignore_missing_imports = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+strict_equality = true
+check_untyped_defs = true
+disallow_subclassing_any = true
+disallow_untyped_decorators = true
+
+[tool.black]
+extend-exclude = 'analysis_software/intanutil/'
