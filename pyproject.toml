@@ -13,6 +13,7 @@ matplotlib = "^3.8.2"
 scipy = "^1.11.4"
 pymicroemg = {path = "analysis_software/pymicroemg", develop = true}
 intanutil = {path = "analysis_software/intanutil", develop = true}
+flake8-bugbear = "^24.1.17"
 
 
 [tool.poetry.group.dev.dependencies]
