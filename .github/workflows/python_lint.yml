@@ -24,5 +24,5 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
       - run: |
-          pip install -r flake8==7.0.0 flake8-bugbear==24.1.17
+          pip install flake8==7.0.0 flake8-bugbear==24.1.17
           flake8 . --verbose
