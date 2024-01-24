@@ -100,3 +100,5 @@ hfile = emg_files.read_header()
 my_data = EMGData(
     emg_data.emg_ts, emg_data.fs, emg_data.chan, emg_data.segment_of_recording
 )
+
+# Too long comment to test that linting is caught by GitHub actions ---------------------------
