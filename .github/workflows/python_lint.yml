@@ -1,1 +1,28 @@
-name: Python Linton:  pull_request:    branches:      - dev      - mainjobs:  lint:    runs-on: ubuntu-latest    steps:      - uses: actions/checkout@v4      - uses: psf/black@stable        with:          options: "--check --verbose"          version: "23.12.1"        
+name: Python Lint
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+  pull_request:
+    branches:
+      - dev
+      - main
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: psf/black@stable
+        with:
+          options: "--check --verbose"
+          version: "23.12.1"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - run: |
+          pip install flake8==7.0.0 flake8-bugbear==24.1.17
+          flake8 . --verbose
