@@ -106,6 +106,26 @@ class EMGData:
         the stop time.
 
         Assumes times units are seconds.
+
+        Parameters
+        ----------
+        start_t : float
+            Start time in seconds.
+        stop_t : float
+            Stop time in seconds.
+
+        Raises
+        ------
+        ValueError
+            Raised if start_t < 0.
+            Raised if stop_t < 0.
+            Raised if stop_t > emg_dur.
+            Raised if start_t >= stop_t.
+
+        Returns
+        -------
+        None.
+
         """
 
         # Confirm that start time is positive
