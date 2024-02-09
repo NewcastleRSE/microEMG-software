@@ -66,6 +66,9 @@ class EMGData:
         self.segment_of_recording = segment_of_recording
         self.chan = chan
 
+        # default time points to use for the analysis (all timepoints)
+        self.analyse_t = np.full(self.n_samples, True)
+
     def __new__(cls, *args, **kwargs):
         """
         Override "new" method to only allow children of EMGData to be
@@ -106,6 +109,26 @@ class EMGData:
         the stop time.
 
         Assumes times units are seconds.
+
+        Parameters
+        ----------
+        start_t : float
+            Start time in seconds.
+        stop_t : float
+            Stop time in seconds.
+
+        Raises
+        ------
+        ValueError
+            Raised if start_t < 0.
+            Raised if stop_t < 0.
+            Raised if stop_t > emg_dur.
+            Raised if start_t >= stop_t.
+
+        Returns
+        -------
+        None.
+
         """
 
         # Confirm that start time is positive

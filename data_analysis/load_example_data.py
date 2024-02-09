@@ -92,6 +92,15 @@ emg_pxx.plot_pxx(start_f, 2500, plot_chan=2)
 emg_pxx_preproc = emg_data_preproc.compute_pxx(10)
 emg_pxx_preproc.plot_pxx(start_f, 2500, plot_chan=2)
 
+# %% Setting data to analyse from preprocessed data
+
+# Sets boolean for timepoints (10-20 s)
+emg_data_preproc.set_analyse_t(start_t=10, stop_t=20)
+
+# Sets boolean for channels
+bad_chan = [0, 1, 8]
+emg_data_preproc.set_bad_chan(bad_chan)
+
 # %% header file
 
 hfile = emg_files.read_header()

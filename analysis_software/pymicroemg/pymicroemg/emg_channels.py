@@ -44,6 +44,9 @@ class EMGChannels:
         # x, y coordinates
         self._get_chan_xy()
 
+        # default channels to use for the analysis (all channels)
+        self.analyse_chan = np.full(len(self.chan_names), True)
+
     def _get_chan_xy(self):
         """
         Get the channel (x, y) coordinates based on the number of channels,
