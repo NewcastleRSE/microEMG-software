@@ -66,6 +66,9 @@ class EMGData:
         self.segment_of_recording = segment_of_recording
         self.chan = chan
 
+        # default time points to use for the analysis (all timepoints)
+        self.analyse_t = np.full(self.n_samples, True)
+
     def __new__(cls, *args, **kwargs):
         """
         Override "new" method to only allow children of EMGData to be
