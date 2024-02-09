@@ -45,7 +45,7 @@ class EMGChannels:
         self._get_chan_xy()
 
         # default channels to use for the analysis (all channels)
-        self.keep_chan = np.full(len(self.chan_names), True)
+        self.analyse_chan = np.full(len(self.chan_names), True)
 
     def _get_chan_xy(self):
         """
