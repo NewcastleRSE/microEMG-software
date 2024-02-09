@@ -4,7 +4,7 @@
 name = "attrs"
 version = "23.2.0"
 description = "Classes Without Boilerplate"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -217,7 +217,7 @@ typing = ["typing-extensions (>=4.8)"]
 name = "flake8"
 version = "7.0.0"
 description = "the modular source code checker: pep8 pyflakes and co"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.8.1"
 files = [
@@ -234,7 +234,7 @@ pyflakes = ">=3.2.0,<3.3.0"
 name = "flake8-bugbear"
 version = "24.1.17"
 description = "A plugin for flake8 finding likely bugs and design problems in your program. Contains warnings that don't belong in pyflakes and pycodestyle."
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.8.1"
 files = [
@@ -511,7 +511,7 @@ python-dateutil = ">=2.7"
 name = "mccabe"
 version = "0.7.0"
 description = "McCabe checker, plugin for flake8"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -788,7 +788,7 @@ virtualenv = ">=20.10.0"
 name = "pycodestyle"
 version = "2.11.1"
 description = "Python style guide checker"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.8"
 files = [
@@ -800,7 +800,7 @@ files = [
 name = "pyflakes"
 version = "3.2.0"
 description = "passive checker of Python programs"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.8"
 files = [
@@ -1021,4 +1021,4 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "d940e2d0ef3d6e13bb77a7f03698d181e305dd530339e6a0d4a5c27c8d4c802b"
+content-hash = "349152730ae93467291c3537fa1859350072cc63b95f300dad5132a3756f1979"
