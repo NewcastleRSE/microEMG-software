@@ -520,6 +520,20 @@ files = [
 ]
 
 [[package]]
+name = "microemggui"
+version = "0.1.0"
+description = ""
+category = "main"
+optional = false
+python-versions = "^3.11"
+files = []
+develop = true
+
+[package.source]
+type = "directory"
+url = "analysis_software/microemggui"
+
+[[package]]
 name = "mypy"
 version = "1.8.0"
 description = "Optional static typing for Python"
@@ -1089,4 +1103,4 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "16c169bc25c6f705fd17e263a4263cab494bed39a017370448a38c96e14fc861"
+content-hash = "9c717996090aafe14cfaaa1440cc67e7901b80810a3ff040c7dbcc739cffdf07"

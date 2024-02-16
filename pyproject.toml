@@ -14,6 +14,7 @@ scipy = "^1.11.4"
 pymicroemg = {path = "analysis_software/pymicroemg", develop = true}
 intanutil = {path = "analysis_software/intanutil", develop = true}
 pyside6 = "^6.6.1"
+microemggui = {path = "analysis_software/microemggui", develop = true}
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.12.1"
