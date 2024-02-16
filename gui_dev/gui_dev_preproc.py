@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QSpinBox,
     QGridLayout,
     QHBoxLayout,
+    QVBoxLayout,
     QSpacerItem,
     QSizePolicy,
     QLineEdit,
@@ -36,6 +37,7 @@ def fix_widget_size(my_widget, w, h):
     if h is not None:
         w_sz.setHeight(h)
     my_widget.setMinimumSize(w_sz)
+    my_widget.setMaximumSize(w_sz)
 
     # size policy = fixed so does not expand if widget size changes
     my_widget.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
@@ -110,21 +112,20 @@ class FilterSettingsWidget(QWidget):
         self.filter_radio = RadioButtonMain("Filter", self, h=spacing_settings.h_major)
         layout.addWidget(self.filter_radio, row_idx, col_idx, row_span, col_span)
 
-        # horizontal offset for widgets specifying filter settings
-        col_idx += col_span - 2
+        # Vertical layout for filter type, frequencies, and order
+        layout_spec = QVBoxLayout()
 
         # input for filter type from combobox (dropdown), with label above
-        self.type_label = InputLabel(" Type", self, h=spacing_settings.h_minor)
+        self.type_label = InputLabel("Type", self, h=spacing_settings.h_minor)
         self.type_combobox = ComboBoxSmall(self, w=100, h=spacing_settings.h_minor)
         filter_types = ["Lowpass", "Highpass", "Bandpass"]
         self.type_combobox.addItems(filter_types)
-        row_idx += 1
-        layout.addWidget(self.type_label, row_idx, col_idx, row_span, col_span)
-        row_idx += 1
-        layout.addWidget(self.type_combobox, row_idx, col_idx, row_span, col_span)
+        layout_spec.addWidget(self.type_label)
+        layout_spec.addWidget(self.type_combobox)
 
         # input for cutoff frequencies
         # input will be provided in horizontal layout
+        # TODO: add validator (QDoubleValidator?)
         self.freq_label = InputLabel(
             "Cutoff frequencies", self, h=spacing_settings.h_minor
         )
@@ -137,14 +138,13 @@ class FilterSettingsWidget(QWidget):
         ]
         for w in self.freq_widgets:
             layout_freq.addWidget(w)
+        layout_freq.setContentsMargins(0, 0, 0, 0)
         self.freq_widget = QWidget()
         self.freq_widget.setLayout(layout_freq)
 
-        # add to main grid layout
-        row_idx += 1
-        layout.addWidget(self.freq_label, row_idx, col_idx, row_span, col_span)
-        row_idx += 1
-        layout.addWidget(self.freq_widget, row_idx, col_idx, row_span, col_span)
+        # add to main layout
+        layout_spec.addWidget(self.freq_label)
+        layout_spec.addWidget(self.freq_widget)
 
         # Input for filter order
         self.order_label = InputLabel("Order", self, h=spacing_settings.h_minor)
@@ -152,15 +152,23 @@ class FilterSettingsWidget(QWidget):
         self.order_spinbox.setRange(2, 8)
         self.order_spinbox.setSingleStep(2)
         self.order_spinbox.lineEdit().setReadOnly(True)
+        layout_spec.addWidget(self.order_label)
+        layout_spec.addWidget(self.order_spinbox)
+
+        self.filter_spec_widget = QWidget()
+        self.filter_spec_widget.setLayout(layout_spec)
+
+        # Add to grid layout
+
+        # horizontal offset for widgets specifying filter settings
+        col_idx += col_span - 2
         row_idx += 1
-        layout.addWidget(self.order_label, row_idx, col_idx, row_span, col_span)
-        row_idx += 1
-        layout.addWidget(self.order_spinbox, row_idx, col_idx, row_span, col_span)
+        layout.addWidget(self.filter_spec_widget, row_idx, col_idx, row_span, col_span)
 
         # Spacer at end so extra space is added below other widgets if window resized
         self.end_space = ExpandingSpacer()
         row_idx += 1
-        layout.addItem(self.end_space, row_idx, col_idx)
+        layout.addItem(self.end_space, row_idx, 0)
 
         # set layout
         self.setLayout(layout)
