@@ -1,5 +1,5 @@
 """
-Widgets for specifying filter settings during preprocessing step
+Widgets for specifying preprocessing settings
 """
 from PySide6.QtWidgets import (
     QWidget,
@@ -82,7 +82,7 @@ class FilterFreqWidget(QWidget):
             InputInlineLabel("Hz", self),
         ]
 
-        # Horitzontal layout for frequency input
+        # Horizontal layout for frequency input
         layout_input = QHBoxLayout()
         for w in self.freq_input_widgets:
             layout_input.addWidget(w)
@@ -98,16 +98,10 @@ class FilterFreqWidget(QWidget):
         self.setLayout(layout)
 
 
-class FilterSettingsWidget(QWidget):
-    def __init__(self):
-        super().__init__()
-
-        # Set up layout for entire widget
-        layout = QVBoxLayout()
-
-        # Add radio for specifying whether to filter
-        self.filter_radio = RadioButtonMain("Filter", self)
-        layout.addWidget(self.filter_radio)
+class FilterSpecWidget(QWidget):
+    # Widget for all filter specifications
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         # Widgets for filter specifications
         self.filter_spec_widgets = [
@@ -117,19 +111,38 @@ class FilterSettingsWidget(QWidget):
         ]
 
         # Add to filter specifications to vertical layout
-        layout_spec = QVBoxLayout()
+        layout = QVBoxLayout()
         for w in self.filter_spec_widgets:
-            layout_spec.addWidget(w)
-        layout_spec.setContentsMargins(50, 0, 0, 0)  # add padding to left
-        self.filter_spec = QWidget(self)
-        self.filter_spec.setLayout(layout_spec)
+            layout.addWidget(w)
+        layout.setContentsMargins(50, 0, 0, 0)  # add padding to left
+        self.setLayout(layout)
 
-        # Add filter specifications to overall layout
-        layout.addWidget(self.filter_spec)
+
+class PreprocSettingsWidget(QWidget):
+    # Widget for all preprocessing settings
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Radio button for selecting mains noise removal
+        mains_radio = RadioButtonMain("Remove mains noise (50 Hz)", self)
+
+        # Radio button for selecting filter
+        filter_radio = RadioButtonMain("Filter", self)
+
+        # Filter settings
+        filter_settings = FilterSpecWidget(self)
+
+        # All widgets
+        self.preproc_widgets = [mains_radio, filter_radio, filter_settings]
+
+        # Create layout and add widgets
+        layout = QVBoxLayout()
+        for w in self.preproc_widgets:
+            layout.addWidget(w)
+        layout.setContentsMargins(0, 0, 0, 0)
 
         # Spacer at end so extra space is added below other widgets if window resized
-        self.end_space = ExpandingSpacer()
-        layout.addItem(self.end_space)
+        end_space = ExpandingSpacer()
+        layout.addItem(end_space)
 
-        # set layout
         self.setLayout(layout)

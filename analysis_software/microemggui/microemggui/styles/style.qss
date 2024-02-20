@@ -3,14 +3,16 @@
 RadioButtonMain {
     font-weight: bold;
     font-size: 14pt;
+    min-height: 50;
+    max-height: 50;
 }
 
 /* Settings input widgets */
 
 InputLabel {
     qproperty-alignment: 'AlignBottom | AlignLeft';
-    min-height: 25;
-    max-height: 25;
+    min-height: 20;
+    max-height: 20;
 }
 
 InputInlineLabel {
@@ -30,3 +32,4 @@ InputLineEdit {
     min-width: 100;
     max-width: 100;
 }
+

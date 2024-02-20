@@ -14,16 +14,16 @@ from PySide6.QtCore import QFile
 
 import microemggui
 
-from microemggui.widgets.preproc.filter_settings import FilterSettingsWidget
+from microemggui.widgets.preproc.preproc_settings import PreprocSettingsWidget
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.filter_settings_widget = FilterSettingsWidget()
+        self.widget = PreprocSettingsWidget()
 
-        self.setCentralWidget(self.filter_settings_widget)
+        self.setCentralWidget(self.widget)
 
 
 app = QApplication(sys.argv)
