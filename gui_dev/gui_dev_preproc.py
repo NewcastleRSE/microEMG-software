@@ -7,26 +7,37 @@ Created on Thu Feb 15 10:10:56 2024
 """
 
 import sys
+import os
 
 from PySide6.QtWidgets import QApplication, QMainWindow
+from PySide6.QtCore import QFile
+
+import microemggui
 
 from microemggui.widgets.preproc.filter_settings import FilterSettingsWidget
-from microemggui.formatting import StyleSettings
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, style_settings):
+    def __init__(self):
         super().__init__()
 
-        self.filter_settings_widget = FilterSettingsWidget(style_settings)
+        self.filter_settings_widget = FilterSettingsWidget()
 
         self.setCentralWidget(self.filter_settings_widget)
 
 
-style_settings = StyleSettings(h_major=40, h_minor=20)
-
 app = QApplication(sys.argv)
-window = MainWindow(style_settings=style_settings)
+window = MainWindow()
 window.show()
+
+# style
+style_dir = microemggui.__file__
+style_dir = style_dir[:-11]  # remove init
+style_path = os.path.join(style_dir, "styles", "style.qss")
+gui_style_file = QFile(style_path)
+gui_style_file.open(QFile.OpenModeFlag.ReadOnly)
+gui_style = gui_style_file.readAll().toStdString()
+app.setStyleSheet(gui_style)
+
 
 app.exec()

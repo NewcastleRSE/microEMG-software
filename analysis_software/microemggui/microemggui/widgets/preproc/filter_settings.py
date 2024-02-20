@@ -14,23 +14,22 @@ from microemggui.widgets.base import (
     InputComboBox,
     InputSpinBox,
     InputLineEdit,
-    InlineLabel,
+    InputInlineLabel,
     ExpandingSpacer,
 )
 
 
 class FilterTypeWidget(QWidget):
     # Widget for specifying filter type from labelled combobox
-    def __init__(self, *args, style_settings, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # Label for filter type
-        self.type_label = InputLabel("Type", self, h=style_settings.h_major)
+        self.type_label = InputLabel("Type", self)
 
         # Input for filter type
-        self.type_combobox = InputComboBox(
-            self, w=style_settings.w3, h=style_settings.h_minor
-        )
+        self.type_combobox = InputComboBox(self)
+
         filter_types = ["Lowpass", "Highpass", "Bandpass"]
         self.type_combobox.addItems(filter_types)
 
@@ -44,16 +43,14 @@ class FilterTypeWidget(QWidget):
 
 class FilterOrderWidget(QWidget):
     # Widget for specifying the filter order from a spinbox
-    def __init__(self, *args, style_settings, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # Label
-        self.order_label = InputLabel("Order", self, h=style_settings.h_major)
+        self.order_label = InputLabel("Order", self)
 
         # Spinbox with range from 2 to 8, in steps of 2
-        self.order_spinbox = InputSpinBox(
-            self, w=style_settings.w1, h=style_settings.h_minor
-        )
+        self.order_spinbox = InputSpinBox(self)
         self.order_spinbox.setRange(2, 8)
         self.order_spinbox.setSingleStep(2)
 
@@ -70,23 +67,20 @@ class FilterOrderWidget(QWidget):
 
 class FilterFreqWidget(QWidget):
     # Widget for specifying the filter frequencies from input boxes
-    def __init__(self, *args, style_settings, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # TODO: add input validator (QDoubleValidator?)
-        # TODO: amend qt widget classes for spacing/styling
 
         # Label
-        self.freq_label = InputLabel(
-            "Cutoff frequencies", self, h=style_settings.h_major
-        )
+        self.freq_label = InputLabel("Cutoff frequencies", self)
 
         # Widgets for specifying frequencies
         self.freq_input_widgets = [
-            InputLineEdit(self, w=style_settings.w2, h=style_settings.h_minor),
-            InlineLabel("to", self),
-            InputLineEdit(self, w=style_settings.w2, h=style_settings.h_minor),
-            InlineLabel("Hz", self),
+            InputLineEdit(self),
+            InputInlineLabel("to", self),
+            InputLineEdit(self),
+            InputInlineLabel("Hz", self),
         ]
 
         # Horitzontal layout for frequency input
@@ -106,7 +100,7 @@ class FilterFreqWidget(QWidget):
 
 
 class FilterSettingsWidget(QWidget):
-    def __init__(self, style_settings):
+    def __init__(self):
         super().__init__()
 
         # set up layout
@@ -118,14 +112,14 @@ class FilterSettingsWidget(QWidget):
         col_span = 4
 
         # Add radio for specifying whether to filter
-        self.filter_radio = RadioButtonMain("Filter", self, h=style_settings.h_major)
+        self.filter_radio = RadioButtonMain("Filter", self)
         layout.addWidget(self.filter_radio, row_idx, col_idx, row_span, col_span)
 
         # Filter specifications
         self.filter_spec_widgets = [
-            FilterTypeWidget(self, style_settings=style_settings),  # type
-            FilterFreqWidget(self, style_settings=style_settings),  # frequencies
-            FilterOrderWidget(self, style_settings=style_settings),  # order
+            FilterTypeWidget(self),  # type
+            FilterFreqWidget(self),  # frequencies
+            FilterOrderWidget(self),  # order
         ]
 
         # Add to filter specifications to vertical layout

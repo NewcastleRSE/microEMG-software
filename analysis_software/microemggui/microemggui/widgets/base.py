@@ -1,8 +1,8 @@
 """
 General widget classes to use across GUI.
-Modify behaviour of main Qt widget classes.
+Either modify behaviour of main Qt widget classes or are used to refer to specific
+groups of widgets in the style sheet.
 """
-import microemggui.widget_helpers as meg_help
 
 from PySide6.QtWidgets import (
     QRadioButton,
@@ -14,66 +14,47 @@ from PySide6.QtWidgets import (
     QSizePolicy,
 )
 
-from PySide6.QtCore import Qt
-
 
 class RadioButtonMain(QRadioButton):
-    # Radio button, main text (start of section)
-    # Class used to set spacing and styling of this widget across GUI
-    def __init__(self, *args, w=None, h=None, **kwargs):
+    # Radio button, main text (start of settings section)
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Fix size to specified width and height
-        meg_help.fix_widget_size(self, w, h)
+
+# --- Settings input ---
 
 
 class InputLabel(QLabel):
     # Label for input field (e.g., combobox)
-    # Class used to set spacing and styling of this widget across GUI
-    def __init__(self, *args, w=None, h=None, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Fix size to specified width and height
-        meg_help.fix_widget_size(self, w, h)
 
-        # Alignment
-        self.setAlignment(Qt.AlignBottom)
-
-
-class InlineLabel(QLabel):
+class InputInlineLabel(QLabel):
     # Label for text that is inline with other widgets
-    # TODO: add styling input and apply styling
-    def __init__(self, *args, w=None, h=None, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
 
 class InputComboBox(QComboBox):
-    # Combobox with fixed size
-    def __init__(self, *args, w=None, h=None, **kwargs):
+    # Combobox for settings input
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        # Fix size to specified width and height
-        meg_help.fix_widget_size(self, w, h)
 
 
 class InputSpinBox(QSpinBox):
-    # Spinbox with fixed size
-
-    def __init__(self, *args, w=None, h=None, **kwargs):
+    # Spinbox for settings input
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        # Fix size to specified width and height
-        meg_help.fix_widget_size(self, w, h)
 
 
 class InputLineEdit(QLineEdit):
-    # LineEdit with fixed size
-
-    def __init__(self, *args, w=None, h=None, **kwargs):
+    # LineEdit for settings input
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Fix size to specified width and height
-        meg_help.fix_widget_size(self, w, h)
+
+# --- Spacers ---
 
 
 class ExpandingSpacer(QSpacerItem):

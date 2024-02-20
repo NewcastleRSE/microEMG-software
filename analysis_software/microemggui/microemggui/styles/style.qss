@@ -1,0 +1,33 @@
+
+/* Settings input widgets - main section */
+
+RadioButtonMain {
+    font-weight: bold;
+    font-size: 14pt;
+}
+
+/* Settings input widgets */
+
+InputLabel {
+    qproperty-alignment: 'AlignBottom | AlignLeft';
+    min-height: 25;
+    max-height: 25;
+}
+
+InputInlineLabel {
+}
+
+InputComboBox {
+    min-width: 100;
+    max-width: 100;
+}
+
+InputSpinBox {
+    min-width: 100;
+    max-width: 100;
+}
+
+InputLineEdit {
+    min-width: 100;
+    max-width: 100;
+}
