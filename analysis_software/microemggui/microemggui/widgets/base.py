@@ -4,7 +4,17 @@ Modify behaviour of main Qt widget classes.
 """
 import microemggui.widget_helpers as meg_help
 
-from PySide6.QtWidgets import QRadioButton, QComboBox, QLabel, QSpacerItem, QSizePolicy
+from PySide6.QtWidgets import (
+    QRadioButton,
+    QComboBox,
+    QLabel,
+    QSpinBox,
+    QLineEdit,
+    QSpacerItem,
+    QSizePolicy,
+)
+
+from PySide6.QtCore import Qt
 
 
 class RadioButtonMain(QRadioButton):
@@ -26,8 +36,39 @@ class InputLabel(QLabel):
         # Fix size to specified width and height
         meg_help.fix_widget_size(self, w, h)
 
+        # Alignment
+        self.setAlignment(Qt.AlignBottom)
+
+
+class InlineLabel(QLabel):
+    # Label for text that is inline with other widgets
+    # TODO: add styling input and apply styling
+    def __init__(self, *args, w=None, h=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
 
 class InputComboBox(QComboBox):
+    # Combobox with fixed size
+    def __init__(self, *args, w=None, h=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Fix size to specified width and height
+        meg_help.fix_widget_size(self, w, h)
+
+
+class InputSpinBox(QSpinBox):
+    # Spinbox with fixed size
+
+    def __init__(self, *args, w=None, h=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Fix size to specified width and height
+        meg_help.fix_widget_size(self, w, h)
+
+
+class InputLineEdit(QLineEdit):
+    # LineEdit with fixed size
+
     def __init__(self, *args, w=None, h=None, **kwargs):
         super().__init__(*args, **kwargs)
 

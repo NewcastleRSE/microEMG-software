@@ -11,22 +11,22 @@ import sys
 from PySide6.QtWidgets import QApplication, QMainWindow
 
 from microemggui.widgets.preproc.filter_settings import FilterSettingsWidget
-from microemggui.formatting import SpacingSettings
+from microemggui.formatting import StyleSettings
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, spacing_settings):
+    def __init__(self, style_settings):
         super().__init__()
 
-        self.filter_settings_widget = FilterSettingsWidget(spacing_settings)
+        self.filter_settings_widget = FilterSettingsWidget(style_settings)
 
         self.setCentralWidget(self.filter_settings_widget)
 
 
-spacing_settings = SpacingSettings(h_major=50, h_minor=20)
+style_settings = StyleSettings(h_major=40, h_minor=20)
 
 app = QApplication(sys.argv)
-window = MainWindow(spacing_settings=spacing_settings)
+window = MainWindow(style_settings=style_settings)
 window.show()
 
 app.exec()
