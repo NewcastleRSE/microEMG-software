@@ -3,7 +3,6 @@ Widgets for specifying filter settings during preprocessing step
 """
 from PySide6.QtWidgets import (
     QWidget,
-    QGridLayout,
     QHBoxLayout,
     QVBoxLayout,
 )
@@ -103,19 +102,14 @@ class FilterSettingsWidget(QWidget):
     def __init__(self):
         super().__init__()
 
-        # set up layout
-        layout = QGridLayout()
-        row_idx = 0
-        col_idx = 0
-
-        row_span = 1
-        col_span = 4
+        # Set up layout for entire widget
+        layout = QVBoxLayout()
 
         # Add radio for specifying whether to filter
         self.filter_radio = RadioButtonMain("Filter", self)
-        layout.addWidget(self.filter_radio, row_idx, col_idx, row_span, col_span)
+        layout.addWidget(self.filter_radio)
 
-        # Filter specifications
+        # Widgets for filter specifications
         self.filter_spec_widgets = [
             FilterTypeWidget(self),  # type
             FilterFreqWidget(self),  # frequencies
@@ -126,19 +120,16 @@ class FilterSettingsWidget(QWidget):
         layout_spec = QVBoxLayout()
         for w in self.filter_spec_widgets:
             layout_spec.addWidget(w)
-        layout_spec.setContentsMargins(0, 0, 0, 0)
+        layout_spec.setContentsMargins(50, 0, 0, 0)  # add padding to left
         self.filter_spec = QWidget(self)
         self.filter_spec.setLayout(layout_spec)
 
-        # Add to filter specifications to grid layout (with horizontal offset)
-        col_idx += col_span - 2
-        row_idx += 1
-        layout.addWidget(self.filter_spec, row_idx, col_idx, row_span, col_span)
+        # Add filter specifications to overall layout
+        layout.addWidget(self.filter_spec)
 
         # Spacer at end so extra space is added below other widgets if window resized
         self.end_space = ExpandingSpacer()
-        row_idx += 1
-        layout.addItem(self.end_space, row_idx, 0)
+        layout.addItem(self.end_space)
 
         # set layout
         self.setLayout(layout)
