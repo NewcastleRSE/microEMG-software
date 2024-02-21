@@ -1,6 +1,6 @@
 /* Settings input widgets - main section */
 
-RadioButtonMain {
+CheckBoxMain {
     font-weight: bold;
     font-size: 14pt;
     min-height: 50;

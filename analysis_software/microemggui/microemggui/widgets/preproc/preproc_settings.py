@@ -1,14 +1,12 @@
 """
 Widgets for specifying preprocessing settings
 """
-from PySide6.QtWidgets import (
-    QWidget,
-    QHBoxLayout,
-    QVBoxLayout,
-)
+from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
+
+from PySide6.QtCore import Signal
 
 from microemggui.widgets.base import (
-    RadioButtonMain,
+    CheckBoxMain,
     InputLabel,
     InputComboBox,
     InputSpinBox,
@@ -16,6 +14,10 @@ from microemggui.widgets.base import (
     InputInlineLabel,
     ExpandingSpacer,
 )
+
+from microemggui.models.settings import EMGPreprocSettingsModel
+
+# --- Widgets for filter specification ---
 
 
 class FilterTypeWidget(QWidget):
@@ -118,22 +120,32 @@ class FilterSpecWidget(QWidget):
         self.setLayout(layout)
 
 
+# --- Widgets for all settings ---
+
+
 class PreprocSettingsWidget(QWidget):
     # Widget for all preprocessing settings
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
-        # Radio button for selecting mains noise removal
-        mains_radio = RadioButtonMain("Remove mains noise (50 Hz)", self)
+    # Custom signal to emit when data is updated - using to check data in main window
+    # TODO: potentially modify or remove
+    settings_changed = Signal()
 
-        # Radio button for selecting filter
-        filter_radio = RadioButtonMain("Filter", self)
+    def __init__(self, settings_model: EMGPreprocSettingsModel, parent=None):
+        super().__init__(parent)
+
+        # Create widget
+
+        # Checkbox for selecting mains noise removal
+        mains_checkbox = CheckBoxMain("Remove mains noise (50 Hz)", self)
+
+        # Checkbox for selecting filter
+        filter_checkbox = CheckBoxMain("Filter", self)
 
         # Filter settings
         filter_settings = FilterSpecWidget(self)
 
         # All widgets
-        self.preproc_widgets = [mains_radio, filter_radio, filter_settings]
+        self.preproc_widgets = [mains_checkbox, filter_checkbox, filter_settings]
 
         # Create layout and add widgets
         layout = QVBoxLayout()
@@ -146,3 +158,27 @@ class PreprocSettingsWidget(QWidget):
         layout.addItem(end_space)
 
         self.setLayout(layout)
+
+        # Connect to data
+
+        # Save settings as attribute
+        # TODO: may not need to be attribute
+        self.settings_model = settings_model
+
+        # Connect mains removal checkbox
+        mains_checkbox.toggled.connect(self.settings_model.mains_checkbox_toggled)
+
+        # Connect filter checkbox
+        filter_checkbox.toggled.connect(self.settings_model.filter_checkbox_toggled)
+
+        # TODO: Connect filter specifications
+
+        # Temporary checks (whether settings data is updated in main window)
+        # TODO: remove or incorporate in logger
+        mains_checkbox.toggled.connect(self.settings_changed_func)
+        filter_checkbox.toggled.connect(self.settings_changed_func)
+
+    def settings_changed_func(self):
+        # Currently used to check data in main window
+        # TODO: potentially modify or remove
+        self.settings_changed.emit()

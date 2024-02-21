@@ -5,7 +5,7 @@ groups of widgets in the style sheet.
 """
 
 from PySide6.QtWidgets import (
-    QRadioButton,
+    QCheckBox,
     QComboBox,
     QLabel,
     QSpinBox,
@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
 )
 
 
-class RadioButtonMain(QRadioButton):
+class CheckBoxMain(QCheckBox):
     # Radio button, main text (start of settings section)
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
