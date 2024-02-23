@@ -145,11 +145,15 @@ class PreprocSettingsWidget(QWidget):
         filter_settings = FilterSpecWidget(self)
 
         # All widgets
-        self.preproc_widgets = [mains_checkbox, filter_checkbox, filter_settings]
+        self.preproc_widgets = {
+            "mains_checkbox": mains_checkbox,
+            "filter_checkbox": filter_checkbox,
+            "filter_settings": filter_settings,
+        }
 
         # Create layout and add widgets
         layout = QVBoxLayout()
-        for w in self.preproc_widgets:
+        for _, w in self.preproc_widgets.items():
             layout.addWidget(w)
         layout.setContentsMargins(0, 0, 0, 0)
 
@@ -165,6 +169,9 @@ class PreprocSettingsWidget(QWidget):
         # TODO: may not need to be attribute
         self.settings_model = settings_model
 
+        # Set inputs to match provided preprocessing settings
+        self.match_input_to_settings()
+
         # Connect mains removal checkbox
         mains_checkbox.toggled.connect(self.settings_model.mains_checkbox_toggled)
 
@@ -177,6 +184,16 @@ class PreprocSettingsWidget(QWidget):
         # TODO: remove or incorporate in logger
         mains_checkbox.toggled.connect(self.settings_changed_func)
         filter_checkbox.toggled.connect(self.settings_changed_func)
+
+    def match_input_to_settings(self):
+        # Set widgets to match provided preprocessing settings
+        settings = self.settings_model.settings
+
+        # Mains noise removal
+        self.preproc_widgets["mains_checkbox"].setChecked(settings.remove_mains)
+
+        # Filter
+        self.preproc_widgets["filter_checkbox"].setChecked(settings.butterworth_filter)
 
     def settings_changed_func(self):
         # Currently used to check data in main window

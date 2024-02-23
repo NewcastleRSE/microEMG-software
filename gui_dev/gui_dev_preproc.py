@@ -25,6 +25,9 @@ class MainWindow(QMainWindow):
 
         # Create preprocessing settings and model - will eventually add via method
         settings = EMGPreprocSettings()
+        settings.add_remove_mains()  # Remain mains noise
+        settings.add_butterworth_filter()
+
         self.settings_model = EMGPreprocSettingsModel(settings)
         print("INITIAL SETTINGS")
         self.settings_model.print_settings()
