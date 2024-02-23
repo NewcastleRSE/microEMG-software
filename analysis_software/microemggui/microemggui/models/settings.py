@@ -6,8 +6,6 @@ interface to pymicroemg data classes for settings:
     - EMGPreprocSettings
 """
 
-import json
-
 from pymicroemg.emg_preproc_settings import EMGPreprocSettings
 
 
@@ -40,7 +38,7 @@ class EMGPreprocSettingsModel:
         self.settings.butterworth_filter = checked
         print(f"updated filter setting: {self.settings.butterworth_filter}")
 
-    def print_settings(self):
-        # Print settings - currently used to verify data updates
-        print(json.dumps(vars(self.settings), indent=4))
-        print("\n")
+    def filter_type_text_changed(self, text):
+        # Slot for filter type combobox
+
+        self.settings.butterworth_filter_settings["filter_type"] = text

@@ -5,6 +5,7 @@ A Class, EMGPreprocSettings, for configuring and storing EMG preprocessing
 settings (applied to EMGData)
 
 """
+import json
 
 
 class EMGPreprocSettings:
@@ -39,6 +40,20 @@ class EMGPreprocSettings:
         self.butterworth_filter = False
         self.butterworth_filter_settings = {}
 
+    @staticmethod
+    def _get_filter_types_allowed() -> list[str]:
+        """
+        Get list of allowed filter types
+
+        Returns
+        -------
+        list[str]
+            List of filter types that are allowed to be used for filtering.
+
+        """
+        filter_types_allowed = ["lowpass", "highpass", "bandpass"]
+        return filter_types_allowed
+
     def add_butterworth_filter(
         self,
         cutoff_freq: None | list[float] | float = None,
@@ -58,13 +73,14 @@ class EMGPreprocSettings:
         order : int, optional
             Filter order; must be even. The default is 6.
         filter_type : str, optional
-            Type of filter - see scipy.signal.butter for options. The default is
-            "bandpass".
+            Type of filter - must be "low", "lowpass", "high", "highpass", or
+            "bandpass". The default is "bandpass".
 
         Raises
         ------
         ValueError
             Raised if filter order is not even.
+            Raised if filter type is not one of the allowed types.
         Exception
             Raised if cutoff frequency is not provided when the filter type is not
             bandpass.
@@ -77,6 +93,18 @@ class EMGPreprocSettings:
 
         if order % 2 != 0:
             raise ValueError("The filter order must be an even integer.")
+
+        # Check and format filter type string
+        filter_type = filter_type.lower()
+        if filter_type == "low" or filter_type == "high":
+            filter_type = filter_type + "pass"
+
+        filter_types_allowed = self._get_filter_types_allowed()
+        if filter_type not in filter_types_allowed:
+            raise ValueError(
+                "The filter type must be one of the following: "
+                f"{filter_types_allowed}"
+            )
 
         # Default cutoff frequencies - only for bandpass filter
         if cutoff_freq is None:
@@ -95,6 +123,20 @@ class EMGPreprocSettings:
             "order": order,
             "filter_type": filter_type,
         }
+
+    def remove_butterworth_filter(self):
+        """
+        Sets "butterworth_filter" to False (filter will not be applied) and removes
+        corresponding parameters (in butterworth_filter_settings dictionary) from the
+        preprocessing settings.
+
+        Returns
+        -------
+        None.
+
+        """
+        self.butterworth_filter = False
+        self.butterworth_filter_settings = {}
 
     def add_remove_mains(self, freq_remove: int = 50, n_win_avg: int = 51):
         """
@@ -147,3 +189,7 @@ class EMGPreprocSettings:
         """
         self.remove_mains = False
         self.remove_mains_settings = {}
+
+    def print_settings(self):
+        print(json.dumps(vars(self), indent=4))
+        print("\n")

@@ -22,8 +22,8 @@ from microemggui.models.settings import EMGPreprocSettingsModel
 
 class FilterTypeWidget(QWidget):
     # Widget for specifying filter type from labelled combobox
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, filter_types, parent=None):
+        super().__init__(parent)
 
         # Label for filter type
         self.type_label = InputLabel("Type", self)
@@ -31,7 +31,6 @@ class FilterTypeWidget(QWidget):
         # Input for filter type
         self.type_combobox = InputComboBox(self)
 
-        filter_types = ["Lowpass", "Highpass", "Bandpass"]
         self.type_combobox.addItems(filter_types)
 
         # Add to layout
@@ -102,12 +101,12 @@ class FilterFreqWidget(QWidget):
 
 class FilterSpecWidget(QWidget):
     # Widget for all filter specifications
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, filter_types, parent=None):
+        super().__init__(parent)
 
         # Widgets for filter specifications
         self.widgets = {
-            "filter_type": FilterTypeWidget(self),  # type
+            "filter_type": FilterTypeWidget(filter_types, parent=self),  # type
             "filter_freq": FilterFreqWidget(self),  # frequencies
             "filter_order": FilterOrderWidget(self),  # order
         }
@@ -120,7 +119,7 @@ class FilterSpecWidget(QWidget):
         self.setLayout(layout)
 
 
-# --- Widgets for all settings ---
+# --- Widget for all settings ---
 
 
 class PreprocSettingsWidget(QWidget):
@@ -133,6 +132,9 @@ class PreprocSettingsWidget(QWidget):
     def __init__(self, settings_model: EMGPreprocSettingsModel, parent=None):
         super().__init__(parent)
 
+        # Settings interface
+        self.settings_model = settings_model
+
         # Create widget
 
         # Checkbox for selecting mains noise removal
@@ -142,7 +144,9 @@ class PreprocSettingsWidget(QWidget):
         filter_checkbox = CheckBoxMain("Filter", self)
 
         # Filter settings
-        filter_spec = FilterSpecWidget(self)
+        filter_spec = FilterSpecWidget(
+            settings_model.settings._get_filter_types_allowed(), parent=self
+        )
 
         # All widgets
         self.widgets = {
@@ -165,23 +169,28 @@ class PreprocSettingsWidget(QWidget):
 
         # Connect to data
 
-        # Settings interface
-        self.settings_model = settings_model
-
         # Set inputs to match provided preprocessing settings
         self.match_input_to_settings()
 
         # Connections to interface
         mains_checkbox.toggled.connect(self.settings_model.mains_checkbox_toggled)
         filter_checkbox.toggled.connect(self.settings_model.filter_checkbox_toggled)
+        filter_spec.widgets["filter_type"].type_combobox.currentTextChanged.connect(
+            self.settings_model.filter_type_text_changed
+        )
 
-        # TODO: Connect filter specifications
+        # TODO: ...
+        # Connect remaining filter  (cutoff freq and order)
+        # Move connections to corresponding widget classes where possible
+        # Hide 2nd cutoff freq if filter type is not bandpass
 
         # Temporary checks (whether settings data is updated in main window)
         # TODO: remove or incorporate in logger
         mains_checkbox.toggled.connect(self.settings_changed_func)
         filter_checkbox.toggled.connect(self.settings_changed_func)
-
+        filter_spec.widgets["filter_type"].type_combobox.currentTextChanged.connect(
+            self.settings_changed_func
+        )
         # Connect editable property of filter specifications to filter checkbox
         filter_checkbox.toggled.connect(self.change_filter_spec_visibility)
 
@@ -189,11 +198,17 @@ class PreprocSettingsWidget(QWidget):
         # Set widgets to match provided preprocessing settings
         settings = self.settings_model.settings
 
-        # Mains noise removal
+        # Mains noise removal checkbox
         self.widgets["mains_checkbox"].setChecked(settings.remove_mains)
 
-        # Filter
+        # Filter checkbox
         self.widgets["filter_checkbox"].setChecked(settings.butterworth_filter)
+
+        # Filter specifications checkbox
+        filter_spec_w = self.widgets["filter_spec"].widgets
+        filter_spec_w["filter_type"].type_combobox.setCurrentText(
+            settings.butterworth_filter_settings["filter_type"]
+        )
 
     def change_filter_spec_visibility(self, checked):
         # Show or hide filter specification widgets based on filter checkbox state

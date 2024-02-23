@@ -18,6 +18,15 @@ from microemggui.widgets.preproc.preproc_settings import PreprocSettingsWidget
 from microemggui.models.settings import EMGPreprocSettingsModel
 from pymicroemg.emg_preproc_settings import EMGPreprocSettings
 
+# %%
+
+settings = EMGPreprocSettings()
+settings.add_butterworth_filter()
+
+settings.print_settings()
+
+# %%
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -30,7 +39,7 @@ class MainWindow(QMainWindow):
 
         self.settings_model = EMGPreprocSettingsModel(settings)
         print("INITIAL SETTINGS")
-        self.settings_model.print_settings()
+        self.settings_model.settings.print_settings()
 
         # Create preprocessing settings widget
         self.widget = PreprocSettingsWidget(self.settings_model, parent=self)
@@ -42,7 +51,7 @@ class MainWindow(QMainWindow):
     def main_window_settings(self):
         # slot for verifying settings update
         print("MAIN WINDOW UPDATED SETTINGS")
-        self.settings_model.print_settings()
+        self.settings_model.settings.print_settings()
 
 
 app = QApplication(sys.argv)
