@@ -106,15 +106,15 @@ class FilterSpecWidget(QWidget):
         super().__init__(*args, **kwargs)
 
         # Widgets for filter specifications
-        self.filter_spec_widgets = [
-            FilterTypeWidget(self),  # type
-            FilterFreqWidget(self),  # frequencies
-            FilterOrderWidget(self),  # order
-        ]
+        self.widgets = {
+            "filter_type": FilterTypeWidget(self),  # type
+            "filter_freq": FilterFreqWidget(self),  # frequencies
+            "filter_order": FilterOrderWidget(self),  # order
+        }
 
         # Add to filter specifications to vertical layout
         layout = QVBoxLayout()
-        for w in self.filter_spec_widgets:
+        for _, w in self.widgets.items():
             layout.addWidget(w)
         layout.setContentsMargins(50, 0, 0, 0)  # add padding to left
         self.setLayout(layout)
@@ -142,18 +142,18 @@ class PreprocSettingsWidget(QWidget):
         filter_checkbox = CheckBoxMain("Filter", self)
 
         # Filter settings
-        filter_settings = FilterSpecWidget(self)
+        filter_spec = FilterSpecWidget(self)
 
         # All widgets
-        self.preproc_widgets = {
+        self.widgets = {
             "mains_checkbox": mains_checkbox,
             "filter_checkbox": filter_checkbox,
-            "filter_settings": filter_settings,
+            "filter_spec": filter_spec,
         }
 
         # Create layout and add widgets
         layout = QVBoxLayout()
-        for _, w in self.preproc_widgets.items():
+        for _, w in self.widgets.items():
             layout.addWidget(w)
         layout.setContentsMargins(0, 0, 0, 0)
 
@@ -165,17 +165,14 @@ class PreprocSettingsWidget(QWidget):
 
         # Connect to data
 
-        # Save settings as attribute
-        # TODO: may not need to be attribute
+        # Settings interface
         self.settings_model = settings_model
 
         # Set inputs to match provided preprocessing settings
         self.match_input_to_settings()
 
-        # Connect mains removal checkbox
+        # Connections to interface
         mains_checkbox.toggled.connect(self.settings_model.mains_checkbox_toggled)
-
-        # Connect filter checkbox
         filter_checkbox.toggled.connect(self.settings_model.filter_checkbox_toggled)
 
         # TODO: Connect filter specifications
@@ -185,15 +182,37 @@ class PreprocSettingsWidget(QWidget):
         mains_checkbox.toggled.connect(self.settings_changed_func)
         filter_checkbox.toggled.connect(self.settings_changed_func)
 
+        # Connect editable property of filter specifications to filter checkbox
+        filter_checkbox.toggled.connect(self.change_filter_spec_visibility)
+
     def match_input_to_settings(self):
         # Set widgets to match provided preprocessing settings
         settings = self.settings_model.settings
 
         # Mains noise removal
-        self.preproc_widgets["mains_checkbox"].setChecked(settings.remove_mains)
+        self.widgets["mains_checkbox"].setChecked(settings.remove_mains)
 
         # Filter
-        self.preproc_widgets["filter_checkbox"].setChecked(settings.butterworth_filter)
+        self.widgets["filter_checkbox"].setChecked(settings.butterworth_filter)
+
+    def change_filter_spec_visibility(self, checked):
+        # Show or hide filter specification widgets based on filter checkbox state
+
+        if checked:
+            self.show_filter_spec()
+        else:
+            self.hide_filter_spec()
+
+    def hide_filter_spec(self):
+        # Hides filter specification widgets
+        # Values do not change, but will not be used if filter checkbox is not checked
+        for _, w in self.widgets["filter_spec"].widgets.items():
+            w.hide()
+
+    def show_filter_spec(self):
+        # Shows filter specification widgets
+        for _, w in self.widgets["filter_spec"].widgets.items():
+            w.show()
 
     def settings_changed_func(self):
         # Currently used to check data in main window
