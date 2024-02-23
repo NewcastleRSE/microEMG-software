@@ -21,7 +21,16 @@ class EMGPreprocSettingsModel:
         # Slot for mains removal checkbox
 
         print(f"MAINS REMOVAL: Is checkbox checked? : {checked}")
-        self.settings.remove_mains = checked
+
+        # Uses add_remove_mains and remove_remove_mains method so associated parameters
+        # are also updated.
+        # The associated parameters are fixed for the GUI, so do not need to be
+        # separately modified; add_remove_mains method sets the default parameters.
+        if checked:
+            self.settings.add_remove_mains()
+        else:
+            self.settings.remove_remove_mains()
+
         print(f"updated mains setting: {self.settings.remove_mains}")
 
     def filter_checkbox_toggled(self, checked):
