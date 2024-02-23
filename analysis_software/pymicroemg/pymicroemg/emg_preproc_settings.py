@@ -133,3 +133,17 @@ class EMGPreprocSettings:
             "freq_remove": freq_remove,
             "n_win_avg": n_win_avg,
         }
+
+    def remove_remove_mains(self):
+        """
+        Sets "remove mains" to False (mains noise will not be removed) and removes
+        corresponding parameters (in remove_mains_settings dictionary) from the
+        preprocessing settings.
+
+        Returns
+        -------
+        None.
+
+        """
+        self.remove_mains = False
+        self.remove_mains_settings = {}
