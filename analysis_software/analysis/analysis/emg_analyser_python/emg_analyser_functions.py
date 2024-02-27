@@ -1,27 +1,41 @@
 import numpy as np
+import scipy.signal as sig
 
+"""
+These functions are reimplemented in Python by Richard Howey
+2024, RSE team, Newcastle University
+Comment largely taken from original code.
+If a function had no comments originally then it may not in the translated version also.
+Original Comments below:
 
-def running_TEO(raw_signal, k=1):
-    # Reimplemented in Python by Richard Howey
-    # 2024, RSE team, Newcastle University
-    # Original Comments below:
-    #
-    #
-    # calcs the function x(n)^2 - x(n-k)*x(n+k)
-    #
-    # this is the standard energy operator (TEO)
-    # some people like to invent new names for old concepts and call this "NEO -> nonlinear energy operator"
-    #
-    # urut/aprl07
-    # Algorithm is based on the following paper :
-    # H. Sedghamiz and Daniele Santonocito,'Unsupervised Detection and
-    # Classification of Motor Unit Action Potentials in Intramuscular
-    # Electromyography Signals', The 5th IEEE International Conference on
-    # E-Health and Bioengineering - EHB 2015, At Iasi-Romania.
-    # Author:
-    # Hooman Sedghamiz
-    # June 2015, Linkoping University
-    # Please cite the paper if any of the methods were helpfull
+Algorithm is based on the following paper :
+H. Sedghamiz and Daniele Santonocito,'Unsupervised Detection and
+Classification of Motor Unit Action Potentials in Intramuscular
+Electromyography Signals', The 5th IEEE International Conference on
+E-Health and Bioengineering - EHB 2015, At Iasi-Romania.
+Author:
+Hooman Sedghamiz
+June 2015, Linkoping University
+Please cite the paper if any of the methods were helpful
+"""
+
+def running_TEO(raw_signal, k = 1):
+    """
+    calcs the function x(n)^2 - x(n-k)*x(n+k)
+
+    this is the standard energy operator (TEO)
+    some people like to invent new names for old concepts and call this "NEO -> nonlinear energy operator"
+
+    Parameters
+    ----------
+    raw_signal : 1D numpy NDArray[float]
+    k : integer
+
+    Returns
+    -------
+    1D numpy NDArray[float]
+
+    """
 
     # Final result
     return raw_signal**2 - np.concatenate(
@@ -29,48 +43,181 @@ def running_TEO(raw_signal, k=1):
     ) * np.concatenate((np.zeros(k), raw_signal[:-k]))
 
 
-def MTEO(rawSignal, ks, FiltFl=1):
-    # Reimplemented in Python by Richard Howey
-    # 2024, RSE team, Newcastle University
-    # Original Comments below:
-    #
-    # Implements the MTEO detector according to
-    # Note this is from => urut/april07
-    # Inputs:
-    # rawSignal: raw signal
-    # ks : levels of MTEO
-    # FiltFL : Filter Flag, set zero to avoid filtering
-    # Algorithm is based on the following paper :
-    # H. Sedghamiz and Daniele Santonocito,'Unsupervised Detection and
-    # Classification of Motor Unit Action Potentials in Intramuscular
-    # Electromyography Signals', The 5th IEEE International Conference on
-    # E-Health and Bioengineering - EHB 2015, At Iasi-Romania.
-    # Author:
-    # Hooman Sedghamiz
-    # June 2015, Linkoping University
-    # Please cite the paper if any of the methods were helpfull
+def MTEO(raw_signal, ks, FiltFl = True):
 
-    L = len(ks)
-    rawSignal = rawSignal[:]
-    tmp = np.zeros(L, len(rawSignal))
-    v = np.zeros(L, 1)
+    L = len(ks)    
+    tmp = np.zeros((L, len(raw_signal)))
+    v = np.zeros(L)
 
-    for i in range(len(ks)):
-        tmp[i, :] = running_TEO(rawSignal, ks(i))
+    for i in range(L):
+        tmp[i, :] = running_TEO(raw_signal, ks[i])
+        print(tmp[i, :])
         # Filter flag
         if FiltFl:
-            v[i] = np.var(tmp[i, :])
+            # ensure the sample variance is used and not the population variance by setting ddof = 1
+            v[i] = np.var(tmp[i, :], ddof=1) 
+          
             # apply the window
-            win = hamming(4 * ks(i) + 1, "symmetric")
-            tmp[i, :] = filtfilt(win, 1, tmp[i, :]) / (v[i])  # def was v unsquared
+            win = np.hamming(4 * ks[i] + 1)
+           
+            tmp[i, :] = sig.filtfilt(win, 1, tmp[i, :]) / (v[i])  # def was v unsquared
+            
 
-    if i > 1:
+    if L > 1:
         runTEO = sum(tmp)  # runTEO + tmp./v(i);
         # runTEO = max(tmp);
     else:
         runTEO = tmp[i, :]
 
     return runTEO, tmp
+'''
+def findspikes(template, sig, locs, Fs, TH):
+    """
+    Uses Psuedo Correlation for spike Classification
+    NOTE: USES PsC_Mex for fast clustering
+
+    Parameters
+    ----------
+    sig: 1D numpy NDArray[int]
+        signal
+    DTh : float 
+        Decision threshold
+    Fs : float
+        Sampling frequency
+    Returns
+    -------
+    TE : 1D numpy NDArray[float]
+        Detected Muaps 
+    """ 
+ 
+    loc = false(1,length(locs));
+    lag = round(0.0002*Fs); %lag (def was 0.0002)
+
+      for i = 1:length(locs)
+        tmp = sig(i,:);
+        [PsC_s,~] = PsC(template,tmp,lag);
+        if PsC_s >= TH
+             loc(i) = 1;
+             sig(i,:) = sig(i,:) - template;
+        end
+      end
+  
+      new_sig = sig;
+    return loc, new_sig
+'''
+
+def resolve_peaks(sig, DTh, Fs):
+    """
+    Resolves the spikes which are too close
+
+    Parameters
+    ----------
+    sig: 1D numpy NDArray[int]
+        signal
+    DTh : float 
+        Decision threshold
+    Fs : float
+        Sampling frequency
+    Returns
+    -------
+    TE : 1D numpy NDArray[float]
+        Detected Muaps 
+    """ 
+
+    sig = np.abs(sig)
+    # def 15 millisec min distance
+    min_pd = np.round(0.0015 * Fs)
+    tmp = np.zeros((1, len(sig)))
+    ind = (sig > DTh)
+    tmp[ind] = sig[ind]
+    TE, _ = sig.find_peaks(tmp, distance = min_pd)
+
+    return TE
+
+def MTH(MTEO, ks, L, Fs):
+    """
+    Multi-Scale Thresholding
+
+    this is the standard energy operator (TEO)
+    some people like to invent new names for old concepts and call this "NEO -> nonlinear energy operator"
+
+    Parameters
+    ----------
+    ks: 1D numpy NDArray[int]
+        levels of MTEO
+    L: int
+        is the factor that multiplies [cost of comission]/[cost of omission].
+        For most practical purposes -0.2 <= L <= 0.2. Larger L --> omissions
+        likely, smaller L --> false positives likely. For unsupervised
+        detection, the suggested value of L is close to 0.
+    Fs : float
+        Sampling frequency
+    Returns
+    -------
+    TE : 1D numpy NDArray[float]
+        Detected Muaps
+    DTh : float 
+        Decision threshold
+    """
+    
+    N, M = MTEO.shape
+    ks = ks*2
+
+    # define detection parameter
+    # log(Lcom/Lom), where the ratio is the maximum 
+    Lmax = -551.0520      
+    L = L * Lmax
+
+    for i in range(N):
+    
+        # take only coefficients that are independent (W(i) apart) for median
+        # standard deviation    
+        Sigmaj = np.median(np.abs( MTEO[i, ::np.round(ks[i])] - np.mean(MTEO[i, :] )))/0.6745
+        #hard threshold
+        Thj = Sigmaj * np.sqrt(2 * np.log(M))  
+        index = np.abs(MTEO[i, :]) > Thj
+        index = MTEO[i, index]
+    
+        if not np.empty(index):
+            # mean of the signal coefficients
+            Mj = np.mean(np.abs(index))
+            # prior of spikes
+            PS = len(index)/M
+            # prior of noise
+            PN = 1 - PS
+            # decision threshold
+            DTh = Mj/2 + (Sigmaj**2)/Mj * (L + np.log(PN/PS))
+            # make DTh>=0
+            DTh = np.abs(DTh) * (DTh >= 0)         
+            TE = resolve_peaks(MTEO[i, :], DTh, Fs)
+        else:
+        
+            Mj = Thj;
+            # assume at least one spike
+            PS = 1/M
+            PN = 1 - PS
+            # decision threshold
+            DTh = Mj/2 + Sigmaj^2/Mj * (L + np.log(PN/PS))
+            # make DTh>=0
+            DTh = np.abs(DTh)* (DTh >= 0)
+            ind  = np.abs(MTEO[i, :]) > DTh
+            ind = MTEO(i,ind)
+            if np.empty(ind):
+                # do nothing ct=[0];
+                TE = []
+            else:
+                # This function resolves too close peaks
+                TE = resolve_peaks(MTEO[i, :], DTh, Fs)
+                           
+    
+    # to enhance performance discard detections more than 700Hz period
+    if not np.empty(TE):
+        if (len(TE)/(np.shape(MTEO)[1]/Fs)) > 500 or (len(TE)/(np.shape(MTEO)[1]/Fs)) < 1:
+            TE = []
+            DTh = []            
+ 
+    return TE, DTh
+
 
 
 """
