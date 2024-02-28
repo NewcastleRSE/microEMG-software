@@ -1,5 +1,5 @@
 import numpy as np
-import scipy.signal as sig
+import scipy.signal as sg
 
 """
 These functions are reimplemented in Python by Richard Howey
@@ -44,7 +44,23 @@ def running_TEO(raw_signal, k = 1):
 
 
 def MTEO(raw_signal, ks, FiltFl = True):
-
+    """
+    
+    Parameters
+    ----------
+    raw_signal : 1D numpy NDArray[float]
+        signal
+    ks : 1D numpy NDArray[int]
+        levels of MTEO
+    FiltFl : boolean
+        Filter flag
+        
+    Returns
+    -------
+    runTEO : 1D numpy NDArray[float]
+    tmp : 1D numpy NDArray[float] 
+    """ 
+    
     L = len(ks)    
     tmp = np.zeros((L, len(raw_signal)))
     v = np.zeros(L)
@@ -60,7 +76,7 @@ def MTEO(raw_signal, ks, FiltFl = True):
             # apply the window
             win = np.hamming(4 * ks[i] + 1)
            
-            tmp[i, :] = sig.filtfilt(win, 1, tmp[i, :]) / (v[i])  # def was v unsquared
+            tmp[i, :] = sg.filtfilt(win, 1, tmp[i, :]) / (v[i])  # def was v unsquared
             
 
     if L > 1:
@@ -78,7 +94,7 @@ def findspikes(template, sig, locs, Fs, TH):
 
     Parameters
     ----------
-    sig: 1D numpy NDArray[int]
+    sig : 1D numpy NDArray[float]
         signal
     DTh : float 
         Decision threshold
@@ -90,15 +106,15 @@ def findspikes(template, sig, locs, Fs, TH):
         Detected Muaps 
     """ 
  
-    loc = false(1,length(locs));
+    loc = false(1,len(locs));
     lag = round(0.0002*Fs); %lag (def was 0.0002)
 
-      for i = 1:length(locs)
-        tmp = sig(i,:);
+      for i = 1:len(locs)
+        tmp = sig[i, :];
         [PsC_s,~] = PsC(template,tmp,lag);
         if PsC_s >= TH
              loc(i) = 1;
-             sig(i,:) = sig(i,:) - template;
+             sig[i, :] = sig[i, :] - template;
         end
       end
   
@@ -112,12 +128,13 @@ def resolve_peaks(sig, DTh, Fs):
 
     Parameters
     ----------
-    sig: 1D numpy NDArray[int]
+    sig : 1D numpy NDArray[int]
         signal
     DTh : float 
         Decision threshold
     Fs : float
         Sampling frequency
+        
     Returns
     -------
     TE : 1D numpy NDArray[float]
@@ -130,7 +147,7 @@ def resolve_peaks(sig, DTh, Fs):
     tmp = np.zeros((1, len(sig)))
     ind = (sig > DTh)
     tmp[ind] = sig[ind]
-    TE, _ = sig.find_peaks(tmp, distance = min_pd)
+    TE, _ = sg.find_peaks(tmp, distance = min_pd)
 
     return TE
 
@@ -143,15 +160,16 @@ def MTH(MTEO, ks, L, Fs):
 
     Parameters
     ----------
-    ks: 1D numpy NDArray[int]
+    ks : 1D numpy NDArray[int]
         levels of MTEO
-    L: int
+    L : int
         is the factor that multiplies [cost of comission]/[cost of omission].
         For most practical purposes -0.2 <= L <= 0.2. Larger L --> omissions
         likely, smaller L --> false positives likely. For unsupervised
         detection, the suggested value of L is close to 0.
     Fs : float
         Sampling frequency
+        
     Returns
     -------
     TE : 1D numpy NDArray[float]
@@ -218,335 +236,297 @@ def MTH(MTEO, ks, L, Fs):
  
     return TE, DTh
 
+def initialize(sig, Fs, Notch = False):
 
-
-"""
-function [Index,loc,final_temps] = TK_filter(sig,Fs,C,PsC_TH,init,wind,gr)
-## For the visual interface Run LEMG_Analyzer.m
-### Function for Spike detection and Classification
-# This is designed to filter out shallow peaks out of Action potentials
-# with the help of Multi-dimensional TK operator. The function has several
-# subroutins and uses template and label matching in order to cluster the
-# action potentials in the signal.
-## Inputs :
-# Sig: EMG signal Vector
-# Fs : Sampling Frequency (e.g. 2000 Hz)
-# C : Threshold for the Spike Detection
-# PsC_TH : Correlation Threshold, two templates are clustered in the same
-# basket if their correlation score goes higher than this value
-# init : Flag for filtering, leave it empty if you have no idea what this
-# is
-# wind: Windows length for storing the templates, it is an important factor
-# for the analysis, so leave it empty if you have no idea about it.
-# gr: Flags for plotting, set it 1 , if you want plots
-## Output:
-# Index :Index of MUAPs clustered
-# loc : location of the MUAPs in the signal
-# final_temps: All the clustered Muap templates
-## Algorithm is based on the following paper :
-# H. Sedghamiz and Daniele Santonocito,'Unsupervised Detection and
-# Classification of Motor Unit Action Potentials in Intramuscular 
-# Electromyography Signals', The 5th IEEE International Conference on
-# E-Health and Bioengineering - EHB 2015, At Iasi-Romania.
-## Author: 
-# Hooman Sedghamiz
-# June 2015, Linkoping University
-# Please cite the paper if any of the methods were helpfull
-## Begin
-
-# Input handling
-if nargin < 7
-    gr = 0;
- if nargin < 6
-     wind = 0.020;     #def 10 milisec
-  if nargin < 5 
-     init = 1;       #flag for computing filters or not
-   if nargin < 4
-     PsC_TH = 0.1;                       
-    if nargin < 3
-      C = 0.1;                           # Default 0.6*STD(0.8-1.2)
-    end
-   end
-  end
- end
-end
-## Initialzie and highpass filter
-# Detrends and band-pass filters the signal
-if init
-  [sig,Fs] = initialize(sig,Fs,1);
-end
-
-## upsampling for better accuracy in Classification
-
-upsample_flag = 0;
-if (Fs < 10000) && (Fs > 4000)
-   sig = resample(sig,5,1); # upsample by a factor of 3 
-   Fs = 5*Fs;
-   upsample_flag = 5;
-elseif (Fs > 10000) && (Fs < 15000)
-   sig = resample(sig,2,1); # upsample by a factor of 2 
-   Fs = 2*Fs;
-   upsample_flag = 2;
-elseif Fs <= 3000
-   sig = resample(sig,8,1);
-   Fs = 8*Fs;
-   upsample_flag = 8;
-end
-
-
-Index = [];
-loc = [];
-final_temps = struct;
-
-
-## MTEO
-ks = [2;3;5];                        # Scales for MTEO (or 1,3,5) detection
-if upsample_flag
- ks = ks.*2;                        
-end
-# 
-#  f = (200:50:500);
-#  ks = round((Fs./f)*1/2);
-#  ks = unique(ks);
- 
-## First Stage Spike detection
-sig_TEO = MTEO(sig, ks);               # Compute MTEO
-[locs,TH] = MTH(sig_TEO,ks,C,Fs);
-
-
-## Removing those peaks on begining and end of sig
-A = locs > round((wind)*Fs);
-locs = locs(A);
-B = locs < (length(sig) - round((wind)*Fs));
-locs = locs(B);
-# if less than 1 spike persecond
-if  isempty(locs)                #length(locs) < 100/(length(sig)/Fs)
-    fprintf('No Spike Found!\n');
-    return;
-end
-
-TH1 = mean(sig_TEO);                    # Threshold for features
-
-
-locs_s = zeros(1,length(locs));        # for alignment
-S_neighbor = round((wind/2)*Fs);       # Search Neighborhood window
-                                       # Initiate original Signal
-                                       
-# output = runningAverage( sig,...       # Running mean with no delay
-#     round(0.020*Fs), 2);         
-template = zeros(length(locs),2*S_neighbor);   # storing templates
-S_block = zeros(length(locs),2*S_neighbor);    # Store METO templates
-features = zeros(length(locs),24);             # feature vector
-window = round(0.002*Fs);                      # window to seperate spikes(def was 3.5 ms/ 2ms)
-
-## This loop removes the interference in the selected spikes and assigns a label to them
- for i = 1 : length(locs)
-      ## Case 1      
-      if   ((locs(i) - S_neighbor) >= 1)...
-             && ((locs(i) + S_neighbor) <= length(sig_TEO))        
-                                       # Find the Neighborhoods
-       S_block(i,:) = sig_TEO((locs(i) - S_neighbor +1):(locs(i) + S_neighbor));
-       [~,d] = findpeaks(abs(sig((locs(i) - S_neighbor+1):(locs(i) + S_neighbor))));
-       [~,d_i] = min(abs(d-S_neighbor));
-       if ~isempty(d) && ~isempty(d_i)
-       locs_s(i) = locs(i)+(d(d_i)-S_neighbor);
-         if locs_s(i) < S_neighbor
-           locs_s(i) = locs(i);
-         end
-       else
-           locs_s(i) = locs(i); 
-       end
-       template(i,:) = sig((locs_s(i) - S_neighbor+1):(locs_s(i) + S_neighbor));
-       [S_block(i,:),template(i,:)] = spike_seperator(S_block(i,:),...
-           template(i,:),S_neighbor,window,TH);
-        features(i,:) = border_detector(S_block(i,:),template(i,:),TH,TH1);
-     ## Case 2
-     elseif (locs(i) - S_neighbor) < 1    
-       S_block(i,1:(locs(i) + S_neighbor)) = sig_TEO(1:(locs(i) + S_neighbor));
-       [~,d] = findpeaks(abs(sig(1:(locs(i) + S_neighbor))));
-       [~,d_i] = min(abs(d-S_neighbor));
-       if ~isempty(d) && ~isempty(d_i)
-         locs_s(i) = locs(i)+(d(d_i)-S_neighbor);
-         if locs_s(i) < S_neighbor
-           locs_s(i) = locs(i);
-         end
-       else
-            locs_s(i) = locs(i);
-       end
-       template(i,1:(locs_s(i) + S_neighbor)) = sig(1:(locs_s(i) + S_neighbor));
-       [S_block(i,:),template(i,:)] = spike_seperator(S_block(i,:),...
-           template(i,:),S_neighbor,window,TH);
-       features(i,:) = border_detector(S_block(i,:),template(i,:),TH,TH1);
-     ## Case 3                                  # Bounderies
-     elseif (locs(i) + S_neighbor) > length(sig_TEO)
-         
-       first_half = length(sig((locs(i) - S_neighbor)+1:locs(i)));
-       complete = length(sig_TEO((locs(i) - S_neighbor + 1):end));
-       # locate the max in center
-       S_block(i,(S_neighbor-first_half)+1:complete) =...
-           sig_TEO((locs(i) - S_neighbor + 1):end);
-       
-       [~,d] = findpeaks(abs(sig((locs(i) - S_neighbor)+1:end)));
-       [~,d_i] = min(abs(d-S_neighbor));
-       if ~isempty(d) && ~isempty(d_i)
-         locs_s(i) = locs(i)+(d(d_i)-S_neighbor);
-         if locs_s(i) < S_neighbor
-           locs_s(i) = locs(i);
-         end
-       else
-            locs_s(i) = locs(i);
-       end
-       first_half = length(sig((locs_s(i) - S_neighbor)+1:locs_s(i)));
-       complete = length(sig_TEO((locs_s(i) - S_neighbor + 1):end));
-       template(i,(S_neighbor-first_half)+1:complete) =...
-           sig((locs_s(i) - S_neighbor)+1:end);
-       [S_block(i,:),template(i,:)] = spike_seperator(S_block(i,:),...
-           template(i,:),S_neighbor,window,TH);                               
-       features(i,:) = border_detector(S_block(i,:),template(i,:),TH,TH1);                            
-      end                                                                 
- end
-
-
-Index = locs;
-
-
-
-## Mapping features to the range of [1 9]
-
- map_range = [1,9];
-# start from feature 6 which is period of each exterema
- for i = 6 : size(features,2)
-     
-    original_range(1) = min(features(:,i));
-    original_range(2) = max(features(:,i));
-    if ~isempty(original_range(~isnan(original_range)))
-    features(:,i) = linear_map(features(:,i),original_range,map_range);
-    end
-    
- end
- 
-## generates the initial set of labels
-title  = generate_title(features);
   
-## Interference cancelation
-#[y,template,Index,title] = inter_cancel(template,Index,title);
-## make templates
- uniq_c = merge_clusters(template,title,PsC_TH,Fs,length(sig));
- loc = ones(1,size(template,1)).*-1;
- to_plot = template;
- TH = PsC_TH;
- 
- for i = 1 : size(uniq_c,1)
-   [tmp, template] = findspikes(uniq_c(i,:), template,locs_s,Fs,TH);
-   ### removing too close MUAPs based on their firing pattern
-   B = (locs_s(tmp));#to remove too close spikes
-   B_i = find(tmp);
-   fire_rate = diff(B);
-   T_rate = fire_rate >= round(0.005*Fs);#5 milisec seperation
-   B_F = [B_i(T_rate),B_i(end)];
-   loc(B_F) = i;
- end
- 
- 
- noise_ind = find(loc == -1);
- noise = (loc == -1);
- new_sig = template(noise ,:);
- noise = locs_s(noise);
- 
+    ## Initialzie
+    # Remove the baseline shift
+    sig = sg.detrend(sig)
+    # Remove mean
+    sig = sig - np.mean(sig) 
+    # Normalize st. deviation
+    sig = sig/np.std(sig, ddof = 1)                    
 
- if ~isempty(noise)
-   TH = PsC_TH;        # 5 percent similarity (def was PsC_TH/2)
-   for i = 1 : size(uniq_c,1)
-    [tmp,new_sig] = findspikes(uniq_c(i,:),new_sig,noise,Fs,TH);
-     loc(noise_ind(tmp)) = i;
-#       A = (loc==i);
-#       final_temps.(strcat('Template',mat2str(i))) = to_plot(A,:);
-   end
-   
- end
- 
- 
-  ### Double check the similarity of templates
-    lag = round(0.008*Fs);                        #lag
-    TH = 0.50;
-  for i = 1:  size(uniq_c,1)
-     if all(~isnan(uniq_c(i,:)))
-       for j = 1 : size(uniq_c,1)
-          if (i~=j) && (all(~isnan(uniq_c(j,:))))
-             PsC_s = PsC(uniq_c(i,:),uniq_c(j,:),lag);
-               if  PsC_s > TH
-                LG = (loc == j);
-                loc(LG) = i;
-                if j < max(loc)
-                    rg = max(loc) - j;
-                    for lk = 1:rg 
-                        LG = (loc == (j+lk));
-                        loc(LG) = (j + lk) - 1;
-                    end
-                end
-                uniq_c(j,:) = NaN;
-               end       
-          end
-       end
-     end
-  end  
-#   ###
-# uniq_c = (uniq_c(isfinite(uniq_c(:, 1)), :)); #remove NaN
- for i = 1: max(loc)
- A = (loc==i);
-   final_temps.(strcat('Template',mat2str(i))) = to_plot(A,:);
- end
+    ## Notch Filter
+    if Notch:
+        # Original MatLab
+        # d = designfilt('bandstopiir','FilterOrder',32,
+        # 'HalfPowerFrequency1',59,'HalfPowerFrequency2',61, 'DesignMethod','butter','SampleRate',Fs)
+        # sig = sg.filtfilt(d, sig)
 
-
-
- 
- 
- 
-if gr
- figure,subplot(2,2,[1,2]);plot(sig);
- cc = hsv(size(uniq_c,1));
- amps = zeros(size(uniq_c,1),1);
- fire_rate = zeros(size(uniq_c,1),1);
- for i = 1:length(loc)     
-  text(Index(i),sig(Index(i)),mat2str(loc(i)));
- end
- subplot(2,2,3);
- 
- for i = 1:size(uniq_c,1)
-  A = (loc==i);
-  B = (locs_s(A));
-  A = to_plot(A,:);
-  amps(i) = mean(max(A'));
-  fire_rate(i) = 1/(mean(diff(B))/Fs);
-  plot(A','color',cc(i,:));
-  hold on
- end
-subplot(2,2,4)
- bar(amps,fire_rate);
-end
-
-#### In case of upsampling its required to downsample everything again
-if upsample_flag 
-  if ~ isempty(Index)
-    Index = round(Index./upsample_flag);   
-    tempnames = fieldnames(final_temps);
-    tempnr = length(tempnames);
-   for j= 1: tempnr 
-    [M,N] = size(final_temps.(tempnames{j,1}));
-    ds_f = round(N/upsample_flag);
-    final_temps1 = zeros(M,...
-        ds_f);
-    for i = 1: M
-       final_temps1(i,:) = downsample(final_temps.(tempnames{j,1})(i,:),...
-           upsample_flag);
-    end
+        # Frequency to be removed from signal (Hz)
+        f0 = 60.0
+        # Quality factor
+        Q = 30.0  
+        b_notch, a_notch = sg.iirnotch(f0, Q, fs = Fs)
+        
+        # Apply notch filter to the noisy signal using signal.filtfilt
+        sig = sg.filtfilt(b_notch, a_notch, sig)
     
-    final_temps.(tempnames{j,1}) = final_temps1;
-   end
- end  
-end
+
+    ## High-Pass Filter
+        F_l = 50/(Fs/2);                      # Normalized cutoff frequency   
+        F_h = 1000/(Fs/2);
+    # F_h = 500/(Fs/2);
+
+    Wn = [F_l, F_h]
+    # Butterworth filter
+    z, p, k = sg.butter(4, Wn) 
+    # Convert to SOS form
+    sos = sg.zpk2sos(z, p, k)              
+    sig = sg.sosfiltfilt(sos, sig)
+
+
+    return sig, Fs
 
 
 
-end
-"""
+def TK_filter(sig, Fs, C = 0.1, PsC_TH = 0.1, init = True, wind = 0.020):
+    """    
+    Function for Spike detection and Classification
+    This is designed to filter out shallow peaks out of Action potentials
+    with the help of Multi-dimensional TK operator. The function has several
+    subroutins and uses template and label matching in order to cluster the
+    action potentials in the signal.
+    
+    Parameters
+    ----------
+    Sig : 1D numpy NDArray[float]
+        EMG signal Vector
+    Fs : float
+        Sampling Frequency (e.g. 2000 Hz)
+    C : float
+        Threshold for the Spike Detection.
+        Default 0.6*STD(0.8-1.2)
+    PsC_TH : float
+        Correlation Threshold, two templates are clustered in the same
+        basket if their correlation score goes higher than this value
+    init : boolean
+        Flag for filtering, leave it empty if you have no idea what this is
+    wind : float
+        Windows len for storing the templates, it is an important factor
+        for the analysis, so leave it empty if you have no idea about it.    
+        
+    Returns
+    -------
+    Index :
+        Index of MUAPs clustered
+    loc :
+        location of the MUAPs in the signal
+    final_temps :
+        All the clustered Muap templates
+    """
+   
+    ## Initialzie and highpass filter
+    # Detrends and band-pass filters the signal
+    if init:
+        sig, Fs = initialize(sig, Fs, 1)
+    
+    ## upsampling for better accuracy in Classification
+
+    upsample_flag = 0
+    
+    if Fs < 10000 and Fs > 4000:
+        # upsample by a factor of 3
+        sig = resample(sig, 5, 1)  
+        Fs = 5*Fs
+        upsample_flag = 5
+    elif Fs > 10000 and Fs < 15000:
+        # upsample by a factor of 2 
+        sig = resample(sig, 2, 1)
+        Fs = 2*Fs
+        upsample_flag = 2
+    elif Fs <= 3000:
+        sig = resample(sig, 8, 1)
+        Fs = 8*Fs
+        upsample_flag = 8
+    
+    Index = []
+    loc = []
+   
+    ## MTEO
+    # Scales for MTEO (or 1,3,5) detection
+    ks = [2, 3, 5]                   
+    if upsample_flag > 0:
+        ks = ks * 2                   
+    
+    ## First Stage Spike detection
+    # Compute MTEO
+    sig_TEO = MTEO(sig, ks)               
+    locs, TH = MTH(sig_TEO, ks, C, Fs)
+
+    ## Removing those peaks on begining and end of sig
+    A = locs > round((wind)*Fs)
+    locs = locs(A);
+    B = locs < (len(sig) - round((wind)*Fs))
+    locs = locs(B)
+    
+    # if less than 1 spike persecond
+    #len(locs) < 100/(len(sig)/Fs)
+    if np.empty(locs):                
+        print('No Spike Found!\n')
+        return Index, loc
+    
+    # Threshold for features
+    TH1 = np.mean(sig_TEO)                   
+
+    # for alignment
+    locs_s = np.zeros(len(locs))
+    # Search Neighborhood window
+    S_neighbor = round((wind/2) * Fs)       
+                                                                               
+    # Initiate original Signal
+    # storing templates
+    template = np.zeros((len(locs),2*S_neighbor))
+    # Store METO templates
+    S_block = np.zeros((len(locs), 2*S_neighbor))
+    # feature vector
+    features = np.zeros((len(locs), 24))
+    # window to seperate spikes(def was 3.5 ms/ 2ms)
+    window = round(0.002 * Fs)
+
+    ## This loop removes the interference in the selected spikes and assigns a label to them
+    for i  in range(len(locs)):
+        ## Case 1      
+        if ((locs[i] - S_neighbor) >= 1) and ((locs[i] + S_neighbor) <= len(sig_TEO)):        
+            # Find the Neighborhoods
+            S_block[i, :] = sig_TEO[(locs[i] - S_neighbor):(locs[i] + S_neighbor)]
+            _, d = sg.find_peaks(abs(sig[(locs[i] - S_neighbor):(locs[i] + S_neighbor)]))
+            _, d_i = min(abs(d - S_neighbor))
+            
+            if not np.empty(d) and not np.empty(d_i):
+                locs_s[i] = locs[i] + (d[d_i] - S_neighbor)
+                if locs_s[i] < S_neighbor:
+                    locs_s[i] = locs[i]             
+            else:
+                locs_s[i] = locs[i]
+                
+            template[i, :] = sig[(locs_s[i] - S_neighbor):(locs_s[i] + S_neighbor)]
+            S_block[i, :], template[i, :] = spike_seperator(S_block[i, :], template[i, :], S_neighbor, window, TH)
+            features[i, :] = border_detector(S_block[i, :], template[i, :], TH, TH1)
+            
+         ## Case 2
+        elif (locs[i] - S_neighbor) < 1:    
+            S_block[i, :(locs[i] + S_neighbor)] = sig_TEO[:(locs[i] + S_neighbor)]
+            _, d = sg.find_peaks(abs(sig[:(locs[i] + S_neighbor)]))
+            _, d_i = min(abs(d - S_neighbor))
+           
+            if not np.empty(d) and not np.empty(d_i):
+                locs_s[i] = locs[i] + (d[d_i] - S_neighbor)
+                if locs_s[i] < S_neighbor:
+                    locs_s[i] = locs[i]                
+            else:
+                locs_s[i] = locs[i]
+           
+            template[i, :(locs_s[i] + S_neighbor)] = sig[:(locs_s[i] + S_neighbor)]
+            S_block[i, :], template[i, :] = spike_seperator(S_block[i, :], template[i, :], S_neighbor, window, TH)
+            features[i, :] = border_detector(S_block[i, :],template[i, :],TH,TH1)
+            
+         ## Case 3                                  
+         # Bounderies
+        elif (locs[i] + S_neighbor) > len(sig_TEO):
+         
+            first_half = len(sig[(locs[i] - S_neighbor):locs[i]])
+            complete = len(sig_TEO[(locs[i] - S_neighbor):])
+           
+            # locate the max in center
+            S_block[i, (S_neighbor-first_half):complete] = sig_TEO[(locs[i] - S_neighbor):]
+       
+            _, d = sg.find_peaks(abs(sig[(locs[i] - S_neighbor):]))
+            _, d_i = min(abs(d - S_neighbor))
+           
+            if not np.empty(d) and not np.empty(d_i):
+                locs_s[i] = locs[i] + (d[d_i] - S_neighbor)
+                
+                if locs_s[i] < S_neighbor:
+                    locs_s[i] = locs[i]
+                
+            else:
+                locs_s[i] = locs[i]
+            
+            first_half = len(sig[(locs_s[i] - S_neighbor):locs_s[i]])
+            complete = len(sig_TEO[(locs_s[i] - S_neighbor):])
+            template[i, (S_neighbor - first_half):complete] = sig[(locs_s[i] - S_neighbor):]
+            S_block[i, :], template[i, :] = spike_seperator(S_block[i, :], template[i, :], S_neighbor, window, TH)                               
+            features[i, :] = border_detector(S_block[i, :], template[i, :], TH, TH1)                            
+  
+
+    Index = locs
+
+    # Mapping features to the range of [1 9]
+    map_range = [0, 8]
+    original_range = np.zeros(2)
+    
+    # start from feature 6 which is period of each exterema
+    for i in range(5, features.shape[1]):
+     
+        original_range[0] = min(features[:, i])
+        original_range[1] = max(features[:, i])
+        if not np.isnan(original_range) and not np.empty(original_range[0]):
+            features[:, i] = linear_map(features[:, i], original_range, map_range)
+        
+    
+    # generates the initial set of labels
+    title  = generate_title(features)
+
+    ## Interference cancelation
+    #[y,template,Index,title] = inter_cancel(template,Index,title);
+    ## make templates
+    uniq_c = merge_clusters(template, title, PsC_TH, Fs, len(sig))
+    loc = np.full(template.shape[0], -1)
+    
+    TH = PsC_TH
+ 
+    for i in range(uniq_c.shape[0]):
+        tmp, template = find_spikes(uniq_c[i, :], template, locs_s, Fs, TH)
+        # removing too close MUAPs based on their firing pattern
+        # to remove too close spikes
+        B = (locs_s(tmp))
+        B_i = np.argwhere(tmp)
+        fire_rate = np.diff(B)
+        # 5 milisec seperation
+        T_rate = fire_rate >= round(0.005*Fs)
+        B_F = [B_i[T_rate], B_i[-1]]
+        loc[B_F] = i
+    
+    noise_ind = np.argwhere(loc == -1)
+    noise = (loc == -1)
+    new_sig = template[noise, :]
+    noise = locs_s[noise]
+ 
+    if not np.empty(noise):
+        # 5 percent similarity (def was PsC_TH/2)
+        TH = PsC_TH
+        
+        for i in range(uniq_c.shape[0]):
+            [tmp,new_sig] = find_spikes(uniq_c[i, :], new_sig, noise, Fs, TH);
+            loc[noise_ind[tmp]] = i;
+  
+ 
+        ### Double check the similarity of templates
+        #lag
+        lag = round(0.008 * Fs)                        
+        TH = 0.50
+        for i in range(uniq_c.shape[0]):
+            if all(not np.isnan(uniq_c[i, :])):
+                for j in range(uniq_c.shape[0]):
+                    if (i != j) and (all(not np.isnan(uniq_c[j, :]))):
+                        PsC_s = PsC(uniq_c[i, :], uniq_c[j, :], lag)
+                        if  PsC_s > TH:
+                            LG = (loc == j)
+                            loc[LG] = i
+                            
+                            if j < max(loc):
+                                rg = max(loc) - j;
+                                for lk in range(rg):
+                                    LG = (loc == (j + lk))
+                                    loc[LG] = (j + lk) - 1
+                                  
+                            uniq_c[j, :] = np.NaN
+
+    #### In case of upsampling its required to downsample everything again
+    if upsample_flag > 0: 
+        if not np.empty(Index):
+            Index = round(Index/upsample_flag);   
+        
+    return Index, loc
