@@ -13,6 +13,7 @@ Dr Roger Whittaker, Newcastle University  ([roger.whittaker@newcastle.ac.uk](mai
 Dr Stuart Maitland, Newcastle University  ([stu.maitland@newcastle.ac.uk](mailto:stu.maitland@newcastle.ac.uk))  
 
 Dr Gabrielle Schroeder, Newcastle University ([gabrielle.schroeder@newcastle.ac.uk](mailto:gabrielle.schroeder@newcastle.ac.uk))  
+Dr Richard Howey, Newcastle University ([richard.howey@newcastle.ac.uk](mailto:richard.howey@newcastle.ac.uk))
 
 ### RSE Contact
 Gabrielle Schroeder
