@@ -107,7 +107,7 @@ def findspikes(template, sig, locs, Fs, TH):
     """ 
  
     loc = false(1,len(locs));
-    lag = round(0.0002*Fs); %lag (def was 0.0002)
+    lag = round(0.0002*Fs); #lag (def was 0.0002)
 
       for i = 1:len(locs)
         tmp = sig[i, :];
@@ -147,8 +147,9 @@ def resolve_peaks(sig, DTh, Fs):
     tmp = np.zeros((1, len(sig)))
     ind = (sig > DTh)
     tmp[ind] = sig[ind]
-    TE, _ = sg.find_peaks(tmp, distance = min_pd)
-
+    locs = sg.find_peaks(tmp, distance = min_pd)
+    TE = tmp[locs]
+    
     return TE
 
 def MTH(MTEO, ks, L, Fs):
@@ -236,8 +237,215 @@ def MTH(MTEO, ks, L, Fs):
  
     return TE, DTh
 
-def initialize(sig, Fs, Notch = False):
+def spike_separator(S_block, template, S_neighbor, window, TH):
+    """       
+    Divides the Spike in two sections
+    Removes the second pulse superimposed if it is far enough from another 
+    Spike
+    
+    Parameters
+    ----------
+    S_block : 2D numpy NDArray[float, float]
+        Store METO templates    
+    template : 2D numpy NDArray[float, float]
+        Storing templates
+    S_neighbor : integer
+        Search Neighborhood window size
+    window : integer
+        Window to separate spikes
+    TH : float
+        threshold
+         
+    Returns
+    -------
+    S_block : 2D numpy NDArray[float, float]
+        Store METO templates
+    template : 2D numpy NDArray[float, float]
+        Storing templates
+    """
+ 
+    # First Part
+    Maxima1 = sg.find_peaks(S_block[0, :S_neighbor])
+    amp_M1 = S_block[0, Maxima1]
+    
+    if not np.empty(Maxima1):
+        Dist_m = (S_neighbor - (Maxima1 + 1)) >= window
+        Dist_a = (amp_M1 >= TH)
+          
+        if Dist_m and Dist_a:
+            #closest to peak
+            Maxima1 = Maxima1[0]       
+            inverted = 1.01 * max(S_block[0, Maxima1:S_neighbor]) - S_block[0, Maxima1:S_neighbor]
+            Minima1 = sg.find_peaks(inverted)
+            
+            if len(Minima1) > 0:
+                Minima1 = Minima1[0]
+                Minima1 = Maxima1 + Minima1
+                # make the uncorrelated zero
+                S_block[0, :Minima1] = 0 
+                template[0, :Minima1] = 0
+                
+        else:
+            #do nothing
+            S_block[0, :] = S_block[0, :] 
+            template[0, :] = template[0, :]
+                   
+    else:
+        S_block[0, :] = S_block[0, :]
+        template[0, :] = template[0, :]
+         
+       
+    ## 2nd Part       
+    Maxima2 = sg.find_peaks(S_block[0, S_neighbor:])
+    amp_M2 = S_block[0, Maxima2]
+    
+    if not np.empty(Maxima2):
+        Dist_m = (Maxima2 + 1 >= window)
+        Dist_a = (amp_M2 >= TH)
+       
+        if Dist_m and Dist_a:
+            #closest to peak
+            Maxima2 = Maxima2[0]
+            
+            end_pos = (S_neighbor + Maxima2 + 1)
+            if end_pos > S_block.shape(1):
+                end_pos = S_block.shape(1)
+                
+            inverted = 1.01 * max(S_block[0, S_neighbor:end_pos]) - S_block[0, S_neighbor:end_pos]
+            
+            Minima2 = sg.find_peaks(inverted)
+            
+            if len(Minima2) > 0:
+                Minima2 = Minima2[-1]
+                Minima2 = S_neighbor - Minima2
+                # make the uncorrelated zero 
+                start_pos = (S_block.shape[1] - 1 - Minima2)
+                if start_pos < 0:
+                    start_pos = 0
+                
+                #Should be like this? Did as MatLab above.
+                #Minima2 = Minima2[-1]
+                #Minima2 = Minima2 + S_neighbor
+                #if start_pos >= S_block.shape[1]:
+                #    start_pos = S_block.shape[1] - 1
+                    
+                S_block[0, start_pos:] = 0 
+                template[0, start_pos:] = 0
+               
+        else:
+            S_block[0, :] = S_block[0, :]
+            template[0, :] = template[0, :]      
+        
+    else:
+        S_block[0, :] = S_block[0, :]
+        template[0, :] = template[0, :]
+       
+    return S_block, template
 
+def border_detector(S_block, template, TH, TH1):
+    """       
+    This function Assigns a label to each template  
+    
+    Parameters
+    ----------
+    S_block : 2D numpy NDArray[float, float]
+        Store METO templates    
+    template : 2D numpy NDArray[float, float]
+        Storing templates
+    TH : float
+        threshold
+    TH1 : float
+        threshold  
+        
+    Returns
+    -------
+    features : 1D numpy NDArray[float]
+        features of data
+       
+    """ 
+    
+    Maxima1 = np.find_peaks(S_block);
+    amp_M1 = S_block[Maxima1]
+    
+    A = amp_M1 > TH
+    # Logical Indexing
+    B = Maxima1[A]
+    
+    if len(B) > 5:
+        B = B[0:5]
+    
+    tmp = np.zeros((2*len(B),2));
+    D_border = np.zeros((len(B), 1))
+    features = np.full(24, np.NaN)
+ 
+    # compute features related to exterema (limited to 3 for now)
+    for i in range(len(B)):                   
+        # (limited to 5 turns or maximas)
+        if i <= 5:  
+            dummy = np.argwhere(S_block[:B[i]] <= TH1)
+     
+            if np.isempty(dummy):
+                tmp[i, 0] = np.argwhere(S_block[:B[i]])    
+            else:
+                tmp[i, 0] = dummy[-1]
+                
+            tmp[i, 0] = B[i] - tmp[i, 0]
+     
+            dummy = np.argwhere(S_block[B[i]:] <= TH1)
+     
+            if np.empty(dummy):
+                tmp[i, 1] = np.argmin(S_block[B[i]:])     
+            else:
+                tmp[i, 1] = dummy[0]
+            
+            D_border[i, 1] = tmp[i, 0] + tmp[i, 1]
+
+    # See if the peak is a maxima or minima
+    #amp = amp_M1(A);
+    amp = S_block[B]
+    for i in range(len(B)):
+        if template(B[i]) < 0:
+            # 1 shows a minima
+            amp[i] = 1;                               
+        else:
+            # 2 shows a maxima
+            amp[i] = 2;                               
+      
+    # number of local Max (0 - 4)
+    features[0, 0:len(amp)] = amp;       
+    # approximate period (5 - 9)
+    features[0, 5:(5 + len(D_border))] = D_border
+    # time difference between each maxima(10 - 13)
+    features[0, 10:(10 + len(np.diff(B)))] = np.diff(B)
+    # Amp of Exterma(14 - 18)
+    features[0, 14:(14 + len(amp))] = S_block(B)
+    # Phase of maximas(19 - 23)
+    features[0, 19:(19 + len(amp))] = B  
+    # Integral of M_TEO
+    #features(1,25) = sum(S_block);
+    # RMS of the template                  
+    #features(1,26) = rms(S_block);                 
+
+    return features
+
+def initialize(sig, Fs, notch = False):
+    """    
+    Initialize the signal with filters.
+    
+    Parameters
+    ----------
+    Sig : 1D numpy NDArray[float]
+        EMG signal Vector
+    Fs : float
+        Sampling Frequency (e.g. 2000 Hz)
+    notch : boolean
+        Flag for whether to do the notch filter or not
+         
+    Returns
+    -------
+    Sig : 1D numpy NDArray[float]
+        Filtered EMG signal Vector
+    """
   
     ## Initialzie
     # Remove the baseline shift
@@ -248,7 +456,7 @@ def initialize(sig, Fs, Notch = False):
     sig = sig/np.std(sig, ddof = 1)                    
 
     ## Notch Filter
-    if Notch:
+    if notch:
         # Original MatLab
         # d = designfilt('bandstopiir','FilterOrder',32,
         # 'HalfPowerFrequency1',59,'HalfPowerFrequency2',61, 'DesignMethod','butter','SampleRate',Fs)
@@ -265,27 +473,23 @@ def initialize(sig, Fs, Notch = False):
     
 
     ## High-Pass Filter
-        F_l = 50/(Fs/2);                      # Normalized cutoff frequency   
-        F_h = 1000/(Fs/2);
-    # F_h = 500/(Fs/2);
-
+    # Normalized cutoff frequency
+    F_l = 50/(Fs/2)                         
+    F_h = 1000/(Fs/2)
     Wn = [F_l, F_h]
     # Butterworth filter
-    z, p, k = sg.butter(4, Wn) 
+    z, p, k = sg.butter(4, Wn)  
     # Convert to SOS form
     sos = sg.zpk2sos(z, p, k)              
     sig = sg.sosfiltfilt(sos, sig)
 
-
-    return sig, Fs
-
-
+    return sig
 
 def TK_filter(sig, Fs, C = 0.1, PsC_TH = 0.1, init = True, wind = 0.020):
     """    
     Function for Spike detection and Classification
     This is designed to filter out shallow peaks out of Action potentials
-    with the help of Multi-dimensional TK operator. The function has several
+    with the help of Multi-dimensional TK operator (Teager-Kaiser). The function has several
     subroutins and uses template and label matching in order to cluster the
     action potentials in the signal.
     
@@ -304,7 +508,7 @@ def TK_filter(sig, Fs, C = 0.1, PsC_TH = 0.1, init = True, wind = 0.020):
     init : boolean
         Flag for filtering, leave it empty if you have no idea what this is
     wind : float
-        Windows len for storing the templates, it is an important factor
+        Windows length for storing the templates, it is an important factor
         for the analysis, so leave it empty if you have no idea about it.    
         
     Returns
@@ -313,32 +517,30 @@ def TK_filter(sig, Fs, C = 0.1, PsC_TH = 0.1, init = True, wind = 0.020):
         Index of MUAPs clustered
     loc :
         location of the MUAPs in the signal
-    final_temps :
-        All the clustered Muap templates
     """
    
     ## Initialzie and highpass filter
     # Detrends and band-pass filters the signal
     if init:
-        sig, Fs = initialize(sig, Fs, 1)
+        sig = initialize(sig, Fs, True)
     
     ## upsampling for better accuracy in Classification
 
     upsample_flag = 0
     
     if Fs < 10000 and Fs > 4000:
-        # upsample by a factor of 3
-        sig = resample(sig, 5, 1)  
-        Fs = 5*Fs
+        # upsample by a factor of 5
+        sig = sg.resample_poly(sig, 5, 1)  
+        Fs = 5 * Fs
         upsample_flag = 5
     elif Fs > 10000 and Fs < 15000:
         # upsample by a factor of 2 
-        sig = resample(sig, 2, 1)
-        Fs = 2*Fs
+        sig = sg.resample_poly(sig, 2, 1)
+        Fs = 2 * Fs
         upsample_flag = 2
     elif Fs <= 3000:
-        sig = resample(sig, 8, 1)
-        Fs = 8*Fs
+        sig = sg.resample_poly(sig, 8, 1)
+        Fs = 8 * Fs
         upsample_flag = 8
     
     Index = []
@@ -355,11 +557,12 @@ def TK_filter(sig, Fs, C = 0.1, PsC_TH = 0.1, init = True, wind = 0.020):
     sig_TEO = MTEO(sig, ks)               
     locs, TH = MTH(sig_TEO, ks, C, Fs)
 
-    ## Removing those peaks on begining and end of sig
-    A = locs > round((wind)*Fs)
-    locs = locs(A);
-    B = locs < (len(sig) - round((wind)*Fs))
-    locs = locs(B)
+    # Removing those peaks on begining and end of sig
+    # Minus 1, as Python indexes start at 0
+    A = locs > round((wind)*Fs) - 1
+    locs = locs[A]
+    B = locs < (len(sig) - round((wind)*Fs) - 1)
+    locs = locs[B]
     
     # if less than 1 spike persecond
     #len(locs) < 100/(len(sig)/Fs)
@@ -377,22 +580,22 @@ def TK_filter(sig, Fs, C = 0.1, PsC_TH = 0.1, init = True, wind = 0.020):
                                                                                
     # Initiate original Signal
     # storing templates
-    template = np.zeros((len(locs),2*S_neighbor))
+    template = np.zeros((len(locs), 2 * S_neighbor))
     # Store METO templates
-    S_block = np.zeros((len(locs), 2*S_neighbor))
+    S_block = np.zeros((len(locs), 2 * S_neighbor))
     # feature vector
     features = np.zeros((len(locs), 24))
-    # window to seperate spikes(def was 3.5 ms/ 2ms)
+    # window to separate spikes(def was 3.5 ms/ 2ms)
     window = round(0.002 * Fs)
 
     ## This loop removes the interference in the selected spikes and assigns a label to them
-    for i  in range(len(locs)):
+    for i in range(len(locs)):
         ## Case 1      
         if ((locs[i] - S_neighbor) >= 1) and ((locs[i] + S_neighbor) <= len(sig_TEO)):        
             # Find the Neighborhoods
             S_block[i, :] = sig_TEO[(locs[i] - S_neighbor):(locs[i] + S_neighbor)]
-            _, d = sg.find_peaks(abs(sig[(locs[i] - S_neighbor):(locs[i] + S_neighbor)]))
-            _, d_i = min(abs(d - S_neighbor))
+            d = sg.find_peaks(abs(sig[(locs[i] - S_neighbor):(locs[i] + S_neighbor)]))
+            d_i = min(abs(d - S_neighbor))
             
             if not np.empty(d) and not np.empty(d_i):
                 locs_s[i] = locs[i] + (d[d_i] - S_neighbor)
@@ -402,14 +605,14 @@ def TK_filter(sig, Fs, C = 0.1, PsC_TH = 0.1, init = True, wind = 0.020):
                 locs_s[i] = locs[i]
                 
             template[i, :] = sig[(locs_s[i] - S_neighbor):(locs_s[i] + S_neighbor)]
-            S_block[i, :], template[i, :] = spike_seperator(S_block[i, :], template[i, :], S_neighbor, window, TH)
+            S_block[i, :], template[i, :] = spike_separator(S_block[i, :], template[i, :], S_neighbor, window, TH)
             features[i, :] = border_detector(S_block[i, :], template[i, :], TH, TH1)
             
          ## Case 2
         elif (locs[i] - S_neighbor) < 1:    
             S_block[i, :(locs[i] + S_neighbor)] = sig_TEO[:(locs[i] + S_neighbor)]
-            _, d = sg.find_peaks(abs(sig[:(locs[i] + S_neighbor)]))
-            _, d_i = min(abs(d - S_neighbor))
+            d = sg.find_peaks(abs(sig[:(locs[i] + S_neighbor)]))
+            d_i = np.argmin(abs(d - S_neighbor))
            
             if not np.empty(d) and not np.empty(d_i):
                 locs_s[i] = locs[i] + (d[d_i] - S_neighbor)
@@ -419,7 +622,7 @@ def TK_filter(sig, Fs, C = 0.1, PsC_TH = 0.1, init = True, wind = 0.020):
                 locs_s[i] = locs[i]
            
             template[i, :(locs_s[i] + S_neighbor)] = sig[:(locs_s[i] + S_neighbor)]
-            S_block[i, :], template[i, :] = spike_seperator(S_block[i, :], template[i, :], S_neighbor, window, TH)
+            S_block[i, :], template[i, :] = spike_separator(S_block[i, :], template[i, :], S_neighbor, window, TH)
             features[i, :] = border_detector(S_block[i, :],template[i, :],TH,TH1)
             
          ## Case 3                                  
@@ -432,8 +635,8 @@ def TK_filter(sig, Fs, C = 0.1, PsC_TH = 0.1, init = True, wind = 0.020):
             # locate the max in center
             S_block[i, (S_neighbor-first_half):complete] = sig_TEO[(locs[i] - S_neighbor):]
        
-            _, d = sg.find_peaks(abs(sig[(locs[i] - S_neighbor):]))
-            _, d_i = min(abs(d - S_neighbor))
+            d = sg.find_peaks(abs(sig[(locs[i] - S_neighbor):]))
+            d_i = np.argmin(abs(d - S_neighbor))
            
             if not np.empty(d) and not np.empty(d_i):
                 locs_s[i] = locs[i] + (d[d_i] - S_neighbor)
@@ -447,7 +650,7 @@ def TK_filter(sig, Fs, C = 0.1, PsC_TH = 0.1, init = True, wind = 0.020):
             first_half = len(sig[(locs_s[i] - S_neighbor):locs_s[i]])
             complete = len(sig_TEO[(locs_s[i] - S_neighbor):])
             template[i, (S_neighbor - first_half):complete] = sig[(locs_s[i] - S_neighbor):]
-            S_block[i, :], template[i, :] = spike_seperator(S_block[i, :], template[i, :], S_neighbor, window, TH)                               
+            S_block[i, :], template[i, :] = spike_separator(S_block[i, :], template[i, :], S_neighbor, window, TH)                               
             features[i, :] = border_detector(S_block[i, :], template[i, :], TH, TH1)                            
   
 
@@ -484,7 +687,7 @@ def TK_filter(sig, Fs, C = 0.1, PsC_TH = 0.1, init = True, wind = 0.020):
         B = (locs_s(tmp))
         B_i = np.argwhere(tmp)
         fire_rate = np.diff(B)
-        # 5 milisec seperation
+        # 5 milisec separation
         T_rate = fire_rate >= round(0.005*Fs)
         B_F = [B_i[T_rate], B_i[-1]]
         loc[B_F] = i
