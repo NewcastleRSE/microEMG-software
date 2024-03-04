@@ -95,10 +95,11 @@ class EMGDataRaw(EMGData):
             config = preproc_settings.butterworth_filter_settings
             print("Applying Butterworth filter.")
             emg_ts = self._butterworth_filter(
-                emg_ts, config["cutoff_freq"], config["order"], config["filter_type"]
+                emg_ts,
+                preproc_settings.get_butterworth_filter_cutoff(),
+                config["order"],
+                config["filter_type"],
             )
-
-        # Future preprocessing steps to be added...
 
         # Create EMGDataPreproc object with preprocessed time series and
         # associated metadata

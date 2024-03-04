@@ -81,6 +81,8 @@ class EMGPreprocSettings:
         ValueError
             Raised if filter order is not even.
             Raised if filter type is not one of the allowed types.
+            Raised if filter cutoff frequency is not a list or float.
+            Raised if filter cutoff frequency list has length greater than 2.
         Exception
             Raised if cutoff frequency is not provided when the filter type is not
             bandpass.
@@ -116,13 +118,63 @@ class EMGPreprocSettings:
                     "filter_type is not bandpass"
                 )
 
+        # Split cutoff frequencies so easier to set in GUI
+        if isinstance(cutoff_freq, list):
+            # First cutoff frequency
+            cutoff1 = cutoff_freq[0]
+
+            # Check for second cutoff frequency
+            if len(cutoff_freq) == 2:
+                cutoff2 = cutoff_freq[1]
+            elif len(cutoff_freq) > 2:
+                raise ValueError(
+                    "cutoff_freq must be length 1 (for lowpass or highpass filter) or 2 "
+                    "(for bandpass filter)"
+                )
+                # Note: Filter function handles checks for filter type and number of
+                # cutoff (critical) frequencies
+            else:
+                cutoff2 = None
+
+        elif isinstance(cutoff_freq, int | float):
+            # Only one cutoff frequency
+            cutoff1 = cutoff_freq
+            cutoff2 = None
+        else:
+            raise ValueError("cutoff_freq must be a list or float")
+
         # Save filter settings
         self.butterworth_filter = True
         self.butterworth_filter_settings = {
-            "cutoff_freq": cutoff_freq,
+            "cutoff1": cutoff1,
+            "cutoff2": cutoff2,
             "order": order,
             "filter_type": filter_type,
         }
+
+    def get_butterworth_filter_cutoff(self) -> float | list[float]:
+        """
+        Extracts the cutoff frequency or frequencies as a single variable (in format
+        suitable to be passed to a filtering function).
+
+        Returns
+        -------
+        float | list[float]
+            Cutoff frequency or frequencies; float if only one frequency, and
+            list otherwise.
+
+        """
+
+        # Range if two frequencies specified
+        if self.butterworth_filter_settings["cutoff2"] is not None:
+            cutoff_freq = [
+                self.butterworth_filter_settings["cutoff1"],
+                self.butterworth_filter_settings["cutoff2"],
+            ]
+        else:
+            cutoff_freq = self.butterworth_filter_settings["cutoff1"]
+
+        return cutoff_freq
 
     def remove_butterworth_filter(self):
         """
