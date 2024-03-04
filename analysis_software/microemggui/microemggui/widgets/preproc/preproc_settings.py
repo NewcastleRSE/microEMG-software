@@ -5,9 +5,12 @@ from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
 
 from PySide6.QtCore import Signal
 
+from PySide6.QtGui import QDoubleValidator
+
 from microemggui.widgets.base import (
     CheckBoxMain,
     InputLabel,
+    InputWarningLabel,
     InputComboBox,
     InputSpinBox,
     InputLineEdit,
@@ -60,6 +63,7 @@ class FilterTypeWidget(QWidget):
 
     def connect_to_settings(self, settings_model):
         # Connect combobox vlaue to corresponding value in preprocessing settings
+
         self.type_combobox.currentTextChanged.connect(
             settings_model.filter_type_text_changed
         )
@@ -110,25 +114,39 @@ class FilterOrderWidget(QWidget):
 
 class FilterFreqWidget(QWidget):
     # Widget for specifying the filter frequencies from input boxes
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, settings_model: EMGPreprocSettingsModel, parent=None):
+        super().__init__(parent)
 
-        # TODO: add input validator (QDoubleValidator?)
+        # TODO: block preprocessing from being applied if freq are not valid
+        # TODO: change validator based on data sampling frequency
+        # TODO: ensure upper cutoff is greater than lower cutoff
 
         # Label
         self.freq_label = InputLabel("Cutoff frequencies", self)
 
+        # Warning label
+        self.freq_val_low = 0
+        self.freq_val_high = 10000  # Nyquist frequency for 20k Hz sampling frequency
+
+        self.warning_label = InputWarningLabel(
+            (
+                f"Each frequency must be between {self.freq_val_low} and "
+                f"{self.freq_val_high} Hz"
+            ),
+            self,
+        )
+
         # Widgets for specifying frequencies
-        self.freq_input_widgets = [
-            InputLineEdit(self),
-            InputInlineLabel("to", self),
-            InputLineEdit(self),
-            InputInlineLabel("Hz", self),
-        ]
+        self.freq_input_widgets = {
+            "cutoff1_lineedit": InputLineEdit(self),
+            "to_label": InputInlineLabel("to", self),
+            "cutoff2_lineedit": InputLineEdit(self),
+            "hz_label": InputInlineLabel("Hz", self),
+        }
 
         # Horizontal layout for frequency input
         layout_input = QHBoxLayout()
-        for w in self.freq_input_widgets:
+        for _, w in self.freq_input_widgets.items():
             layout_input.addWidget(w)
         layout_input.setContentsMargins(0, 0, 0, 0)
         self.freq_input = QWidget(self)
@@ -138,8 +156,71 @@ class FilterFreqWidget(QWidget):
         layout = QVBoxLayout()
         layout.addWidget(self.freq_label)
         layout.addWidget(self.freq_input)
+        layout.addWidget(self.warning_label)
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
+
+        # Add validation for input
+        # Double (float), between 0 and Nyquist frequency, up to 2 decimal places
+        freq_val = QDoubleValidator(self.freq_val_low, self.freq_val_high, 2)
+        self.freq_input_widgets["cutoff1_lineedit"].setValidator(freq_val)
+        self.freq_input_widgets["cutoff2_lineedit"].setValidator(freq_val)
+
+        # Set initial values and widget visibility using provided settings
+        self.match_input_to_settings(settings_model)
+
+        # Connect to filter settings interface
+        self.connect_to_settings(settings_model)
+
+        # Connect input to warning visability
+        self.connect_input_to_warning()
+
+    def match_input_to_settings(self, settings_model):
+        # Set line edit box text to the corresponding values in the preprocessing
+        # settings
+        # TODO: case if only one cutoff
+        # TODO: initial warning messages? (probably not needed - already validated)
+        self.freq_input_widgets["cutoff1_lineedit"].setText(
+            str(settings_model.settings.butterworth_filter_settings["cutoff1"])
+        )
+
+        self.freq_input_widgets["cutoff2_lineedit"].setText(
+            str(settings_model.settings.butterworth_filter_settings["cutoff2"])
+        )
+
+    def connect_to_settings(self, settings_model):
+        # Connect line edit values to corresponding values in preprocessing settings
+
+        widget_names = ["cutoff1_lineedit", "cutoff2_lineedit"]
+        cutoff_type = ["cutoff1", "cutoff2"]
+        for i in range(len(widget_names)):
+            w = self.freq_input_widgets[widget_names[i]]
+            w.editingFinished.connect(
+                lambda w=w, cutoff_type=cutoff_type[
+                    i
+                ]: settings_model.filter_cutoff_changed(
+                    float(w.displayText()), cutoff_type
+                )
+            )
+
+    def change_warning_visibility(self, has_acceptable_input: bool):
+        if has_acceptable_input:
+            self.warning_label.hide()
+        else:
+            self.warning_label.show()
+
+    def connect_input_to_warning(self):
+        # Connect line edit values to visibility of warning message
+        # TODO: create separate message for each frequency so can show multiple errors
+        # if neither box has valid input
+
+        widget_names = ["cutoff1_lineedit", "cutoff2_lineedit"]
+        for w_name in widget_names:
+            w = self.freq_input_widgets[w_name]
+
+            w.textChanged.connect(
+                lambda text, w=w: self.change_warning_visibility(w.hasAcceptableInput())
+            )
 
 
 class FilterSpecWidget(QWidget):
@@ -157,7 +238,7 @@ class FilterSpecWidget(QWidget):
             "filter_type": FilterTypeWidget(
                 settings_model=settings_model, filter_types=filter_types, parent=self
             ),  # type
-            "filter_freq": FilterFreqWidget(self),  # frequencies
+            "filter_freq": FilterFreqWidget(settings_model, self),  # frequencies
             "filter_order": FilterOrderWidget(settings_model, parent=self),  # order
         }
 
@@ -229,9 +310,11 @@ class PreprocSettingsWidget(QWidget):
         mains_checkbox.toggled.connect(self.settings_model.mains_checkbox_toggled)
         filter_checkbox.toggled.connect(self.settings_model.filter_checkbox_toggled)
 
+        # Connect visability of filter specifications to filter checkbox
+        filter_checkbox.toggled.connect(self.change_filter_spec_visibility)
+
         # TODO: ...
         # Connect remaining filter  (cutoff freq and order)
-        # Move connections to corresponding widget classes where possible
         # Hide 2nd cutoff freq if filter type is not bandpass
 
         # Temporary checks (whether settings data is updated in main window)
@@ -244,9 +327,13 @@ class PreprocSettingsWidget(QWidget):
         filter_spec.widgets["filter_order"].order_spinbox.valueChanged.connect(
             self.settings_changed_func
         )
-
-        # Connect visability of filter specifications to filter checkbox
-        filter_checkbox.toggled.connect(self.change_filter_spec_visibility)
+        freq_widgets = filter_spec.widgets["filter_freq"].freq_input_widgets
+        freq_widgets["cutoff1_lineedit"].editingFinished.connect(
+            self.settings_changed_func
+        )
+        freq_widgets["cutoff2_lineedit"].editingFinished.connect(
+            self.settings_changed_func
+        )
 
     def match_input_to_settings(self):
         # Set widgets to match provided preprocessing settings
@@ -260,6 +347,8 @@ class PreprocSettingsWidget(QWidget):
 
     def change_filter_spec_visibility(self, checked):
         # Show or hide filter specification widgets based on filter checkbox state
+        # Note that filter specification settings are retained so they are available
+        # if the filtering option is added back to the preprocessing steps.
 
         if checked:
             self.show_filter_spec()

@@ -33,6 +33,9 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         # Create preprocessing settings and model - will eventually add via method
+        # TODO: set default filter specification settings (and/or initial values for
+        # GUI widgets)
+        # Otherwise, breaks if no filter added to preprocessing settings
         settings = EMGPreprocSettings()
         settings.add_remove_mains()  # Remain mains noise
         settings.add_butterworth_filter()

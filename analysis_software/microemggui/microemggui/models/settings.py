@@ -47,3 +47,9 @@ class EMGPreprocSettingsModel:
         # Slot for filter order spinbox
 
         self.settings.butterworth_filter_settings["order"] = order
+
+    def filter_cutoff_changed(self, cutoff_freq, cutoff_type):
+        # Slot for filter cutoff line edit, first cutoff
+
+        self.settings.butterworth_filter_settings[cutoff_type] = cutoff_freq
+        print((cutoff_freq))
