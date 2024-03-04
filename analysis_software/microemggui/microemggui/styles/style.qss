@@ -18,6 +18,10 @@ InputLabel {
 InputInlineLabel {
 }
 
+InputWarningLabel {
+    color: 'red';
+}
+
 InputComboBox {
     min-width: 100;
     max-width: 100;

@@ -36,6 +36,12 @@ class InputInlineLabel(QLabel):
         super().__init__(*args, **kwargs)
 
 
+class InputWarningLabel(QLabel):
+    # Label for warning/error text for input fields
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
 class InputComboBox(QComboBox):
     # Combobox for settings input
     def __init__(self, *args, **kwargs):
