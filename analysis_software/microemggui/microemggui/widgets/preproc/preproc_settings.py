@@ -22,7 +22,12 @@ from microemggui.models.settings import EMGPreprocSettingsModel
 
 class FilterTypeWidget(QWidget):
     # Widget for specifying filter type from labelled combobox
-    def __init__(self, filter_types, parent=None):
+    def __init__(
+        self,
+        settings_model: EMGPreprocSettingsModel,
+        filter_types: list[str],
+        parent=None,
+    ):
         super().__init__(parent)
 
         # Label for filter type
@@ -39,6 +44,25 @@ class FilterTypeWidget(QWidget):
         layout.addWidget(self.type_combobox)
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
+
+        # Set initial text using provided settings
+        self.match_input_to_settings(settings_model)
+
+        # Connect to filter settigns interface
+        self.connect_to_settings(settings_model)
+
+    def match_input_to_settings(self, settings_model):
+        # Set combobox text to corresponding text in preprocessing settings
+
+        self.type_combobox.setCurrentText(
+            settings_model.settings.butterworth_filter_settings["filter_type"]
+        )
+
+    def connect_to_settings(self, settings_model):
+        # Connect combobox vlaue to corresponding value in preprocessing settings
+        self.type_combobox.currentTextChanged.connect(
+            settings_model.filter_type_text_changed
+        )
 
 
 class FilterOrderWidget(QWidget):
@@ -65,7 +89,7 @@ class FilterOrderWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
-        # Set initialise value using provided settings
+        # Set initial value using provided settings
         self.match_input_to_settings(settings_model)
 
         # Connect to filter settings interface
@@ -122,15 +146,17 @@ class FilterSpecWidget(QWidget):
     # Widget for all filter specifications
     def __init__(
         self,
-        filter_types: list[str],
         settings_model: EMGPreprocSettingsModel,
+        filter_types: list[str],
         parent=None,
     ):
         super().__init__(parent)
 
         # Widgets for filter specifications
         self.widgets = {
-            "filter_type": FilterTypeWidget(filter_types, parent=self),  # type
+            "filter_type": FilterTypeWidget(
+                settings_model=settings_model, filter_types=filter_types, parent=self
+            ),  # type
             "filter_freq": FilterFreqWidget(self),  # frequencies
             "filter_order": FilterOrderWidget(settings_model, parent=self),  # order
         }
@@ -170,8 +196,8 @@ class PreprocSettingsWidget(QWidget):
 
         # Filter settings
         filter_spec = FilterSpecWidget(
-            settings_model.settings._get_filter_types_allowed(),
-            self.settings_model,
+            settings_model=self.settings_model,
+            filter_types=settings_model.settings._get_filter_types_allowed(),
             parent=self,
         )
 
@@ -199,16 +225,9 @@ class PreprocSettingsWidget(QWidget):
         # Set inputs to match provided preprocessing settings
         self.match_input_to_settings()
 
-        # Connections to interface
-
-        # Checkboxes
+        # Connect checkboxes to interface
         mains_checkbox.toggled.connect(self.settings_model.mains_checkbox_toggled)
         filter_checkbox.toggled.connect(self.settings_model.filter_checkbox_toggled)
-
-        # Filter specifications
-        filter_spec.widgets["filter_type"].type_combobox.currentTextChanged.connect(
-            self.settings_model.filter_type_text_changed
-        )
 
         # TODO: ...
         # Connect remaining filter  (cutoff freq and order)
@@ -238,12 +257,6 @@ class PreprocSettingsWidget(QWidget):
 
         # Filter checkbox
         self.widgets["filter_checkbox"].setChecked(settings.butterworth_filter)
-
-        # Filter specifications
-        filter_spec_w = self.widgets["filter_spec"].widgets
-        filter_spec_w["filter_type"].type_combobox.setCurrentText(
-            settings.butterworth_filter_settings["filter_type"]
-        )
 
     def change_filter_spec_visibility(self, checked):
         # Show or hide filter specification widgets based on filter checkbox state
