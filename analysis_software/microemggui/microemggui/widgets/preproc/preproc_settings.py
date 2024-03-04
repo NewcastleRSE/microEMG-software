@@ -43,8 +43,9 @@ class FilterTypeWidget(QWidget):
 
 class FilterOrderWidget(QWidget):
     # Widget for specifying the filter order from a spinbox
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+
+    def __init__(self, settings_model: EMGPreprocSettingsModel, parent=None):
+        super().__init__(parent)
 
         # Label
         self.order_label = InputLabel("Order", self)
@@ -63,6 +64,24 @@ class FilterOrderWidget(QWidget):
         layout.addWidget(self.order_spinbox)
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
+
+        # Set initialise value using provided settings
+        self.match_input_to_settings(settings_model)
+
+        # Connect to filter settings interface
+        self.connect_to_settings(settings_model)
+
+    def match_input_to_settings(self, settings_model):
+        # Set spinbox value to corresponding value in preprocessing settings
+
+        self.order_spinbox.setValue(
+            settings_model.settings.butterworth_filter_settings["order"]
+        )
+
+    def connect_to_settings(self, settings_model):
+        # Connect spinbox value to corresponding value in preprocessing settings
+
+        self.order_spinbox.valueChanged.connect(settings_model.filter_order_changed)
 
 
 class FilterFreqWidget(QWidget):
@@ -101,14 +120,19 @@ class FilterFreqWidget(QWidget):
 
 class FilterSpecWidget(QWidget):
     # Widget for all filter specifications
-    def __init__(self, filter_types, parent=None):
+    def __init__(
+        self,
+        filter_types: list[str],
+        settings_model: EMGPreprocSettingsModel,
+        parent=None,
+    ):
         super().__init__(parent)
 
         # Widgets for filter specifications
         self.widgets = {
             "filter_type": FilterTypeWidget(filter_types, parent=self),  # type
             "filter_freq": FilterFreqWidget(self),  # frequencies
-            "filter_order": FilterOrderWidget(self),  # order
+            "filter_order": FilterOrderWidget(settings_model, parent=self),  # order
         }
 
         # Add to filter specifications to vertical layout
@@ -131,6 +155,7 @@ class PreprocSettingsWidget(QWidget):
 
     def __init__(self, settings_model: EMGPreprocSettingsModel, parent=None):
         super().__init__(parent)
+        # TODO: consider moving connections and value initialisations to individual widgets
 
         # Settings interface
         self.settings_model = settings_model
@@ -145,7 +170,9 @@ class PreprocSettingsWidget(QWidget):
 
         # Filter settings
         filter_spec = FilterSpecWidget(
-            settings_model.settings._get_filter_types_allowed(), parent=self
+            settings_model.settings._get_filter_types_allowed(),
+            self.settings_model,
+            parent=self,
         )
 
         # All widgets
@@ -173,8 +200,12 @@ class PreprocSettingsWidget(QWidget):
         self.match_input_to_settings()
 
         # Connections to interface
+
+        # Checkboxes
         mains_checkbox.toggled.connect(self.settings_model.mains_checkbox_toggled)
         filter_checkbox.toggled.connect(self.settings_model.filter_checkbox_toggled)
+
+        # Filter specifications
         filter_spec.widgets["filter_type"].type_combobox.currentTextChanged.connect(
             self.settings_model.filter_type_text_changed
         )
@@ -191,7 +222,11 @@ class PreprocSettingsWidget(QWidget):
         filter_spec.widgets["filter_type"].type_combobox.currentTextChanged.connect(
             self.settings_changed_func
         )
-        # Connect editable property of filter specifications to filter checkbox
+        filter_spec.widgets["filter_order"].order_spinbox.valueChanged.connect(
+            self.settings_changed_func
+        )
+
+        # Connect visability of filter specifications to filter checkbox
         filter_checkbox.toggled.connect(self.change_filter_spec_visibility)
 
     def match_input_to_settings(self):
@@ -204,7 +239,7 @@ class PreprocSettingsWidget(QWidget):
         # Filter checkbox
         self.widgets["filter_checkbox"].setChecked(settings.butterworth_filter)
 
-        # Filter specifications checkbox
+        # Filter specifications
         filter_spec_w = self.widgets["filter_spec"].widgets
         filter_spec_w["filter_type"].type_combobox.setCurrentText(
             settings.butterworth_filter_settings["filter_type"]

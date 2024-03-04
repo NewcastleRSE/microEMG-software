@@ -31,14 +31,19 @@ class EMGPreprocSettingsModel:
 
         print(f"updated mains setting: {self.settings.remove_mains}")
 
-    def filter_checkbox_toggled(self, checked):
+    def filter_checkbox_toggled(self, checked: bool):
         # Slot for filter checkbox
 
         print(f"FILTER: Is checkbox checked? : {checked}")
         self.settings.butterworth_filter = checked
         print(f"updated filter setting: {self.settings.butterworth_filter}")
 
-    def filter_type_text_changed(self, text):
+    def filter_type_text_changed(self, filter_type: str):
         # Slot for filter type combobox
 
-        self.settings.butterworth_filter_settings["filter_type"] = text
+        self.settings.butterworth_filter_settings["filter_type"] = filter_type
+
+    def filter_order_changed(self, order: int):
+        # Slot for filter order spinbox
+
+        self.settings.butterworth_filter_settings["order"] = order
