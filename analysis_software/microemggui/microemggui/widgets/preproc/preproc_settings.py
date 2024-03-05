@@ -137,17 +137,24 @@ class FilterFreqWidget(QWidget):
         )
 
         # Widgets for specifying frequencies
-        self.freq_input_widgets = {
-            "cutoff1_lineedit": InputLineEdit(self),
-            "to_label": InputInlineLabel("to", self),
-            "cutoff2_lineedit": InputLineEdit(self),
-            "hz_label": InputInlineLabel("Hz", self),
+
+        # Keep frequency input line edits separate so easy to loop through
+        # Keys match the keys for specifying the filter cutoff frequency in settings
+        self.freq_lineedit = {
+            "cutoff1": InputLineEdit(self),
+            "cutoff2": InputLineEdit(self),
+        }
+        self.freq_inlinelabel = {
+            "to": InputInlineLabel("to", self),
+            "hz": InputInlineLabel("Hz", self),
         }
 
         # Horizontal layout for frequency input
         layout_input = QHBoxLayout()
-        for _, w in self.freq_input_widgets.items():
-            layout_input.addWidget(w)
+        layout_input.addWidget(self.freq_lineedit["cutoff1"])
+        layout_input.addWidget(self.freq_inlinelabel["to"])
+        layout_input.addWidget(self.freq_lineedit["cutoff2"])
+        layout_input.addWidget(self.freq_inlinelabel["hz"])
         layout_input.setContentsMargins(0, 0, 0, 0)
         self.freq_input = QWidget(self)
         self.freq_input.setLayout(layout_input)
@@ -163,42 +170,31 @@ class FilterFreqWidget(QWidget):
         # Add validation for input
         # Double (float), between 0 and Nyquist frequency, up to 2 decimal places
         freq_val = QDoubleValidator(self.freq_val_low, self.freq_val_high, 2)
-        self.freq_input_widgets["cutoff1_lineedit"].setValidator(freq_val)
-        self.freq_input_widgets["cutoff2_lineedit"].setValidator(freq_val)
+        for _, w in self.freq_lineedit.items():
+            w.setValidator(freq_val)
 
         # Set initial values and widget visibility using provided settings
         self.match_input_to_settings(settings_model)
 
-        # Connect to filter settings interface
-        self.connect_to_settings(settings_model)
-
-        # Connect input to warning visability
-        self.connect_input_to_warning()
+        # Connections
+        self.connect_to_settings(settings_model)  # To filter settings interface
+        self.connect_input_to_warning()  # To warning labels
 
     def match_input_to_settings(self, settings_model):
         # Set line edit box text to the corresponding values in the preprocessing
         # settings
         # TODO: case if only one cutoff
         # TODO: initial warning messages? (probably not needed - already validated)
-        self.freq_input_widgets["cutoff1_lineedit"].setText(
-            str(settings_model.settings.butterworth_filter_settings["cutoff1"])
-        )
 
-        self.freq_input_widgets["cutoff2_lineedit"].setText(
-            str(settings_model.settings.butterworth_filter_settings["cutoff2"])
-        )
+        for k, w in self.freq_lineedit.items():
+            w.setText(str(settings_model.settings.butterworth_filter_settings[k]))
 
     def connect_to_settings(self, settings_model):
         # Connect line edit values to corresponding values in preprocessing settings
 
-        widget_names = ["cutoff1_lineedit", "cutoff2_lineedit"]
-        cutoff_type = ["cutoff1", "cutoff2"]
-        for i in range(len(widget_names)):
-            w = self.freq_input_widgets[widget_names[i]]
+        for k, w in self.freq_lineedit.items():
             w.editingFinished.connect(
-                lambda w=w, cutoff_type=cutoff_type[
-                    i
-                ]: settings_model.filter_cutoff_changed(
+                lambda w=w, cutoff_type=k: settings_model.filter_cutoff_changed(
                     float(w.displayText()), cutoff_type
                 )
             )
@@ -214,10 +210,7 @@ class FilterFreqWidget(QWidget):
         # TODO: create separate message for each frequency so can show multiple errors
         # if neither box has valid input
 
-        widget_names = ["cutoff1_lineedit", "cutoff2_lineedit"]
-        for w_name in widget_names:
-            w = self.freq_input_widgets[w_name]
-
+        for k, w in self.freq_lineedit.items():
             w.textChanged.connect(
                 lambda text, w=w: self.change_warning_visibility(w.hasAcceptableInput())
             )
@@ -327,13 +320,9 @@ class PreprocSettingsWidget(QWidget):
         filter_spec.widgets["filter_order"].order_spinbox.valueChanged.connect(
             self.settings_changed_func
         )
-        freq_widgets = filter_spec.widgets["filter_freq"].freq_input_widgets
-        freq_widgets["cutoff1_lineedit"].editingFinished.connect(
-            self.settings_changed_func
-        )
-        freq_widgets["cutoff2_lineedit"].editingFinished.connect(
-            self.settings_changed_func
-        )
+        freq_widgets = filter_spec.widgets["filter_freq"].freq_lineedit
+        for _, w in freq_widgets.items():
+            w.editingFinished.connect(self.settings_changed_func)
 
     def match_input_to_settings(self):
         # Set widgets to match provided preprocessing settings
