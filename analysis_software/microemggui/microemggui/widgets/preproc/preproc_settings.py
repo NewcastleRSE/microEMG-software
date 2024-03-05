@@ -124,18 +124,6 @@ class FilterFreqWidget(QWidget):
         # Label
         self.freq_label = InputLabel("Cutoff frequencies", self)
 
-        # Warning label
-        self.freq_val_low = 0
-        self.freq_val_high = 10000  # Nyquist frequency for 20k Hz sampling frequency
-
-        self.warning_label = InputWarningLabel(
-            (
-                f"Each frequency must be between {self.freq_val_low} and "
-                f"{self.freq_val_high} Hz"
-            ),
-            self,
-        )
-
         # Widgets for specifying frequencies
 
         # Keep frequency input line edits separate so easy to loop through
@@ -159,19 +147,33 @@ class FilterFreqWidget(QWidget):
         self.freq_input = QWidget(self)
         self.freq_input.setLayout(layout_input)
 
+        # Valid range for frequencies
+        self.freq_val_low = 0
+        self.freq_val_high = 10000  # Nyquist frequency for 20k Hz sampling frequency
+        freq_val = QDoubleValidator(self.freq_val_low, self.freq_val_high, 2)
+        for _, w in self.freq_lineedit.items():
+            w.setValidator(freq_val)
+
+        # Warning label for each frequency input if not valid
+        self.warning_labels = {}
+        w_count = ["First", "Second"]
+        for k, c in zip(self.freq_lineedit.keys(), w_count):
+            self.warning_labels[k] = InputWarningLabel(
+                (
+                    f"{c} frequency must be between {self.freq_val_low} and "
+                    f"{self.freq_val_high} Hz"
+                ),
+                self,
+            )
+
         # Add label and input to overall layout
         layout = QVBoxLayout()
         layout.addWidget(self.freq_label)
         layout.addWidget(self.freq_input)
-        layout.addWidget(self.warning_label)
+        for _, w in self.warning_labels.items():
+            layout.addWidget(w)
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
-
-        # Add validation for input
-        # Double (float), between 0 and Nyquist frequency, up to 2 decimal places
-        freq_val = QDoubleValidator(self.freq_val_low, self.freq_val_high, 2)
-        for _, w in self.freq_lineedit.items():
-            w.setValidator(freq_val)
 
         # Set initial values and widget visibility using provided settings
         self.match_input_to_settings(settings_model)
@@ -199,20 +201,20 @@ class FilterFreqWidget(QWidget):
                 )
             )
 
-    def change_warning_visibility(self, has_acceptable_input: bool):
+    def change_warning_visibility(self, has_acceptable_input: bool, cutoff_type: str):
         if has_acceptable_input:
-            self.warning_label.hide()
+            self.warning_labels[cutoff_type].hide()
         else:
-            self.warning_label.show()
+            self.warning_labels[cutoff_type].show()
 
     def connect_input_to_warning(self):
-        # Connect line edit values to visibility of warning message
-        # TODO: create separate message for each frequency so can show multiple errors
-        # if neither box has valid input
+        # Connect line edit values to visibility of warning messages
 
         for k, w in self.freq_lineedit.items():
             w.textChanged.connect(
-                lambda text, w=w: self.change_warning_visibility(w.hasAcceptableInput())
+                lambda text, w=w, cutoff_type=k: self.change_warning_visibility(
+                    w.hasAcceptableInput(), cutoff_type
+                )
             )
 
 
@@ -306,8 +308,6 @@ class PreprocSettingsWidget(QWidget):
         # Connect visability of filter specifications to filter checkbox
         filter_checkbox.toggled.connect(self.change_filter_spec_visibility)
 
-        # TODO: ...
-        # Connect remaining filter  (cutoff freq and order)
         # Hide 2nd cutoff freq if filter type is not bandpass
 
         # Temporary checks (whether settings data is updated in main window)
