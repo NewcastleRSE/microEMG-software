@@ -86,7 +86,7 @@ def MTEO(raw_signal, ks, FiltFl = True):
         runTEO = tmp[i, :]
 
     return runTEO, tmp
-'''
+
 def findspikes(template, sig, locs, Fs, TH):
     """
     Uses Psuedo Correlation for spike Classification
@@ -94,33 +94,41 @@ def findspikes(template, sig, locs, Fs, TH):
 
     Parameters
     ----------
+    template : 2D numpy NDArray[float, float]
+        Storing templates
     sig : 1D numpy NDArray[float]
         signal
-    DTh : float 
-        Decision threshold
+    locs : 1D numpy NDArray[int]
+        locations
     Fs : float
         Sampling frequency
+    TH : float
+        threshold    
+        
     Returns
     -------
-    TE : 1D numpy NDArray[float]
-        Detected Muaps 
+    loc : 1D numpy NDArray[int]
+        location of the spikes in the signal
+    new_sig : 1D numpy NDArray[float]
+        new signal
+        
     """ 
  
-    loc = false(1,len(locs));
-    lag = round(0.0002*Fs); #lag (def was 0.0002)
+    loc = np.full((1, len(locs)), False)
+    #lag (def was 0.0002)
+    lag = round(0.0002 * Fs) 
 
-      for i = 1:len(locs)
-        tmp = sig[i, :];
-        [PsC_s,~] = PsC(template,tmp,lag);
-        if PsC_s >= TH
-             loc(i) = 1;
-             sig[i, :] = sig[i, :] - template;
-        end
-      end
-  
-      new_sig = sig;
+    for i in range(len(locs)):
+        tmp = sig[i, :]
+        PsC_s, _ = PsC(template, tmp, lag)
+        if PsC_s >= TH:
+            loc[i] = True
+            sig[i, :] = sig[i, :] - template
+        
+    new_sig = sig
+    
     return loc, new_sig
-'''
+
 
 def resolve_peaks(sig, DTh, Fs):
     """
@@ -485,6 +493,234 @@ def initialize(sig, Fs, notch = False):
 
     return sig
 
+def linear_map(X, original_range, map_range):
+    """    
+    Linearly Maps a set of numbers to another scale
+    
+    Parameters
+    ----------
+    X : 1D numpy NDArray[float]
+        The number to be mapped
+    original_range : 1D numpy NDArray[float]
+        The original range of the variable e.g. ([0 10]), the
+        minimum and maximum possible value that X can take
+    map_range : 1D numpy NDArray[float]
+        The new min and maximum range that the number should be
+        assigned to that range
+   
+    Returns
+    -------
+    Y : integer
+        Mapped number
+    """
+
+    a1 = original_range[0]
+    a2 = original_range[1]
+
+    b1 = map_range[0]
+    b2 = map_range[1]
+
+    if original_range[0] != original_range[1]:
+        Y = b1 + ((X - a1) * (b2 - b1)) / (a2 - a1)
+    else:
+        Y = X/original_range[0]
+    
+    # map to nearest integer
+    return round(Y)                     
+
+
+def PsC(template, sig, lag = -1):
+    """    
+    Psuedo_Correlation
+    Computes the Pseudo Correlation , a finer approach than normal
+    correlation for template matching. Please review the paper below in order
+    to see why it is much more accurate for the pattern recognition
+    
+    Parameters
+    ----------
+    template : 2D numpy NDArray[float, float]
+        Storing templates
+    sig: 1D numpy NDArray[float]
+        the signal that we are searching the template in
+    lag : integer
+        does PsC for the lag between -lag : lag, it should be in samples,
+        for example half the length of the input signal
+        
+    Returns
+    -------
+    PsC_score : float
+        maximum score at best lag
+    """
+
+    if lag == -1:
+        lag = round(len(sig)*0.5)
+    
+    m = len(template)
+    n = len(sig)
+
+    if m > n:
+        raise Exception('Length of Template should be equal or smaller than pattern') 
+   
+    sig = np.vstack(np.zeros((lag, 1)), sig, np.zeros((2 * lag, 1)))
+    
+    p4 = np.zeros((1, m))
+    normaliz = np.zeros((1, m))
+    PsC_score = np.zeros((1, n));
+ 
+    for k in range(2 * lag + 1):
+        for i in range(m):
+            p1 = template[i] * sig[k + i]
+            p2 = abs(template[i] - sig[k + i])
+            p3 = max(abs(template[i]), abs(sig[k + i]))
+            p4[i] = (p1 - p2*p3)
+            normaliz[i] = p3**2
+         
+        PsC_score[k + 1] = max(sum(p4)/sum(normaliz), 0)
+    
+
+    PsC_s, best_lag = max(PsC_score)
+    best_lag = best_lag - (lag + 1)
+    
+    return PsC_s, best_lag
+
+def merge_clusters(template, title, TH, Fs, sig_l):
+    """    
+    This function uses Pysuedo- Correlation for clustering method
+    Checks first for inter-cluster similarity and then for clusters
+    themself that are similar
+    
+    Parameters
+    ----------
+    template : 2D numpy NDArray[float, float]
+        Storing templates
+    title : 
+        ....
+    TH : float
+        threshold
+    Fs : float
+        Sampling Frequency (e.g. 2000 Hz)
+    sig_l : integer
+        length of signal
+        
+    Returns
+    -------
+    uniq_c : integer
+        Mapped number
+    """
+    
+    c = 1
+    semi_final = np.zeros(max(title), template.shape[1])
+    counter = np.full((max(title), 1), False)
+
+    if round(sig_l/Fs) < 10:
+        #minimum length of clusters
+        min_l = np.ceil(sig_l/Fs)            
+    else:
+        min_l = 3
+    
+    #lag(def 0.0002)
+    lag = round(0.0002*Fs)                       
+    
+    # Checking for inter-cluster similarity
+    for i in range(max(title)):
+        A = (title == i)
+        tmp_t2 = template[A, :] 
+        if tmp_t2.shape[0] >= min_l:
+            semi_final[c, :] = np.median(tmp_t2)
+       
+            for j in range(tmp_t2.shape[0]):
+                PsC_s = PsC(semi_final[c, :], tmp_t2[j, :], 4)
+                if PsC_s < TH:
+                    tmp_t2[j, :] = np.NaN
+                              
+            tmp_t2 = tmp_t2[np.isfinite(tmp_t2[:, 0]), :]
+            if tmp_t2.shape[0] < min_l:
+                semi_final[c, :] = np.NaN
+                counter[c] = False     
+            else:
+                semi_final[c, :] = np.median(tmp_t2);
+                counter[c] = True
+          
+            c = c +1
+     
+            
+    # Now merging clusters that are similar
+    semi_final = semi_final[counter, :]
+
+    for i in range(semi_final.shape[0]):
+        if all(not np.isnan(semi_final[i, :])):
+            for j in range(semi_final.shape[0]):
+                if i != j and all(not np.isnan(semi_final[j, :])):
+                    PsC_s = PsC(semi_final[i, :], semi_final[j, :], lag)
+                    if PsC_s > TH:
+                        semi_final[i, :] = (semi_final[i, :] + semi_final[j, :]) * 0.5
+                        semi_final[j, :] = np.NaN
+               
+    uniq_c = semi_final[np.isfinite(semi_final[:, 1]), :]
+
+    return uniq_c
+
+def generate_title(features):
+    """    
+    Title Generation:
+    generates the titles and also initial set of clusters based on label matching 
+    
+    Parameters
+    ----------
+    features : 
+    
+    Returns
+    -------
+    title :
+   
+    """
+    
+    title = [] 
+    complete = [] 
+    L = np.zeros((features.shape[0], 1))
+
+    for i in range(features.shape[0]):
+        tmp1 = not np.isnan(features[i, 1:5])
+        tmp1 = features(i, tmp1)
+        tmp = not np.isnan(features[i, :])
+        tmp = features[i, tmp]
+        title[i] = " ".join(map(str, tmp1)) 
+        complete[i] = " ".join(map(str, tmp))
+        L[i] = len(title[i])
+        
+    tmp, ai = np.unique(title)
+    L = L[ai]
+    _, title = np.ismember(title, tmp)
+
+    for i in range(len(L)):
+        LI = (L[i] - 1)
+        ind1 = (title == i)
+        locs = np.argwhere(title == i)
+        test = complete[ind1]
+        
+        for j in features(test.shape[0]):
+            for k in features(test.shape[0]):
+              
+                if j > 0: 
+                    TP = (test[j, :] == test[j-1, :])
+                    if all(TP):
+                        break 
+                 
+              
+            d = abs(test[j, :] - test[k, :])
+            B = np.any((d != 1) & (d != 0))
+            V = np.any(d[-LI:])
+            
+            if (not B and not V):
+                test[k, :]= test[j, :]
+                complete[locs[k]] = complete[locs[j]]
+  
+    tmp = np.unique(complete)
+    
+    _, title = np.ismember(complete, tmp)
+
+    return title
+
 def TK_filter(sig, Fs, C = 0.1, PsC_TH = 0.1, init = True, wind = 0.020):
     """    
     Function for Spike detection and Classification
@@ -625,8 +861,8 @@ def TK_filter(sig, Fs, C = 0.1, PsC_TH = 0.1, init = True, wind = 0.020):
             S_block[i, :], template[i, :] = spike_separator(S_block[i, :], template[i, :], S_neighbor, window, TH)
             features[i, :] = border_detector(S_block[i, :],template[i, :],TH,TH1)
             
-         ## Case 3                                  
-         # Bounderies
+        ## Case 3                                  
+        # Bounderies
         elif (locs[i] + S_neighbor) > len(sig_TEO):
          
             first_half = len(sig[(locs[i] - S_neighbor):locs[i]])
