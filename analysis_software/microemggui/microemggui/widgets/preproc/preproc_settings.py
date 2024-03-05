@@ -199,8 +199,6 @@ class FilterFreqWidget(QWidget):
         n_freq = filter_n_freq[filter_type]
 
         if n_freq == 1:
-            print("1 frequency")
-
             # Change cutoff2 input to empty string
             self.freq_lineedit["cutoff2"].setText("")
 
@@ -219,7 +217,6 @@ class FilterFreqWidget(QWidget):
             )
 
         elif n_freq == 2:
-            print("2 frequencies")
             # TODO: store that cutoff2 input is not valid since still empty
 
             # Show widgets
@@ -303,7 +300,7 @@ class FilterSpecWidget(QWidget):
         self.setLayout(layout)
 
 
-# --- Widget for all settings ---
+# --- Widget for all preprocessing settings ---
 
 
 class PreprocSettingsWidget(QWidget):
@@ -353,12 +350,8 @@ class PreprocSettingsWidget(QWidget):
 
         self.setLayout(layout)
 
-        # Connect to data
-
-        # Set inputs to match provided preprocessing settings
-        self.match_input_to_settings()
-
-        # Connect checkboxes to interface
+        # Connect checkboxes to data
+        self.match_input_to_settings()  # match initial settings
         mains_checkbox.toggled.connect(self.settings_model.mains_checkbox_toggled)
         filter_checkbox.toggled.connect(self.settings_model.filter_checkbox_toggled)
 
@@ -385,7 +378,7 @@ class PreprocSettingsWidget(QWidget):
             w.editingFinished.connect(self.settings_changed_func)
 
     def match_input_to_settings(self):
-        # Set widgets to match provided preprocessing settings
+        # Set checkboxes to match provided preprocessing settings
         settings = self.settings_model.settings
 
         # Mains noise removal checkbox
