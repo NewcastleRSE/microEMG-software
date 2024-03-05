@@ -62,7 +62,9 @@ class FilterTypeWidget(QWidget):
         )
 
     def connect_to_settings(self, settings_model):
-        # Connect combobox vlaue to corresponding value in preprocessing settings
+        # Connect combobox value to corresponding values in preprocessing settings.
+        # Changes filter type and also sets cutoff2 frequency to none if filter type
+        # only requires one frequency
 
         self.type_combobox.currentTextChanged.connect(
             settings_model.filter_type_text_changed
@@ -118,8 +120,12 @@ class FilterFreqWidget(QWidget):
         super().__init__(parent)
 
         # TODO: block preprocessing from being applied if freq are not valid
-        # TODO: change validator based on data sampling frequency
+        # TODO: set validator based on data sampling frequency
+        # TODO: check upper allowed range for filter frequencies
         # TODO: ensure upper cutoff is greater than lower cutoff
+
+        # Settings
+        self.settings_model = settings_model
 
         # Label
         self.freq_label = InputLabel("Cutoff frequencies", self)
@@ -165,6 +171,7 @@ class FilterFreqWidget(QWidget):
                 ),
                 self,
             )
+            self.warning_labels[k].hide()  # Initially hidden since settings validated
 
         # Add label and input to overall layout
         layout = QVBoxLayout()
@@ -176,27 +183,78 @@ class FilterFreqWidget(QWidget):
         self.setLayout(layout)
 
         # Set initial values and widget visibility using provided settings
-        self.match_input_to_settings(settings_model)
+        self.match_input_to_settings()
 
         # Connections
-        self.connect_to_settings(settings_model)  # To filter settings interface
+        self.connect_to_settings()  # To filter settings interface
         self.connect_input_to_warning()  # To warning labels
 
-    def match_input_to_settings(self, settings_model):
+    def set_n_freq(self, filter_type):
+        # Set frequency input to match the number of frequencies needed (determined
+        # by filter type)
+        # Note that setting cutoff2 frequency to None is handled by FilterTypeWidget
+        # signal.
+
+        filter_n_freq = self.settings_model.settings._get_n_freq_per_filter_type()
+        n_freq = filter_n_freq[filter_type]
+
+        if n_freq == 1:
+            print("1 frequency")
+
+            # Change cutoff2 input to empty string
+            self.freq_lineedit["cutoff2"].setText("")
+
+            # Hide widgets
+            self.freq_lineedit["cutoff2"].hide()
+            self.freq_inlinelabel["to"].hide()
+            self.warning_labels["cutoff2"].hide()
+
+            # Change labels to singular
+            self.freq_label.setText("Cutoff frequency")
+            self.warning_labels["cutoff1"].setText(
+                (
+                    f"Frequency must be between {self.freq_val_low} and "
+                    f"{self.freq_val_high} Hz"
+                )
+            )
+
+        elif n_freq == 2:
+            print("2 frequencies")
+            # TODO: store that cutoff2 input is not valid since still empty
+
+            # Show widgets
+            self.freq_lineedit["cutoff2"].show()
+            self.freq_inlinelabel["to"].show()
+
+            # Change labels to plural
+            self.freq_label.setText("Cutoff frequencies")
+            self.warning_labels["cutoff1"].setText(
+                (
+                    f"First frequency must be between {self.freq_val_low} and "
+                    f"{self.freq_val_high} Hz"
+                )
+            )
+
+    def match_input_to_settings(self):
         # Set line edit box text to the corresponding values in the preprocessing
         # settings
-        # TODO: case if only one cutoff
-        # TODO: initial warning messages? (probably not needed - already validated)
 
+        # Match lineedit inputs to frequencies
+        # If cutoff2 is None, will be replaced by empty string by self.set_n_freq
         for k, w in self.freq_lineedit.items():
-            w.setText(str(settings_model.settings.butterworth_filter_settings[k]))
+            w.setText(str(self.settings_model.settings.butterworth_filter_settings[k]))
 
-    def connect_to_settings(self, settings_model):
+        # Match widgets to filter type
+        self.set_n_freq(
+            self.settings_model.settings.butterworth_filter_settings["filter_type"]
+        )
+
+    def connect_to_settings(self):
         # Connect line edit values to corresponding values in preprocessing settings
 
         for k, w in self.freq_lineedit.items():
             w.editingFinished.connect(
-                lambda w=w, cutoff_type=k: settings_model.filter_cutoff_changed(
+                lambda w=w, cutoff_type=k: self.settings_model.filter_cutoff_changed(
                     float(w.displayText()), cutoff_type
                 )
             )
@@ -257,7 +315,6 @@ class PreprocSettingsWidget(QWidget):
 
     def __init__(self, settings_model: EMGPreprocSettingsModel, parent=None):
         super().__init__(parent)
-        # TODO: consider moving connections and value initialisations to individual widgets
 
         # Settings interface
         self.settings_model = settings_model
@@ -308,7 +365,10 @@ class PreprocSettingsWidget(QWidget):
         # Connect visability of filter specifications to filter checkbox
         filter_checkbox.toggled.connect(self.change_filter_spec_visibility)
 
-        # Hide 2nd cutoff freq if filter type is not bandpass
+        # Connect filter type to filter frequency widget
+        filter_spec.widgets["filter_type"].type_combobox.currentTextChanged.connect(
+            filter_spec.widgets["filter_freq"].set_n_freq
+        )
 
         # Temporary checks (whether settings data is updated in main window)
         # TODO: remove or incorporate in logger

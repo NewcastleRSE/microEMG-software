@@ -38,7 +38,7 @@ class MainWindow(QMainWindow):
         # Otherwise, breaks if no filter added to preprocessing settings
         settings = EMGPreprocSettings()
         settings.add_remove_mains()  # Remain mains noise
-        settings.add_butterworth_filter()
+        settings.add_butterworth_filter(filter_type="highpass", cutoff_freq=100)
 
         self.settings_model = EMGPreprocSettingsModel(settings)
         print("INITIAL SETTINGS")

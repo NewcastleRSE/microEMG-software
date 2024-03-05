@@ -54,6 +54,12 @@ class EMGPreprocSettings:
         filter_types_allowed = ["lowpass", "highpass", "bandpass"]
         return filter_types_allowed
 
+    @staticmethod
+    def _get_n_freq_per_filter_type() -> dict[str, int]:
+        filter_n_freq = {"lowpass": 1, "highpass": 1, "bandpass": 2}
+
+        return filter_n_freq
+
     def add_butterworth_filter(
         self,
         cutoff_freq: None | list[float] | float = None,

@@ -41,7 +41,13 @@ class EMGPreprocSettingsModel:
     def filter_type_text_changed(self, filter_type: str):
         # Slot for filter type combobox
 
+        # Set filter type
         self.settings.butterworth_filter_settings["filter_type"] = filter_type
+
+        # Change cutoff2 frequency to None if filter type only requires one frequency
+        filter_n_freq = self.settings._get_n_freq_per_filter_type()
+        if filter_n_freq[filter_type] == 1:
+            self.settings.butterworth_filter_settings["cutoff2"] = None
 
     def filter_order_changed(self, order: int):
         # Slot for filter order spinbox
