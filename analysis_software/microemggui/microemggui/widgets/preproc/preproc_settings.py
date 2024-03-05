@@ -1,5 +1,6 @@
 """
 Widgets for specifying preprocessing settings
+TODO: behaviour when initial settings do not include filter specifications
 """
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
 
