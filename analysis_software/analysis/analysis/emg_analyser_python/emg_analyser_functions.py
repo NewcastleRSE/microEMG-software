@@ -87,7 +87,65 @@ def MTEO(raw_signal, ks, FiltFl = True):
 
     return runTEO, tmp
 
-def findspikes(template, sig, locs, Fs, TH):
+
+
+def PsC(template, sig_one_loc, lag = -1):
+    """    
+    Psuedo_Correlation
+    Computes the Pseudo Correlation, a finer approach than normal
+    correlation for template matching. Please review the paper below in order
+    to see why it is much more accurate for the pattern recognition
+    
+    Parameters
+    ----------
+    template : 2D numpy NDArray[float, float]
+        Storing templates
+    sig_one_loc: 1D numpy NDArray[float]
+        the signal that we are searching the template in
+    lag : integer
+        does PsC for the lag between -lag : lag, it should be in samples,
+        for example half the length of the input signal
+        
+    Returns
+    -------
+    PsC_score : float
+        maximum score at best lag
+    """
+
+    if lag == -1:
+        lag = round(len(sig_one_loc)*0.5)
+    
+    m = len(template)
+    n = len(sig_one_loc)
+
+    if m > n:
+        raise Exception('Length of Template should be equal or smaller than pattern') 
+   
+    sig_one_loc = np.hstack((np.zeros((lag)), sig_one_loc, np.zeros((2 * lag))))
+    
+    p4 = np.zeros(m)
+    normaliz = np.zeros(m)
+    PsC_score = np.zeros(n);
+ 
+    for k in range(2 * lag + 1):
+        for i in range(m):
+            p1 = template[i] * sig_one_loc[k + i]
+            p2 = abs(template[i] - sig_one_loc[k + i])
+            p3 = max(abs(template[i]), abs(sig_one_loc[k + i]))
+            p4[i] = (p1 - p2*p3)
+            normaliz[i] = p3**2
+         
+        PsC_score[k] = max(sum(p4)/sum(normaliz), 0)
+    
+
+    best_lag = np.argmax(PsC_score)
+    PsC_s = PsC_score[best_lag]
+    best_lag = best_lag - lag
+    
+    return PsC_s, best_lag
+
+
+def find_spikes(template, sig, locs, Fs, TH):
     """
     Uses Psuedo Correlation for spike Classification
     NOTE: USES PsC_Mex for fast clustering
@@ -96,8 +154,8 @@ def findspikes(template, sig, locs, Fs, TH):
     ----------
     template : 2D numpy NDArray[float, float]
         Storing templates
-    sig : 1D numpy NDArray[float]
-        signal
+    sig : 2D numpy NDArray[float, float]
+        signal, each row a separate location
     locs : 1D numpy NDArray[int]
         locations
     Fs : float
@@ -114,7 +172,7 @@ def findspikes(template, sig, locs, Fs, TH):
         
     """ 
  
-    loc = np.full((1, len(locs)), False)
+    loc = np.full(len(locs), False)
     #lag (def was 0.0002)
     lag = round(0.0002 * Fs) 
 
@@ -130,7 +188,7 @@ def findspikes(template, sig, locs, Fs, TH):
     return loc, new_sig
 
 
-def resolve_peaks(sig, DTh, Fs):
+def resolve_peaks(sig_one_loc, DTh, Fs):
     """
     Resolves the spikes which are too close
 
@@ -149,15 +207,14 @@ def resolve_peaks(sig, DTh, Fs):
         Detected Muaps 
     """ 
 
-    sig = np.abs(sig)
+    sig_one_loc = np.abs(sig_one_loc)
     # def 15 millisec min distance
-    min_pd = np.round(0.0015 * Fs)
-    tmp = np.zeros((1, len(sig)))
-    ind = (sig > DTh)
-    tmp[ind] = sig[ind]
-    locs = sg.find_peaks(tmp, distance = min_pd)
-    TE = tmp[locs]
-    
+    min_pd = max(1, np.round(0.0015 * Fs))
+    tmp = np.zeros(len(sig_one_loc))
+    ind = (sig_one_loc > DTh)
+    tmp[ind] = sig_one_loc[ind]
+    TE = sg.find_peaks(tmp, distance = min_pd)
+       
     return TE
 
 def MTH(MTEO, ks, L, Fs):
@@ -169,8 +226,10 @@ def MTH(MTEO, ks, L, Fs):
 
     Parameters
     ----------
-    ks : 1D numpy NDArray[int]
-        levels of MTEO
+    MTEO : 1D numpy NDArray[float]
+        MTEO signal outputs from MTEO function    
+    ks : int
+        level of MTEO
     L : int
         is the factor that multiplies [cost of comission]/[cost of omission].
         For most practical purposes -0.2 <= L <= 0.2. Larger L --> omissions
@@ -187,59 +246,57 @@ def MTH(MTEO, ks, L, Fs):
         Decision threshold
     """
     
-    N, M = MTEO.shape
+    M = len(MTEO)
     ks = ks*2
 
     # define detection parameter
     # log(Lcom/Lom), where the ratio is the maximum 
     Lmax = -551.0520      
     L = L * Lmax
-
-    for i in range(N):
-    
-        # take only coefficients that are independent (W(i) apart) for median
-        # standard deviation    
-        Sigmaj = np.median(np.abs( MTEO[i, ::np.round(ks[i])] - np.mean(MTEO[i, :] )))/0.6745
-        #hard threshold
-        Thj = Sigmaj * np.sqrt(2 * np.log(M))  
-        index = np.abs(MTEO[i, :]) > Thj
-        index = MTEO[i, index]
-    
-        if not np.empty(index):
-            # mean of the signal coefficients
-            Mj = np.mean(np.abs(index))
-            # prior of spikes
-            PS = len(index)/M
-            # prior of noise
-            PN = 1 - PS
-            # decision threshold
-            DTh = Mj/2 + (Sigmaj**2)/Mj * (L + np.log(PN/PS))
-            # make DTh>=0
-            DTh = np.abs(DTh) * (DTh >= 0)         
-            TE = resolve_peaks(MTEO[i, :], DTh, Fs)
-        else:
+  
+    # take only coefficients that are independent (W(i) apart) for median
+    # standard deviation    
+    Sigmaj = np.median(np.abs(MTEO[::np.round(ks)] - np.mean(MTEO)))/0.6745
+    #hard threshold
+    Thj = Sigmaj * np.sqrt(2 * np.log(M))  
+    indexes = (np.abs(MTEO) > Thj)
+      
+    if len(indexes) > 0:
+        sig_out = MTEO[indexes]    
+        # mean of the signal coefficients
+        Mj = np.mean(np.abs(sig_out))
+        # prior of spikes
+        PS = len(sig_out)/M
+        # prior of noise
+        PN = 1 - PS
+        # decision threshold
+        DTh = Mj/2 + (Sigmaj**2)/Mj * (L + np.log(PN/PS))
+        # make DTh>=0
+        DTh = np.abs(DTh) * (DTh >= 0)         
+        TE = resolve_peaks(MTEO[:], DTh, Fs)
+    else:
         
-            Mj = Thj;
-            # assume at least one spike
-            PS = 1/M
-            PN = 1 - PS
-            # decision threshold
-            DTh = Mj/2 + Sigmaj^2/Mj * (L + np.log(PN/PS))
-            # make DTh>=0
-            DTh = np.abs(DTh)* (DTh >= 0)
-            ind  = np.abs(MTEO[i, :]) > DTh
-            ind = MTEO(i,ind)
-            if np.empty(ind):
-                # do nothing ct=[0];
-                TE = []
-            else:
-                # This function resolves too close peaks
-                TE = resolve_peaks(MTEO[i, :], DTh, Fs)
+        Mj = Thj;
+        # assume at least one spike
+        PS = 1/M
+        PN = 1 - PS
+        # decision threshold
+        DTh = Mj/2 + Sigmaj^2/Mj * (L + np.log(PN/PS))
+        # make DTh>=0
+        DTh = np.abs(DTh)* (DTh >= 0)
+        ind  = np.abs(MTEO) > DTh
+        ind = MTEO[ind]
+        if np.empty(ind):
+            # do nothing ct=[0];
+            TE = []
+        else:
+            # This function resolves too close peaks
+            TE = resolve_peaks(MTEO, DTh, Fs)
                            
     
     # to enhance performance discard detections more than 700Hz period
     if not np.empty(TE):
-        if (len(TE)/(np.shape(MTEO)[1]/Fs)) > 500 or (len(TE)/(np.shape(MTEO)[1]/Fs)) < 1:
+        if (len(TE)/(len(MTEO)/Fs)) > 500 or (len(TE)/(len(MTEO)/Fs)) < 1:
             TE = []
             DTh = []            
  
@@ -529,60 +586,6 @@ def linear_map(X, original_range, map_range):
     return round(Y)                     
 
 
-def PsC(template, sig, lag = -1):
-    """    
-    Psuedo_Correlation
-    Computes the Pseudo Correlation , a finer approach than normal
-    correlation for template matching. Please review the paper below in order
-    to see why it is much more accurate for the pattern recognition
-    
-    Parameters
-    ----------
-    template : 2D numpy NDArray[float, float]
-        Storing templates
-    sig: 1D numpy NDArray[float]
-        the signal that we are searching the template in
-    lag : integer
-        does PsC for the lag between -lag : lag, it should be in samples,
-        for example half the length of the input signal
-        
-    Returns
-    -------
-    PsC_score : float
-        maximum score at best lag
-    """
-
-    if lag == -1:
-        lag = round(len(sig)*0.5)
-    
-    m = len(template)
-    n = len(sig)
-
-    if m > n:
-        raise Exception('Length of Template should be equal or smaller than pattern') 
-   
-    sig = np.vstack(np.zeros((lag, 1)), sig, np.zeros((2 * lag, 1)))
-    
-    p4 = np.zeros((1, m))
-    normaliz = np.zeros((1, m))
-    PsC_score = np.zeros((1, n));
- 
-    for k in range(2 * lag + 1):
-        for i in range(m):
-            p1 = template[i] * sig[k + i]
-            p2 = abs(template[i] - sig[k + i])
-            p3 = max(abs(template[i]), abs(sig[k + i]))
-            p4[i] = (p1 - p2*p3)
-            normaliz[i] = p3**2
-         
-        PsC_score[k + 1] = max(sum(p4)/sum(normaliz), 0)
-    
-
-    PsC_s, best_lag = max(PsC_score)
-    best_lag = best_lag - (lag + 1)
-    
-    return PsC_s, best_lag
-
 def merge_clusters(template, title, TH, Fs, sig_l):
     """    
     This function uses Pysuedo- Correlation for clustering method
@@ -721,7 +724,7 @@ def generate_title(features):
 
     return title
 
-def TK_filter(sig, Fs, C = 0.1, PsC_TH = 0.1, init = True, wind = 0.020):
+def TK_filter(sig_one_loc, Fs, C = 0.1, PsC_TH = 0.1, init = True, wind = 0.020):
     """    
     Function for Spike detection and Classification
     This is designed to filter out shallow peaks out of Action potentials
@@ -735,6 +738,7 @@ def TK_filter(sig, Fs, C = 0.1, PsC_TH = 0.1, init = True, wind = 0.020):
         EMG signal Vector
     Fs : float
         Sampling Frequency (e.g. 2000 Hz)
+        average number of samples obtained in one second
     C : float
         Threshold for the Spike Detection.
         Default 0.6*STD(0.8-1.2)
@@ -758,7 +762,7 @@ def TK_filter(sig, Fs, C = 0.1, PsC_TH = 0.1, init = True, wind = 0.020):
     ## Initialzie and highpass filter
     # Detrends and band-pass filters the signal
     if init:
-        sig = initialize(sig, Fs, True)
+        sig_one_loc = initialize(sig_one_loc, Fs, True)
     
     ## upsampling for better accuracy in Classification
 
@@ -766,16 +770,16 @@ def TK_filter(sig, Fs, C = 0.1, PsC_TH = 0.1, init = True, wind = 0.020):
     
     if Fs < 10000 and Fs > 4000:
         # upsample by a factor of 5
-        sig = sg.resample_poly(sig, 5, 1)  
+        sig_one_loc = sg.resample_poly(sig_one_loc, 5, 1)  
         Fs = 5 * Fs
         upsample_flag = 5
     elif Fs > 10000 and Fs < 15000:
         # upsample by a factor of 2 
-        sig = sg.resample_poly(sig, 2, 1)
+        sig_one_loc = sg.resample_poly(sig_one_loc, 2, 1)
         Fs = 2 * Fs
         upsample_flag = 2
     elif Fs <= 3000:
-        sig = sg.resample_poly(sig, 8, 1)
+        sig_one_loc = sg.resample_poly(sig_one_loc, 8, 1)
         Fs = 8 * Fs
         upsample_flag = 8
     
@@ -790,14 +794,14 @@ def TK_filter(sig, Fs, C = 0.1, PsC_TH = 0.1, init = True, wind = 0.020):
     
     ## First Stage Spike detection
     # Compute MTEO
-    sig_TEO = MTEO(sig, ks)               
+    sig_TEO = MTEO(sig_one_loc, ks)               
     locs, TH = MTH(sig_TEO, ks, C, Fs)
 
     # Removing those peaks on begining and end of sig
     # Minus 1, as Python indexes start at 0
     A = locs > round((wind)*Fs) - 1
     locs = locs[A]
-    B = locs < (len(sig) - round((wind)*Fs) - 1)
+    B = locs < (len(sig_one_loc) - round((wind)*Fs) - 1)
     locs = locs[B]
     
     # if less than 1 spike persecond
@@ -857,7 +861,7 @@ def TK_filter(sig, Fs, C = 0.1, PsC_TH = 0.1, init = True, wind = 0.020):
             else:
                 locs_s[i] = locs[i]
            
-            template[i, :(locs_s[i] + S_neighbor)] = sig[:(locs_s[i] + S_neighbor)]
+            template[i, :(locs_s[i] + S_neighbor)] = sig_one_loc[:(locs_s[i] + S_neighbor)]
             S_block[i, :], template[i, :] = spike_separator(S_block[i, :], template[i, :], S_neighbor, window, TH)
             features[i, :] = border_detector(S_block[i, :],template[i, :],TH,TH1)
             
@@ -865,13 +869,13 @@ def TK_filter(sig, Fs, C = 0.1, PsC_TH = 0.1, init = True, wind = 0.020):
         # Bounderies
         elif (locs[i] + S_neighbor) > len(sig_TEO):
          
-            first_half = len(sig[(locs[i] - S_neighbor):locs[i]])
+            first_half = len(sig_one_loc[(locs[i] - S_neighbor):locs[i]])
             complete = len(sig_TEO[(locs[i] - S_neighbor):])
            
             # locate the max in center
             S_block[i, (S_neighbor-first_half):complete] = sig_TEO[(locs[i] - S_neighbor):]
        
-            d = sg.find_peaks(abs(sig[(locs[i] - S_neighbor):]))
+            d = sg.find_peaks(abs(sig_one_loc[(locs[i] - S_neighbor):]))
             d_i = np.argmin(abs(d - S_neighbor))
            
             if not np.empty(d) and not np.empty(d_i):
@@ -883,9 +887,9 @@ def TK_filter(sig, Fs, C = 0.1, PsC_TH = 0.1, init = True, wind = 0.020):
             else:
                 locs_s[i] = locs[i]
             
-            first_half = len(sig[(locs_s[i] - S_neighbor):locs_s[i]])
+            first_half = len(sig_one_loc[(locs_s[i] - S_neighbor):locs_s[i]])
             complete = len(sig_TEO[(locs_s[i] - S_neighbor):])
-            template[i, (S_neighbor - first_half):complete] = sig[(locs_s[i] - S_neighbor):]
+            template[i, (S_neighbor - first_half):complete] = sig_one_loc[(locs_s[i] - S_neighbor):]
             S_block[i, :], template[i, :] = spike_separator(S_block[i, :], template[i, :], S_neighbor, window, TH)                               
             features[i, :] = border_detector(S_block[i, :], template[i, :], TH, TH1)                            
   
@@ -911,7 +915,7 @@ def TK_filter(sig, Fs, C = 0.1, PsC_TH = 0.1, init = True, wind = 0.020):
     ## Interference cancelation
     #[y,template,Index,title] = inter_cancel(template,Index,title);
     ## make templates
-    uniq_c = merge_clusters(template, title, PsC_TH, Fs, len(sig))
+    uniq_c = merge_clusters(template, title, PsC_TH, Fs, len(sig_one_loc))
     loc = np.full(template.shape[0], -1)
     
     TH = PsC_TH

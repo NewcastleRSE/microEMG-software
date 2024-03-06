@@ -13,3 +13,19 @@ tmp<-c(1.000e+00, 4.000e+00, 4.000e+00, 4.000e+00, 4.000e+00, 4.000e+00, 4.000e+
  
  n<-length(tmp)
  var(tmp)*(n-1)/n
+ 
+ 
+ x<-seq(1, 10, 0.1)
+
+for(i in 1:4)
+{ 
+ y<-i*sin(x)+cos(i*1.1234*x) + 0.2*rnorm(length(x))
+ 
+ length(x)
+ 
+ dev.new()
+ 
+ plot(x, y, type="l")
+ 
+ print(y)
+} 
