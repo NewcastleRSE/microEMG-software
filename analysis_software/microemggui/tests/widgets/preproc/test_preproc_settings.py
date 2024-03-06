@@ -6,7 +6,6 @@ TODO: Tests for widget visibility
 import pytest
 
 from pymicroemg.emg_preproc_settings import EMGPreprocSettings
-
 import microemggui.widgets.preproc.preproc_settings as preproc_set
 from microemggui.models.settings import EMGPreprocSettingsModel
 
@@ -310,7 +309,7 @@ def test_preproc_widget_modifying_filter_cutoff2_fails_when_input_invalid(
     assert str(settings.butterworth_filter_settings["cutoff2"]) == freq_str_original
 
 
-# Parameterise with checkbox and correspondingn attribute
+# Parameterise with checkbox and corresponding attribute
 @pytest.mark.parametrize(
     "setting",
     [("filter_checkbox", "butterworth_filter"), ("mains_checkbox", "remove_mains")],
