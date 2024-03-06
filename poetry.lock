@@ -331,6 +331,18 @@ files = [
 license = ["ukkonen"]
 
 [[package]]
+name = "iniconfig"
+version = "2.0.0"
+description = "brain-dead simple config-ini parsing"
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "iniconfig-2.0.0-py3-none-any.whl", hash = "sha256:b6a85871a79d2e3b22d2d1b94ac2824226a63c6b741c88f7ae975f18b6778374"},
+    {file = "iniconfig-2.0.0.tar.gz", hash = "sha256:2d91e135bf72d31a410b17c16da610a82cb55f6b0477d1a902134b24a455b8b3"},
+]
+
+[[package]]
 name = "intanutil"
 version = "0.1.0"
 description = ""
@@ -518,6 +530,20 @@ files = [
     {file = "mccabe-0.7.0-py2.py3-none-any.whl", hash = "sha256:6c2d30ab6be0e4a46919781807b4f0d834ebdd6c6e3dca0bda5a15f863427b6e"},
     {file = "mccabe-0.7.0.tar.gz", hash = "sha256:348e0240c33b60bbdf4e523192ef919f28cb2c3d7d5c7794f74009290f236325"},
 ]
+
+[[package]]
+name = "microemggui"
+version = "0.1.0"
+description = ""
+category = "main"
+optional = false
+python-versions = "^3.11"
+files = []
+develop = true
+
+[package.source]
+type = "directory"
+url = "analysis_software/microemggui"
 
 [[package]]
 name = "mypy"
@@ -766,6 +792,22 @@ docs = ["furo (>=2023.7.26)", "proselint (>=0.13)", "sphinx (>=7.1.1)", "sphinx-
 test = ["appdirs (==1.4.4)", "covdefaults (>=2.3)", "pytest (>=7.4)", "pytest-cov (>=4.1)", "pytest-mock (>=3.11.1)"]
 
 [[package]]
+name = "pluggy"
+version = "1.4.0"
+description = "plugin and hook calling mechanisms for python"
+category = "dev"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "pluggy-1.4.0-py3-none-any.whl", hash = "sha256:7db9f7b503d67d1c5b95f59773ebb58a8c1c288129a88665838012cfb07b8981"},
+    {file = "pluggy-1.4.0.tar.gz", hash = "sha256:8c85c2876142a764e5b7548e7d9a0e0ddb46f5185161049a79b7e974454223be"},
+]
+
+[package.extras]
+dev = ["pre-commit", "tox"]
+testing = ["pytest", "pytest-benchmark"]
+
+[[package]]
 name = "pre-commit"
 version = "3.6.0"
 description = "A framework for managing and maintaining multi-language pre-commit hooks."
@@ -836,6 +878,101 @@ files = [
 
 [package.extras]
 diagrams = ["jinja2", "railroad-diagrams"]
+
+[[package]]
+name = "pyside6"
+version = "6.6.1"
+description = "Python bindings for the Qt cross-platform application and UI framework"
+category = "main"
+optional = false
+python-versions = "<3.13,>=3.8"
+files = [
+    {file = "PySide6-6.6.1-cp38-abi3-macosx_11_0_universal2.whl", hash = "sha256:3c348948fe3957b18164c9c7b8942fe065bdb39648b326f212bc114326679fa9"},
+    {file = "PySide6-6.6.1-cp38-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:0a67587c088cb80e90d4ce3023b02466ea858c93a6dc9c4e062b13314e03d464"},
+    {file = "PySide6-6.6.1-cp38-abi3-manylinux_2_31_aarch64.whl", hash = "sha256:ed3822150f0d7a06b68bf4ceebe287515b5e8309bb256e9b49ae405afd062b18"},
+    {file = "PySide6-6.6.1-cp38-abi3-win_amd64.whl", hash = "sha256:3593d605175e83e6952cf3b428ecc9c146af97effb36de921ecf3da2752de082"},
+]
+
+[package.dependencies]
+PySide6-Addons = "6.6.1"
+PySide6-Essentials = "6.6.1"
+shiboken6 = "6.6.1"
+
+[[package]]
+name = "pyside6-addons"
+version = "6.6.1"
+description = "Python bindings for the Qt cross-platform application and UI framework (Addons)"
+category = "main"
+optional = false
+python-versions = "<3.13,>=3.8"
+files = [
+    {file = "PySide6_Addons-6.6.1-cp38-abi3-macosx_11_0_universal2.whl", hash = "sha256:7cb7af1b050c40f7ac891b0e61c758c1923863173932f5b92dc47bdfb4158b42"},
+    {file = "PySide6_Addons-6.6.1-cp38-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:a0982da4033319667f9df5ed6fa8eff300a88216aec103a1fff6751a172b19a0"},
+    {file = "PySide6_Addons-6.6.1-cp38-abi3-manylinux_2_31_aarch64.whl", hash = "sha256:5a63a8a943724ce5acd2df72e5ab04982b6906963278cbabb216656b9a26ee18"},
+    {file = "PySide6_Addons-6.6.1-cp38-abi3-win_amd64.whl", hash = "sha256:a223575c81e9a13173136c044c3447e25f6d656b462b4d71fc3c6bd9c935a709"},
+]
+
+[package.dependencies]
+PySide6-Essentials = "6.6.1"
+shiboken6 = "6.6.1"
+
+[[package]]
+name = "pyside6-essentials"
+version = "6.6.1"
+description = "Python bindings for the Qt cross-platform application and UI framework (Essentials)"
+category = "main"
+optional = false
+python-versions = "<3.13,>=3.8"
+files = [
+    {file = "PySide6_Essentials-6.6.1-cp38-abi3-macosx_11_0_universal2.whl", hash = "sha256:0c8917b15236956957178a8c9854641b12b11dad79ba0caf26147119164c30cf"},
+    {file = "PySide6_Essentials-6.6.1-cp38-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:c7185616083eab6f42eaed598d97d49fac4f60ae2e7415194140d54f58c2b42c"},
+    {file = "PySide6_Essentials-6.6.1-cp38-abi3-manylinux_2_31_aarch64.whl", hash = "sha256:a383c3d60298392cfb621ec1a0cf24b4799321e6c5bbafc021d4cc8076ea1315"},
+    {file = "PySide6_Essentials-6.6.1-cp38-abi3-win_amd64.whl", hash = "sha256:13da926e9e9ee3e26e3f66883a9d5e43726ddee70cdabddca02a07aa1ccf9484"},
+]
+
+[package.dependencies]
+shiboken6 = "6.6.1"
+
+[[package]]
+name = "pytest"
+version = "8.0.2"
+description = "pytest: simple powerful testing with Python"
+category = "dev"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "pytest-8.0.2-py3-none-any.whl", hash = "sha256:edfaaef32ce5172d5466b5127b42e0d6d35ebbe4453f0e3505d96afd93f6b096"},
+    {file = "pytest-8.0.2.tar.gz", hash = "sha256:d4051d623a2e0b7e51960ba963193b09ce6daeb9759a451844a21e4ddedfc1bd"},
+]
+
+[package.dependencies]
+colorama = {version = "*", markers = "sys_platform == \"win32\""}
+iniconfig = "*"
+packaging = "*"
+pluggy = ">=1.3.0,<2.0"
+
+[package.extras]
+testing = ["argcomplete", "attrs (>=19.2.0)", "hypothesis (>=3.56)", "mock", "nose", "pygments (>=2.7.2)", "requests", "setuptools", "xmlschema"]
+
+[[package]]
+name = "pytest-qt"
+version = "4.4.0"
+description = "pytest support for PyQt and PySide applications"
+category = "dev"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "pytest-qt-4.4.0.tar.gz", hash = "sha256:76896142a940a4285339008d6928a36d4be74afec7e634577e842c9cc5c56844"},
+    {file = "pytest_qt-4.4.0-py3-none-any.whl", hash = "sha256:001ed2f8641764b394cf286dc8a4203e40eaf9fff75bf0bfe5103f7f8d0c591d"},
+]
+
+[package.dependencies]
+pluggy = ">=1.1"
+pytest = "*"
+
+[package.extras]
+dev = ["pre-commit", "tox"]
+doc = ["sphinx", "sphinx-rtd-theme"]
 
 [[package]]
 name = "python-dateutil"
@@ -974,6 +1111,20 @@ testing = ["build[virtualenv]", "filelock (>=3.4.0)", "flake8-2020", "ini2toml[l
 testing-integration = ["build[virtualenv] (>=1.0.3)", "filelock (>=3.4.0)", "jaraco.envs (>=2.2)", "jaraco.path (>=3.2.0)", "packaging (>=23.1)", "pytest", "pytest-enabler", "pytest-xdist", "tomli", "virtualenv (>=13.0.0)", "wheel"]
 
 [[package]]
+name = "shiboken6"
+version = "6.6.1"
+description = "Python/C++ bindings helper module"
+category = "main"
+optional = false
+python-versions = "<3.13,>=3.8"
+files = [
+    {file = "shiboken6-6.6.1-cp38-abi3-macosx_11_0_universal2.whl", hash = "sha256:d756fd1fa945b787e8eef142f2eb571da0b4c4dc2f2eec1a7c12a474a2cf84e4"},
+    {file = "shiboken6-6.6.1-cp38-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:fb102e4bc210006f0cdd0ce38e1aaaaf792bd871f02a2b3f01d07922c5cf4c59"},
+    {file = "shiboken6-6.6.1-cp38-abi3-manylinux_2_31_aarch64.whl", hash = "sha256:a605960e72af5eef915991cee7eef4cc72f5cabe63b9ae1a955ceb3d3b0a00b9"},
+    {file = "shiboken6-6.6.1-cp38-abi3-win_amd64.whl", hash = "sha256:072c35c4fe46ec13b364d9dc47b055bb2277ee3aeaab18c23650280ec362f62a"},
+]
+
+[[package]]
 name = "six"
 version = "1.16.0"
 description = "Python 2 and 3 compatibility utilities"
@@ -1020,5 +1171,5 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 
 [metadata]
 lock-version = "2.0"
-python-versions = "^3.11"
-content-hash = "349152730ae93467291c3537fa1859350072cc63b95f300dad5132a3756f1979"
+python-versions = ">=3.11,<3.13"
+content-hash = "f1f85a9029dd7746cbb597f273f409b4de669cf623acd99c325e89dd0ff894d2"

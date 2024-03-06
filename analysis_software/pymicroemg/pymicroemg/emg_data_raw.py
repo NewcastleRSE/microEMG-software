@@ -95,10 +95,11 @@ class EMGDataRaw(EMGData):
             config = preproc_settings.butterworth_filter_settings
             print("Applying Butterworth filter.")
             emg_ts = self._butterworth_filter(
-                emg_ts, config["cutoff_freq"], config["order"], config["filter_type"]
+                emg_ts,
+                preproc_settings.get_butterworth_filter_cutoff(),
+                config["order"],
+                config["filter_type"],
             )
-
-        # Future preprocessing steps to be added...
 
         # Create EMGDataPreproc object with preprocessed time series and
         # associated metadata
@@ -111,9 +112,9 @@ class EMGDataRaw(EMGData):
     def _butterworth_filter(
         self,
         emg_ts: npt.NDArray[np.float64],
-        cutoff_freq: None | list[float] | float = None,
-        order: int = 6,
-        filter_type: str = "bandpass",
+        cutoff_freq: list[float] | float,
+        order: int,
+        filter_type: str,
     ) -> npt.NDArray[np.float64]:
         """
         Filters each channel's signal in the EMG time series using a
@@ -130,15 +131,12 @@ class EMGDataRaw(EMGData):
         emg_ts : npt.NDArray[np.float64]
             2D array containing the multivariate EMG time series. Each row
             corresponds to the signal from one EMG channel.
-        cutoff_freq : None|list[float]|float, optional
-            Filter cutoff frequencies. The default is [500, 200] if filter_type
-            is bandpass; otherwise, must be specified.
-        order : int, optional
-            Filter order - must be even to allow zero-phase filtering. The
-            default is 6.
-        filter_type : str, optional
-            Filter type - see scipy.signal.butter options. The default is
-            'bandpass'.
+        cutoff_freq : list[float]|float
+            Filter cutoff frequencies.
+        order : int
+            Filter order - must be even to allow zero-phase filtering.
+        filter_type : str
+            Filter type - see scipy.signal.butter options.
 
         Returns
         -------
