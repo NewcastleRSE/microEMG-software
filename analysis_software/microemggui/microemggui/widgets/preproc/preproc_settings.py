@@ -1,6 +1,5 @@
 """
 Widgets for specifying preprocessing settings
-TODO: behaviour when initial settings do not include filter specifications
 """
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
 
@@ -358,6 +357,7 @@ class PreprocSettingsWidget(QWidget):
 
         # Connect visability of filter specifications to filter checkbox
         filter_checkbox.toggled.connect(self.change_filter_spec_visibility)
+        self.change_filter_spec_visibility(filter_checkbox.isChecked())
 
         # Connect filter type to filter frequency widget
         filter_spec.widgets["filter_type"].type_combobox.currentTextChanged.connect(
