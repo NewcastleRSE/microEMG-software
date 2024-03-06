@@ -120,7 +120,7 @@ def assert_settings_match(window, settings, is_initial=False):
             assert float(settings.butterworth_filter_settings["cutoff2"]) == float(
                 spec_w["filter_freq"].freq_lineedit["cutoff2"].text()
             )
-        # If not a bandpass filter, cutoff2 line edit is empty string and setting is None
+        # If not a bandpass filter, cutoff2 line edit is empty string, setting is None
         else:
             assert spec_w["filter_freq"].freq_lineedit["cutoff2"].text() == ""
             assert settings.butterworth_filter_settings["cutoff2"] is None

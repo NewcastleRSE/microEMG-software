@@ -140,8 +140,8 @@ class EMGPreprocSettings:
                 cutoff2 = cutoff_freq[1]
             elif len(cutoff_freq) > 2:
                 raise ValueError(
-                    "cutoff_freq must be length 1 (for lowpass or highpass filter) or 2 "
-                    "(for bandpass filter)"
+                    "cutoff_freq must be length 1 (for lowpass or highpass filter) or 2"
+                    " (for bandpass filter)"
                 )
                 # Note: Filter function handles checks for filter type and number of
                 # cutoff (critical) frequencies
