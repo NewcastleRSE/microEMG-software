@@ -18,6 +18,10 @@ InputLabel {
 InputInlineLabel {
 }
 
+InputInlineText {
+    color: 'grey';
+}
+
 InputWarningLabel {
     color: 'red';
 }

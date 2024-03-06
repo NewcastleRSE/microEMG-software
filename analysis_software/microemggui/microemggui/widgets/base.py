@@ -31,7 +31,13 @@ class InputLabel(QLabel):
 
 
 class InputInlineLabel(QLabel):
-    # Label for text that is inline with other widgets
+    # Inline label for input field
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class InputInlineText(QLabel):
+    # Text that is inline with other widget, but not label for widget (e.g., units)
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

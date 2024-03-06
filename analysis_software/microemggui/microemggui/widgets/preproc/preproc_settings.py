@@ -14,7 +14,7 @@ from microemggui.widgets.base import (
     InputComboBox,
     InputSpinBox,
     InputLineEdit,
-    InputInlineLabel,
+    InputInlineText,
     ExpandingSpacer,
 )
 
@@ -139,8 +139,8 @@ class FilterFreqWidget(QWidget):
             "cutoff2": InputLineEdit(self),
         }
         self.freq_inlinelabel = {
-            "to": InputInlineLabel("to", self),
-            "hz": InputInlineLabel("Hz", self),
+            "to": InputInlineText("to", self),
+            "hz": InputInlineText("Hz", self),
         }
 
         # Horizontal layout for frequency input
