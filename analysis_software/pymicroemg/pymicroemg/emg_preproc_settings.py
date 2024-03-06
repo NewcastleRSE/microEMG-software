@@ -65,10 +65,11 @@ class EMGPreprocSettings:
         cutoff_freq: None | list[float] | float = None,
         order: int = 6,
         filter_type: str = "bandpass",
+        apply_filter: bool = True,
     ):
         """
-        Add filter settings for a zero-phase Butterworth filter. See scipy.signal.butter
-        for parameter details.
+        Add filter and settings for a zero-phase Butterworth filter. See
+        scipy.signal.butter for parameter details.
 
         Parameters
         ----------
@@ -81,6 +82,11 @@ class EMGPreprocSettings:
         filter_type : str, optional
             Type of filter - must be "low", "lowpass", "high", "highpass", or
             "bandpass". The default is "bandpass".
+        apply_filter: bool, optional
+            Whether to apply the specified filter settings during preprocessing. If
+            False, the specified filter settings will be stored, but not used during
+            preprocessing. This behaviour may be useful when filtering is turned off,
+            but may be turned on later (e.g., by a GUI). The default is True.
 
         Raises
         ------
@@ -150,7 +156,7 @@ class EMGPreprocSettings:
             raise ValueError("cutoff_freq must be a list or float")
 
         # Save filter settings
-        self.butterworth_filter = True
+        self.butterworth_filter = apply_filter
         self.butterworth_filter_settings = {
             "cutoff1": cutoff1,
             "cutoff2": cutoff2,
