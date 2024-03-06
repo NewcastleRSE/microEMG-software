@@ -10,15 +10,11 @@ from pymicroemg.emg_preproc_settings import EMGPreprocSettings
 
 
 class EMGPreprocSettingsModel:
-    # TODO: remove print statements or change to logging output
-
     def __init__(self, settings: EMGPreprocSettings):
         self.settings = settings
 
     def mains_checkbox_toggled(self, checked):
         # Slot for mains removal checkbox
-
-        print(f"MAINS REMOVAL: Is checkbox checked? : {checked}")
 
         # Uses add_remove_mains and remove_remove_mains method so associated parameters
         # are also updated.
@@ -29,14 +25,10 @@ class EMGPreprocSettingsModel:
         else:
             self.settings.remove_remove_mains()
 
-        print(f"updated mains setting: {self.settings.remove_mains}")
-
     def filter_checkbox_toggled(self, checked: bool):
         # Slot for filter checkbox
 
-        print(f"FILTER: Is checkbox checked? : {checked}")
         self.settings.butterworth_filter = checked
-        print(f"updated filter setting: {self.settings.butterworth_filter}")
 
     def filter_type_text_changed(self, filter_type: str):
         # Slot for filter type combobox
@@ -58,4 +50,3 @@ class EMGPreprocSettingsModel:
         # Slot for filter cutoff line edit, first cutoff
 
         self.settings.butterworth_filter_settings[cutoff_type] = cutoff_freq
-        print((cutoff_freq))
