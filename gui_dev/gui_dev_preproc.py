@@ -20,13 +20,6 @@ from pymicroemg.emg_preproc_settings import EMGPreprocSettings
 
 # %%
 
-settings = EMGPreprocSettings()
-settings.add_butterworth_filter()
-
-settings.print_settings()
-
-# %%
-
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -38,7 +31,9 @@ class MainWindow(QMainWindow):
         # Otherwise, breaks if no filter added to preprocessing settings
         settings = EMGPreprocSettings()
         settings.add_remove_mains()  # Remain mains noise
-        settings.add_butterworth_filter(filter_type="highpass", cutoff_freq=100)
+        settings.add_butterworth_filter(
+            filter_type="highpass", cutoff_freq=100, apply_filter=False
+        )
 
         self.settings_model = EMGPreprocSettingsModel(settings)
         print("INITIAL SETTINGS")
