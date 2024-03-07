@@ -8,13 +8,11 @@ Example script for EMG time series visualisation widget.
 import sys
 import os
 
-from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout
+from PySide6.QtWidgets import QApplication, QMainWindow
 from PySide6.QtCore import QFile
 
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
-
 import microemggui
-from microemggui.widgets.emg_viewer import StartTimeWidget
+import microemggui.widgets.emg_viewer as ev
 from pymicroemg.emg_files import EMGFiles
 
 # %%
@@ -33,22 +31,12 @@ class MainWindow(QMainWindow):
         emg_data = emg_files.load_emg_data()
 
         # make figure
-        fig, _ = emg_data.plot_emg_ts(start_t=0, stop_t=1, downsample_factor=10)
+        fig, _ = emg_data.plot_emg_ts(
+            start_t=0, stop_t=1, downsample_factor=10, figsize=[100, 100]
+        )
 
-        # figure widget
-        self.emg_vis = FigureCanvasQTAgg(fig)
-
-        # controls widget
-        self.controls_w = StartTimeWidget(self)
-
-        layout = QVBoxLayout()
-        layout.addWidget(self.emg_vis)
-        layout.addWidget(self.controls_w)
-        # layout.setContentsMargins(0, 0, 0, 0)
-
-        # self.setLayout(layout)
-
-        self.setCentralWidget(self.controls_w)
+        self.w = ev.EMGViewerWidget(fig, parent=self)
+        self.setCentralWidget(self.w)
 
 
 app = QApplication(sys.argv)
