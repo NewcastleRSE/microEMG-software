@@ -67,7 +67,7 @@ def MTEO(raw_signal, ks, filter = True):
 
     for i in range(L):
         tmp[i, :] = running_TEO(raw_signal, ks[i])
-        print(tmp[i, :])
+       
         # Filter flag
         if filter:
             # ensure the sample variance is used and not the population variance by setting ddof = 1
@@ -137,8 +137,7 @@ def PsC(template, sig, lag = None):
             p4[i] = (p1 - p2*p3)
             normaliz[i] = p3**2
          
-        PsC_score[k] = max(sum(p4)/sum(normaliz), 0)
-        print(sum(p4)/sum(normaliz))
+        PsC_score[k] = max(sum(p4)/sum(normaliz), 0)     
 
     best_lag = np.argmax(PsC_score)
     PsC_s = PsC_score[best_lag]
@@ -397,7 +396,7 @@ def spike_separator(S_block, template, S_neighbor, window, threshold):
                 #minima_2 = minima_2 + S_neighbor
                 #if start_pos >= S_block.shape[1]:
                 #    start_pos = S_block.shape[1] - 1
-                print("max 2-3")    
+             
                 S_block[0, start_pos:] = 0 
                 template[0, start_pos:] = 0
                
@@ -692,11 +691,9 @@ def merge_clusters(template, titles, threshold, sampling_freq, sig_len):
         if tmp_t2.shape[0] >= min_l:
             semi_final[c, :] = np.median(tmp_t2, axis = 0)
             
-            for j in range(tmp_t2.shape[0]):
-                print(semi_final[c,:])
+            for j in range(tmp_t2.shape[0]):             
                 PsC_s, _ = PsC(semi_final[c, :], tmp_t2[j, :], 4)
-                print(PsC_s)
-                print(threshold)
+               
                 if PsC_s < threshold:
                     tmp_t2[j, :] = np.NaN
                               
