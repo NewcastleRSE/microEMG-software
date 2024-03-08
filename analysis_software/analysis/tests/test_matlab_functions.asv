@@ -211,15 +211,13 @@ disp(Y);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-features2 = vertcat(features, features, features)%, features)
+features2 = vertcat(features, features, features, features)
 
-%features2(2, 2) = 1 % 2 to be the same
-%features2(2, 7) = 2 # 2, 3, 4 to be the same
-%features2(2, 21) = np.NaN # 2 to be the same
-features2(1, 7) = 2
-features2(2, 7) = 3
-features2(3, 7) = 4
-%features2(4, 7) = 5
+features2(1, 1) = 1 # 2 to be the same
+#features2(1, 6) = 2 # 2, 3, 4 to be the same
+#features2(1, 20] = np.NaN # 2 to be the same
+#features2(2, 6] = 4
+features2(3, 6 = 5
 
 title = generate_title(features2);
 
@@ -234,22 +232,11 @@ TH = 0.2;
 Fs = 3000;
 sig_l = 500;
 
-uniq_c = merge_clusters(template,title,TH,Fs,sig_l);
+%uniq_c = merge_clusters(template,title,TH,Fs,sig_l);
 
-disp("merge_clusters(template,title,TH,Fs,sig_l) = ");
-disp(uniq_c);
-size(uniq_c)
+%disp("merge_clusters(template,title,TH,Fs,sig_l) = ");
+%disp(uniq_c);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%, C = 0.1, threshold_PsC = 0.1, init = True, wind = 0.020
-sampling_freq = 3000;
-
-[Index, loc] = TK_filter(sig, sampling_freq);
-
-disp("TK_filter(sig, sampling_freq) = ");
-disp(Index)
-disp("loc =")
-disp(loc)
 
 

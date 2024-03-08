@@ -152,6 +152,7 @@ Fs = 3000
 
 TE = emg.resolve_peaks(sig_one_loc, DTh, Fs)
 
+print("emg.resolve_peaks(sig_one_loc, DTh, Fs) = ")
 print(TE)
 
 ############################
@@ -166,5 +167,90 @@ print("MTH(MTEO,ks,L,Fs) = ");
 print(TE)
 print(DTh)
 
+############################
 
+S_block = sig 
+template = tmp
+S_neighbor = 3
+window = 2
+TH = 0.2
 
+S_block, template = emg.spike_separator(S_block,template,S_neighbor,window,TH)
+print("spike_separator(S_block,template,S_neighbor,window,TH) = ")
+print(S_block)
+print("template =")
+print(template)
+
+############################
+
+S_block = sig[0, :]
+template = tmp[0, :]
+TH = 0.2
+TH1 = 0.4
+
+features = emg.border_detector(S_block,template,TH,TH1)
+print("border_detector(S_block,template,TH,TH1) = ")
+print(features)
+
+############################
+
+Fs = 3000
+Notch = False
+
+sig = emg.initialize(sig_one_loc)
+
+print("initialize(sig_one_loc) = ")
+print(sig)
+
+############################
+original_range = [2.5, 2.5]
+map_range = [-100.5, 100.5]
+
+Y = emg.linear_map(sig_one_loc, original_range, map_range)
+ 
+print("linear_map(sig_one_loc, original_range, map_range) = ")
+print(Y)
+
+############################
+
+features0 = features.reshape(1, len(features))
+features2 = np.vstack((features0, features0, features0))#, features0))
+
+#features2[1, 1] = 1 # 2 to be the same
+#features2[1, 6] = 2 # 2, 3, 4 to be the same
+#features2[1, 20] = np.NaN # 2 to be the same
+features2[0, 6] = 2
+features2[1, 6] = 3
+features2[2, 6] = 4
+#features2[3, 6] = 5
+
+title = emg.generate_title(features2)
+
+print("generate_title(features2) = ")
+print(title)
+
+############################
+
+template = tmp
+#title = range(1,3)
+TH = 0.2
+Fs = 3000
+sig_l = 500
+
+uniq_c = emg.merge_clusters(template,title,TH,Fs,sig_l)
+
+print("merge_clusters(template,title,TH,Fs,sig_l) = ")
+print(uniq_c)
+print(uniq_c.shape)
+
+###########################
+
+#, C = 0.1, threshold_PsC = 0.1, init = True, wind = 0.020
+sampling_freq = 3000
+
+Index, loc = emg.TK_filter(sig, sampling_freq)
+
+print("TK_filter(sig, sampling_freq) = ")
+print(Index)
+print("loc =")
+print(loc)
