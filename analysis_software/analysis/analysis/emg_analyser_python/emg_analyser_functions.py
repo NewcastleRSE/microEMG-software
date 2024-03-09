@@ -592,7 +592,7 @@ def linear_map(X, original_range, map_range):
     # map to nearest integer
     return np.round(Y)                     
 
-def generate_title(features):
+def generate_titles(features):
     """    
     Title Generation:
     Generates the titles and also initial set of clusters based on label matching 
@@ -614,14 +614,13 @@ def generate_title(features):
         return []
         
     # Label first list of features as "1"
-    title = np.zeros(no_features) 
+    titles = np.zeros(no_features) 
     title_counter = 1
-    title[0] = title_counter
+    titles[0] = title_counter
     # Current list of feature groups to check if a list of features belongs to it
     features_to_check = [0]
     
-    for i in range(1, no_features):
-        #for j in range(i):
+    for i in range(1, no_features):        
         for j in features_to_check:            
             # Check if the first 5 elements are the same
             if (features[j, :5] == features[i, :5]).all():
@@ -629,19 +628,16 @@ def generate_title(features):
                 diff = np.abs(features[j, 5:] - features[i, 5:])
                 if ((diff == 0) | (diff == 1)).all():
                     # Considered the same, so give the same title
-                    title[i] = title[j]
-                    # Ensure features are grouped that are only at most 1 away for each element from the first list of features in the group
-                    # i.e avoid sequence with increasing/decreasing 1 apart between list of features for a given element 
-                    features[i, 5:] = features[j, 5:]
+                    titles[i] = titles[j]                    
                     break
         
-        # Does not match any previous features so give a new "title"
-        if title[i] == 0:
+        # Does not match any previous feature groups so give a new "title"
+        if titles[i] == 0:
             title_counter += 1
-            title[i] = title_counter
+            titles[i] = title_counter
             features_to_check.append(i)
             
-    return title
+    return titles
 
 
 def merge_clusters(template, titles, threshold, sampling_freq, sig_len):
@@ -911,7 +907,7 @@ def TK_filter(sig, sampling_freq, C = 0.1, threshold_PsC = 0.1, init = True, win
         
     
     # generates the initial set of labels
-    title  = generate_title(features)
+    title  = generate_titles(features)
 
     ## Interference cancelation
     #[y,template,Index,title] = inter_cancel(template,Index,title);
