@@ -78,9 +78,9 @@ def MTEO(raw_signal, ks, filter = True):
            
             tmp[i, :] = sg.filtfilt(win, 1, tmp[i, :]) / (v[i])  # def was v unsquared
             
-
+  
     if L > 1:
-        runTEO = sum(tmp)  # runTEO + tmp./v(i);
+        runTEO = np.sum(tmp, axis=0)  # runTEO + tmp./v(i);
         # runTEO = max(tmp);
     else:
         runTEO = tmp[i, :]
@@ -247,7 +247,11 @@ def MTH(MTEO, ks, L, sampling_freq):
         Decision threshold
     """
     
-    M = len(MTEO)
+    if MTEO.ndim < 2:
+        MTEO = MTEO.reshape(1, len(MTEO))
+        
+    N, M = MTEO.shape
+    
     ks = ks*2
 
     # define detection parameter
@@ -255,44 +259,45 @@ def MTH(MTEO, ks, L, sampling_freq):
     Lmax = -551.0520      
     L = L * Lmax
   
-    # take only coefficients that are independent (W(i) apart) for median
-    # standard deviation    
-    Sigmaj = np.median(np.abs(MTEO[::np.round(ks)] - np.mean(MTEO)))/0.6745
-    #hard threshold
-    Thj = Sigmaj * np.sqrt(2 * np.log(M))  
-    indexes = (np.abs(MTEO) > Thj)
+    for i in range(N):
+        # take only coefficients that are independent (W(i) apart) for median
+        # standard deviation    
+        Sigmaj = np.median(np.abs(MTEO[::np.round(ks[i])] - np.mean(MTEO)))/0.6745
+        #hard threshold
+        Thj = Sigmaj * np.sqrt(2 * np.log(M))  
+        indexes = (np.abs(MTEO[i, :]) > Thj)
       
-    if len(indexes) > 0:
-        sig_out = MTEO[indexes]    
-        # mean of the signal coefficients
-        Mj = np.mean(np.abs(sig_out))
-        # prior of spikes
-        PS = len(sig_out)/M
-        # prior of noise
-        PN = 1 - PS
-        # decision threshold
-        decision_thres = Mj/2 + (Sigmaj**2)/Mj * (L + np.log(PN/PS))
-        # make decision_thres>=0
-        decision_thres = np.abs(decision_thres) * (decision_thres >= 0)         
-        TE = resolve_peaks(MTEO[:], decision_thres, sampling_freq)
-    else:
-        
-        Mj = Thj;
-        # assume at least one spike
-        PS = 1/M
-        PN = 1 - PS
-        # decision threshold
-        decision_thres = Mj/2 + Sigmaj^2/Mj * (L + np.log(PN/PS))
-        # make decision_thres>=0
-        decision_thres = np.abs(decision_thres)* (decision_thres >= 0)
-        ind  = np.abs(MTEO) > decision_thres
-        ind = MTEO[ind]
-        if np.empty(ind):
-            # do nothing ct=[0];
-            TE = []
+        if len(indexes) > 0:
+            sig_out = MTEO[i, indexes]    
+            # mean of the signal coefficients
+            Mj = np.mean(np.abs(sig_out))
+            # prior of spikes
+            PS = len(sig_out)/M
+            # prior of noise
+            PN = 1 - PS
+            # decision threshold
+            decision_thres = Mj/2 + (Sigmaj**2)/Mj * (L + np.log(PN/PS))
+            # make decision_thres>=0
+            decision_thres = np.abs(decision_thres) * (decision_thres >= 0)         
+            TE = resolve_peaks(MTEO[i, :], decision_thres, sampling_freq)
         else:
-            # This function resolves too close peaks
-            TE = resolve_peaks(MTEO, decision_thres, sampling_freq)
+        
+            Mj = Thj
+            # assume at least one spike
+            PS = 1/M
+            PN = 1 - PS
+            # decision threshold
+            decision_thres = Mj/2 + Sigmaj^2/Mj * (L + np.log(PN/PS))
+            # make decision_thres>=0
+            decision_thres = np.abs(decision_thres)* (decision_thres >= 0)
+            ind  = np.abs(MTEO[i, :]) > decision_thres
+            ind = MTEO[i, ind]
+            if np.empty(ind):
+                # do nothing ct=[0];
+                TE = []
+            else:
+                # This function resolves too close peaks
+                TE = resolve_peaks(MTEO[i, :], decision_thres, sampling_freq)
                            
     
     # to enhance performance discard detections more than 700Hz period
@@ -785,13 +790,13 @@ def TK_filter(sig, sampling_freq, C = 0.1, threshold_PsC = 0.1, init = True, win
    
     ## MTEO
     # Scales for MTEO (or 1,3,5) detection
-    ks = [2, 3, 5]                   
+    ks = np.array([2, 3, 5])
     if upsample_flag > 0:
         ks = ks * 2                   
     
     ## First Stage Spike detection
     # Compute MTEO
-    sig_TEO = MTEO(sig, ks)               
+    sig_TEO, _ = MTEO(sig, ks)
     locs, threshold = MTH(sig_TEO, ks, C, sampling_freq)
 
     # Removing those peaks on begining and end of sig
