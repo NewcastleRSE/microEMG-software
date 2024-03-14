@@ -1,0 +1,5 @@
+
+Matlab doing test data for TK_filter function
+Elapsed time is 1792.090779 seconds.
+29.868179650000002 minutes
+MUs found: 24 via channel: 59

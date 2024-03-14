@@ -165,7 +165,7 @@ disp(size(runTEO))
 disp("MTH(MTEO,ks,L,Fs) = ");
 disp(TE);
 disp(DTh);
-fjkfjkh
+
 %%%%%%%%%%%%%%%%%%%%%%%%%
 S_block = sig %[1.2 2.3 0.5; 0.4 1.3 -1.2; 0.1 -2.3 1.2; -0.4 0.3 -1.0; -0.2 0.3 0.2];
 template = tmp %[4.2 -1.3 0.1; 0.3 -1.2 -0.2];
@@ -211,7 +211,7 @@ disp(Y);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-features2 = vertcat(features, features, features)%, features)
+features2 = vertcat(features, features, features, features, features); %, features)
 
 %features2(2, 2) = 1 % 2 to be the same
 %features2(2, 7) = 2 # 2, 3, 4 to be the same
@@ -219,12 +219,17 @@ features2 = vertcat(features, features, features)%, features)
 features2(1, 7) = 2
 features2(2, 7) = 3
 features2(3, 7) = 4
+
+features2(4, 5) = 14
+features2(5, 5) = 13 %0.318718050000000
 %features2(4, 7) = 5
 
 title = generate_title(features2);
 
 disp("generate_title(features2) = ");
 disp(title);
+
+huuihuih
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -251,5 +256,28 @@ disp("TK_filter(sig, sampling_freq) = ");
 disp(Index)
 disp("loc =")
 disp(loc)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Channel 59 data
+%MUs found: 27 via channel: 59
+
+test_data = readmatrix('C:\Users\richa\OneDrive - Newcastle University\RSE\Micro-EMG\Micro-EMG-analysis\microEMG-software\analysis_software\analysis\tests\test_data.csv'); 
+
+tic
+[index,loc,temps] = TK_filter(test_data,20000,0.1,0.1,1,0.004,0);
+toc
+
+%writematrix(index,"C:\Users\richa\OneDrive - Newcastle University\RSE\Micro-EMG\Micro-EMG-analysis\microEMG-software\analysis_software\analysis\tests\results_matlab_index.csv"); 
+%writematrix(loc,"C:\Users\richa\OneDrive - Newcastle University\RSE\Micro-EMG\Micro-EMG-analysis\microEMG-software\analysis_software\analysis\tests\results_matlab_locs.csv"); 
+
+%disp('index =')
+%disp(index)
+%disp('loc =')
+%disp(loc)
+%disp('temps =')
+%disp(temps)
+
+disp(['MUs found: ' num2str(max(loc)) ' via channel: 59']);
+
 
 

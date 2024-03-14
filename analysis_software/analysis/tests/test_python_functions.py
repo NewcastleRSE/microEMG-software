@@ -169,8 +169,8 @@ print(DTh)
 
 ############################
 
-S_block = sig 
-template = tmp
+S_block = sig[0, :] 
+template = tmp[0, :]
 S_neighbor = 3
 window = 2
 TH = 0.2
@@ -197,7 +197,7 @@ print(features)
 Fs = 3000
 Notch = False
 
-sigInit = emg.initialize(sig_one_loc)
+sigInit = emg.initialize(sig_one_loc, Fs)
 
 print("initialize(sig_one_loc) = ")
 print(sigInit)
@@ -254,3 +254,39 @@ print("TK_filter(sig_one_loc, sampling_freq) = ")
 print(Index)
 print("loc =")
 print(loc)
+
+############################
+
+filename = 'C:\\Users\\richa\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\test_data.csv'
+
+# Importing csv module
+import csv
+  
+with open(filename, 'r') as x:
+    test_data = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
+ 
+test_data = (np.array(test_data)).flatten()
+print(test_data.shape)
+
+import time
+
+t0 = time.time()
+index, locs = emg.TK_filter(test_data,20000,0.1,0.1,True,0.004)
+t1 = time.time()
+
+total = t1-t0
+
+index.tofile('C:\\Users\\richa\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\results_python_index.csv', sep = ',')
+locs.tofile('C:\\Users\\richa\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\results_python_locs.csv', sep = ',')
+
+#print("index =")
+#print(index)
+#print("loc =")
+#print(loc)
+#print("temps =")
+#print(temps)
+
+print('MUs found: ')
+#print(max(loc))
+
+print(total)
