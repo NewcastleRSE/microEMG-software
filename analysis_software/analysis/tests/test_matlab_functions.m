@@ -154,6 +154,12 @@ TE = resolve_peaks(sig_one_loc, DTh, Fs);
 disp("resolve_peaks(sig, DTh, Fs) = ");
 disp(TE);
 
+[ans, locs] = findpeaks(sig_one_loc);
+disp("findpeaks(sig_one_loc)");
+disp(locs);
+disp(ans);
+fgdfdfg
+
 %%%%%%%%%%%%%%%%%%%%%%%%%
 ks = [2 3 5];
 L = 0.01;
@@ -211,17 +217,21 @@ disp(Y);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-features2 = vertcat(features, features, features, features, features); %, features)
+features = round(features)
+features2 = vertcat(features, features, features)%, features, features); %, features)
 
 %features2(2, 2) = 1 % 2 to be the same
 %features2(2, 7) = 2 # 2, 3, 4 to be the same
 %features2(2, 21) = np.NaN # 2 to be the same
-features2(1, 7) = 2
-features2(2, 7) = 3
-features2(3, 7) = 4
+%features2(1, 7) = 2;
+%features2(2, 7) = 3;
+%features2(3, 7) = 4;
 
-features2(4, 5) = 14
-features2(5, 5) = 13 %0.318718050000000
+%features2(4, 21) = 1;
+%features2(5, 21) = 2;
+
+%features2(4, 5) = 14
+%features2(5, 5) = 13 %0.318718050000000
 %features2(4, 7) = 5
 
 title = generate_title(features2);
@@ -229,7 +239,6 @@ title = generate_title(features2);
 disp("generate_title(features2) = ");
 disp(title);
 
-huuihuih
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -256,6 +265,14 @@ disp("TK_filter(sig, sampling_freq) = ");
 disp(Index)
 disp("loc =")
 disp(loc)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+peaks = findpeaks(abs(sig_one_loc))
+
+disp("Find peaks = ")
+disp(peaks)
+
+fdsdfsdf
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Channel 59 data

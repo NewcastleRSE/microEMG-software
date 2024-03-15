@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.signal as sg
+from emg_analyser_python.detect_peaks import detect_peaks
 
 """
 These functions are reimplemented in Python by Richard Howey
@@ -18,6 +19,13 @@ Hooman Sedghamiz
 June 2015, Linkoping University
 Please cite the paper if any of the methods were helpful
 """
+
+def find_peaks(data, distance = 1):
+    """
+    Try to return as near as possible the same answer as findpeaks in MatLab
+    """
+    
+    return detect_peaks(data, mpd = distance)
 
 def running_TEO(raw_signal, k = 1):
     """
@@ -210,13 +218,22 @@ def resolve_peaks(sig, decision_thres, sampling_freq):
 
     sig = np.abs(sig)
     # def 15 millisec min distance
-    min_pd = max(1, np.round(0.0015 * sampling_freq))
+    # Avoid rounding errors
+    val = 0.0015 * sampling_freq
+    first_dec = int((abs(val) % 1) * 10)
+    if first_dec == 5:
+        val += 0.000000001
+        
+    min_pd = int(max(1, np.round(val)))
+   
     tmp = np.zeros(len(sig))
     ind = (sig > decision_thres)
     tmp[ind] = sig[ind]
-    TE, _ = sg.find_peaks(tmp, distance = min_pd)
+    
+    TE = find_peaks(tmp, distance = min_pd)
        
-    return np.array(TE)
+    return TE
+
 
 def MTH(MTEO, ks, L, sampling_freq):
     """
@@ -339,7 +356,7 @@ def spike_separator(S_block, template, S_neighbor, window, threshold):
  
         
     # First Part
-    maxima_1, _ = sg.find_peaks(S_block[:S_neighbor])
+    maxima_1 = find_peaks(S_block[:S_neighbor])
     
     if len(maxima_1) > 0:
         amp_M1 = S_block[maxima_1]
@@ -351,7 +368,7 @@ def spike_separator(S_block, template, S_neighbor, window, threshold):
             #closest to peak
             maxima_1 = maxima_1[0]       
             inverted = 1.01 * max(S_block[maxima_1:S_neighbor]) - S_block[maxima_1:S_neighbor]
-            minima_1, _ = sg.find_peaks(inverted)
+            minima_1 = find_peaks(inverted)
             
             if len(minima_1) > 0:
                 minima_1 = minima_1[0]
@@ -363,7 +380,7 @@ def spike_separator(S_block, template, S_neighbor, window, threshold):
        
        
     ## 2nd Part       
-    maxima_2, _ = sg.find_peaks(S_block[S_neighbor:])
+    maxima_2 = find_peaks(S_block[S_neighbor:])
     
     if len(maxima_2) > 0:
         amp_M2 = S_block[maxima_2]
@@ -381,7 +398,7 @@ def spike_separator(S_block, template, S_neighbor, window, threshold):
                 
             inverted = 1.01 * max(S_block[S_neighbor:end_pos]) - S_block[S_neighbor:end_pos]
             
-            minima_2, _ = sg.find_peaks(inverted)
+            minima_2 = find_peaks(inverted)
             
             if len(minima_2) > 0:
                 minima_2 = minima_2[-1]
@@ -424,7 +441,7 @@ def border_detector(S_block, template, threshold, threshold1):
        
     """ 
     
-    maxima_1, _ = sg.find_peaks(S_block);
+    maxima_1 = find_peaks(S_block);
     amp_M1 = S_block[maxima_1]
     
     A = amp_M1 > threshold
@@ -598,10 +615,12 @@ def generate_titles(features):
     """
     
     no_features = features.shape[0]
+    #feature_length = features.shape[1]
     
     if no_features == 0:
         return []
-     
+    
+    '''
     # Label first list of features as "1"
     titles = np.zeros(no_features) 
     title_counter = 1
@@ -629,7 +648,83 @@ def generate_titles(features):
             titles[i] = title_counter
             features_to_check[features_to_check_count] = i
             features_to_check_count += 1
-            
+    '''
+    
+    # Label first list of features as "1"
+    titles = np.zeros(no_features) 
+    title_counter = 0
+    t0 = time.time()
+   
+    # First 5 and last 3 elements must be equal. Create groups where these are equal firstly
+    _, uni_indices, uni_inv_ind = np.unique(np.hstack((features[:, :5], features[:, -3:])), return_index = True, return_inverse = True, axis=0)
+    t1 = time.time()
+
+    print("Time = ")
+    print(t1 - t0)
+    #_, uni_indices, uni_inv_ind = npi.unique(features[:, :no_indices_must_be_equal], return_index = True, return_inverse = True, axis=0)
+    
+    #multi = np.array([1, 2, 4, 8, 16])
+    
+    #rows_as_vec = features[:, :5] @ multi
+    #print("rows_as_vec = ")
+    #print(rows_as_vec)
+    #_, uni_indices, uni_inv_ind = np.unique(rows_as_vec, return_index = True, return_inverse = True)
+   
+    #print("rows_as_vec = ")
+    #print(rows_as_vec[uni_indices[uni_inv_ind]])
+    
+    #print(unique_rows)
+    print("uni_indices.shape = ")
+    print(uni_indices.shape)
+    #print("uni_inv_ind = ")
+    #print(uni_inv_ind)
+    #print(features[uni_inv_ind, :5])
+    
+    # Loop through unique sets
+    for idx_count, idx in enumerate(uni_indices):
+        #print("idx_count = " + str(idx_count))    
+        in_set = (np.argwhere(idx_count == uni_inv_ind)).flatten() #orig indx
+        #print("in_set.shape = ")
+        #print(in_set.shape)
+        # Current list of feature groups to check if a list of features belongs to it
+        features_to_check = np.full(len(in_set), -1)
+        features_to_check[0] = in_set[0]
+        features_to_check_count = 1
+        title_counter += 1
+        titles[idx] = title_counter
+        #counts = np.zeros(len(features[0, 5:]))
+        
+        for i in in_set[1:]:
+            #print(str(i) + ": " + str(features_to_check_count))
+            #print("i = " + str(i)) 
+            for xxx in range(features_to_check_count):
+                j = features_to_check[xxx]
+                
+                #if (features[j, 5:] == features[i, 5:]).all():
+                #    # Considered the same, so give the same title
+                #    titles[i] = titles[j]                    
+                #    break    
+                #else:
+                #print("j = " + str(j))
+                # Check if remaining elements are the same or differ by exactly 1
+                diff = np.abs(features[j, 5:-3] - features[i, 5:-3])
+                #diffCount = (diff != 0) & (diff != 1)
+                #counts = counts + diffCount
+                #print(diff)
+                #print(counts)
+                if ((diff == 0) | (diff == 1)).all():
+                    # Considered the same, so give the same title
+                    titles[i] = titles[j]                    
+                    break
+        
+            # Does not match any previous feature groups so give a new "title"
+            if titles[i] == 0:
+                title_counter += 1
+                titles[i] = title_counter
+                features_to_check[features_to_check_count] = i
+                features_to_check_count += 1
+
+    
     return titles
 
 
@@ -828,7 +923,7 @@ def TK_filter(sig, sampling_freq, C = 0.1, threshold_PsC = 0.1, init = True, win
         if ((locs[i] - S_neighbor) >= 1) and ((locs[i] + S_neighbor) <= len(sig_TEO)):        
             # Find the Neighborhoods
             S_block[i, :] = sig_TEO[(locs[i] - S_neighbor):(locs[i] + S_neighbor)]
-            d, _ = sg.find_peaks(abs(sig[(locs[i] - S_neighbor):(locs[i] + S_neighbor)]))
+            d = find_peaks(abs(sig[(locs[i] - S_neighbor):(locs[i] + S_neighbor)]))
                     
             if d.size:               
                 d_i = np.argmin(abs(d - S_neighbor))                
@@ -846,7 +941,7 @@ def TK_filter(sig, sampling_freq, C = 0.1, threshold_PsC = 0.1, init = True, win
         elif (locs[i] - S_neighbor) < 1:  
             end_loc = int(locs[i]) + S_neighbor
             S_block[i, :end_loc] = sig_TEO[:end_loc]
-            d, _ = sg.find_peaks(abs(sig[:end_loc]))
+            d = find_peaks(abs(sig[:end_loc]))
             d_i = np.argmin(abs(d - S_neighbor))
            
             if d.size and d_i.size:
@@ -871,7 +966,7 @@ def TK_filter(sig, sampling_freq, C = 0.1, threshold_PsC = 0.1, init = True, win
             # locate the max in center
             S_block[i, (S_neighbor-first_half):complete] = sig_TEO[(locs[i] - S_neighbor):]
        
-            d, _ = sg.find_peaks(abs(sig[(locs[i] - S_neighbor):]))
+            d = find_peaks(abs(sig[(locs[i] - S_neighbor):]))
             d_i = np.argmin(abs(d - S_neighbor))
            
             if d.size and d_i.size:
@@ -902,42 +997,50 @@ def TK_filter(sig, sampling_freq, C = 0.1, threshold_PsC = 0.1, init = True, win
     # start from feature 6 which is period of each exterema
     for i in range(5, features.shape[1]):
      
-        original_range[0] = min(features[:, i])
-        original_range[1] = max(features[:, i])
-        if (~np.isnan(original_range)).all() and original_range.size:
-            features[:, i] = linear_map(features[:, i], original_range, map_range)
+        original_range[0] = np.nanmin(features[:, i])
+        original_range[1] = np.nanmax(features[:, i])        
+        features[:, i] = linear_map(features[:, i], original_range, map_range)
         
-    
+    print(features[:3, :])
     # generates the initial set of labels
     t2 = time.time()
     print("Time 2: " + str(t2 - t1))
     print("pre gen title")
-    title  = generate_titles(features)
+    titles  = generate_titles(features)
     print("post gen title")
     t3 = time.time()
     print("Time 3: " + str(t3 - t2))
     
+    print("size(features)")
+    print(features.shape)
+    print(titles.shape)
+    print(np.unique(titles).shape)
+
     ## Interference cancelation
     #[y,template,Index,title] = inter_cancel(template,Index,title);
     ## make templates
-    uniq_c = merge_clusters(template, title, threshold_PsC, sampling_freq, len(sig))
+    uniq_c = merge_clusters(template, titles, threshold_PsC, sampling_freq, len(sig))
     loc = np.full(template.shape[0], -1)
     print("post clusters")
     t4 = time.time()
     print("Time 4: " + str(t4 - t3))
-    
+    print(uniq_c.shape)
     threshold = threshold_PsC
  
     for i in range(uniq_c.shape[0]):
         tmp, template = find_spikes(uniq_c[i, :], template, locs_s, sampling_freq, threshold)
         # removing too close MUAPs based on their firing pattern
         # to remove too close spikes
-        B = (locs_s(tmp))
+        B = locs_s[tmp]
         B_i = np.argwhere(tmp)
         fire_rate = np.diff(B)
         # 5 milisec separation
-        T_rate = fire_rate >= round(0.005*sampling_freq)
-        B_F = [B_i[T_rate], B_i[-1]]
+        T_rate = fire_rate >= round(0.005 * sampling_freq)
+        if len(T_rate) > 0:
+            T_rate = np.concatenate((T_rate, np.array([True])))
+        B_F = B_i[T_rate]
+        #B_F = [B_i[T_rate], B_i[-1]]
+        #B_F = np.concatenate((B_i[T_rate], B_i[-1]), axis=0)
         loc[B_F] = i
     
     t5 = time.time()

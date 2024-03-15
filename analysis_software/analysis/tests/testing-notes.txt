@@ -3,3 +3,77 @@ Matlab doing test data for TK_filter function
 Elapsed time is 1792.090779 seconds.
 29.868179650000002 minutes
 MUs found: 24 via channel: 59
+
+disp("size(features)")
+disp(size(features))
+disp(size(title))
+disp(size(unique(title)))
+size(features)
+      136895          24
+
+      136895           1
+
+       19773           1
+   
+size(uniq_c)
+    26    80
+
+Elapsed time is 1756.004950 seconds.
+MUs found: 24 via channel: 59
+ 
+    ##################################################################   
+python
+(5998800,)
+Time 1: 29.793034315109253
+[[ 2.  2.  2.  2. nan  1.  1.  1.  1. nan  3.  2.  2. nan  0.  0.  0.  0.
+  nan  1.  4.  5.  8. nan]
+ [ 2.  2.  2.  2.  2.  1.  1.  1.  1.  1.  2.  2.  2.  0.  0.  0.  0.  0.
+   0.  0.  2.  3.  5.  5.]
+ [ 2.  2.  2.  2.  2.  1.  1.  1.  1.  0.  1.  0.  2.  2.  0.  0.  0.  0.
+   0.  1.  2.  2.  3.  5.]]
+Time 2: 0.1589646339416504
+pre gen title
+Time =
+0.2090003490447998
+uni_indices.shape =
+(73648,)
+post gen title
+Time 3: 40.368998527526855
+size(features)
+(140698, 24)
+(140698,)
+#unique titles
+(76328,)
+post clusters
+Time 4: 77.11105871200562
+
+After mergring clusters
+print(uniq_c.shape)
+(1007, 80)
+
+###
+(5998800,)
+Time 1: 28.809569120407104
+[[ 2.  2.  2.  2. nan  1.  1.  1.  1. nan  3.  2.  2. nan  0.  0.  0.  0.
+  nan  1.  4.  5.  8. nan]
+ [ 2.  2.  2.  2.  2.  1.  1.  1.  1.  1.  2.  2.  2.  0.  0.  0.  0.  0.
+   0.  0.  2.  3.  5.  5.]
+ [ 2.  2.  2.  2.  2.  1.  1.  1.  1.  0.  1.  0.  2.  2.  0.  0.  0.  0.
+   0.  1.  2.  2.  3.  5.]]
+Time 2: 0.1750040054321289
+pre gen title
+Time =
+0.3839888572692871
+uni_indices.shape =
+(74720,)
+post gen title
+Time 3: 8.333028316497803
+size(features)
+(140698, 24)
+(140698,)
+(80710,)
+post clusters
+Time 4: 82.47096681594849
+(2249, 80)
+
+     

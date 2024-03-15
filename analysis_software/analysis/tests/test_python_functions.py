@@ -4,6 +4,7 @@ import numpy as np
 
 # Need to add analysis folder to search path
 import emg_analyser_python.emg_analyser_functions as emg
+from emg_analyser_python.detect_peaks import detect_peaks
 
 
 # length of vector to test
@@ -155,6 +156,10 @@ TE = emg.resolve_peaks(sig_one_loc, DTh, Fs)
 print("emg.resolve_peaks(sig_one_loc, DTh, Fs) = ")
 print(TE)
 
+ans = detect_peaks(sig_one_loc)
+print("detect_peaks(sig_one_loc)")
+print(ans)
+#input("fgdfdfg")
 ############################
 ks = np.array([2, 3, 5])
 L = 0.01
@@ -214,21 +219,25 @@ print(Y)
 ############################
 
 features0 = features.reshape(1, len(features))
-features2 = np.vstack((features0, features0, features0))#, features0))
+features2 = np.vstack((features0, features0, features0))#, features0, features0))
 
-#features2[1, 1] = 1 # 2 to be the same
-#features2[1, 6] = 2 # 2, 3, 4 to be the same
+#features2[0, 1] = 1 # 2 to be the same
+#features2[1, 1] = 1 # 2, 3, 4 to be the same
 #features2[1, 20] = np.NaN # 2 to be the same
-features2[0, 6] = 2
-features2[1, 6] = 3
-features2[2, 6] = 4
-#features2[3, 6] = 5
+#features2[4, 2] = 1
+#features2[2, 2] = 1
+#features2[2, 6] = 8
+#features2[3, 21] = 1
+#features2[4, 21] = 2
+
+print(features2)
 
 title = emg.generate_titles(features2)
 
 print("generate_title(features2) = ")
 print(title)
 
+#input("egegreg")
 ############################
 
 template = tmp
@@ -255,6 +264,14 @@ print(Index)
 print("loc =")
 print(loc)
 
+############################
+import scipy.signal as sg
+
+peaks, _ = sg.find_peaks(abs(sig_one_loc))
+
+print("Find peaks = ")
+print(peaks)
+#input("fdsdfsdf")
 ############################
 
 filename = 'C:\\Users\\richa\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\test_data.csv'
