@@ -158,7 +158,7 @@ disp(TE);
 disp("findpeaks(sig_one_loc)");
 disp(locs);
 disp(ans);
-fgdfdfg
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 ks = [2 3 5];
@@ -220,6 +220,15 @@ disp(Y);
 features = round(features)
 features2 = vertcat(features, features, features)%, features, features); %, features)
 
+fea1 = [2     2     2     2   NaN     2     2     2     2   NaN     4     3     3   NaN     1     1     1     1   NaN     2     5     6     9   NaN]
+fea2 = [2     2     2     2     2     2     2     2     2     2     3     3     3     1     1     1     1     1     1     1     3     4     6     6]
+fea3 = [2     2     2     2     2     2     2     2     2     1     2     1     3     3     1     1     1     1     1     2     3     3     4     6]
+fea4 = [2     2     2     2     1     2     2     2     2   NaN     4     3     3   NaN     1     1     1     1   NaN     2     5     6     9   NaN]
+fea5 = [2     2     2     2     2     2     2     2     2     2     3     3     3     1     1     1     1     1     1     1     3     4     6     6]
+fea6 = [2     2     2     2     2     2     2     2     2     1     2     1     3     3     1     1     1     1     1     2     3     3     4     6]
+
+features3 = vertcat(fea1, fea2, fea3, fea4, fea5, fea6)
+     
 %features2(2, 2) = 1 % 2 to be the same
 %features2(2, 7) = 2 # 2, 3, 4 to be the same
 %features2(2, 21) = np.NaN # 2 to be the same
@@ -236,10 +245,10 @@ features2 = vertcat(features, features, features)%, features, features); %, feat
 
 title = generate_title(features2);
 
-disp("generate_title(features2) = ");
+disp("generate_title(features3) = ");
 disp(title);
 
-
+%gyugyug
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 template = tmp; 
@@ -272,7 +281,7 @@ peaks = findpeaks(abs(sig_one_loc))
 disp("Find peaks = ")
 disp(peaks)
 
-fdsdfsdf
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Channel 59 data

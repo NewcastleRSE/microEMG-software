@@ -1,3 +1,4 @@
+from math import isnan
 import numpy as np
 import scipy.signal as sg
 from emg_analyser_python.detect_peaks import detect_peaks
@@ -20,6 +21,88 @@ June 2015, Linkoping University
 Please cite the paper if any of the methods were helpful
 """
 
+MAP_RANGE = [1, 9]
+
+def round_int(val):
+    """
+    Rounds the given float to the nearest integer. In the case of a value half way the number
+    is rounded up to be consistent with MatLab, e.g. 0.5 rounds to 1. 
+    
+    Parameters
+    ----------
+    val : float
+        number to be rounded
+        
+    Returns
+    -------
+    integer
+    
+    """
+    #return int(np.round(val))
+
+    if np.isnan(val):
+        return val
+    
+    # Avoid rounding down when half way. If first decimal is 5 then add a bit to ensure it rounds up
+    first_dec = int((val % 1) * 10)
+    
+    if first_dec == 5:
+        if val > 0:
+            val += 0.1
+        else:
+            val -= 0.1
+ 
+    return int(np.round(val))
+
+def round_int_peaks(val):
+    """
+    Rounds the given float to the nearest integer. In the case of a value half way the number
+    is rounded up to be consistent with MatLab, e.g. 0.5 rounds to 1. 
+    
+    Parameters
+    ----------
+    val : float
+        number to be rounded
+        
+    Returns
+    -------
+    integer
+    
+    """
+   
+    if np.isnan(val):
+        return val
+
+    # Avoid rounding down when half way. If first decimal is 5 then add a bit to ensure it rounds up
+    first_dec = int((val % 1) * 10)
+   
+    if first_dec == 5:
+        if val > 0:
+            val += 0.1
+        else:
+            val -= 0.1
+        
+    return int(np.round(val))
+        
+def round_ints(vals):
+    """
+    Rounds the given array of floats to the nearest integers. In the case of a values half way the numbers
+    are rounded up to be consistent with MatLab, e.g. 0.5 rounds to 1. 
+    
+    Parameters
+    ----------
+    val : 1D numpy NDArray[float]
+        number to be rounded
+        
+    Returns
+    -------
+    1D numpy NDArray[int]
+    
+    """
+    #return np.round(vals)
+    return np.array([round_int(x) for x in vals])
+    #return np.array(map(lambda x: round_int(x), vals))
+    
 def find_peaks(data, distance = 1):
     """
     Try to return as near as possible the same answer as findpeaks in MatLab
@@ -123,7 +206,7 @@ def PsC(template, sig, lag = None):
     """
 
     if lag is None:
-        lag = round(len(sig)*0.5)
+        lag = round_int(len(sig)*0.5)
     
     m = len(template)
     n = len(sig)
@@ -183,7 +266,7 @@ def find_spikes(templates, sigs, locs, sampling_freq, threshold):
  
     spike_locs = np.full(len(locs), False)
     #lag (def was 0.0002)
-    lag = round(0.0002 * sampling_freq) 
+    lag = round_int(0.0002 * sampling_freq) 
 
     for i in range(len(locs)):
         tmp = sigs[i, :]
@@ -217,14 +300,10 @@ def resolve_peaks(sig, decision_thres, sampling_freq):
     """ 
 
     sig = np.abs(sig)
+    
     # def 15 millisec min distance
-    # Avoid rounding errors
-    val = 0.0015 * sampling_freq
-    first_dec = int((abs(val) % 1) * 10)
-    if first_dec == 5:
-        val += 0.000000001
-        
-    min_pd = int(max(1, np.round(val)))
+    val = 0.0015 * sampling_freq       
+    min_pd = int(max(1, round_int_peaks(val)))
    
     tmp = np.zeros(len(sig))
     ind = (sig > decision_thres)
@@ -280,7 +359,7 @@ def MTH(MTEO, ks, L, sampling_freq):
     for i in range(N):
         # take only coefficients that are independent (W(i) apart) for median
         # standard deviation    
-        Sigmaj = np.median(np.abs(MTEO[::np.round(ks[i])] - np.mean(MTEO)))/0.6745
+        Sigmaj = np.median(np.abs(MTEO[::round_int(ks[i])] - np.mean(MTEO)))/0.6745
         #hard threshold
         Thj = Sigmaj * np.sqrt(2 * np.log(M))  
         indexes = (np.abs(MTEO[i, :]) > Thj)
@@ -380,34 +459,49 @@ def spike_separator(S_block, template, S_neighbor, window, threshold):
        
        
     ## 2nd Part       
-    maxima_2 = find_peaks(S_block[S_neighbor:])
+    maxima_2 = find_peaks(S_block[(S_neighbor-1):])
+    #print("things")
+    #print(S_neighbor)
+    #print(S_block[(S_neighbor-1):])
+    #print(maxima_2)
+    #print(window)
     
     if len(maxima_2) > 0:
         amp_M2 = S_block[maxima_2]
         dist_m = (maxima_2 + 1 >= window)
         dist_a = (amp_M2 >= threshold)
         maxima_2 = maxima_2[dist_m & dist_a]
-         
+        
+        
+        #print(dist_m)
+        #print(dist_a)
+        #print(maxima_2)
+        
         if len(maxima_2) > 0:
             #closest to peak
             maxima_2 = maxima_2[0]
             
-            end_pos = (S_neighbor + maxima_2 + 1)
+            end_pos = (S_neighbor - 1 + maxima_2 + 1)
             if end_pos > len(S_block):
                 end_pos = len(S_block)
                 
-            inverted = 1.01 * max(S_block[S_neighbor:end_pos]) - S_block[S_neighbor:end_pos]
+            inverted = 1.01 * max(S_block[(S_neighbor-1):end_pos]) - S_block[(S_neighbor-1):end_pos]
             
             minima_2 = find_peaks(inverted)
             
+            #print(inverted)
+            #print(minima_2)
+        
             if len(minima_2) > 0:
                 minima_2 = minima_2[-1]
-                minima_2 = S_neighbor - minima_2
+                minima_2 = S_neighbor - 1 - minima_2
                 # make the uncorrelated zero 
                 start_pos = (len(S_block) - 1 - minima_2)
                 if start_pos < 0:
                     start_pos = 0
                 
+                #print(start_pos)
+                #print("end things")
                 #Should be like this? Did as MatLab above.
                 #minima_2 = minima_2[-1]
                 #minima_2 = minima_2 + S_neighbor
@@ -441,7 +535,7 @@ def border_detector(S_block, template, threshold, threshold1):
        
     """ 
     
-    maxima_1 = find_peaks(S_block);
+    maxima_1 = find_peaks(S_block)
     amp_M1 = S_block[maxima_1]
     
     A = amp_M1 > threshold
@@ -459,10 +553,10 @@ def border_detector(S_block, template, threshold, threshold1):
     for i in range(len(B)):                   
         # (limited to 5 turns or maximas)
         if i < 5:  
-            dummy = np.argwhere(S_block[:B[i]] <= threshold1)
+            dummy = np.argwhere(S_block[:(B[i]+1)] <= threshold1)
      
             if len(dummy) == 0:
-                tmp[i, 0] = np.argmin(S_block[:B[i]])    
+                tmp[i, 0] = np.argmin(S_block[:(B[i]+1)])    
             else:
                 tmp[i, 0] = dummy[-1]
                 
@@ -489,7 +583,7 @@ def border_detector(S_block, template, threshold, threshold1):
             amp[i] = 2;                               
       
     # number of local Max (0 - 4)
-    features[0:len(amp)] = amp;       
+    features[0:len(amp)] = amp       
     # approximate period (5 - 9)
     features[5:(5 + len(D_border))] = D_border + 1
     # time difference between each maxima(10 - 13)
@@ -580,7 +674,7 @@ def linear_map(X, original_range, map_range):
    
     Returns
     -------
-    Y : integer
+    Y : 1D numpy NDArray[int]
         Mapped number
     """
 
@@ -595,8 +689,12 @@ def linear_map(X, original_range, map_range):
     else:
         Y = np.asarray(X)/original_range[0]
     
-    # map to nearest integer
-    return np.round(Y)                     
+    # map to nearest integers
+    #X = Y % 1
+    first_dec = np.round((np.fabs(Y) % 1) * 10)
+    Y[first_dec == 5] += 0.1
+    #return np.round(Y)
+    return round_ints(Y)                     
 
 def generate_titles(features):
     """    
@@ -650,6 +748,15 @@ def generate_titles(features):
             features_to_check_count += 1
     '''
     
+    # Replace NaNs with this number, other numbers should be below this number so will not conflict
+    # We need NaNs to be considered equal when comparing features
+    t00 = time.time() 
+    features[np.isnan(features)] = MAP_RANGE[1] + 1
+    t01 = time.time()
+
+    print("Nan replace Time = ")
+    print(t01 - t00)
+    
     # Label first list of features as "1"
     titles = np.zeros(no_features) 
     title_counter = 0
@@ -697,8 +804,8 @@ def generate_titles(features):
         for i in in_set[1:]:
             #print(str(i) + ": " + str(features_to_check_count))
             #print("i = " + str(i)) 
-            for xxx in range(features_to_check_count):
-                j = features_to_check[xxx]
+            for k in range(features_to_check_count):
+                j = features_to_check[k]
                 
                 #if (features[j, 5:] == features[i, 5:]).all():
                 #    # Considered the same, so give the same title
@@ -758,14 +865,14 @@ def merge_clusters(template, titles, threshold, sampling_freq, sig_len):
     semi_final = np.zeros((no_unique_titles, template.shape[1]))
     counter = np.full(no_unique_titles, False)
 
-    if round(sig_len/sampling_freq) < 10:
+    if round_int(sig_len/sampling_freq) < 10:
         #minimum length of clusters
         min_l = np.ceil(sig_len/sampling_freq)            
     else:
         min_l = 3
     
     #lag(def 0.0002)
-    lag = round(0.0002*sampling_freq)                       
+    lag = round_int(0.0002*sampling_freq)                       
     
     # Checking for inter-cluster similarity
     for tit in range(1, no_unique_titles + 1):
@@ -883,14 +990,24 @@ def TK_filter(sig, sampling_freq, C = 0.1, threshold_PsC = 0.1, init = True, win
     sig_TEO, _ = MTEO(sig, ks)
     locs, threshold = MTH(sig_TEO, ks, C, sampling_freq)
      
+    print('sig_TEO')
+    print(sig_TEO.shape)
+    print(sig_TEO[:10])
+
+    print(locs.shape)
+    print(locs[:20])
+
     # Removing those peaks on begining and end of sig
     # Minus 1, as Python indexes start at 0
-    A = locs > round((wind) * sampling_freq) - 1
+    A = locs > round_int((wind) * sampling_freq) - 1
     locs = locs[A]
-    B = locs < (len(sig) - round((wind)*sampling_freq) - 1)
+    B = locs < (len(sig) - round_int((wind)*sampling_freq) - 1)
     locs = locs[B]
     
-  
+    print('locs again')
+    print(locs.shape)
+    print(locs[:20])
+
     # if less than 1 spike persecond
     #len(locs) < 100/(len(sig)/sampling_freq)
     if not locs.size:                
@@ -900,10 +1017,15 @@ def TK_filter(sig, sampling_freq, C = 0.1, threshold_PsC = 0.1, init = True, win
     # Threshold for features
     threshold1 = np.mean(sig_TEO)                   
 
+    print("TH")
+    print("TH1")
+    print(threshold)
+    print(threshold1)
+
     # for alignment
     locs_s = np.zeros(len(locs))
     # Search Neighborhood window
-    S_neighbor = round((wind/2) * sampling_freq)       
+    S_neighbor = round_int((wind/2) * sampling_freq)       
                                                                                
     # Initiate original Signal
     # storing templates
@@ -913,39 +1035,56 @@ def TK_filter(sig, sampling_freq, C = 0.1, threshold_PsC = 0.1, init = True, win
     # feature vector
     features = np.zeros((len(locs), 24))
     # window to separate spikes(def was 3.5 ms/ 2ms)
-    window = round(0.002 * sampling_freq)
+    window = round_int(0.002 * sampling_freq)
 
     t0 = time.time()
 
+    print("S_neighbor")
+    print(S_neighbor)
+    
     ## This loop removes the interference in the selected spikes and assigns a label to them
     for i in range(len(locs)):
+        print(i)
         ## Case 1      
-        if ((locs[i] - S_neighbor) >= 1) and ((locs[i] + S_neighbor) <= len(sig_TEO)):        
+        if ((locs[i] - S_neighbor) >= 0) and ((locs[i] + S_neighbor) < len(sig_TEO)):        
             # Find the Neighborhoods
-            S_block[i, :] = sig_TEO[(locs[i] - S_neighbor):(locs[i] + S_neighbor)]
-            d = find_peaks(abs(sig[(locs[i] - S_neighbor):(locs[i] + S_neighbor)]))
-                    
+            
+            #print("Stuff 1...")
+            #print(S_block[i, :])
+            #print(features[i, :])
+            
+            S_block[i, :] = sig_TEO[(locs[i] - S_neighbor + 1):(locs[i] + S_neighbor + 1)]
+            d = find_peaks(abs(sig[(locs[i] - S_neighbor + 1):(locs[i] + S_neighbor + 1)]))
+               
             if d.size:               
                 d_i = np.argmin(abs(d - S_neighbor))                
-                locs_s[i] = locs[i] + (d[d_i] - S_neighbor)
+                locs_s[i] = locs[i] + (d[d_i] + 1 - S_neighbor)
                 if locs_s[i] < S_neighbor:
                     locs_s[i] = locs[i]             
             else:
                 locs_s[i] = locs[i]
-             
-            template[i, :] = sig[(int(locs_s[i]) - S_neighbor):(int(locs_s[i]) + S_neighbor)]
-            S_block[i, :], template[i, :] = spike_separator(S_block[i, :], template[i, :], S_neighbor, window, threshold)
+            
+            #print("Stuff 2...")
+            #print(S_block[i, :])
+            #print(features[i, :])
+            
+            template[i, :] = sig[(int(locs_s[i]) - S_neighbor + 1):(int(locs_s[i]) + S_neighbor + 1)]            
+            S_block[i, :], template[i, :] = spike_separator(S_block[i, :], template[i, :], S_neighbor, window, threshold)            
             features[i, :] = border_detector(S_block[i, :], template[i, :], threshold, threshold1)
             
+            ##print("Stuff 3...")
+            #print(S_block[i, :])
+            #print(features[i, :])
+                       
          ## Case 2
-        elif (locs[i] - S_neighbor) < 1:  
-            end_loc = int(locs[i]) + S_neighbor
+        elif (locs[i] - S_neighbor) < 0:  
+            end_loc = int(locs[i]) + S_neighbor + 1
             S_block[i, :end_loc] = sig_TEO[:end_loc]
             d = find_peaks(abs(sig[:end_loc]))
             d_i = np.argmin(abs(d - S_neighbor))
            
             if d.size and d_i.size:
-                locs_s[i] = locs[i] + (d[d_i] - S_neighbor)
+                locs_s[i] = locs[i] + (d[d_i] + 1 - S_neighbor)
                 if locs_s[i] < S_neighbor:
                     locs_s[i] = locs[i]                
             else:
@@ -958,7 +1097,7 @@ def TK_filter(sig, sampling_freq, C = 0.1, threshold_PsC = 0.1, init = True, win
             
         ## Case 3                                  
         # Bounderies
-        elif (locs[i] + S_neighbor) > len(sig_TEO):
+        elif (locs[i] + S_neighbor) >= len(sig_TEO):
          
             first_half = len(sig[(locs[i] - S_neighbor):locs[i]])
             complete = len(sig_TEO[(locs[i] - S_neighbor):])
@@ -970,7 +1109,7 @@ def TK_filter(sig, sampling_freq, C = 0.1, threshold_PsC = 0.1, init = True, win
             d_i = np.argmin(abs(d - S_neighbor))
            
             if d.size and d_i.size:
-                locs_s[i] = locs[i] + (d[d_i] - S_neighbor)
+                locs_s[i] = locs[i] + (d[d_i] + 1 - S_neighbor)
                 
                 if locs_s[i] < S_neighbor:
                     locs_s[i] = locs[i]
@@ -978,29 +1117,41 @@ def TK_filter(sig, sampling_freq, C = 0.1, threshold_PsC = 0.1, init = True, win
             else:
                 locs_s[i] = locs[i]
             
-            first_half = len(sig[(locs_s[i] - S_neighbor):locs_s[i]])
-            complete = len(sig_TEO[(locs_s[i] - S_neighbor):])
-            template[i, (S_neighbor - first_half):complete] = sig[(locs_s[i] - S_neighbor):]
+            first_half = len(sig[(locs_s[i] - S_neighbor + 1):locs_s[i]])
+            complete = len(sig_TEO[(locs_s[i] - S_neighbor + 1):])
+            template[i, (S_neighbor - first_half + 1):complete] = sig[(locs_s[i] - S_neighbor):]
             S_block[i, :], template[i, :] = spike_separator(S_block[i, :], template[i, :], S_neighbor, window, threshold)                               
             features[i, :] = border_detector(S_block[i, :], template[i, :], threshold, threshold1)                            
+        
   
-
     t1 = time.time()
     print("Time 1: " + str(t1 - t0))
     
+    print("features...")
+    print(features.shape)
+    print(features[:10,:])
+    
     Index = locs
 
-    # Mapping features to the range of [1 9]
-    map_range = [0, 8]
+    # Mapping features to the range of [1 9]    
     original_range = np.zeros(2)
     
+    import pandas as pd 
+    df = pd.DataFrame(features)
+    df.to_csv('C:\\Users\\richa\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\features0_python_pre_gen_titles.csv', header= False, index=False, na_rep='nan')
+ 
     # start from feature 6 which is period of each exterema
     for i in range(5, features.shape[1]):
      
         original_range[0] = np.nanmin(features[:, i])
         original_range[1] = np.nanmax(features[:, i])        
-        features[:, i] = linear_map(features[:, i], original_range, map_range)
+        features[:, i] = linear_map(features[:, i], original_range, MAP_RANGE)
         
+
+   
+    df = pd.DataFrame(features)
+    df.to_csv('C:\\Users\\richa\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\features_python_pre_gen_titles.csv', header= False, index=False, na_rep='nan')
+ 
     print(features[:3, :])
     # generates the initial set of labels
     t2 = time.time()
@@ -1014,6 +1165,7 @@ def TK_filter(sig, sampling_freq, C = 0.1, threshold_PsC = 0.1, init = True, win
     print("size(features)")
     print(features.shape)
     print(titles.shape)
+    print(titles[:100])
     print(np.unique(titles).shape)
 
     ## Interference cancelation
@@ -1024,7 +1176,10 @@ def TK_filter(sig, sampling_freq, C = 0.1, threshold_PsC = 0.1, init = True, win
     print("post clusters")
     t4 = time.time()
     print("Time 4: " + str(t4 - t3))
+    print("uniq_c.shape = ")
     print(uniq_c.shape)
+    print("uniq_c = ")
+    print(uniq_c)
     threshold = threshold_PsC
  
     for i in range(uniq_c.shape[0]):
@@ -1035,9 +1190,10 @@ def TK_filter(sig, sampling_freq, C = 0.1, threshold_PsC = 0.1, init = True, win
         B_i = np.argwhere(tmp)
         fire_rate = np.diff(B)
         # 5 milisec separation
-        T_rate = fire_rate >= round(0.005 * sampling_freq)
+        T_rate = fire_rate >= round_int(0.005 * sampling_freq)
         if len(T_rate) > 0:
             T_rate = np.concatenate((T_rate, np.array([True])))
+            
         B_F = B_i[T_rate]
         #B_F = [B_i[T_rate], B_i[-1]]
         #B_F = np.concatenate((B_i[T_rate], B_i[-1]), axis=0)
@@ -1045,6 +1201,7 @@ def TK_filter(sig, sampling_freq, C = 0.1, threshold_PsC = 0.1, init = True, win
     
     t5 = time.time()
     print("Time 5: " + str(t5 - t4))
+    print(template.shape)
     noise_ind = np.argwhere(loc == -1)
     noise = (loc == -1)
     new_sig = template[noise, :]
@@ -1059,26 +1216,26 @@ def TK_filter(sig, sampling_freq, C = 0.1, threshold_PsC = 0.1, init = True, win
             loc[noise_ind[tmp]] = i;
   
  
-        ### Double check the similarity of templates
-        #lag
-        lag = round(0.008 * sampling_freq)                        
-        threshold = 0.50
-        for i in range(uniq_c.shape[0]):
-            if (~np.isnan(uniq_c[i, :])).all():
-                for j in range(uniq_c.shape[0]):
-                    if (i != j) and (~np.isnan(uniq_c[j, :])).all():
-                        PsC_s = PsC(uniq_c[i, :], uniq_c[j, :], lag)
-                        if  PsC_s > threshold:
-                            LG = (loc == j)
-                            loc[LG] = i
+    ### Double check the similarity of templates
+    #lag
+    lag = round_int(0.008 * sampling_freq)                        
+    threshold = 0.50
+    for i in range(uniq_c.shape[0]):
+        if (~np.isnan(uniq_c[i, :])).all():
+            for j in range(uniq_c.shape[0]):
+                if (i != j) and (~np.isnan(uniq_c[j, :])).all():
+                    PsC_s = PsC(uniq_c[i, :], uniq_c[j, :], lag)
+                    if  PsC_s > threshold:
+                        LG = (loc == j)
+                        loc[LG] = i
                             
-                            if j < max(loc):
-                                rg = max(loc) - j;
-                                for lk in range(rg):
-                                    LG = (loc == (j + lk))
-                                    loc[LG] = (j + lk) - 1
+                        if j < max(loc):
+                            rg = max(loc) - j;
+                            for lk in range(rg):
+                                LG = (loc == (j + lk))
+                                loc[LG] = (j + lk) - 1
                                   
-                            uniq_c[j, :] = np.NaN
+                        uniq_c[j, :] = np.NaN
 
     t6 = time.time()
     print("Time 6: " + str(t6 - t5))
@@ -1086,6 +1243,6 @@ def TK_filter(sig, sampling_freq, C = 0.1, threshold_PsC = 0.1, init = True, win
     #### In case of upsampling its required to downsample everything again
     if upsample_flag > 0: 
         if Index.size:
-            Index = round(Index/upsample_flag);   
+            Index = round_ints(Index/upsample_flag);   
         
     return Index, loc

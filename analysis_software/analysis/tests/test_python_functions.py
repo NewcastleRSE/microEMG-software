@@ -221,6 +221,16 @@ print(Y)
 features0 = features.reshape(1, len(features))
 features2 = np.vstack((features0, features0, features0))#, features0, features0))
 
+fea1 = [2,     2,     2,     2,   np.nan,     2,     2,     2,     2,   np.nan,     4,     3,     3,   np.nan,     1,     1,     1,     1,   np.nan,     2,     5,     6,     9,   np.nan]
+fea2 = [2,     2,     2,     2,      np.nan,     2,     2,     2,     2,     2,     3,     3,     3,     1,     1,     1,     1,     1,     1,     1,     3,     4,     6,     6]
+fea3 = [2,     2,     2,     2,     2,     2,     2,     2,     2,     1,     2,     1,     3,     3,     1,     1,     1,     1,     1,     2,     3,     3,     4,     6]
+fea4 = [2,     2,     2,     2,   np.nan,     2,     2,     2,     2,   np.nan,     4,     3,     3,   np.nan,     1,     1,     1,     1,   np.nan,     2,     5,     6,     9,   np.nan]
+fea5 = [2,     2,     2,     2,      2,     2,     2,     2,     2,     2,     3,     3,     3,     1,     1,     1,     1,     1,     1,     1,     3,     4,     6,     6]
+fea6 = [2,     2,     2,     2,     2,     2,     2,     2,     2,     1,     2,     1,     3,     3,     1,     1,     1,     1,     1,     2,     3,     3,     4,     6]
+
+features3 = np.vstack((fea1, fea2, fea3, fea4, fea5, fea6))
+     
+
 #features2[0, 1] = 1 # 2 to be the same
 #features2[1, 1] = 1 # 2, 3, 4 to be the same
 #features2[1, 20] = np.NaN # 2 to be the same
@@ -234,7 +244,7 @@ print(features2)
 
 title = emg.generate_titles(features2)
 
-print("generate_title(features2) = ")
+print("generate_title(features3) = ")
 print(title)
 
 #input("egegreg")
@@ -293,9 +303,13 @@ t1 = time.time()
 
 total = t1-t0
 
-index.tofile('C:\\Users\\richa\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\results_python_index.csv', sep = ',')
-locs.tofile('C:\\Users\\richa\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\results_python_locs.csv', sep = ',')
+import pandas as pd 
+df = pd.DataFrame(index)
+df.to_csv('C:\\Users\\richa\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\results_python_index.csv', header= False, index=False, na_rep='nan')
 
+df = pd.DataFrame(locs)
+df.to_csv('C:\\Users\\richa\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\results_python_locs.csv', header= False, index=False, na_rep='nan')
+ 
 #print("index =")
 #print(index)
 #print("loc =")
@@ -304,6 +318,7 @@ locs.tofile('C:\\Users\\richa\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\
 #print(temps)
 
 print('MUs found: ')
-#print(max(loc))
+if len(loc) > 0:
+    print(max(locs))
 
 print(total)
