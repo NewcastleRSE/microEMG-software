@@ -284,6 +284,24 @@ print(peaks)
 #input("fdsdfsdf")
 ############################
 
+#test peaks code
+a = np.array([2, 2, 1, 0, 15,  20,  44,  39,   6,  28,  31,   3,  24,  18,  21,  65,  79,  53,
+  19,  11,  19,   4,  22,  20,   3,  25,  38,  39,  38,  52,  79,  97,
+  89,  67,  46,  37,  43,  65,  98, 135, 171, 196, 205, 205, 207, 216,
+ 226, 230, 226, 217, 212, 213, 215, 214, 208, 197, 185, 176, 172, 171,
+ 168, 167, 166, 167, 170, 171, 169, 162, 153, 148, 149, 159, 169, 171,
+ 157, 133, 110,  99, 103, 117, 130, 126, 102,  69, 80, 80])
+
+from emg_analyser_python.detect_peaks import detect_peaks
+
+peaks = detect_peaks(a) #, edge='both')
+
+print("detect_peaks(a) = ")
+print(peaks)
+#input("detect_peaks(a)")
+
+############################
+
 filename = 'C:\\Users\\richa\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\test_data.csv'
 
 # Importing csv module

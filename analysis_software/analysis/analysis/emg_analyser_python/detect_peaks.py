@@ -126,7 +126,7 @@ def detect_peaks(x, mph=None, mpd=1, threshold=0, edge='rising',
         ine = np.where((np.hstack((dx, 0)) < 0) & (np.hstack((0, dx)) > 0))[0]
     else:
         if edge.lower() in ['rising', 'both']:
-            ire = np.where((np.hstack((dx, 0)) <= 0) & (np.hstack((0, dx)) > 0))[0]
+            ire = np.where((np.hstack((dx, 0)) <= 0) & (np.hstack((0, dx)) > 0))[0]                       
         if edge.lower() in ['falling', 'both']:
             ife = np.where((np.hstack((dx, 0)) < 0) & (np.hstack((0, dx)) >= 0))[0]
     ind = np.unique(np.hstack((ine, ire, ife)))
@@ -158,7 +158,41 @@ def detect_peaks(x, mph=None, mpd=1, threshold=0, edge='rising',
                 idel[i] = 0  # Keep current peak
         # remove the small peaks and sort back the indices by their occurrence
         ind = np.sort(ind[~idel])
+    
+    
 
+    # remove points which are inflections rather than peaks
+    to_delete = []    
+    
+    # Rising inflections           
+    flat_peaks = np.where(dx[ind] == 0)[0]     
+    for fp in flat_peaks:            
+        pt = ind[fp] + 1
+        dx_val = 0
+        while pt < len(dx) and dx_val == 0:                
+            dx_val = dx[pt]
+            pt += 1               
+                    
+        # if first dx point after flat section is +ve then it is not a peak so delete it     
+        if dx_val >= 0:                             
+            to_delete.append(fp)   
+   
+    # Falling inflections
+    flat_peaks = np.where(dx[ind-1] == 0)[0] 
+    for fp in flat_peaks:            
+        pt = ind[fp] - 1        
+        dx_val = 0
+        while pt >= 0 and dx_val == 0:                
+            dx_val = dx[pt]
+            pt -= 1               
+                    
+        # if first dx point before flat section is -ve then it is not a peak so delete it     
+        if dx_val <= 0:                             
+            to_delete.append(fp)   
+                
+    # delete inflections
+    ind = np.delete(ind, to_delete) 
+    
     if show:
         if indnan.size:
             x[indnan] = np.nan
@@ -167,7 +201,7 @@ def detect_peaks(x, mph=None, mpd=1, threshold=0, edge='rising',
             if mph is not None:
                 mph = -mph
         _plot(x, mph, mpd, threshold, edge, valley, ax, ind, title)
-
+        
     return ind
 
 
