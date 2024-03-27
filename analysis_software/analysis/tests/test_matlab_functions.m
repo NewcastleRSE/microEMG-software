@@ -308,8 +308,8 @@ disp(peaks)
 clear
 clc
 
-%test_data = readmatrix('C:\Users\richa\OneDrive - Newcastle University\RSE\Micro-EMG\Micro-EMG-analysis\microEMG-software\analysis_software\analysis\tests\test_data.csv'); 
-test_data = readmatrix('C:\Users\nrajh\OneDrive - Newcastle University\RSE\Micro-EMG\Micro-EMG-analysis\microEMG-software\analysis_software\analysis\tests\test_data.csv'); 
+test_data = readmatrix('C:\Users\richa\OneDrive - Newcastle University\RSE\Micro-EMG\Micro-EMG-analysis\microEMG-software\analysis_software\analysis\tests\test_data.csv'); 
+%test_data = readmatrix('C:\Users\nrajh\OneDrive - Newcastle University\RSE\Micro-EMG\Micro-EMG-analysis\microEMG-software\analysis_software\analysis\tests\test_data.csv'); 
 
 tic
 [index,loc,temps] = TK_filter(test_data,20000,0.1,0.1,1,0.004,0);

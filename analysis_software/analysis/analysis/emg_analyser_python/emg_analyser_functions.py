@@ -22,6 +22,7 @@ Please cite the paper if any of the methods were helpful
 """
 
 MAP_RANGE = [1, 9]
+name = "richa" #"nrajh" #print
 
 def round_int(val):
     """
@@ -180,7 +181,7 @@ def MTEO(raw_signal, ks, filter = True):
 
 
 
-def PsC(template, sig, lag = None):
+def PsC0(template, sig, lag = None):
     """    
     Psuedo_Correlation
     Computes the Pseudo Correlation, a finer approach than normal
@@ -210,6 +211,10 @@ def PsC(template, sig, lag = None):
     
     m = len(template)
     n = len(sig)
+
+    #print("m and n")
+    #print(m)
+    #print(n)
 
     if m > n:
         raise Exception('Length of Template should be equal or smaller than pattern') 
@@ -241,6 +246,82 @@ def PsC(template, sig, lag = None):
     
     return PsC_s, best_lag
 
+def PsC(template, sig, lag = None):
+    """    
+    Psuedo_Correlation
+    Computes the Pseudo Correlation, a finer approach than normal
+    correlation for template matching. Please review the paper below in order
+    to see why it is much more accurate for the pattern recognition
+    
+    Parameters
+    ----------
+    template : 1D numpy NDArray[float, float]
+        Storing templates
+    sig: 1D numpy NDArray[float]
+        the signal that we are searching the template in
+    lag : integer
+        does PsC for the lag between -lag : lag, it should be in samples,
+        for example half the length of the input signal
+        
+    Returns
+    -------
+    PsC_score : float
+        maximum score at best lag
+    best_lag : int
+        best lag
+    """
+
+    if lag is None:
+        lag = round_int(len(sig)*0.5)
+    
+    m = len(template)
+    n = len(sig)
+
+    #print("m and n")
+    #print(m)
+    #print(n)
+
+    if m > n:
+        raise Exception('Length of Template should be equal or smaller than pattern') 
+   
+    sig = np.hstack((np.zeros((lag)), sig, np.zeros((2 * lag))))
+    
+    #p4 = np.zeros(m)
+    #normaliz = np.zeros(m)
+    sum_p4 = 0
+    #sum_normaliz = 0
+    #PsC_score = np.zeros(n)
+    PsC_sc_max = 0
+    min_lag = 0
+    if m < lag:
+        min_lag = lag - m
+        
+    max_lag = 2 * lag + 1
+    if max_lag > n + lag + 1:
+        max_lag = n + lag + 1
+    
+    for k in range(min_lag, max_lag):
+        shifted_sig = sig[k:(k + m)]
+        p1 = template * shifted_sig
+        p2 = np.fabs(template - shifted_sig)
+        p3 = np.maximum(np.fabs(template), np.fabs(shifted_sig))
+        p4 = p1 - p2 * p3
+        #normaliz = p3 * p3
+        sum_p4 = np.sum(p4)
+        if sum_p4 > 0:
+            PsC_score = sum_p4/np.sum(p3 * p3)
+            if PsC_score > PsC_sc_max:
+                PsC_sc_max = PsC_score
+            
+        #    PsC_score[k] = 0
+        #else:
+        #    PsC_score[k] = sum_p4/np.sum(p3 * p3)
+                  
+    #best_lag = np.nanargmax(PsC_score)
+    #PsC_s = PsC_score[best_lag]
+    #best_lag = best_lag - lag
+    
+    return PsC_sc_max #, best_lag
 
 def find_spikes(templates, sigs, locs, sampling_freq, threshold):
     """
@@ -269,14 +350,17 @@ def find_spikes(templates, sigs, locs, sampling_freq, threshold):
         
     """ 
  
+    print("len(locs) = ")
+    print(len(locs))
     spike_locs = np.full(len(locs), False)
     #lag (def was 0.0002)
     lag = round_int(0.0002 * sampling_freq) 
 
     for i in range(len(locs)): 
-        print("f spike = ")
-        print(i)
-        PsC_s, _ = PsC(templates, sigs[i, :], lag)
+        #print("f spike = ")
+        #print(i)
+        PsC_s = PsC(templates, sigs[i, :], lag)
+        #print(PsC_s)
         if PsC_s >= threshold:
             spike_locs[i] = True
             sigs[i, :] = sigs[i, :] - templates
@@ -906,7 +990,7 @@ def merge_clusters(template, titles, threshold, sampling_freq, sig_len):
                 print(semi_final[c, :])
             
             for j in range(tmp_t2.shape[0]):             
-                PsC_s, _ = PsC(semi_final[c, :], tmp_t2[j, :], 4)
+                PsC_s = PsC(semi_final[c, :], tmp_t2[j, :], 4)
                 
                 if tit == test_num:
                     print("j = ")
@@ -942,7 +1026,7 @@ def merge_clusters(template, titles, threshold, sampling_freq, sig_len):
         if not np.isnan(semi_final[i, :]).any():
             for j in range(i):
                 if not np.isnan(semi_final[j, :]).any():
-                    PsC_s, _ = PsC(semi_final[i, :], semi_final[j, :], lag)
+                    PsC_s = PsC(semi_final[i, :], semi_final[j, :], lag)
                     if PsC_s > threshold:
                         semi_final[i, :] = (semi_final[i, :] + semi_final[j, :]) * 0.5
                         semi_final[j, :] = np.NaN
@@ -950,7 +1034,7 @@ def merge_clusters(template, titles, threshold, sampling_freq, sig_len):
     uniq_c = semi_final[np.isfinite(semi_final[:, 0]), :]
 
     df = pd.DataFrame(uniq_c)
-    df.to_csv('C:\\Users\\nrajh\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\python_semi3.csv', header= False, index=False, na_rep='nan')
+    df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\python_semi3.csv', header= False, index=False, na_rep='nan')
 
     return uniq_c
 
@@ -1265,7 +1349,7 @@ def TK_filter(sig, sampling_freq, C = 0.1, threshold_PsC = 0.1, init = True, win
 
     ####start uniq_c
     print("Reading in uniq_c from MatLab...")
-    name = "nrajh"
+    
     filename = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\matlab_uniq_c.csv'
     # Importing csv module
     import csv
@@ -1327,7 +1411,7 @@ def TK_filter(sig, sampling_freq, C = 0.1, threshold_PsC = 0.1, init = True, win
         if not np.isnan(uniq_c[i, :]).any():
             for j in range(i):
                 if not np.isnan(uniq_c[j, :]).any():
-                    PsC_s, _ = PsC(uniq_c[i, :], uniq_c[j, :], lag)
+                    PsC_s = PsC(uniq_c[i, :], uniq_c[j, :], lag)
                     if PsC_s > threshold:
                         LG = (loc == j)
                         loc[LG] = i

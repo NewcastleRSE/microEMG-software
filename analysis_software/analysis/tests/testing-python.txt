@@ -575,3 +575,17 @@ uniq_c =
  [ 689.5  689.5  677.  ...  693.   694.   703. ]
  [1269.  1249.  1227.  ...  988.   996.   997. ]
  [1590.  1589.5 1573.  ... 1691.5 1697.  1704.5]]
+ 
+ 
+ Traceback (most recent call last):
+  File "C:\Users\richa\OneDrive - Newcastle University\RSE\Micro-EMG\Micro-EMG-analysis\microEMG-software\analysis_software\analysis\tests\test_python_functions.py", line 320, in <module>
+    index, locs = emg.TK_filter(test_data,20000,0.1,0.1,True,0.004)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\richa\OneDrive - Newcastle University\RSE\Micro-EMG\Micro-EMG-analysis\microEMG-software\analysis_software\analysis\analysis\emg_analyser_python\emg_analyser_functions.py", line 1402, in TK_filter
+    PsC_s, _ = PsC(uniq_c[i, :], uniq_c[j, :], lag)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\richa\OneDrive - Newcastle University\RSE\Micro-EMG\Micro-EMG-analysis\microEMG-software\analysis_software\analysis\analysis\emg_analyser_python\emg_analyser_functions.py", line 304, in PsC
+    PsC_score[k] = 0
+    ~~~~~~~~~^^^
+IndexError: index 80 is out of bounds for axis 0 with size 80
+Press any key to continue . . .

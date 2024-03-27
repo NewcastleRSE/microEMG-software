@@ -126,8 +126,8 @@ print(tmp)
 template = tmp[0, :]
 
 lag = 2
-
-PsC_s, best_lag = emg.PsC(template,sig_one_loc,lag)
+best_lag = 2
+PsC_s = emg.PsC(template,sig_one_loc,lag)
 print("PsC(template,sig,lag) = ")
 print("PsC_s = ")
 print(PsC_s)
@@ -302,7 +302,7 @@ print(peaks)
 
 ############################
 
-name = "nrajh"
+name = "richa" #"nrajh"
 filename = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\test_data.csv'
 
 # Importing csv module
@@ -337,7 +337,8 @@ df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-
 #print(temps)
 
 print('MUs found: ')
-if len(loc) > 0:
-    print(max(locs))
+if len(locs) > 0:
+    print(np.max(locs))
 
+print("total Time =")
 print(total)
