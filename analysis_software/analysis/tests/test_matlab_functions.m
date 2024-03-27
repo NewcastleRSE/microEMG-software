@@ -121,14 +121,25 @@ disp(size(tmp));
 %%%%%%%%%%%%%%%%%%%%%%%
 template = tmp(1, :);
 
-lag = 2;
+lag = 10;
 
-[PsC_s,best_lag] = PsC(template,sig_one_loc,lag);
+sig5 = [sig1 0]
+sig6 = [0 sig1]
+sig5(10) = 1
+
+[PsC_s,best_lag] = PsC(sig5,sig6,lag);
 disp("PsC(template,sig,lag) = ")
 disp("PsC_s = ")
 disp(PsC_s)
 disp("best_lag = ")
 disp(best_lag)
+
+[PsC_s2,best_lag2] = PsC(sig6,sig5,lag);
+disp("PsC_s2 = ")
+disp(PsC_s2)
+disp("best_lag2 = ")
+disp(best_lag2)
+
 
 %%%%%%%%%%%%%%%%%%%%%%%
 
@@ -297,7 +308,8 @@ disp(peaks)
 clear
 clc
 
-test_data = readmatrix('C:\Users\richa\OneDrive - Newcastle University\RSE\Micro-EMG\Micro-EMG-analysis\microEMG-software\analysis_software\analysis\tests\test_data.csv'); 
+%test_data = readmatrix('C:\Users\richa\OneDrive - Newcastle University\RSE\Micro-EMG\Micro-EMG-analysis\microEMG-software\analysis_software\analysis\tests\test_data.csv'); 
+test_data = readmatrix('C:\Users\nrajh\OneDrive - Newcastle University\RSE\Micro-EMG\Micro-EMG-analysis\microEMG-software\analysis_software\analysis\tests\test_data.csv'); 
 
 tic
 [index,loc,temps] = TK_filter(test_data,20000,0.1,0.1,1,0.004,0);
