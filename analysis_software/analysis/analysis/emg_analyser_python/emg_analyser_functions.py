@@ -22,7 +22,7 @@ Please cite the paper if any of the methods were helpful
 """
 
 MAP_RANGE = [1, 9]
-name = "richa" #"nrajh" #print
+name = "nrajh" #print
 
 def round_int(val):
     """
@@ -1024,8 +1024,8 @@ def merge_clusters(template, titles, threshold, sampling_freq, sig_len):
 
     for i in range(semi_final.shape[0]):
         if not np.isnan(semi_final[i, :]).any():
-            for j in range(i):
-                if not np.isnan(semi_final[j, :]).any():
+            for j in range(semi_final.shape[0]): # range(i):
+                if i != j and not np.isnan(semi_final[j, :]).any():
                     PsC_s = PsC(semi_final[i, :], semi_final[j, :], lag)
                     if PsC_s > threshold:
                         semi_final[i, :] = (semi_final[i, :] + semi_final[j, :]) * 0.5
@@ -1350,11 +1350,11 @@ def TK_filter(sig, sampling_freq, C = 0.1, threshold_PsC = 0.1, init = True, win
     ####start uniq_c
     print("Reading in uniq_c from MatLab...")
     
-    filename = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\matlab_uniq_c.csv'
+    #filename = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\matlab_uniq_c.csv'
     # Importing csv module
-    import csv
-    with open(filename, 'r') as x:
-        uniq_c = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
+    #import csv
+    #with open(filename, 'r') as x:
+    #    uniq_c = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
  
     uniq_c = np.array(uniq_c)
     ####end uniq_c
@@ -1409,20 +1409,20 @@ def TK_filter(sig, sampling_freq, C = 0.1, threshold_PsC = 0.1, init = True, win
     threshold = 0.50
     for i in range(uniq_c.shape[0]):
         if not np.isnan(uniq_c[i, :]).any():
-            for j in range(i):
-                if not np.isnan(uniq_c[j, :]).any():
+            for j in range(uniq_c.shape[0]):#range(i + 1, np.max(loc) + 1):
+                if i != j and not np.isnan(uniq_c[j, :]).any():
                     PsC_s = PsC(uniq_c[i, :], uniq_c[j, :], lag)
+                    print(str(i) + " " + str(j) + " = " + str(PsC_s))
                     if PsC_s > threshold:
-                        LG = (loc == j)
-                        loc[LG] = i
-                            
-                        if j < np.max(loc):
-                            rg = np.max(loc) - j
-                            for lk in range(rg):
-                                LG = (loc == (j + lk))
-                                loc[LG] = (j + lk) - 1
+                        # i and j similar so give the same value                    
+                        loc[loc == j] = i
+                         
+                        # take one away from loc labels higher than j, as j has been removed (relabelled as i)
+                        if j < np.max(loc):                            
+                            for ch in range(j + 1, np.max(loc) + 1):                            
+                                loc[loc == ch] = ch - 1
                                   
-                        uniq_c[j, :] = np.NaN
+                        uniq_c[j, :] = np.NaN 
 
     t6 = time.time()
     print("Time 6: " + str(t6 - t5))

@@ -283,5 +283,38 @@ s1mat<-read.csv(paste0('C:\\Users\\',name,'\\OneDrive - Newcastle University\\RS
 
 s1py<-read.csv(paste0('C:\\Users\\',name,'\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\python_semi1.csv'), header = FALSE)
 
-
+ # check loc calcs at end of TK_filter
  
+loc1py<-read.csv(paste0('C:\\Users\\',name,'\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\python_loc1.csv'), header = FALSE)[,1]
+#add 1 to loc for py to match mat 
+loc1py[loc1py != -1] = loc1py[loc1py != -1] + rep(1, sum(loc1py != -1))
+ 
+loc2py<-read.csv(paste0('C:\\Users\\',name,'\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\python_loc2.csv'), header = FALSE)[,1]
+#add 1 to loc for py to match mat 
+loc2py[loc2py != -1] = loc2py[loc2py != -1] + rep(1, sum(loc2py != -1))
+
+loc3py<-read.csv(paste0('C:\\Users\\',name,'\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\python_loc3.csv'), header = FALSE)[,1]
+#add 1 to loc for py to match mat 
+loc3py[loc3py != -1] = loc3py[loc3py != -1] + rep(1, sum(loc3py != -1))
+
+
+loc3py_0<-read.csv(paste0('C:\\Users\\',name,'\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\python_loc3_0.csv'), header = FALSE)[,1]
+#add 1 to loc for py to match mat 
+loc3py_0[loc3py_0 != -1] = loc3py_0[loc3py_0 != -1] + rep(1, sum(loc3py_0 != -1))
+
+loc1mat<-as.matrix(read.csv(paste0('C:\\Users\\',name,'\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\matlab_loc1.csv'), header = FALSE))[1,]
+
+loc2mat<-as.matrix(read.csv(paste0('C:\\Users\\',name,'\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\matlab_loc2.csv'), header = FALSE))[1,]
+
+loc3mat<-as.matrix(read.csv(paste0('C:\\Users\\',name,'\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\matlab_loc3.csv'), header = FALSE))[1,]
+
+# check
+
+
+sum(loc1mat != loc1py)
+
+sum(loc2mat != loc2py)
+
+sum(loc3mat != loc3py)
+
+sum(loc3py_0 != loc3py) 

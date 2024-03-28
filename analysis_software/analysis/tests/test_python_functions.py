@@ -302,7 +302,7 @@ print(peaks)
 
 ############################
 
-name = "richa" #"nrajh"
+name = "nrajh"
 filename = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\test_data.csv'
 
 # Importing csv module
@@ -338,7 +338,7 @@ df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-
 
 print('MUs found: ')
 if len(locs) > 0:
-    print(np.max(locs))
+    print(np.max(locs) + 1)
 
 print("total Time =")
 print(total)
