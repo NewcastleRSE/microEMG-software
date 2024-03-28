@@ -302,7 +302,7 @@ print(peaks)
 
 ############################
 
-name = "nrajh"
+name = "richa"
 filename = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\test_data.csv'
 
 # Importing csv module

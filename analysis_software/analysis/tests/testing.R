@@ -1,4 +1,4 @@
-name<-"nrajh"
+name<-"richa" #"nrajh"
 
 tmp<-c(1.000e+00, 4.000e+00, 4.000e+00, 4.000e+00, 4.000e+00, 4.000e+00, 4.000e+00,
  4.000e+00, 4.000e+00, 4.000e+00, 4.000e+00, 4.000e+00, 4.000e+00, 4.000e+00,
@@ -318,3 +318,21 @@ sum(loc2mat != loc2py)
 sum(loc3mat != loc3py)
 
 sum(loc3py_0 != loc3py) 
+
+###
+
+index_mat<-as.matrix(read.csv(paste0('C:\\Users\\',name,'\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\results_matlab_index.csv'), header = FALSE))[1,]
+
+
+locs_mat<-as.matrix(read.csv(paste0('C:\\Users\\',name,'\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\results_matlab_locs.csv'), header = FALSE))[1,]
+
+index_py<-as.matrix(read.csv(paste0('C:\\Users\\',name,'\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\results_python_index.csv'), header = FALSE))[,1]
+index_py<-index_py + 1
+
+locs_py2<-as.matrix(read.csv(paste0('C:\\Users\\',name,'\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\results_python_locs2.csv'), header = FALSE))[,1]
+locs_py[locs_py != -1] = locs_py[locs_py != -1] + rep(1, sum(locs_py != -1))
+
+
+sum(index_py-index_mat)
+
+sum(locs_py - locs_mat)
