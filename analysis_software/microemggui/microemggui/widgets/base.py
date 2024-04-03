@@ -75,3 +75,11 @@ class ExpandingSpacer(QSpacerItem):
     # Used to keep other widgets a fixed size.
     def __init__(self):
         super().__init__(0, 0, QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+
+class ExpandingVSpacer(QSpacerItem):
+    # Spacer with minimum size of (0, 0) that will expand vertically fill available
+    # space in widget.
+    # Used to keep other widgets a fixed size.
+    def __init__(self):
+        super().__init__(0, 0, QSizePolicy.Fixed, QSizePolicy.Expanding)
