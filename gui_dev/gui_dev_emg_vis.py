@@ -30,12 +30,7 @@ class MainWindow(QMainWindow):
         emg_files = EMGFiles(emg_dir)
         emg_data = emg_files.load_emg_data()
 
-        # make figure
-        fig, _ = emg_data.plot_emg_ts(
-            start_t=0, stop_t=1, downsample_factor=10, figsize=[100, 100]
-        )
-
-        self.w = ev.EMGViewerWidget(fig, parent=self)
+        self.w = ev.EMGViewerWidget(emg_data, parent=self)
         self.setCentralWidget(self.w)
 
 
