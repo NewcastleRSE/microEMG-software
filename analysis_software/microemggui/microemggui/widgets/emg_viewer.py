@@ -41,6 +41,7 @@ class EMGPlotWidget(QWidget):
     """
     Widget for plotting EMG time series data in EMG viewer widget
     TODO: consider updating emg_data with interface object (i.e., model)
+    TODO: consider using pyqtgraph for potentially better performance
     """
 
     # Signal to emit when start time is incremented
@@ -66,6 +67,9 @@ class EMGPlotWidget(QWidget):
         layout.addWidget(self.plot)
         self.setLayout(layout)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+        # Connect scroll (wheel) event on canvas to incrementing start time
+        self.fig.canvas.mpl_connect("scroll_event", self.on_scroll)
 
     def compute_stop_time(self) -> float:
         # Compute stop time of plotted data based on start time and division size
@@ -152,6 +156,20 @@ class EMGPlotWidget(QWidget):
 
         # Send signal to update start time of slider
         self.start_time_incremented.emit(start_t)
+
+    def on_scroll(self, event):
+        # Slot for scroll event on plot canvas.
+        # Matplotlib event returns whether scroll is up (on Mac trackpad, moving towards
+        # user) or down (moving away from user). Up scrolls progress EMG time series
+        # forward; down scrolls progress backwards.
+        # Note this type of event is called a wheel event in Qt.
+
+        match event.button:
+            case "up":
+                n_div = 1
+            case "down":
+                n_div = -1
+        self.increment_start_time(n_div)
 
 
 # --- Widgets for controlling time window ---
@@ -319,7 +337,6 @@ class EMGArrowsWidget(QWidget):
         # Will increment start time by the number of divisions moved by the button
 
         for w, n in zip(self.widgets.values(), self.button_n_div):
-            print(n)
             w.pressed.connect(lambda n=n: self.plot_widget.increment_start_time(n))
 
 
@@ -368,7 +385,6 @@ class EMGStartTimeWidget(QWidget):
 
         max_start = self.emg_dur - (self.plot_widget.n_div * self.plot_widget.div_size)
         self.widgets["slider"].setMaximum(int(max_start))  # units: s
-        print(f"slider max start: {max_start}")
 
     def update_time_label(self, slider_time: int):
         # Updates time label (from slider time in seconds)
