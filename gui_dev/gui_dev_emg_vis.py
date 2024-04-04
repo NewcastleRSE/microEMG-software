@@ -13,6 +13,7 @@ from PySide6.QtCore import QFile
 
 import microemggui
 import microemggui.widgets.emg_viewer as ev
+from microemggui.models.emg import EMGDataModel
 from pymicroemg.emg_files import EMGFiles
 
 # %%
@@ -29,8 +30,8 @@ class MainWindow(QMainWindow):
         )
         emg_files = EMGFiles(emg_dir)
         emg_data = emg_files.load_emg_data()
-
-        self.w = ev.EMGViewerWidget(emg_data, parent=self)
+        emg_data_model = EMGDataModel(emg_data)
+        self.w = ev.EMGViewerWidget(emg_data_model, parent=self)
         self.setCentralWidget(self.w)
 
 

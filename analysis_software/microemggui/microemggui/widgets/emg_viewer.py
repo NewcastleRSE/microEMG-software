@@ -3,8 +3,7 @@ Widget for viewing EMG time series.
 
 Current icons from https://icons.getbootstrap.com/
 
-TODO: make model for EMGData; pass to widgets
-TODO: signals and slots for voltage
+TODO: consider fixing yaxis limits so labels do not move
 """
 
 import os
@@ -40,17 +39,16 @@ from microemggui.widgets.base import (
 class EMGPlotWidget(QWidget):
     """
     Widget for plotting EMG time series data in EMG viewer widget
-    TODO: consider updating emg_data with interface object (i.e., model)
     TODO: consider using pyqtgraph for potentially better performance
     """
 
     # Signal to emit when start time is incremented
     start_time_incremented = Signal(float)
 
-    def __init__(self, emg_data, parent=None):
+    def __init__(self, emg_data_model, parent=None):
         super().__init__(parent)
 
-        self.emg_data = emg_data
+        self.emg_data_model = emg_data_model
 
         self.start_t = 0  # start time (in seconds)
         self.div_size = 0.1  # division size (in seconds)
@@ -84,7 +82,7 @@ class EMGPlotWidget(QWidget):
         stop_t = self.compute_stop_time()
 
         # Make figure and axes
-        self.fig, self.ax = self.emg_data.plot_emg_ts(
+        self.fig, self.ax = self.emg_data_model.emg_data.plot_emg_ts(
             start_t=self.start_t,
             stop_t=stop_t,
             downsample_factor=self.ds_factor,
@@ -101,7 +99,7 @@ class EMGPlotWidget(QWidget):
         stop_t = self.compute_stop_time()
 
         # Make figure using existing axes
-        _, self.ax = self.emg_data.plot_emg_ts(
+        _, self.ax = self.emg_data_model.emg_data.plot_emg_ts(
             start_t=self.start_t,
             stop_t=stop_t,
             downsample_factor=self.ds_factor,
@@ -142,7 +140,7 @@ class EMGPlotWidget(QWidget):
         # Compute maximum allowed start time given division size and number of
         # divisions
 
-        max_start = self.emg_data.emg_dur - self.n_div * self.div_size
+        max_start = self.emg_data_model.emg_data.emg_dur - self.n_div * self.div_size
         return max_start
 
     def increment_start_time(self, n_div: int):
@@ -360,7 +358,7 @@ class EMGStartTimeWidget(QWidget):
 
         # EMG plot and duration
         self.plot_widget = plot_widget
-        self.emg_dur = plot_widget.emg_data.emg_dur
+        self.emg_dur = plot_widget.emg_data_model.emg_data.emg_dur
 
         # Create widgets
         self.widgets = {
@@ -520,11 +518,11 @@ class EMGGainWidget(QWidget):
 class EMGViewerWidget(QWidget):
     # Widget for viewing EMG time series data
 
-    def __init__(self, emg_data, parent=None):
+    def __init__(self, emg_data_model, parent=None):
         super().__init__(parent)
 
         # Create plot widget for provided EMG data
-        plot_widget = EMGPlotWidget(emg_data, parent=self)
+        plot_widget = EMGPlotWidget(emg_data_model, parent=self)
 
         # Create widgets for viewer
         self.widgets = {
