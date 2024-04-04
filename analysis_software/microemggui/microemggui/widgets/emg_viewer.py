@@ -25,7 +25,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import QIcon
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 
 from microemggui.widgets.base import (
     InputInlineLabel,
@@ -43,6 +43,8 @@ from microemggui.widgets.base import (
 class EMGPlotWidget(QWidget):
     # TODO: consider updating emg_data with interface object (i.e., model)
 
+    start_time_incremented = Signal(float)
+
     def __init__(self, emg_data, parent=None):
         super().__init__(parent)
 
@@ -50,7 +52,7 @@ class EMGPlotWidget(QWidget):
 
         self.start_t = 0  # start time (in seconds)
         self.div_size = 0.1  # division size (in seconds)
-        self.ds_factor = 10  # downsample factor
+        self.ds_factor = self.compute_ds_factor()  # downsample factor
         self.offset = 1000
         self.n_div = 10  # number of divisions per "page"
 
@@ -95,6 +97,17 @@ class EMGPlotWidget(QWidget):
         # redraw
         self.fig.canvas.draw_idle()
 
+    def compute_ds_factor(self) -> int:
+        # Compute downsample factor based on division size
+        # Downsampling prevents slow plotting when large time interval is plotted
+        # Set to divison size * 50, with min of 1 and max of 80
+
+        ds_factor = min(self.div_size * 50, 80)
+        ds_factor = max(ds_factor, 1)
+        ds_factor = int(ds_factor)
+
+        return ds_factor
+
     def update_div_size(self, div_size: float):
         # TODO: consider best relationship between div size and downsample factor
 
@@ -102,32 +115,41 @@ class EMGPlotWidget(QWidget):
         self.div_size = div_size
         print(self.div_size)
 
-        # update downsample factor for speed (max of 80x)
-        self.ds_factor = min(int(self.div_size * 50), 80)
+        # update downsample factor
+        self.ds_factor = self.compute_ds_factor()
 
         # update plot
         self.update_plot()
 
     def update_start_time(self, start_t: float):
+        # Update start time
+        # Used as slot for slider and also called by increment_start_time
+
         self.start_t = start_t
-        print(self.start_t)
         self.update_plot()
 
     def get_max_start_time(self) -> float:
         # Compute maximum possible start time given division size and number of
         # divisions
+
         max_start = self.emg_data.emg_dur - self.n_div * self.div_size
         return max_start
 
     def increment_start_time(self, n_div: int):
+        # Slot for arrow buttons for incrementing start time
+
         # n_div = number of divisions to move
-        print(n_div)
         start_t = self.start_t + (n_div * self.div_size)  # increment by n div
 
         # Restrict to valid times
         start_t = max(start_t, 0)  # force start_t to be >= 0
         start_t = min(start_t, self.get_max_start_time())  # force <= duration
+
+        # Update start time for plot
         self.update_start_time(start_t)
+
+        # Update start time for slider
+        self.start_time_incremented.emit(start_t)
 
 
 # --- Widgets for controlling time window ---
@@ -346,26 +368,38 @@ class EMGStartTimeWidget(QWidget):
         # Connections
         self.connect_slider_value_to_time_label()
         self.connect_slider_value_to_start_time()
+        self.plot_widget.start_time_incremented.connect(self.update_slider)
 
     def set_slider_maximum(self, div_size):
         # Set slider maximum to maximum allowed start time, given division size
         # Will truncate if not integer
+
         max_start = self.emg_dur - (self.plot_widget.n_div * self.plot_widget.div_size)
         self.widgets["slider"].setMaximum(int(max_start))  # units: s
         print(f"slider max start: {max_start}")
 
     def update_time_label(self, slider_time: int):
         # Updates time label (from slider time in seconds)
+
         n_min = int(slider_time / 60)
         n_sec = int(slider_time - (n_min * 60))
         time_label = f"{n_min:02d}:{n_sec:02d}"
         self.widgets["time"].setText(time_label)
 
     def connect_slider_value_to_time_label(self):
+        # Connection for changes in slider value to change start time label
+
         self.widgets["slider"].valueChanged.connect(self.update_time_label)
 
     def connect_slider_value_to_start_time(self):
+        # Connection for changes in slider value to change start time in plot
+
         self.widgets["slider"].valueChanged.connect(self.plot_widget.update_start_time)
+
+    def update_slider(self, start_time: float):
+        # Slot for changed slider when plot start time is incremented (via arrows)
+
+        self.widgets["slider"].setValue(int(start_time))
 
 
 class EMGTimeControlsWidget(QWidget):
@@ -390,11 +424,19 @@ class EMGTimeControlsWidget(QWidget):
 
     def connect_div_size_to_start_time_slider(self):
         # Connects div size to max slider time
+
         div_w = self.widgets["div"].widgets["div_combobox"]
         div_values = self.widgets["div"].options["values_s"]
         div_w.currentIndexChanged.connect(
             lambda idx: self.widgets["starttime"].set_slider_maximum(div_values[idx])
         )
+
+    def connect_arrows_to_start_time_slider(self):
+        arrow_w = self.widgets["arrows"].widgets
+
+        for w, n in zip(arrow_w.values(), self.button_n_div):
+            print(n)
+            w.pressed.connect(lambda n=n: self.plot_widget.increment_start_time(n))
 
 
 # --- Widgets for controlling plotted signal amplitude ---
