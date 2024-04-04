@@ -97,6 +97,7 @@ class EMGPlotWidget(QWidget):
 
     def update_div_size(self, div_size: float):
         # TODO: consider best relationship between div size and downsample factor
+
         # new division size
         self.div_size = div_size
         print(self.div_size)
@@ -120,13 +121,12 @@ class EMGPlotWidget(QWidget):
 
     def increment_start_time(self, n_div: int):
         # n_div = number of divisions to move
-        # TODO: add ceiling/floor
         print(n_div)
         start_t = self.start_t + (n_div * self.div_size)  # increment by n div
 
         # Restrict to valid times
         start_t = max(start_t, 0)  # force start_t to be >= 0
-        start_t = min(start_t, self.get_max_start_time())  # <= duration
+        start_t = min(start_t, self.get_max_start_time())  # force <= duration
         self.update_start_time(start_t)
 
 
@@ -147,16 +147,12 @@ class EMGDivSizeWidget(QWidget):
         }
 
         # Add options for combobox
-        self.options = {}
-        # TODO: add ms options; store all values in seconds, convert to ms for text
-        self.options["values"] = [0.1, 0.2, 0.5, 1, 2, 5]
-        self.options["units"] = ["s", "s", "s", "s", "s", "s"]
-        div_text = "divisions"
-        self.options["text"] = [
-            " ".join([str(val), unit, div_text])
-            for (val, unit) in zip(self.options["values"], self.options["units"])
-        ]
+        self.options = self.make_combobox_options()
         self.widgets["div_combobox"].addItems(self.options["text"])
+
+        # Match initial combobox setting to div size in initial plot
+        idx = self.options["values_s"].index(plot_widget.div_size)
+        self.widgets["div_combobox"].setCurrentIndex(idx)
 
         # Add to layout
         layout = QHBoxLayout()
@@ -168,12 +164,57 @@ class EMGDivSizeWidget(QWidget):
         # Connect signals
         self.connect_div_size()
 
+    @staticmethod
+    def make_combobox_options():
+        # TODO: remove options that would exceed duration of EMG segment (or pad time
+        # series so it is possible)
+        # TODO: ensure initial division size is included in options
+
+        MS_TO_S = 1000
+
+        options = {}
+
+        # options in ms
+        # using ms so can ensure are integers for text conversion
+        options["values_ms"] = [1, 2, 5, 10, 25, 50, 100, 500, 1000, 10000]
+
+        # set units to seconds if 1+ seconds (1000 ms); otherwise, ms
+        ms_cutoff = 1000
+        options["units"] = [
+            "ms" if v < ms_cutoff else "s" for v in options["values_ms"]
+        ]
+
+        # value for combobox as a string, converted to match units in options["units"]
+        options["values_text"] = []
+        for v in options["values_ms"]:
+            if v >= ms_cutoff:
+                v_text = v / MS_TO_S
+                if abs(int(v_text) - v_text) < 10e-10:
+                    v_text = int(v_text)  # convert to int if integer value
+
+            else:
+                v_text = v
+            options["values_text"].append(str(v_text))
+
+        # final text for combobox
+        div_text = "divisions"
+        options["text"] = [
+            " ".join([v, unit, div_text])
+            for (v, unit) in zip(options["values_text"], options["units"])
+        ]
+
+        # second version (float) for signals to plot specification
+        options["values_s"] = [v / MS_TO_S for v in options["values_ms"]]
+
+        return options
+
     def connect_div_size(self):
-        # Sends division size (stored in self.options["values"]) that corresponds to the
-        # combobox index to the plot
+        # Sends division size in seconds (stored in self.options["values_s"]) that
+        # corresponds to the combobox index to the plot
+
         w = self.widgets["div_combobox"]
         w.currentIndexChanged.connect(
-            lambda idx: self.plot_widget.update_div_size(self.options["values"][idx])
+            lambda idx: self.plot_widget.update_div_size(self.options["values_s"][idx])
         )
 
 
@@ -309,7 +350,6 @@ class EMGStartTimeWidget(QWidget):
     def set_slider_maximum(self, div_size):
         # Set slider maximum to maximum allowed start time, given division size
         # Will truncate if not integer
-        # TODO: connect to combobox changes
         max_start = self.emg_dur - (self.plot_widget.n_div * self.plot_widget.div_size)
         self.widgets["slider"].setMaximum(int(max_start))  # units: s
         print(f"slider max start: {max_start}")
@@ -351,7 +391,7 @@ class EMGTimeControlsWidget(QWidget):
     def connect_div_size_to_start_time_slider(self):
         # Connects div size to max slider time
         div_w = self.widgets["div"].widgets["div_combobox"]
-        div_values = self.widgets["div"].options["values"]
+        div_values = self.widgets["div"].options["values_s"]
         div_w.currentIndexChanged.connect(
             lambda idx: self.widgets["starttime"].set_slider_maximum(div_values[idx])
         )
