@@ -85,7 +85,10 @@ class EMGPlotWidget(QWidget):
 
         # Make figure and axes
         self.fig, self.ax = self.emg_data.plot_emg_ts(
-            start_t=self.start_t, stop_t=stop_t, downsample_factor=self.ds_factor
+            start_t=self.start_t,
+            stop_t=stop_t,
+            downsample_factor=self.ds_factor,
+            offset=self.offset,
         )
 
     def update_plot(self):
@@ -102,6 +105,7 @@ class EMGPlotWidget(QWidget):
             start_t=self.start_t,
             stop_t=stop_t,
             downsample_factor=self.ds_factor,
+            offset=self.offset,
             ax=self.ax,
         )
 
@@ -156,6 +160,13 @@ class EMGPlotWidget(QWidget):
 
         # Send signal to update start time of slider
         self.start_time_incremented.emit(start_t)
+
+    def scale_offset(self, scale):
+        # Slot for zoom buttons to scale amplitude of plotted lines (via offset
+        # parameter)
+
+        self.offset = self.offset / scale  # scale offset
+        self.update_plot()  # update plot
 
     def on_scroll(self, event):
         # Slot for scroll event on plot canvas.
@@ -448,16 +459,23 @@ class EMGTimeControlsWidget(QWidget):
 class EMGGainWidget(QWidget):
     # Controls for controlling plotted signal amplitude (gain)
 
-    def __init__(self, parent=None):
+    def __init__(self, plot_widget, parent=None):
         super().__init__(parent)
 
         # TODO: button class
-        # TODO: path to icons
 
+        # Reference to plot widget
+        self.plot_widget = plot_widget
+
+        # Create button widgets for zooming
         self.widgets = {
             "zoomin": QPushButton(self),
             "zoomout": QPushButton(self),
         }
+
+        # Set scaling factor of each button
+        scale_factor = 0.75
+        self.widget_zoom = [1 / scale_factor, scale_factor]
 
         # Icons for buttons
         # TODO: set resource path or otherwise define path for icons
@@ -485,6 +503,16 @@ class EMGGainWidget(QWidget):
         layout.setSpacing(2)
         self.setLayout(layout)
 
+        # Connections
+        self.connect_zoom_to_plot_offset()
+
+    def connect_zoom_to_plot_offset(self):
+        # Connect button clicked signal of zoom buttons to offset of EMG plot.
+        # Will scale offset by widget_zoom value
+
+        for w, scale in zip(self.widgets.values(), self.widget_zoom):
+            w.pressed.connect(lambda scale=scale: self.plot_widget.scale_offset(scale))
+
 
 # --- Widget for viewer ---
 
@@ -502,7 +530,7 @@ class EMGViewerWidget(QWidget):
         self.widgets = {
             "plot": plot_widget,
             "timecontrols": EMGTimeControlsWidget(plot_widget, parent=self),
-            "gaincontrols": EMGGainWidget(parent=self),
+            "gaincontrols": EMGGainWidget(plot_widget, parent=self),
         }
 
         # Add widgets to layout
