@@ -4,6 +4,7 @@ Widget for viewing EMG time series.
 Current icons from https://icons.getbootstrap.com/
 
 TODO: consider fixing yaxis limits so labels do not move
+TODO: fix behaviour if increase div size at end of time segment (current breaks)
 """
 
 import os
@@ -33,6 +34,7 @@ from microemggui.widgets.base import (
     ExpandingVSpacer,
 )
 
+
 # --- Plot ---
 
 
@@ -44,6 +46,13 @@ class EMGPlotWidget(QWidget):
 
     # Signal to emit when start time is incremented
     start_time_incremented = Signal(float)
+
+    # Signals for whether EMG time series is at start or end (stop)
+    at_start = Signal(bool)
+    at_stop = Signal(bool)
+
+    # Signal when division size is changed
+    div_size_changed = Signal()
 
     def __init__(self, emg_data_model, parent=None):
         super().__init__(parent)
@@ -68,6 +77,10 @@ class EMGPlotWidget(QWidget):
 
         # Connect scroll (wheel) event on canvas to incrementing start time
         self.fig.canvas.mpl_connect("scroll_event", self.on_scroll)
+
+        # Flags for whether time series can be progressed forward/backwards
+        self.can_move_forward = True
+        self.can_move_backward = False  # Cannot move backwards initially since at t = 0
 
     def compute_stop_time(self) -> float:
         # Compute stop time of plotted data based on start time and division size
@@ -97,6 +110,20 @@ class EMGPlotWidget(QWidget):
 
         # Compute stop time
         stop_t = self.compute_stop_time()
+        xlim = [self.start_t, stop_t]
+
+        # If requested stop time > EMG duration, change to EMG duration
+        if stop_t > self.emg_data_model.emg_data.emg_dur:
+            stop_t = self.emg_data_model.emg_data.emg_dur
+
+            # stop further progression
+            self.can_move_forward = False
+            self.at_stop.emit(self.can_move_forward)
+
+        # If not at end of EMG time series, check if need to re-activate forward buttons
+        elif self.can_move_forward is False:
+            self.can_move_forward = True
+            self.at_stop.emit(self.can_move_forward)
 
         # Make figure using existing axes
         _, self.ax = self.emg_data_model.emg_data.plot_emg_ts(
@@ -106,6 +133,7 @@ class EMGPlotWidget(QWidget):
             offset=self.offset,
             ax=self.ax,
         )
+        self.ax.set_xlim(xlim)  # fixes width, even if at the end of the EMG time series
 
         # redraw
         self.fig.canvas.draw_idle()
@@ -128,6 +156,7 @@ class EMGPlotWidget(QWidget):
         self.div_size = div_size  # new division size
         self.ds_factor = self.compute_ds_factor()  # update downsample factor
         self.update_plot()  # update plot
+        self.div_size_changed.emit()  # emit signal for slider
 
     def update_start_time(self, start_t: float):
         # Update start time of plotted data
@@ -140,18 +169,30 @@ class EMGPlotWidget(QWidget):
         # Compute maximum allowed start time given division size and number of
         # divisions
 
-        max_start = self.emg_data_model.emg_data.emg_dur - self.n_div * self.div_size
+        max_start = self.emg_data_model.emg_data.emg_dur - self.div_size
         return max_start
 
     def increment_start_time(self, n_div: int):
         # Slot for arrow buttons for incrementing start time
-
         # n_div = number of divisions to move
-        start_t = self.start_t + (n_div * self.div_size)  # increment by n div
+
+        # Increment by n div
+        start_t = self.start_t + (n_div * self.div_size)
 
         # Restrict to valid times
-        start_t = max(start_t, 0)  # force start_t to be >= 0
-        start_t = min(start_t, self.get_max_start_time())  # force <= duration
+        if start_t <= 0:
+            start_t = 0  # force start_t to be >= 0
+
+            # Send signal that at start to disable buttons
+            self.can_move_backward = False
+            self.at_start.emit(self.can_move_backward)
+
+        elif self.can_move_backward is False:
+            # If previously at start, enable backwards buttons
+            self.can_move_backward = True
+            self.at_start.emit(self.can_move_backward)
+
+        start_t = min(start_t, self.get_max_start_time())  # force < duration
 
         # Update start time for plot
         self.update_start_time(start_t)
@@ -159,14 +200,14 @@ class EMGPlotWidget(QWidget):
         # Send signal to update start time of slider
         self.start_time_incremented.emit(start_t)
 
-    def scale_offset(self, scale):
+    def scale_offset(self, scale: float):
         # Slot for zoom buttons to scale amplitude of plotted lines (via offset
         # parameter)
 
         self.offset = self.offset / scale  # scale offset
         self.update_plot()  # update plot
 
-    def on_scroll(self, event):
+    def on_scroll(self, event: str):
         # Slot for scroll event on plot canvas.
         # Matplotlib event returns whether scroll is up (on Mac trackpad, moving towards
         # user) or down (moving away from user). Up scrolls progress EMG time series
@@ -283,8 +324,6 @@ class EMGArrowsWidget(QWidget):
     def __init__(self, plot_widget, parent=None):
         super().__init__(parent)
         # TODO: create class for icon buttons
-        # TODO: consider disabling button if no longer possible to increment
-        # TODO: consider plotting blank space if partial over-increment ?
 
         # Reference to widget with plot
         self.plot_widget = plot_widget
@@ -328,7 +367,9 @@ class EMGArrowsWidget(QWidget):
 
         # Number of divisions moved by each button
         # (will send with button pressed signals)
+        # Disable buttons for moving backwards
         self.button_n_div = [-10, -1, 1, 10]
+        self.toggle_previous_buttons(False)
 
         # Add to layout
         layout = QHBoxLayout()
@@ -340,6 +381,8 @@ class EMGArrowsWidget(QWidget):
 
         # Connections
         self.connect_start_time()
+        self.plot_widget.at_stop.connect(self.toggle_next_buttons)
+        self.plot_widget.at_start.connect(self.toggle_previous_buttons)
 
     def connect_start_time(self):
         # Connect button clicked signal to start time of EMG plot.
@@ -348,9 +391,27 @@ class EMGArrowsWidget(QWidget):
         for w, n in zip(self.widgets.values(), self.button_n_div):
             w.pressed.connect(lambda n=n: self.plot_widget.increment_start_time(n))
 
+    def toggle_next_buttons(self, can_move_forward):
+        # Enable/disable buttons for progressing time series.
+        # Slot for self.plot_widget "at_stop" signal.
+
+        for w, n in zip(self.widgets.values(), self.button_n_div):
+            if n > 0:  # widgets that move forward through EMG time series
+                w.setEnabled(can_move_forward)
+
+    def toggle_previous_buttons(self, can_move_backward):
+        # Enable/disable buttons for progressing time series.
+        # Slot for self.plot_widget "at_stop" signal.
+        print("toggling")
+        for w, n in zip(self.widgets.values(), self.button_n_div):
+            if n < 0:  # widgets that move backward through EMG time series
+                w.setEnabled(can_move_backward)
+
 
 class EMGStartTimeWidget(QWidget):
-    # Slider for changing time in EMG Viewer
+    # Slider for changing time in EMG Viewer.
+    # Intervals are determined by division size.
+    # Provides mm:ss label for start time.
     # TODO: consider custom slider class if need multiple sliders with different styles
 
     def __init__(self, plot_widget, parent=None):
@@ -372,9 +433,7 @@ class EMGStartTimeWidget(QWidget):
 
         # Set slider limits
         self.widgets["slider"].setMinimum(0)
-        self.set_slider_maximum(self.plot_widget.div_size)
-
-        # TODO: consider slider units (sec or ms)
+        self.set_slider_maximum()
 
         # Add to layout
         layout = QHBoxLayout()
@@ -387,19 +446,39 @@ class EMGStartTimeWidget(QWidget):
         self.connect_slider_value_to_time_label()
         self.connect_slider_value_to_start_time()
         self.plot_widget.start_time_incremented.connect(self.update_slider)
+        self.plot_widget.div_size_changed.connect(self.set_slider_maximum)
 
-    def set_slider_maximum(self, div_size):
-        # Set slider maximum to maximum allowed start time, given division size
-        # Will truncate if not integer
+    def set_slider_maximum(self):
+        # Set slider maximum match number of divisions in data
+        # Correspondingly adjust current slider value to match current start time
 
-        max_start = self.emg_dur - (self.plot_widget.n_div * self.plot_widget.div_size)
-        self.widgets["slider"].setMaximum(int(max_start))  # units: s
+        # Get current plot time (may be changed when change slider max)
+        start_t = self.plot_widget.start_t
 
-    def update_time_label(self, slider_time: int):
-        # Updates time label (from slider time in seconds)
+        # Set max start division and set slider to correct corresponding start time
+        # TODO: consider whether to set max to minimise white space or to minimise
+        # movement when changing division size (determines end behaviour)
+        self.widgets["slider"].setMaximum(
+            int(self.emg_dur / self.plot_widget.div_size) - (self.plot_widget.n_div - 1)
+        )  # Set maximum
+        self.update_slider(start_t)
 
-        n_min = int(slider_time / 60)
-        n_sec = int(slider_time - (n_min * 60))
+    def convert_slider_value_to_start_time(self) -> float:
+        # Converts slider value (number of divisions) to start time in seconds
+
+        start_t = self.widgets["slider"].value() * self.plot_widget.div_size
+        return start_t
+
+    def update_time_label(self, slider_value: int):
+        # Updates time label from slider value
+
+        S_TO_MIN = 60
+
+        # Start time in seconds
+        start_t = self.convert_slider_value_to_start_time()
+
+        n_min = int(start_t / S_TO_MIN)
+        n_sec = int(start_t - (n_min * S_TO_MIN))
         time_label = f"{n_min:02d}:{n_sec:02d}"
         self.widgets["time"].setText(time_label)
 
@@ -411,12 +490,22 @@ class EMGStartTimeWidget(QWidget):
     def connect_slider_value_to_start_time(self):
         # Connection for changes in slider value to change start time in plot
 
-        self.widgets["slider"].valueChanged.connect(self.plot_widget.update_start_time)
+        self.widgets["slider"].valueChanged.connect(
+            lambda value: self.plot_widget.update_start_time(
+                self.convert_slider_value_to_start_time()
+            )
+        )
 
     def update_slider(self, start_time: float):
-        # Slot for changing slider when plot start time is incremented (via arrows)
+        # Slot for changing slider when plot start time is incremented (via arrows).
+        # Also used when updating slider maximum (which also changes slider interval
+        # size)
 
-        self.widgets["slider"].setValue(int(start_time))
+        # Multiply by 1/div_size rather than divide by div_size to reduce (prevent?)
+        # floating point precision errors; also round as a back-up
+        self.widgets["slider"].setValue(
+            int(round(start_time * (1 / self.plot_widget.div_size)))
+        )
 
 
 class EMGTimeControlsWidget(QWidget):
@@ -437,18 +526,6 @@ class EMGTimeControlsWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(20)
         self.setLayout(layout)
-
-        # Connections between widgets
-        self.connect_div_size_to_start_time_slider()
-
-    def connect_div_size_to_start_time_slider(self):
-        # Connects div size to max slider time
-
-        div_w = self.widgets["div"].widgets["div_combobox"]
-        div_values = self.widgets["div"].options["values_s"]
-        div_w.currentIndexChanged.connect(
-            lambda idx: self.widgets["starttime"].set_slider_maximum(div_values[idx])
-        )
 
 
 # --- Widgets for controlling plotted signal amplitude ---
