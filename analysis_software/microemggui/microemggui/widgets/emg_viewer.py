@@ -402,7 +402,7 @@ class EMGArrowsWidget(QWidget):
     def toggle_previous_buttons(self, can_move_backward):
         # Enable/disable buttons for progressing time series.
         # Slot for self.plot_widget "at_stop" signal.
-        print("toggling")
+
         for w, n in zip(self.widgets.values(), self.button_n_div):
             if n < 0:  # widgets that move backward through EMG time series
                 w.setEnabled(can_move_backward)
