@@ -21,8 +21,8 @@ from PySide6.QtWidgets import (
     QSizePolicy,
 )
 from PySide6.QtGui import QIcon
-
 from PySide6.QtCore import Qt, Signal
+import pyqtgraph as pg
 
 from microemggui.widgets.base import (
     InputInlineLabel,
@@ -57,6 +57,10 @@ class EMGPlotWidget(QWidget):
     def __init__(self, emg_data_model, parent=None):
         super().__init__(parent)
 
+        # temporary attribute for controlling which visualisation library is used
+        self.vis_library = "matplotlib"
+        # self.vis_library = 'pyqtgraph'
+
         self.emg_data_model = emg_data_model
 
         self.start_t = 0  # start time (in seconds)
@@ -67,7 +71,11 @@ class EMGPlotWidget(QWidget):
 
         # Initial plot
         self.make_fig()
-        self.plot = FigureCanvasQTAgg(self.fig)
+        match self.vis_library:
+            case "matplotlib":
+                self.plot = FigureCanvasQTAgg(self.fig)
+            case "pyqtgraph":
+                self.plot = self.fig
 
         # Add figure to layout and set figure to expand to fill available space
         layout = QVBoxLayout()
@@ -76,7 +84,8 @@ class EMGPlotWidget(QWidget):
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         # Connect scroll (wheel) event on canvas to incrementing start time
-        self.fig.canvas.mpl_connect("scroll_event", self.on_scroll)
+        if self.vis_library == "matplotlib":
+            self.fig.canvas.mpl_connect("scroll_event", self.on_scroll)
 
         # Flags for whether time series can be progressed forward/backwards
         self.can_move_forward = True
@@ -95,18 +104,38 @@ class EMGPlotWidget(QWidget):
         stop_t = self.compute_stop_time()
 
         # Make figure and axes
-        self.fig, self.ax = self.emg_data_model.emg_data.plot_emg_ts(
-            start_t=self.start_t,
-            stop_t=stop_t,
-            downsample_factor=self.ds_factor,
-            offset=self.offset,
-        )
+        match self.vis_library:
+            case "matplotlib":
+                self.fig, self.ax = self.emg_data_model.emg_data.plot_emg_ts(
+                    start_t=self.start_t,
+                    stop_t=stop_t,
+                    downsample_factor=self.ds_factor,
+                    offset=self.offset,
+                )
+                xlim = [self.start_t, stop_t]
+                self.ax.set_xlim(
+                    xlim
+                )  # fixes width, even if at the end of the EMG time series
+            case "pyqtgraph":
+                emg_t = self.emg_data_model.emg_data.get_emg_t()
+                plot_idx = self.emg_data_model.emg_data._get_t_idx(self.start_t, stop_t)
+                plot_idx = plot_idx[0 :: self.ds_factor]
+                pen = pg.mkPen(color=(0, 0, 255), width=1)
+                self.fig = pg.PlotWidget()
+                self.line_ref = list()
+                for i in range(self.emg_data_model.emg_data.n_chan):
+                    line_ref = self.fig.plot(
+                        emg_t[plot_idx],
+                        self.emg_data_model.emg_data.emg_ts[i, plot_idx]
+                        - self.offset * i,
+                        pen=pen,
+                    )
+                    self.line_ref.append(line_ref)
+                self.fig.setBackground("w")
+                self.fig.showGrid(x=True, y=False)
 
     def update_plot(self):
         # Update plot using existing axes
-
-        # clear axis
-        self.ax.cla()
 
         # Compute stop time
         stop_t = self.compute_stop_time()
@@ -125,18 +154,34 @@ class EMGPlotWidget(QWidget):
             self.can_move_forward = True
             self.at_stop.emit(self.can_move_forward)
 
-        # Make figure using existing axes
-        _, self.ax = self.emg_data_model.emg_data.plot_emg_ts(
-            start_t=self.start_t,
-            stop_t=stop_t,
-            downsample_factor=self.ds_factor,
-            offset=self.offset,
-            ax=self.ax,
-        )
-        self.ax.set_xlim(xlim)  # fixes width, even if at the end of the EMG time series
+        match self.vis_library:
+            case "matplotlib":
+                # Make figure using existing axes
+                self.ax.cla()  # clear axis
+                _, self.ax = self.emg_data_model.emg_data.plot_emg_ts(
+                    start_t=self.start_t,
+                    stop_t=stop_t,
+                    downsample_factor=self.ds_factor,
+                    offset=self.offset,
+                    ax=self.ax,
+                )
+                self.ax.set_xlim(
+                    xlim
+                )  # fixes width, even if at the end of the EMG time series
 
-        # redraw
-        self.fig.canvas.draw_idle()
+                # redraw
+                self.fig.canvas.draw_idle()
+
+            case "pyqtgraph":
+                emg_t = self.emg_data_model.emg_data.get_emg_t()
+                plot_idx = self.emg_data_model.emg_data._get_t_idx(self.start_t, stop_t)
+                plot_idx = plot_idx[0 :: self.ds_factor]
+                for i in range(len(self.line_ref)):
+                    self.line_ref[i].setData(
+                        emg_t[plot_idx],
+                        self.emg_data_model.emg_data.emg_ts[i, plot_idx]
+                        - self.offset * i,
+                    )
 
     def compute_ds_factor(self) -> int:
         # Compute downsampling factor based on division size
