@@ -880,6 +880,21 @@ files = [
 diagrams = ["jinja2", "railroad-diagrams"]
 
 [[package]]
+name = "pyqtgraph"
+version = "0.13.4"
+description = "Scientific Graphics and GUI Library for Python"
+category = "main"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "pyqtgraph-0.13.4-py3-none-any.whl", hash = "sha256:1dc9a786aa43cd787114366058dc3b4b8cb96a0e318f334720c7e6cc6c285940"},
+    {file = "pyqtgraph-0.13.4.tar.gz", hash = "sha256:67b0d371405c4fd5f35afecfeb37d4b73bc118f187c52a965ed68d62f59b67b3"},
+]
+
+[package.dependencies]
+numpy = ">=1.22.0"
+
+[[package]]
 name = "pyside6"
 version = "6.6.1"
 description = "Python bindings for the Qt cross-platform application and UI framework"
@@ -1172,4 +1187,4 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "f1f85a9029dd7746cbb597f273f409b4de669cf623acd99c325e89dd0ff894d2"
+content-hash = "0822e38a46b1972a57b301c1950d019b7a6b58d97c1d5b04bd69e6b6782f8263"
