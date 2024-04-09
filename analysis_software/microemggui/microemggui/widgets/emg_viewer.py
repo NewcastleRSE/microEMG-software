@@ -4,7 +4,6 @@ Widget for viewing EMG time series.
 Current icons from https://icons.getbootstrap.com/
 
 TODO: consider fixing yaxis limits so labels do not move
-TODO: fix behaviour if increase div size at end of time segment (current breaks)
 """
 
 import os
@@ -308,8 +307,6 @@ class EMGDivSizeWidget(QWidget):
         # Make division options for combobox.
         # Includes combobox text and corresponding division values in seconds; the
         # latter will be used for signals.
-        # TODO: remove options that would exceed duration of EMG segment (or pad time
-        # series so it is possible)
         # TODO: ensure initial division size is included in options
 
         MS_TO_S = 1000
