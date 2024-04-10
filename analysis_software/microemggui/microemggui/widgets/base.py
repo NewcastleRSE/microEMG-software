@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QSpinBox,
     QLineEdit,
+    QPushButton,
     QSpacerItem,
     QSizePolicy,
 )
@@ -78,6 +79,13 @@ class SubsectionTitle(QLabel):
 
 class SectionTitle(QLabel):
     # Label for a larger widget (e.g., preprocessing step)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+# --- Buttons ---
+class LargePushButton(QPushButton):
+    # Large push buttons
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

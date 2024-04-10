@@ -12,6 +12,20 @@ SubsectionTitle{
     font-size: 16pt;
 }
 
+/* Buttons */
+
+LargePushButton {
+    font-size: 20pt;
+    background-color: white;
+    border-style: none;
+    min-width: 10em;
+    padding: 6px;
+    border-radius: 10px;
+}
+
+LargePushButton:pressed {
+    background-color: grey;
+}
 /* Settings input widgets - main section */
 
 CheckBoxMain {
@@ -42,8 +56,8 @@ InputWarningLabel {
 }
 
 InputComboBox {
-    min-width: 100;
-    max-width: 100;
+    min-width: 150;
+    max-width: 150;
 }
 
 InputSpinBox {
