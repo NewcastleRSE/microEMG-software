@@ -1,7 +1,7 @@
 """
 Widgets for specifying preprocessing settings
 """
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
+from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QSizePolicy
 
 from PySide6.QtCore import Signal
 
@@ -15,7 +15,8 @@ from microemggui.widgets.base import (
     InputSpinBox,
     InputLineEdit,
     InputInlineText,
-    ExpandingSpacer,
+    ExpandingVSpacer,
+    SubsectionTitle,
 )
 
 from microemggui.models.settings import EMGPreprocSettingsModel
@@ -150,6 +151,7 @@ class FilterFreqWidget(QWidget):
         layout_input.addWidget(self.freq_lineedit["cutoff2"])
         layout_input.addWidget(self.freq_inlinelabel["hz"])
         layout_input.setContentsMargins(0, 0, 0, 0)
+
         self.freq_input = QWidget(self)
         self.freq_input.setLayout(layout_input)
 
@@ -296,8 +298,12 @@ class FilterSpecWidget(QWidget):
         layout = QVBoxLayout()
         for _, w in self.widgets.items():
             layout.addWidget(w)
-        layout.setContentsMargins(50, 0, 0, 0)  # add padding to left
+        layout.setContentsMargins(35, 0, 0, 0)  # add padding to left
         self.setLayout(layout)
+        size_policy = self.sizePolicy()
+        size_policy.setHorizontalPolicy(QSizePolicy.Maximum)
+        size_policy.setRetainSizeWhenHidden(True)
+        self.setSizePolicy(size_policy)
 
 
 # --- Widget for all preprocessing settings ---
@@ -333,6 +339,7 @@ class PreprocSettingsWidget(QWidget):
 
         # All widgets
         self.widgets = {
+            "title": SubsectionTitle("Settings", self),
             "mains_checkbox": mains_checkbox,
             "filter_checkbox": filter_checkbox,
             "filter_spec": filter_spec,
@@ -345,7 +352,7 @@ class PreprocSettingsWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
 
         # Spacer at end so extra space is added below other widgets if window resized
-        end_space = ExpandingSpacer()
+        end_space = ExpandingVSpacer()
         layout.addItem(end_space)
 
         self.setLayout(layout)

@@ -658,3 +658,4 @@ class EMGViewerWidget(QWidget):
         layout.addWidget(self.widgets["plot"], 0, 1)
         layout.addWidget(self.widgets["timecontrols"], 1, 1)
         self.setLayout(layout)
+        self.setContentsMargins(0, 0, 0, 0)
