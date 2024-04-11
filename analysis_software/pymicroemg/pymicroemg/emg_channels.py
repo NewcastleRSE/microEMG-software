@@ -37,9 +37,7 @@ class EMGChannels:
 
         # Create new channel labels using the channel order
         # (i.e., label channels from 1 to n channels)
-        self.chan_names = [
-            "channel " + str(i) for i in np.arange(1, len(intan_chan_names) + 1)
-        ]
+        self.chan_names = [str(i) for i in np.arange(1, len(intan_chan_names) + 1)]
 
         # x, y coordinates
         self._get_chan_xy()
