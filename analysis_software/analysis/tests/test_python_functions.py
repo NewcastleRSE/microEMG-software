@@ -127,10 +127,10 @@ template = tmp[0, :]
 
 lag = 2
 best_lag = 2
-PsC_s = emg.PsC(template,sig_one_loc,lag)
+#PsC_s = emg.PsC(template,sig_one_loc,lag)
 print("PsC(template,sig,lag) = ")
 print("PsC_s = ")
-print(PsC_s)
+#print(PsC_s)
 print("best_lag = ")
 print(best_lag)
 
@@ -139,13 +139,13 @@ locs = [2, 4]
 TH = 0.2
 Fs = 3000
 
-loc, new_sig = emg.find_spikes(template, sig, locs, Fs, TH)
+#loc, new_sig = emg.find_spikes(template, sig, locs, Fs, TH)
 
 print("find_spikes(template,sig,locs,Fs,TH) = ")
 print("loc = ")
-print(loc)
+#print(loc)
 print("new_sig = ")
-print(new_sig)
+#print(new_sig)
 
 ############################
 DTh = 0.1
@@ -302,7 +302,7 @@ print(peaks)
 
 ############################
 
-name = "richa"
+name = "nrajh" #"richa"
 filename = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\test_data.csv'
 
 # Importing csv module

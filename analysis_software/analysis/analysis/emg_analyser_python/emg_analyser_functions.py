@@ -6,7 +6,7 @@ from emg_analyser_python.detect_peaks import detect_peaks
 """
 These functions are reimplemented in Python by Richard Howey
 2024, RSE team, Newcastle University
-Comment largely taken from original code.
+The comments are mostly taken from original code.
 If a function had no comments originally then it may not in the translated version also.
 Original Comments below:
 
@@ -22,6 +22,7 @@ Please cite the paper if any of the methods were helpful
 """
 
 MAP_RANGE = [1, 9]
+MAP_RANGE_INNER = [1, 5]
 #name = "richa" ##print
 
 def round_int(val):
@@ -130,9 +131,7 @@ def running_TEO(raw_signal, k = 1):
     """
 
     # Final result
-    return raw_signal**2 - np.concatenate(
-        (raw_signal[k:], np.zeros(k))
-    ) * np.concatenate((np.zeros(k), raw_signal[:-k]))
+    return raw_signal**2 - np.concatenate((raw_signal[k:], np.zeros(k))) * np.concatenate((np.zeros(k), raw_signal[:-k]))
 
 
 def MTEO(raw_signal, ks, filter = True):
@@ -172,12 +171,12 @@ def MTEO(raw_signal, ks, filter = True):
             
   
     if L > 1:
-        runTEO = np.sum(tmp, axis=0)  # runTEO + tmp./v(i)
-        # runTEO = max(tmp)
+        runTEO = np.sum(tmp, axis=0)      
     else:
         runTEO = tmp[i, :]
 
     return runTEO, tmp
+
 
 def PsC(template, sig, lag = None):
     """    
@@ -213,21 +212,13 @@ def PsC(template, sig, lag = None):
     m = len(template)
     n = len(sig)
 
-    ##print("m and n")
-    ##print(m)
-    ##print(n)
-
-    if m > n:
-        raise Exception('Length of Template should be equal or smaller than pattern') 
+    if m != n:
+        raise Exception('Length of Template should be equal to pattern') 
    
     sig = np.hstack((np.zeros((lag)), sig, np.zeros((2 * lag))))
-    
-    #p4 = np.zeros(m)
-    #normaliz = np.zeros(m)
-    sum_p4 = 0
-    #sum_normaliz = 0
-    #PsC_score = np.zeros(n)
-    PsC_sc_max = 0
+       
+    # If the lag is too great then extreme lags always result in zero
+    # so no need to calculate for some lags
     min_lag = 0
     if m < lag:
         min_lag = lag - m
@@ -235,29 +226,34 @@ def PsC(template, sig, lag = None):
     max_lag = 2 * lag + 1
     if max_lag > n + lag + 1:
         max_lag = n + lag + 1
+   
+    # Define matrices so that all the calculations can be done at once to speed things up
+    no_rows = max_lag - min_lag 
+      
+    template_mat = np.full((no_rows, m), template)
+    shifted_sig = np.zeros((no_rows, m))
     
     for k in range(min_lag, max_lag):
-        shifted_sig = sig[k:(k + m)]
-        p1 = template * shifted_sig
-        p2 = np.fabs(template - shifted_sig)
-        p3 = np.maximum(np.fabs(template), np.fabs(shifted_sig))
-        p4 = p1 - p2 * p3
-        #normaliz = p3 * p3
-        sum_p4 = np.sum(p4)
-        if sum_p4 > 0:
-            PsC_score = sum_p4/np.sum(p3 * p3)
-            if PsC_score > PsC_sc_max:
-                PsC_sc_max = PsC_score
-            
-        #    PsC_score[k] = 0
-        #else:
-        #    PsC_score[k] = sum_p4/np.sum(p3 * p3)
-                  
-    #best_lag = np.nanargmax(PsC_score)
-    #PsC_s = PsC_score[best_lag]
-    #best_lag = best_lag - lag
+        shifted_sig[k - min_lag, :] = sig[k:(k + m)]
+        
+    # calculate the "pseudo correlation" for each shifted signal and then take the max
+    p1 = template_mat * shifted_sig
+    p2 = np.fabs(template_mat - shifted_sig)
+    p3 = np.maximum(np.fabs(template_mat), np.fabs(shifted_sig))
+ 
+    p4 = p1 - p2 * p3
+    sum_p4 = np.sum(p4, axis=1)
     
-    return PsC_sc_max #, best_lag
+    positive_sum_p4 = sum_p4[sum_p4 > 0]
+    
+    # Take the maximum from the positive results if there are any, otherwise the pseudo correlation is zero
+    if positive_sum_p4.size:
+        p3 = p3[sum_p4 > 0]
+        PsC_score = np.max(positive_sum_p4/np.sum(p3 * p3, axis=1))
+    else:
+        PsC_score = 0   
+                  
+    return PsC_score
 
 def find_spikes(templates, sigs, locs, sampling_freq, threshold):
     """
@@ -727,6 +723,53 @@ def linear_map(X, original_range, map_range):
     #return np.round(Y)
     return round_ints(Y)                     
 
+def linear_map2(X, original_range, map_range1, map_range2):
+    """    
+    Linearly Maps a set of numbers to another scale
+    
+    Parameters
+    ----------
+    X : 1D numpy NDArray[float]
+        The number to be mapped
+    original_range : 1D numpy NDArray[float]
+        The original range of the variable e.g. ([0 10]), the
+        minimum and maximum possible value that X can take
+    map_range1 : 1D numpy NDArray[float]
+        The new min and maximum range that the numbers in the first 5 and last 5 should be
+        assigned to that range
+    map_range2 : 1D numpy NDArray[float]
+        The new min and maximum range that the numbers should be
+        assigned to that range
+        
+    Returns
+    -------
+    Y : 1D numpy NDArray[int]
+        Mapped number
+    """
+
+    a1 = original_range[0]
+    a2 = original_range[1]
+
+    b1 = map_range1[0]
+    b2 = map_range1[1]
+    
+    #X = np.asarray(X)
+    #X1 = np.hstack((X[:, :5], X[:, -5:]))
+    
+    #map first and last 5 with range1
+    Y1 = b1 + ((np.asarray(X)[:5] - a1) * (b2 - b1)) / (a2 - a1)
+    Y3 = b1 + ((np.asarray(X)[-5:] - a1) * (b2 - b1)) / (a2 - a1)
+    
+    b1 = map_range2[0]
+    b2 = map_range2[1]
+
+    #map middle elements with range2
+    Y2 = b1 + ((np.asarray(X)[5:-5] - a1) * (b2 - b1)) / (a2 - a1)
+    
+    Y = np.hstack((Y1, Y2, Y3))
+    
+    return round_ints(Y)         
+
 def generate_titles(features):
     """    
     Title Generation:
@@ -744,112 +787,40 @@ def generate_titles(features):
     """
     
     no_features = features.shape[0]
-    #feature_length = features.shape[1]
     
     if no_features == 0:
         return []
     
-    '''
-    # Label first list of features as "1"
-    titles = np.zeros(no_features) 
-    title_counter = 1
-    titles[0] = title_counter
-    # Current list of feature groups to check if a list of features belongs to it
-    features_to_check = np.full(no_features, -1)
-    features_to_check[0] = 0
-    features_to_check_count = 1
-    
-    for i in range(1, no_features):
-        #print(str(i) + ": " + str(features_to_check_count))
-        for j in range(features_to_check_count):            
-            # Check if the first 5 elements are the same
-            if all(features[j, :5] == features[i, :5]):
-                # Check if remaining elements are the same or differ by exactly 1
-                diff = np.abs(features[j, 5:] - features[i, 5:])
-                if all((diff == 0) | (diff == 1)):
-                    # Considered the same, so give the same title
-                    titles[i] = titles[j]                    
-                    break
-        
-        # Does not match any previous feature groups so give a new "title"
-        if titles[i] == 0:
-            title_counter += 1
-            titles[i] = title_counter
-            features_to_check[features_to_check_count] = i
-            features_to_check_count += 1
-    '''
-    
     # Replace NaNs with this number, other numbers should be below this number so will not conflict
     # We need NaNs to be considered equal when comparing features
-    #t00 = time.time() 
     features[np.isnan(features)] = MAP_RANGE[1] + 1
-    #t01 = time.time()
-
-    #print("Nan replace Time = ")
-    #print(t01 - t00)
     
     # Label first list of features as "1"
     titles = np.zeros(no_features) 
     title_counter = 0
-    #t0 = time.time()
    
     # First 5 and last 5 elements must be equal. Create groups where these are equal firstly
     _, uni_indices, uni_inv_ind = np.unique(np.hstack((features[:, :5], features[:, -5:])), return_index = True, return_inverse = True, axis=0)
-    #t1 = time.time()
-
-    #print("Time = ")
-    #print(t1 - t0)
-    #_, uni_indices, uni_inv_ind = npi.unique(features[:, :no_indices_must_be_equal], return_index = True, return_inverse = True, axis=0)
-    
-    #multi = np.array([1, 2, 4, 8, 16])
-    
-    #rows_as_vec = features[:, :5] @ multi
-    ##print("rows_as_vec = ")
-    ##print(rows_as_vec)
-    #_, uni_indices, uni_inv_ind = np.unique(rows_as_vec, return_index = True, return_inverse = True)
-   
-    ##print("rows_as_vec = ")
-    ##print(rows_as_vec[uni_indices[uni_inv_ind]])
-    
-    ##print(unique_rows)
-    #print("uni_indices.shape = ")
-    #print(uni_indices.shape)
-    ##print("uni_inv_ind = ")
-    ##print(uni_inv_ind)
-    ##print(features[uni_inv_ind, :5])
-    
+  
     # Loop through unique sets
-    for idx_count, idx in enumerate(uni_indices):
-        ##print("idx_count = " + str(idx_count))    
+    for idx_count, idx in enumerate(uni_indices):       
         in_set = (np.argwhere(idx_count == uni_inv_ind)).flatten() #orig indx
-        ##print("in_set.shape = ")
-        ##print(in_set.shape)
+       
         # Current list of feature groups to check if a list of features belongs to it
         features_to_check = np.full(len(in_set), -1)
         features_to_check[0] = in_set[0]
         features_to_check_count = 1
         title_counter += 1
         titles[idx] = title_counter
-        #counts = np.zeros(len(features[0, 5:]))
         
         for i in in_set[1:]:
-            ##print(str(i) + ": " + str(features_to_check_count))
-            ##print("i = " + str(i)) 
+           
             for k in range(features_to_check_count):
-                j = features_to_check[k]
-                
-                #if (features[j, 5:] == features[i, 5:]).all():
-                #    # Considered the same, so give the same title
-                #    titles[i] = titles[j]                    
-                #    break    
-                #else:
-                ##print("j = " + str(j))
+                j = features_to_check[k]                
+              
                 # Check if remaining elements are the same or differ by exactly 1
                 diff = np.abs(features[j, 5:-5] - features[i, 5:-5])
-                #diffCount = (diff != 0) & (diff != 1)
-                #counts = counts + diffCount
-                ##print(diff)
-                ##print(counts)
+              
                 if ((diff == 0) | (diff == 1)).all():
                     # Considered the same, so give the same title
                     titles[i] = titles[j]                    
@@ -861,10 +832,38 @@ def generate_titles(features):
                 titles[i] = title_counter
                 features_to_check[features_to_check_count] = i
                 features_to_check_count += 1
-
-    
+   
     return titles
 
+def generate_titles2(features):
+    """    
+    Title Generation:
+    Generates the titles and also initial set of clusters based on label matching 
+    
+    Parameters
+    ----------
+    features : 2D numpy NDArray[float, float]
+        As returned by border_detector
+    Returns
+    -------
+    title : 1D numpy NDArray[int]
+        List of integers labelling each list of features.
+        Considered the same if first 5 numbers are the same and the other numbers are the same or differ by exactly 1
+    """
+    
+    no_features = features.shape[0]
+    
+    if no_features == 0:
+        return []
+    
+    # Replace NaNs with this number, other numbers should be below this number so will not conflict
+    # We need NaNs to be considered equal when comparing features
+    features[np.isnan(features)] = MAP_RANGE[1] + 1
+    
+    # All elements must be equal. Create groups where these are equal firstly
+    _, uni_inv_ind = np.unique(features, return_inverse = True, axis=0)
+  
+    return uni_inv_ind + 1
 
 def merge_clusters(template, titles, threshold, sampling_freq, sig_len):
     """    
@@ -1238,7 +1237,8 @@ def TK_filter(sig, sampling_freq, C = 0.1, threshold_PsC = 0.1, init = True, win
      
         original_range[0] = np.nanmin(features[:, i])
         original_range[1] = np.nanmax(features[:, i])        
-        features[:, i] = linear_map(features[:, i], original_range, MAP_RANGE)
+        #features[:, i] = linear_map(features[:, i], original_range, MAP_RANGE)
+        features[:, i] = linear_map2(features[:, i], original_range, MAP_RANGE, MAP_RANGE_INNER)
         
 
    
@@ -1250,7 +1250,8 @@ def TK_filter(sig, sampling_freq, C = 0.1, threshold_PsC = 0.1, init = True, win
     #t2 = time.time()
     #print("Time 2: " + str(t2 - t1))
     #print("pre gen title")
-    titles  = generate_titles(features)
+    #titles  = generate_titles(features)
+    titles  = generate_titles2(features)
     #print("post gen title")
     #t3 = time.time()
     #print("Time 3: " + str(t3 - t2))
