@@ -50,6 +50,10 @@ InputInlineText {
     color: 'grey';
 }
 
+InputInlineHighlightedText {
+    color: 'blue';
+}
+
 InputWarningLabel {
     color: 'red';
     font-size: 12pt;

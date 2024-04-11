@@ -25,11 +25,9 @@ import pyqtgraph as pg
 
 from microemggui.widgets.base import (
     InputInlineLabel,
-    # InputWarningLabel,
     InputComboBox,
-    # InputLineEdit,
     InputInlineText,
-    # ExpandingSpacer,
+    InputInlineHighlightedText,
     ExpandingVSpacer,
 )
 
@@ -466,8 +464,9 @@ class EMGStartTimeWidget(QWidget):
         # Create widgets
         self.widgets = {
             "label": InputInlineLabel("Start time: ", self),
-            "time": InputInlineText("00:00", self),
+            "time": InputInlineHighlightedText("00:00", self),
             "slider": QSlider(Qt.Horizontal, self),
+            "maxtime": InputInlineText("00:00", self),
         }
 
         # Set slider to expand to fill space
@@ -475,7 +474,7 @@ class EMGStartTimeWidget(QWidget):
 
         # Set slider limits
         self.widgets["slider"].setMinimum(0)
-        self.set_slider_maximum()
+        self.set_slider_maximum()  # also updates max time label
 
         # Add to layout
         layout = QHBoxLayout()
@@ -504,6 +503,7 @@ class EMGStartTimeWidget(QWidget):
             int(self.emg_dur / self.plot_widget.div_size) - (self.plot_widget.n_div - 1)
         )  # Set maximum
         self.update_slider(start_t)
+        self.update_max_time_label()
 
     def convert_slider_value_to_start_time(self) -> float:
         # Converts slider value (number of divisions) to start time in seconds
@@ -511,18 +511,37 @@ class EMGStartTimeWidget(QWidget):
         start_t = self.widgets["slider"].value() * self.plot_widget.div_size
         return start_t
 
-    def update_time_label(self, slider_value: int):
-        # Updates time label from slider value
+    @staticmethod
+    def convert_seconds_to_time_label(time_s: float) -> str:
+        # Convert time in seconds to a mm:ss string
 
         S_TO_MIN = 60
+
+        n_min = int(time_s / S_TO_MIN)
+        n_sec = int(time_s - (n_min * S_TO_MIN))
+        time_label = f"{n_min:02d}:{n_sec:02d}"
+        return time_label
+
+    def update_time_label(self, slider_value: int):
+        # Updates time label from slider value
 
         # Start time in seconds
         start_t = self.convert_slider_value_to_start_time()
 
-        n_min = int(start_t / S_TO_MIN)
-        n_sec = int(start_t - (n_min * S_TO_MIN))
-        time_label = f"{n_min:02d}:{n_sec:02d}"
-        self.widgets["time"].setText(time_label)
+        # Compute and set time label
+        t_label = self.convert_seconds_to_time_label(start_t)
+        self.widgets["time"].setText(t_label)
+
+    def update_max_time_label(self):
+        # Update the max time label for the slider based on the interval size
+        # (max time is the maximal start time that the slider can be set to)
+
+        # Convert max slider value to seconds
+        max_t = self.widgets["slider"].maximum() * self.plot_widget.div_size
+
+        # Compute and set max time label
+        t_label = self.convert_seconds_to_time_label(max_t)
+        self.widgets["maxtime"].setText(t_label)
 
     def connect_slider_value_to_time_label(self):
         # Connection for changes in slider value to change start time label

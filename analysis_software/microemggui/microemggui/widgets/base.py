@@ -43,6 +43,14 @@ class InputInlineText(QLabel):
         super().__init__(*args, **kwargs)
 
 
+class InputInlineHighlightedText(QLabel):
+    # Text that is inline with other widget, but not label for widget (e.g., units)
+    # Highlighted in a different colour to make more prominent
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
 class InputWarningLabel(QLabel):
     # Label for warning/error text for input fields
     def __init__(self, *args, **kwargs):
