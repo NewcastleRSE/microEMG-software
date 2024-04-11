@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
     QSpinBox,
     QLineEdit,
     QPushButton,
+    QToolButton,
     QSpacerItem,
     QSizePolicy,
 )
@@ -92,8 +93,17 @@ class SectionTitle(QLabel):
 
 
 # --- Buttons ---
+
+
 class LargePushButton(QPushButton):
     # Large push buttons
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class WidgetControlButton(QToolButton):
+    # Button for controlling widget (e.g., EMG viewer plot settings)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

@@ -12,7 +12,6 @@ from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 
 from PySide6.QtWidgets import (
     QWidget,
-    QPushButton,
     QSlider,
     QHBoxLayout,
     QVBoxLayout,
@@ -29,6 +28,7 @@ from microemggui.widgets.base import (
     InputInlineText,
     InputInlineHighlightedText,
     ExpandingVSpacer,
+    WidgetControlButton,
 )
 
 
@@ -243,7 +243,7 @@ class EMGPlotWidget(QWidget):
         self.start_time_incremented.emit(start_t)
 
     def scale_offset(self, scale: float):
-        # Slot for zoom buttons to scale amplitude of plotted lines (via offset
+        # Slot for buttons that scale amplitude of plotted lines (via offset
         # parameter)
 
         self.offset = self.offset / scale  # scale offset
@@ -370,10 +370,10 @@ class EMGArrowsWidget(QWidget):
 
         # Create button widgets
         self.widgets = {
-            "previous_fast": QPushButton(self),
-            "previous": QPushButton(self),
-            "next": QPushButton(self),
-            "next_fast": QPushButton(self),
+            "previous_fast": WidgetControlButton(self),
+            "previous": WidgetControlButton(self),
+            "next": WidgetControlButton(self),
+            "next_fast": WidgetControlButton(self),
         }
 
         # Icons for buttons
@@ -603,15 +603,15 @@ class EMGGainWidget(QWidget):
         # Reference to plot widget
         self.plot_widget = plot_widget
 
-        # Create button widgets for zooming
+        # Create button widgets for changing signal amplitude
         self.widgets = {
-            "zoomin": QPushButton(self),
-            "zoomout": QPushButton(self),
+            "increase": WidgetControlButton(self),
+            "decrease": WidgetControlButton(self),
         }
 
         # Set scaling factor of each button
         scale_factor = 0.75
-        self.widget_zoom = [1 / scale_factor, scale_factor]
+        self.widget_scale = [1 / scale_factor, scale_factor]
 
         # Icons for buttons
         # TODO: set resource path or otherwise define path for icons
@@ -623,8 +623,8 @@ class EMGGainWidget(QWidget):
             "bootstrap-icons-1.11.3",
         )
         icons = [
-            "zoom-in.svg",
-            "zoom-out.svg",
+            "caret-up.svg",
+            "caret-down.svg",
         ]
 
         for w, ic in zip(self.widgets.values(), icons):
@@ -640,13 +640,13 @@ class EMGGainWidget(QWidget):
         self.setLayout(layout)
 
         # Connections
-        self.connect_zoom_to_plot_offset()
+        self.connect_scale_to_plot_offset()
 
-    def connect_zoom_to_plot_offset(self):
-        # Connect button clicked signal of zoom buttons to offset of EMG plot.
-        # Will scale offset by widget_zoom value
+    def connect_scale_to_plot_offset(self):
+        # Connect button clicked signal of buttons to offset of EMG plot.
+        # Will scale offset by widget_scale value
 
-        for w, scale in zip(self.widgets.values(), self.widget_zoom):
+        for w, scale in zip(self.widgets.values(), self.widget_scale):
             w.pressed.connect(lambda scale=scale: self.plot_widget.scale_offset(scale))
 
 

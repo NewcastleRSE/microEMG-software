@@ -16,16 +16,37 @@ SubsectionTitle{
 
 LargePushButton {
     font-size: 20pt;
-    background-color: white;
-    border-style: none;
+    background-color: 'white';
+    border-style: solid;
+    border-width: 1px;
+    border-color: #D9D9D9;
     min-width: 10em;
-    padding: 6px;
-    border-radius: 10px;
+    padding: 4;
+    border-radius: 2;
 }
 
 LargePushButton:pressed {
-    background-color: grey;
+    background-color: 'grey';
 }
+
+WidgetControlButton {
+    background-color: 'white';
+    border-style: solid;
+    border-width: 1px;
+    border-color: #D9D9D9;
+    border-radius: 2;
+    padding: 3;
+}
+
+WidgetControlButton:pressed {
+    background-color: #D9D9D9;
+}
+
+WidgetControlButton:disabled {
+    background-color: #D9D9D9;
+}
+
+
 /* Settings input widgets - main section */
 
 CheckBoxMain {
