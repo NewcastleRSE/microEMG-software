@@ -1,19 +1,28 @@
 """Detect peaks in data based on their amplitude and other features."""
 
-#from __future__ import division, print_function
-#import warnings
+# from __future__ import division, print_function
+# import warnings
 import numpy as np
 
 __author__ = "Marcos Duarte, https://github.com/demotu"
 __version__ = "1.0.6"
 __license__ = "MIT"
 
-#warnings.warn('A newest version is available at https://pypi.org/project/detecta/')
+# warnings.warn('A newest version is available at https://pypi.org/project/detecta/')
 
 
-def detect_peaks(x, mph=None, mpd=1, threshold=0, edge='rising',
-                 kpsh=False, valley=False, show=False, ax=None, title=True):
-
+def detect_peaks(
+    x,
+    mph=None,
+    mpd=1,
+    threshold=0,
+    edge="rising",
+    kpsh=False,
+    valley=False,
+    show=False,
+    ax=None,
+    title=True,
+):
     """Detect peaks in data based on their amplitude and other features.
 
     Parameters
@@ -107,7 +116,7 @@ def detect_peaks(x, mph=None, mpd=1, threshold=0, edge='rising',
 
     """
 
-    x = np.atleast_1d(x).astype('float64')
+    x = np.atleast_1d(x).astype("float64")
     if x.size < 3:
         return np.array([], dtype=int)
     if valley:
@@ -125,26 +134,30 @@ def detect_peaks(x, mph=None, mpd=1, threshold=0, edge='rising',
     if not edge:
         ine = np.where((np.hstack((dx, 0)) < 0) & (np.hstack((0, dx)) > 0))[0]
     else:
-        if edge.lower() in ['rising', 'both']:
-            ire = np.where((np.hstack((dx, 0)) <= 0) & (np.hstack((0, dx)) > 0))[0]                       
-        if edge.lower() in ['falling', 'both']:
+        if edge.lower() in ["rising", "both"]:
+            ire = np.where((np.hstack((dx, 0)) <= 0) & (np.hstack((0, dx)) > 0))[0]
+        if edge.lower() in ["falling", "both"]:
             ife = np.where((np.hstack((dx, 0)) < 0) & (np.hstack((0, dx)) >= 0))[0]
     ind = np.unique(np.hstack((ine, ire, ife)))
     # handle NaN's
     if ind.size and indnan.size:
         # NaN's and values close to NaN's cannot be peaks
-        ind = ind[np.in1d(ind, np.unique(np.hstack((indnan, indnan-1, indnan+1))), invert=True)]
+        ind = ind[
+            np.in1d(
+                ind, np.unique(np.hstack((indnan, indnan - 1, indnan + 1))), invert=True
+            )
+        ]
     # first and last values of x cannot be peaks
     if ind.size and ind[0] == 0:
         ind = ind[1:]
-    if ind.size and ind[-1] == x.size-1:
+    if ind.size and ind[-1] == x.size - 1:
         ind = ind[:-1]
     # remove peaks < minimum peak height
     if ind.size and mph is not None:
         ind = ind[x[ind] >= mph]
     # remove peaks - neighbors < threshold
     if ind.size and threshold > 0:
-        dx = np.min(np.vstack([x[ind]-x[ind-1], x[ind]-x[ind+1]]), axis=0)
+        dx = np.min(np.vstack([x[ind] - x[ind - 1], x[ind] - x[ind + 1]]), axis=0)
         ind = np.delete(ind, np.where(dx < threshold)[0])
     # detect small peaks closer than minimum peak distance
     if ind.size and mpd > 1:
@@ -153,46 +166,45 @@ def detect_peaks(x, mph=None, mpd=1, threshold=0, edge='rising',
         for i in range(ind.size):
             if not idel[i]:
                 # keep peaks with the same height if kpsh is True
-                idel = idel | (ind >= ind[i] - mpd) & (ind <= ind[i] + mpd) \
-                       & (x[ind[i]] > x[ind] if kpsh else True)
+                idel = idel | (ind >= ind[i] - mpd) & (ind <= ind[i] + mpd) & (
+                    x[ind[i]] > x[ind] if kpsh else True
+                )
                 idel[i] = 0  # Keep current peak
         # remove the small peaks and sort back the indices by their occurrence
         ind = np.sort(ind[~idel])
-    
-    
 
     # remove points which are inflections rather than peaks
-    to_delete = []    
-    
-    # Rising inflections           
-    flat_peaks = np.where(dx[ind] == 0)[0]     
-    for fp in flat_peaks:            
+    to_delete = []
+
+    # Rising inflections
+    flat_peaks = np.where(dx[ind] == 0)[0]
+    for fp in flat_peaks:
         pt = ind[fp] + 1
         dx_val = 0
-        while pt < len(dx) and dx_val == 0:                
+        while pt < len(dx) and dx_val == 0:
             dx_val = dx[pt]
-            pt += 1               
-                    
-        # if first dx point after flat section is +ve then it is not a peak so delete it     
-        if dx_val >= 0:                             
-            to_delete.append(fp)   
-   
+            pt += 1
+
+        # if first dx point after flat section is +ve then it is not a peak so delete it
+        if dx_val >= 0:
+            to_delete.append(fp)
+
     # Falling inflections
-    flat_peaks = np.where(dx[ind-1] == 0)[0] 
-    for fp in flat_peaks:            
-        pt = ind[fp] - 1        
+    flat_peaks = np.where(dx[ind - 1] == 0)[0]
+    for fp in flat_peaks:
+        pt = ind[fp] - 1
         dx_val = 0
-        while pt >= 0 and dx_val == 0:                
+        while pt >= 0 and dx_val == 0:
             dx_val = dx[pt]
-            pt -= 1               
-                    
-        # if first dx point before flat section is -ve then it is not a peak so delete it     
-        if dx_val <= 0:                             
-            to_delete.append(fp)   
-                
+            pt -= 1
+
+        # if first dx point before flat section is -ve then it is not a peak so delete it
+        if dx_val <= 0:
+            to_delete.append(fp)
+
     # delete inflections
-    ind = np.delete(ind, to_delete) 
-    
+    ind = np.delete(ind, to_delete)
+
     if show:
         if indnan.size:
             x[indnan] = np.nan
@@ -201,7 +213,7 @@ def detect_peaks(x, mph=None, mpd=1, threshold=0, edge='rising',
             if mph is not None:
                 mph = -mph
         _plot(x, mph, mpd, threshold, edge, valley, ax, ind, title)
-        
+
     return ind
 
 
@@ -210,7 +222,7 @@ def _plot(x, mph, mpd, threshold, edge, valley, ax, ind, title):
     try:
         import matplotlib.pyplot as plt
     except ImportError:
-        print('matplotlib is not available.')
+        print("matplotlib is not available.")
     else:
         if ax is None:
             _, ax = plt.subplots(1, 1, figsize=(8, 4))
@@ -218,24 +230,37 @@ def _plot(x, mph, mpd, threshold, edge, valley, ax, ind, title):
         else:
             no_ax = False
 
-        ax.plot(x, 'b', lw=1)
+        ax.plot(x, "b", lw=1)
         if ind.size:
-            label = 'valley' if valley else 'peak'
-            label = label + 's' if ind.size > 1 else label
-            ax.plot(ind, x[ind], '+', mfc=None, mec='r', mew=2, ms=8,
-                    label='%d %s' % (ind.size, label))
-            ax.legend(loc='best', framealpha=.5, numpoints=1)
-        ax.set_xlim(-.02*x.size, x.size*1.02-1)
+            label = "valley" if valley else "peak"
+            label = label + "s" if ind.size > 1 else label
+            ax.plot(
+                ind,
+                x[ind],
+                "+",
+                mfc=None,
+                mec="r",
+                mew=2,
+                ms=8,
+                label="%d %s" % (ind.size, label),
+            )
+            ax.legend(loc="best", framealpha=0.5, numpoints=1)
+        ax.set_xlim(-0.02 * x.size, x.size * 1.02 - 1)
         ymin, ymax = x[np.isfinite(x)].min(), x[np.isfinite(x)].max()
         yrange = ymax - ymin if ymax > ymin else 1
-        ax.set_ylim(ymin - 0.1*yrange, ymax + 0.1*yrange)
-        ax.set_xlabel('Data #', fontsize=14)
-        ax.set_ylabel('Amplitude', fontsize=14)
+        ax.set_ylim(ymin - 0.1 * yrange, ymax + 0.1 * yrange)
+        ax.set_xlabel("Data #", fontsize=14)
+        ax.set_ylabel("Amplitude", fontsize=14)
         if title:
             if not isinstance(title, str):
-                mode = 'Valley detection' if valley else 'Peak detection'
-                title = "%s (mph=%s, mpd=%d, threshold=%s, edge='%s')"% \
-                        (mode, str(mph), mpd, str(threshold), edge)
+                mode = "Valley detection" if valley else "Peak detection"
+                title = "%s (mph=%s, mpd=%d, threshold=%s, edge='%s')" % (
+                    mode,
+                    str(mph),
+                    mpd,
+                    str(threshold),
+                    edge,
+                )
             ax.set_title(title)
         # plt.grid()
         if no_ax:
