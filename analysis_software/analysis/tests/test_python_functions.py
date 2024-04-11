@@ -115,12 +115,12 @@ print(out1)
 ############################
 ks = [2, 3, 5]
 
-runTEO, tmp = emg.MTEO(vec, ks)
-
-print("emg.MTEO(vec, ks) =")
-print(runTEO)
-print("tmp =")
-print(tmp)
+runTEO, tmp = emg.multi_teager_energy_operator(vec, ks) # emg.MTEO(vec, ks)
+#multi_teager_energy_operator
+#print("emg.MTEO(vec, ks) =")
+#print(runTEO)
+#print("tmp =")
+#print(tmp)
 
 ############################
 template = tmp[0, :]
@@ -166,7 +166,7 @@ L = 0.01
 Fs = 3000
 print(runTEO.shape)
   
-TE, DTh = emg.MTH(runTEO,ks,L,Fs)
+TE, DTh = emg.multi_scale_thresholding(runTEO,ks,L,Fs)
 
 print("MTH(MTEO,ks,L,Fs) = ");
 print(TE)
