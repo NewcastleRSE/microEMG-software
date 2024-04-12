@@ -8,6 +8,7 @@ TODO: consider fixing yaxis limits so labels do not move
 
 import os
 
+import numpy as np
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 
 from PySide6.QtWidgets import (
@@ -70,15 +71,14 @@ class EMGPlotWidget(QWidget):
         self.make_fig()
         match self.vis_library:
             case "matplotlib":
-                self.plot = FigureCanvasQTAgg(self.fig)
+                self.plot_w = FigureCanvasQTAgg(self.fig)
             case "pyqtgraph":
-                self.plot = self.fig
-                self.plot.plotItem.setMouseEnabled(x=False, y=False)
-                self.plot.viewport().installEventFilter(self)
+                self.plot_w.plotItem.setMouseEnabled(x=False, y=False)
+                self.plot_w.viewport().installEventFilter(self)  # to catch wheel events
 
         # Add figure to layout and set figure to expand to fill available space
         layout = QVBoxLayout()
-        layout.addWidget(self.plot)
+        layout.addWidget(self.plot_w)
         self.setLayout(layout)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
@@ -120,21 +120,22 @@ class EMGPlotWidget(QWidget):
                 plot_idx = self.emg_data_model.emg_data._get_t_idx(self.start_t, stop_t)
                 plot_idx = plot_idx[0 :: self.ds_factor]
                 pen = pg.mkPen(color=(0, 0, 255), width=1)
-                self.fig = pg.PlotWidget()
+                self.plot_w = pg.PlotWidget()
                 self.line_ref = list()
                 for i in range(self.emg_data_model.emg_data.n_chan):
-                    line_ref = self.fig.plot(
+                    line_ref = self.plot_w.plot(
                         emg_t[plot_idx],
                         self.emg_data_model.emg_data.emg_ts[i, plot_idx]
                         - self.offset * i,
                         pen=pen,
                     )
                     self.line_ref.append(line_ref)
-                self.fig.setBackground("w")
-                self.fig.showGrid(x=True, y=False)
+                self.plot_w.setBackground("w")
+                self.plot_w.showGrid(x=True, y=False)
+                self.set_y_ticks_and_range()
 
     def update_plot(self):
-        # Update plot using existing axes
+        # Update plotted data using existing axes
 
         # Compute stop time
         stop_t = self.compute_stop_time()
@@ -181,6 +182,38 @@ class EMGPlotWidget(QWidget):
                         self.emg_data_model.emg_data.emg_ts[i, plot_idx]
                         - self.offset * i,
                     )
+
+    def set_y_ticks_and_range(self):
+        # Fix y-axis ticks and range of pyqtgraph plot based on offset value and
+        # number of channels
+
+        # Compute y-tick locations
+        y_ticks = list(
+            np.linspace(
+                0,
+                (self.emg_data_model.emg_data.n_chan - 1) * self.offset * -1,
+                self.emg_data_model.emg_data.n_chan,
+            )
+        )
+
+        # Apply to y-axis
+        y_ax = self.plot_w.getAxis("left")
+        y_ax.setTicks(
+            [
+                [
+                    (tick, chan)
+                    for (tick, chan) in zip(
+                        y_ticks, self.emg_data_model.emg_data.chan.chan_names
+                    )
+                ]
+            ]
+        )
+
+        # Set y axis range
+        y_buff = self.offset * 2
+        self.plot_w.setYRange(
+            y_ticks[0] + y_buff, y_ticks[len(y_ticks) - 1] - y_buff, padding=0
+        )
 
     def compute_ds_factor(self) -> int:
         # Compute downsampling factor based on division size
@@ -247,9 +280,11 @@ class EMGPlotWidget(QWidget):
     def scale_offset(self, scale: float):
         # Slot for buttons that scale amplitude of plotted lines (via offset
         # parameter)
+        # Also updates y-axis ticks and range
 
         self.offset = self.offset / scale  # scale offset
         self.update_plot()  # update plot
+        self.set_y_ticks_and_range()  # update y-axis ticks
 
     def on_scroll(self, event: str):
         # Slot for scroll event on plot canvas.
