@@ -15,6 +15,7 @@ intanutil = {path = "analysis_software/intanutil", develop = true}
 pyside6 = "^6.6.1"
 microemggui = {path = "analysis_software/microemggui", develop = true}
 pyqtgraph = "^0.13.4"
+palettable = "^3.3.3"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.12.1"
