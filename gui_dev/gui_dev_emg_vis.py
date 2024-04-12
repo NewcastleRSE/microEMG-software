@@ -8,11 +8,13 @@ Example script for EMG time series visualisation widget.
 import sys
 import os
 
+from palettable.cartocolors.qualitative import Bold_7
+
 from PySide6.QtWidgets import QApplication, QMainWindow
 from PySide6.QtCore import QFile
 
 import microemggui
-import microemggui.widgets.emg_viewer as ev
+from microemggui.widgets.emg_viewer import EMGViewerWidget
 from microemggui.models.emg import EMGDataModel
 from pymicroemg.emg_files import EMGFiles
 
@@ -31,7 +33,13 @@ class MainWindow(QMainWindow):
         emg_files = EMGFiles(emg_dir)
         emg_data = emg_files.load_emg_data()
         emg_data_model = EMGDataModel(emg_data)
-        self.w = ev.EMGViewerWidget(emg_data_model, parent=self)
+
+        # colors
+        # clrs = Prism_10.hex_colors
+        # clrs = [clrs[i] for i in [6, 9, 2, 5, 3, 8]]
+        clrs = Bold_7.hex_colors
+
+        self.w = EMGViewerWidget(emg_data_model, clrs, parent=self)
         self.setCentralWidget(self.w)
 
 

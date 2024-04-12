@@ -7,6 +7,7 @@ TODO: consider fixing yaxis limits so labels do not move
 """
 
 import os
+from math import ceil
 
 import numpy as np
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
@@ -19,7 +20,7 @@ from PySide6.QtWidgets import (
     QGridLayout,
     QSizePolicy,
 )
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QIcon, QPen
 from PySide6.QtCore import Qt, Signal
 import pyqtgraph as pg
 
@@ -52,7 +53,7 @@ class EMGPlotWidget(QWidget):
     # Signal when division size is changed
     div_size_changed = Signal()
 
-    def __init__(self, emg_data_model, parent=None):
+    def __init__(self, emg_data_model, emg_clrs: list[str], parent=None):
         super().__init__(parent)
 
         # temporary attribute for controlling which visualisation library is used
@@ -66,6 +67,7 @@ class EMGPlotWidget(QWidget):
         self.ds_factor = self.compute_ds_factor()  # downsampling factor
         self.offset = 1000  # initial vertical offset between signals
         self.n_div = 10  # number of divisions per "page"
+        self.emg_clrs = emg_clrs  # colors for plot
 
         # Initial plot
         self.make_fig()
@@ -96,6 +98,25 @@ class EMGPlotWidget(QWidget):
         stop_t = self.start_t + (self.div_size * self.n_div)
         return stop_t
 
+    def make_plot_pens(self) -> list[QPen]:
+        # Make a pen for drawing each EMG signal in the pyqtgraph plot
+
+        n_chan = self.emg_data_model.emg_data.n_chan  # number of channels
+        n_rep = 4  # number of times each colour will be repeated in adjacent channels
+
+        # Repeat provided colours to meet required number of colours
+        n_clrs = ceil(n_chan / n_rep)  # number of colours needed
+        n_emg_clrs = len(self.emg_clrs)  # number of colours provided
+        self.emg_clrs = self.emg_clrs * ceil(n_clrs / n_emg_clrs)
+        self.emg_clrs = self.emg_clrs[:n_clrs]
+
+        # Repeat each colour n_rep times
+        self.emg_clrs = [clr for clr in self.emg_clrs for i in range(n_rep)]
+
+        # Make pens
+        pens = [pg.mkPen(color=clr, width=1.5) for clr in self.emg_clrs]
+        return pens
+
     def make_fig(self):
         # Make figure
 
@@ -116,10 +137,15 @@ class EMGPlotWidget(QWidget):
                     xlim
                 )  # fixes width, even if at the end of the EMG time series
             case "pyqtgraph":
+                # Compute section of data to plot
                 emg_t = self.emg_data_model.emg_data.get_emg_t()
                 plot_idx = self.emg_data_model.emg_data._get_t_idx(self.start_t, stop_t)
                 plot_idx = plot_idx[0 :: self.ds_factor]
-                pen = pg.mkPen(color=(0, 0, 255), width=1)
+
+                # Make pens
+                pens = self.make_plot_pens()
+
+                # Make plot widget and plot
                 self.plot_w = pg.PlotWidget()
                 self.line_ref = list()
                 for i in range(self.emg_data_model.emg_data.n_chan):
@@ -127,7 +153,7 @@ class EMGPlotWidget(QWidget):
                         emg_t[plot_idx],
                         self.emg_data_model.emg_data.emg_ts[i, plot_idx]
                         - self.offset * i,
-                        pen=pen,
+                        pen=pens[i],
                     )
                     self.line_ref.append(line_ref)
                 self.plot_w.setBackground("w")
@@ -197,17 +223,25 @@ class EMGPlotWidget(QWidget):
         )
 
         # Apply to y-axis
+        chan_names = self.emg_data_model.emg_data.chan.chan_names
         y_ax = self.plot_w.getAxis("left")
-        y_ax.setTicks(
-            [
-                [
-                    (tick, chan)
-                    for (tick, chan) in zip(
-                        y_ticks, self.emg_data_model.emg_data.chan.chan_names
-                    )
-                ]
-            ]
-        )
+        # TODO: decide approach for setting ytick labels
+        y_ax.setTicks([[(tick, chan) for (tick, chan) in zip(y_ticks, chan_names)]])
+        # y_ax.setTicks([[(tick, "") for tick in y_ticks]])
+
+        # Tick labels (manually set so can make different labels different colours)
+        # TODO: in progress; set up so labels progress with plot
+        self.y_labels = list()
+        for i in range(self.emg_data_model.emg_data.n_chan):
+            label = pg.TextItem(
+                chan_names[i], color=self.emg_clrs[i], anchor=(1.25, 0.5)
+            )
+            # label.setFlag(label.GraphicsItemFlag.ItemIgnoresTransformations)
+            # label.setPos(self.start_t, y_ticks[i])
+            # label.setParentItem(self.plot_w)
+
+            # self.plot_w.addItem(label)
+            self.y_labels.append(label)
 
         # Set y axis range
         y_buff = self.offset * 2
@@ -704,11 +738,11 @@ class EMGGainWidget(QWidget):
 class EMGViewerWidget(QWidget):
     # Widget for viewing EMG time series data
 
-    def __init__(self, emg_data_model, parent=None):
+    def __init__(self, emg_data_model, emg_clrs: list[str], parent=None):
         super().__init__(parent)
 
         # Create plot widget for provided EMG data
-        plot_widget = EMGPlotWidget(emg_data_model, parent=self)
+        plot_widget = EMGPlotWidget(emg_data_model, emg_clrs, parent=self)
 
         # Create widgets for viewer
         self.widgets = {
