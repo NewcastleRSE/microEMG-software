@@ -55,8 +55,8 @@ class EMGPlotWidget(QWidget):
         super().__init__(parent)
 
         # temporary attribute for controlling which visualisation library is used
-        self.vis_library = "matplotlib"
-        # self.vis_library = 'pyqtgraph'
+        # self.vis_library = "matplotlib"
+        self.vis_library = "pyqtgraph"
 
         self.emg_data_model = emg_data_model
 
@@ -73,6 +73,8 @@ class EMGPlotWidget(QWidget):
                 self.plot = FigureCanvasQTAgg(self.fig)
             case "pyqtgraph":
                 self.plot = self.fig
+                self.plot.plotItem.setMouseEnabled(x=False, y=False)
+                self.plot.viewport().installEventFilter(self)
 
         # Add figure to layout and set figure to expand to fill available space
         layout = QVBoxLayout()
@@ -262,6 +264,17 @@ class EMGPlotWidget(QWidget):
             case "down":
                 n_div = -1
         self.increment_start_time(n_div)
+
+    def eventFilter(self, obj, event):
+        # Catch wheel events on pyqtgraph plot
+        # TODO: check that works as expect using mouse and WindowsOS
+
+        if "QWheelEvent" in str(event):
+            wheel_delta = event.angleDelta().y()
+            self.increment_start_time(int(wheel_delta / 8))
+            return True
+        else:
+            return super().eventFilter(obj, event)
 
 
 # --- Widgets for controlling time window ---
