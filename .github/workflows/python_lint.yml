@@ -15,14 +15,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: psf/black@stable
-        with:
-          options: "--check --verbose"
-          version: "23.12.1"
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
       - run: |
-          pip install flake8==7.0.0 flake8-bugbear==24.1.17
+          pip install flake8==7.0.0 flake8-bugbear==24.1.17 black==24.4.0
+          black . --diff --verbose
           flake8 . --verbose
