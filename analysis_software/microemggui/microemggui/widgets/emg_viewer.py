@@ -35,6 +35,20 @@ from microemggui.widgets.base import (
 from microemggui.widgets.base_pyqtgraph import EMGAxisItem
 
 
+# --- Local helper functions ----
+
+
+def convert_seconds_to_time_label(time_s: float) -> str:
+    # Convert time in seconds to a mm:ss string
+
+    S_TO_MIN = 60
+
+    n_min = int(time_s / S_TO_MIN)
+    n_sec = int(time_s - (n_min * S_TO_MIN))
+    time_label = f"{n_min:02d}:{n_sec:02d}"
+    return time_label
+
+
 # --- Plot ---
 
 
@@ -165,6 +179,7 @@ class EMGPlotWidget(QWidget):
                 emg_axis = EMGAxisItem(pens, "left")
                 self.plot_w.setAxisItems({"left": emg_axis})
                 self.set_y_ticks_and_range()
+                self.set_x_ticks_and_range()
 
     def update_plot(self):
         # Update plotted data using existing axes
@@ -214,6 +229,7 @@ class EMGPlotWidget(QWidget):
                         self.emg_data_model.emg_data.emg_ts[i, plot_idx]
                         - self.offset * i,
                     )
+                self.set_x_ticks_and_range()
 
     def set_y_ticks_and_range(self):
         # Fix y-axis ticks and range of pyqtgraph plot based on offset value and
@@ -238,6 +254,22 @@ class EMGPlotWidget(QWidget):
         self.plot_w.setYRange(
             y_ticks[0] + y_buff, y_ticks[len(y_ticks) - 1] - y_buff, padding=0
         )
+
+    def set_x_ticks_and_range(self):
+        # Set the x ticks to form 10 divisions
+        # Label with recording time in minutes and seconds
+
+        # Compute x-tick locations
+        x_ticks = list(
+            np.linspace(self.start_t, self.compute_stop_time(), self.n_div + 1)
+        )
+
+        # Apply to x-axis
+        # TODO: labels
+        x_ax = self.plot_w.getAxis("bottom")
+        x_ax.setTicks([[(tick, "") for tick in x_ticks]])
+
+        # TODO: range
 
     def compute_ds_factor(self) -> int:
         # Compute downsampling factor based on division size
@@ -583,17 +615,6 @@ class EMGStartTimeWidget(QWidget):
         start_t = self.widgets["slider"].value() * self.plot_widget.div_size
         return start_t
 
-    @staticmethod
-    def convert_seconds_to_time_label(time_s: float) -> str:
-        # Convert time in seconds to a mm:ss string
-
-        S_TO_MIN = 60
-
-        n_min = int(time_s / S_TO_MIN)
-        n_sec = int(time_s - (n_min * S_TO_MIN))
-        time_label = f"{n_min:02d}:{n_sec:02d}"
-        return time_label
-
     def update_time_label(self, slider_value: int):
         # Updates time label from slider value
 
@@ -601,7 +622,7 @@ class EMGStartTimeWidget(QWidget):
         start_t = self.convert_slider_value_to_start_time()
 
         # Compute and set time label
-        t_label = self.convert_seconds_to_time_label(start_t)
+        t_label = convert_seconds_to_time_label(start_t)
         self.widgets["time"].setText(t_label)
 
     def update_max_time_label(self):
@@ -612,7 +633,7 @@ class EMGStartTimeWidget(QWidget):
         max_t = self.widgets["slider"].maximum() * self.plot_widget.div_size
 
         # Compute and set max time label
-        t_label = self.convert_seconds_to_time_label(max_t)
+        t_label = convert_seconds_to_time_label(max_t)
         self.widgets["maxtime"].setText(t_label)
 
     def connect_slider_value_to_time_label(self):
