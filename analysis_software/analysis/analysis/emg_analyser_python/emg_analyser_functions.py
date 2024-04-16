@@ -880,7 +880,7 @@ def TK_filter(sig, sampling_freq, C=0.1, threshold_PsC=0.1, init=True, wind=0.02
     Function for Spike detection and Classification
     This is designed to filter out shallow peaks out of Action potentials
     with the help of Multi-dimensional TK operator (Teager-Kaiser). The function has several
-    subroutins and uses template and label matching in order to cluster the
+    subroutines and uses template and label matching in order to cluster the
     action potentials in the signal.
 
     Parameters
