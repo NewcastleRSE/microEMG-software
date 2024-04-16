@@ -17,7 +17,7 @@ pyside6 = "^6.6.1"
 microemggui = {path = "analysis_software/microemggui", develop = true}
 
 [tool.poetry.group.dev.dependencies]
-black = "^23.12.1"
+black = "^24.4.0"
 pre-commit = "^3.6.0"
 mypy = "^1.8.0"
 flake8 = "^7.0.0"
@@ -41,4 +41,4 @@ disallow_subclassing_any = true
 disallow_untyped_decorators = true
 
 [tool.black]
-extend-exclude = 'analysis_software/intanutil/'
+extend-exclude = "analysis_software/intanutil/"

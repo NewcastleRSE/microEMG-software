@@ -3,6 +3,7 @@ Tests for preprocessing settings widgets.
 TODO: Tests for warning labels
 TODO: Tests for widget visibility
 """
+
 import pytest
 
 from pymicroemg.emg_preproc_settings import EMGPreprocSettings
