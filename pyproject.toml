@@ -37,4 +37,4 @@ disallow_subclassing_any = true
 disallow_untyped_decorators = true
 
 [tool.black]
-extend-exclude = ['analysis_software/intanutil/', 'analysis_software/analysis/tests/*.py']
+extend-exclude = "analysis_software/intanutil/"
