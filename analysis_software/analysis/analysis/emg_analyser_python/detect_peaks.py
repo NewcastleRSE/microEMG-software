@@ -70,7 +70,8 @@ def detect_peaks(
 
     References
     ----------
-    .. [1] http://nbviewer.ipython.org/github/demotu/BMC/blob/master/notebooks/DetectPeaks.ipynb
+    .. [1] http://nbviewer.ipython.org/github/demotu/BMC/
+                  blob/master/notebooks/DetectPeaks.ipynb
 
     Examples
     --------
@@ -198,7 +199,8 @@ def detect_peaks(
             dx_val = dx[pt]
             pt -= 1
 
-        # if first dx point before flat section is -ve then it is not a peak so delete it
+        # if first dx point before flat section is -ve
+        # then it is not a peak so delete it
         if dx_val <= 0:
             to_delete.append(fp)
 

@@ -28,8 +28,7 @@ QUICK_VERSION = False  # True
 
 def round_int(val):
     """
-    Rounds the given float to the nearest integer. In the case of a value half way the number
-    is rounded up to be consistent with MatLab, e.g. 0.5 rounds to 1.
+    Rounds the given float to the nearest integer.
 
     Parameters
     ----------
@@ -47,8 +46,7 @@ def round_int(val):
 
 def round_ints(vals):
     """
-    Rounds the given array of floats to the nearest integers. In the case of a values half way the numbers
-    are rounded up to be consistent with MatLab, e.g. 0.5 rounds to 1.
+    Rounds the given array of floats to the nearest integers.
 
     Parameters
     ----------
@@ -81,7 +79,8 @@ def running_TEO(raw_signal, k=1):
     calcs the function x(n)^2 - x(n-k)*x(n+k)
 
     this is the standard energy operator (TEO)
-    some people like to invent new names for old concepts and call this "NEO -> nonlinear energy operator"
+    some people like to invent new names for old concepts
+    and call this "NEO -> nonlinear energy operator"
 
     Parameters
     ----------
@@ -102,7 +101,8 @@ def running_TEO(raw_signal, k=1):
 
 def multi_teager_energy_operator(raw_signal, ks, filter=True):
     """
-    Teager Energy Operator (TEO) mainly shows the frequency and instantaneous changes of the signal amplitude that is very sensitive to subtle changes.
+    Teager Energy Operator (TEO) mainly shows the frequency and instantaneous
+    changes of the signal amplitude that is very sensitive to subtle changes.
 
     Parameters
     ----------
@@ -128,7 +128,8 @@ def multi_teager_energy_operator(raw_signal, ks, filter=True):
 
         # Filter flag
         if filter:
-            # ensure the sample variance is used and not the population variance by setting ddof = 1
+            # ensure the sample variance is used and not the population variance
+            # by setting ddof = 1
             v[i] = np.var(tmp[i, :], ddof=1)
 
             # apply the window
@@ -193,7 +194,8 @@ def psuedo_correlation(template, sig, lag=None):
     if max_lag > n + lag + 1:
         max_lag = n + lag + 1
 
-    # Define matrices so that all the calculations can be done at once to speed things up
+    # Define matrices so that all the calculations
+    # can be done at once to speed things up
     no_rows = max_lag - min_lag
 
     template_mat = np.full((no_rows, m), template)
@@ -212,7 +214,8 @@ def psuedo_correlation(template, sig, lag=None):
 
     positive_sum_p4 = sum_p4[sum_p4 > 0]
 
-    # Take the maximum from the positive results if there are any, otherwise the pseudo correlation is zero
+    # Take the maximum from the positive results if there are any,
+    # otherwise the pseudo correlation is zero
     if positive_sum_p4.size:
         p3 = p3[sum_p4 > 0]
         psuedo_correlation_score = np.max(positive_sum_p4 / np.sum(p3 * p3, axis=1))
@@ -302,9 +305,6 @@ def resolve_peaks(sig, decision_thres, sampling_freq):
 def multi_scale_thresholding(MTEO, ks, L, sampling_freq):
     """
     Multi-Scale Thresholding
-
-    this is the standard energy operator (TEO)
-    some people like to invent new names for old concepts and call this "NEO -> nonlinear energy operator"
 
     Parameters
     ----------
@@ -655,8 +655,8 @@ def linear_map2(X, original_range, map_range1, map_range2):
         The original range of the variable e.g. ([0 10]), the
         minimum and maximum possible value that X can take
     map_range1 : 1D numpy NDArray[float]
-        The new min and maximum range that the numbers in the first 5 and last 5 should be
-        assigned to that range
+        The new min and maximum range that the numbers in the
+        first 5 and last 5 should be assigned to that range
     map_range2 : 1D numpy NDArray[float]
         The new min and maximum range that the numbers should be
         assigned to that range
@@ -701,7 +701,8 @@ def generate_titles(features):
     -------
     title : 1D numpy NDArray[int]
         List of integers labelling each list of features.
-        Considered the same if first 5 numbers are the same and the other numbers are the same or differ by exactly 1
+        Considered the same if first 5 numbers are the same
+        and the other numbers are the same or differ by exactly 1
     """
 
     no_features = features.shape[0]
@@ -709,7 +710,8 @@ def generate_titles(features):
     if no_features == 0:
         return []
 
-    # Replace NaNs with this number, other numbers should be below this number so will not conflict
+    # Replace NaNs with this number, other numbers should be below
+    # this number so will not conflict
     # We need NaNs to be considered equal when comparing features
     features[np.isnan(features)] = MAP_RANGE[1] + 1
 
@@ -717,7 +719,8 @@ def generate_titles(features):
     titles = np.zeros(no_features)
     title_counter = 0
 
-    # First 5 and last 5 elements must be equal. Create groups where these are equal firstly
+    # First 5 and last 5 elements must be equal.
+    # Create groups where these are equal firstly
     _, uni_indices, uni_inv_ind = np.unique(
         np.hstack((features[:, :5], features[:, -5:])),
         return_index=True,
@@ -772,7 +775,8 @@ def generate_titles2(features):
     -------
     title : 1D numpy NDArray[int]
         List of integers labelling each list of features.
-        Considered the same if first 5 numbers are the same and the other numbers are the same or differ by exactly 1
+        Considered the same if first 5 numbers are the same
+        and the other numbers are the same or differ by exactly 1
     """
 
     no_features = features.shape[0]
@@ -780,7 +784,8 @@ def generate_titles2(features):
     if no_features == 0:
         return []
 
-    # Replace NaNs with this number, other numbers should be below this number so will not conflict
+    # Replace NaNs with this number, other numbers should be below
+    # this number so will not conflict
     # We need NaNs to be considered equal when comparing features
     features[np.isnan(features)] = MAP_RANGE[1] + 1
 
@@ -879,9 +884,9 @@ def TK_filter(sig, sampling_freq, C=0.1, threshold_PsC=0.1, init=True, wind=0.02
     """
     Function for Spike detection and Classification
     This is designed to filter out shallow peaks out of Action potentials
-    with the help of Multi-dimensional TK operator (Teager-Kaiser). The function has several
-    subroutines and uses template and label matching in order to cluster the
-    action potentials in the signal.
+    with the help of Multi-dimensional TK operator (Teager-Kaiser).
+    The function has several subroutines and uses template and label matching
+    in order to cluster the action potentials in the signal.
 
     Parameters
     ----------
@@ -978,7 +983,8 @@ def TK_filter(sig, sampling_freq, C=0.1, threshold_PsC=0.1, init=True, wind=0.02
     # window to separate spikes(def was 3.5 ms/ 2ms)
     window = round_int(0.002 * sampling_freq)
 
-    # This loop removes the interference in the selected spikes and assigns a label to them
+    # This loop removes the interference in the selected spikes
+    # and assigns a label to them
     for i in range(len(locs)):
 
         # Case 1
@@ -1081,7 +1087,8 @@ def TK_filter(sig, sampling_freq, C=0.1, threshold_PsC=0.1, init=True, wind=0.02
         if QUICK_VERSION:
             features[:, i] = linear_map2(
                 features[:, i], original_range, MAP_RANGE, [1, 4]
-            )  # idea for speed up for clustering, change below also. Does work a bit but more MUs
+            )  # idea for speed up for clustering, change below also.
+            # Does work a bit, but more MUs
         else:
             features[:, i] = linear_map(features[:, i], original_range, MAP_RANGE)
 
@@ -1144,7 +1151,8 @@ def TK_filter(sig, sampling_freq, C=0.1, threshold_PsC=0.1, init=True, wind=0.02
                         # i and j similar so give the same value
                         loc[loc == j] = i
 
-                        # take one away from loc labels higher than j, as j has been removed (relabelled as i)
+                        # take one away from loc labels higher than j,
+                        # as j has been removed (relabelled as i)
                         if j < np.max(loc):
                             for ch in range(j + 1, np.max(loc) + 1):
                                 loc[loc == ch] = ch - 1
