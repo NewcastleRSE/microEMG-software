@@ -22,7 +22,7 @@ Please cite the paper if any of the methods were helpful
 
 MAP_RANGE = [1, 9]
 
-# Use Python package for find peaks and quicker clustering appraoch
+# Use Python package for find peaks and quicker clustering approach
 QUICK_VERSION = False  # True
 
 
