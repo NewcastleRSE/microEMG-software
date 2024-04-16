@@ -7,12 +7,14 @@ readme = "README.md"
 packages = [{include = "microemg_software"}]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = ">=3.11,<3.13"
 numpy = "^1.26.3"
 matplotlib = "^3.8.2"
 scipy = "^1.11.4"
 pymicroemg = {path = "analysis_software/pymicroemg", develop = true}
 intanutil = {path = "analysis_software/intanutil", develop = true}
+pyside6 = "^6.6.1"
+microemggui = {path = "analysis_software/microemggui", develop = true}
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.0"
@@ -20,6 +22,8 @@ pre-commit = "^3.6.0"
 mypy = "^1.8.0"
 flake8 = "^7.0.0"
 flake8-bugbear = "^24.1.17"
+pytest = "^8.0.2"
+pytest-qt = "^4.4.0"
 
 [build-system]
 requires = ["poetry-core"]
