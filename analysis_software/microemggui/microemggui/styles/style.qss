@@ -1,0 +1,39 @@
+/* Settings input widgets - main section */
+
+CheckBoxMain {
+    font-weight: bold;
+    font-size: 14pt;
+    min-height: 50;
+    max-height: 50;
+}
+
+/* Settings input widgets */
+
+InputLabel {
+    qproperty-alignment: 'AlignBottom | AlignLeft';
+    min-height: 20;
+    max-height: 20;
+}
+
+InputInlineLabel {
+}
+
+InputWarningLabel {
+    color: 'red';
+}
+
+InputComboBox {
+    min-width: 100;
+    max-width: 100;
+}
+
+InputSpinBox {
+    min-width: 100;
+    max-width: 100;
+}
+
+InputLineEdit {
+    min-width: 100;
+    max-width: 100;
+}
+
