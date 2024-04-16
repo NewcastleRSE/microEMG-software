@@ -1,6 +1,7 @@
 """
 Widgets for specifying preprocessing settings
 """
+
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
 
 from PySide6.QtCore import Signal
