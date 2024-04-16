@@ -32,6 +32,7 @@ from microemggui.widgets.base import (
     ExpandingVSpacer,
     WidgetControlButton,
 )
+from microemggui.widgets.base_pyqtgraph import EMGAxisItem
 
 
 # --- Plot ---
@@ -158,6 +159,11 @@ class EMGPlotWidget(QWidget):
                     self.line_ref.append(line_ref)
                 self.plot_w.setBackground("w")
                 self.plot_w.showGrid(x=True, y=False)
+                self.plot_w.getPlotItem().hideAxis(
+                    "left"
+                )  # hide axis, will make custom
+                emg_axis = EMGAxisItem(pens, "left")
+                self.plot_w.setAxisItems({"left": emg_axis})
                 self.set_y_ticks_and_range()
 
     def update_plot(self):
@@ -225,23 +231,7 @@ class EMGPlotWidget(QWidget):
         # Apply to y-axis
         chan_names = self.emg_data_model.emg_data.chan.chan_names
         y_ax = self.plot_w.getAxis("left")
-        # TODO: decide approach for setting ytick labels
         y_ax.setTicks([[(tick, chan) for (tick, chan) in zip(y_ticks, chan_names)]])
-        # y_ax.setTicks([[(tick, "") for tick in y_ticks]])
-
-        # Tick labels (manually set so can make different labels different colours)
-        # TODO: in progress; set up so labels progress with plot
-        self.y_labels = list()
-        for i in range(self.emg_data_model.emg_data.n_chan):
-            label = pg.TextItem(
-                chan_names[i], color=self.emg_clrs[i], anchor=(1.25, 0.5)
-            )
-            # label.setFlag(label.GraphicsItemFlag.ItemIgnoresTransformations)
-            # label.setPos(self.start_t, y_ticks[i])
-            # label.setParentItem(self.plot_w)
-
-            # self.plot_w.addItem(label)
-            self.y_labels.append(label)
 
         # Set y axis range
         y_buff = self.offset * 2
