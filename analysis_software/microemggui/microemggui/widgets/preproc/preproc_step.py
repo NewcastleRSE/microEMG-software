@@ -79,6 +79,7 @@ class PreprocWidget(QWidget):
         self,
         raw_emg_data_model: EMGDataModel,
         settings_model: EMGPreprocSettingsModel,
+        emg_clrs: list[str],
         parent=None,
     ):
         super().__init__(parent)
@@ -90,7 +91,9 @@ class PreprocWidget(QWidget):
         self.widgets = {
             "title": SectionTitle("Preprocessing", self),
             "settings": PreprocSettingsWidget(self.settings_model, parent=self),
-            "viewer": EMGViewerWidget(self.raw_emg_data_model, parent=self),
+            "viewer": EMGViewerWidget(
+                self.raw_emg_data_model, emg_clrs=emg_clrs, parent=self
+            ),
             "buttons": MainButtons(self),
         }
 

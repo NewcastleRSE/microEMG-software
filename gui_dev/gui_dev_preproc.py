@@ -9,6 +9,8 @@ Created on Thu Feb 15 10:10:56 2024
 import sys
 import os
 
+from palettable.cartocolors.qualitative import Prism_10
+
 from PySide6.QtWidgets import QApplication, QMainWindow
 from PySide6.QtCore import QFile
 
@@ -50,9 +52,15 @@ class MainWindow(QMainWindow):
         print("INITIAL SETTINGS")
         self.settings_model.settings.print_settings()
 
+        # colors
+        # avoiding red (reserving for indicating bad channels)
+        clrs = Prism_10.hex_colors
+        clrs = [clrs[i] for i in [0, 4, 1, 5]]  # purple, green, blue, yellow
+        # clrs = [clrs[1]] # only dark blue
+
         # Preprocessing widdget
         self.widget = PreprocWidget(
-            raw_emg_data_model, self.settings_model, parent=self
+            raw_emg_data_model, self.settings_model, emg_clrs=clrs, parent=self
         )
 
         # signal for verifying settings update
