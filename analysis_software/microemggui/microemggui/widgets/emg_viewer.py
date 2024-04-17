@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
     QGridLayout,
     QSizePolicy,
 )
-from PySide6.QtGui import QIcon, QPen
+from PySide6.QtGui import QIcon, QPen, QFont
 from PySide6.QtCore import Qt, Signal
 import pyqtgraph as pg
 
@@ -38,14 +38,21 @@ from microemggui.widgets.base_pyqtgraph import EMGAxisItem
 # --- Local helper functions ----
 
 
-def convert_seconds_to_time_label(time_s: float) -> str:
+def convert_seconds_to_time_label(time_s: float, with_ms: bool = False, n_dec=4) -> str:
     # Convert time in seconds to a mm:ss string
+    # TODO: check for any floating point issues
 
     S_TO_MIN = 60
 
     n_min = int(time_s / S_TO_MIN)
-    n_sec = int(time_s - (n_min * S_TO_MIN))
-    time_label = f"{n_min:02d}:{n_sec:02d}"
+    n_sec = time_s - (n_min * S_TO_MIN)
+
+    if with_ms:  # include ms
+        time_label = f"{n_min:02d}:{round(n_sec,4):0{n_dec+3}.{n_dec}f}"
+        return time_label
+
+    # ignoring ms
+    time_label = f"{n_min:02d}:{int(n_sec):02d}"
     return time_label
 
 
@@ -77,12 +84,18 @@ class EMGPlotWidget(QWidget):
 
         self.emg_data_model = emg_data_model
 
+        # EMG data segment options
         self.start_t = 0  # start time (in seconds)
         self.div_size = 0.1  # division size (in seconds)
         self.ds_factor = self.compute_ds_factor()  # downsampling factor
         self.offset = 1000  # initial vertical offset between signals
         self.n_div = 10  # number of divisions per "page"
+
+        # style options
         self.emg_clrs = emg_clrs  # colors for plot
+        self.n_clr_rep = 8  # times each colour will be repeated in adjacent channels
+        self.y_font_size = 12  # font size for y-tick labels
+        self.x_font_size = 12  # font size for x-tick labels
 
         # Initial plot
         self.make_fig()
@@ -117,16 +130,15 @@ class EMGPlotWidget(QWidget):
         # Make a pen for drawing each EMG signal in the pyqtgraph plot
 
         n_chan = self.emg_data_model.emg_data.n_chan  # number of channels
-        n_rep = 4  # number of times each colour will be repeated in adjacent channels
 
         # Repeat provided colours to meet required number of colours
-        n_clrs = ceil(n_chan / n_rep)  # number of colours needed
+        n_clrs = ceil(n_chan / self.n_clr_rep)  # number of colours needed
         n_emg_clrs = len(self.emg_clrs)  # number of colours provided
         self.emg_clrs = self.emg_clrs * ceil(n_clrs / n_emg_clrs)
         self.emg_clrs = self.emg_clrs[:n_clrs]
 
-        # Repeat each colour n_rep times
-        self.emg_clrs = [clr for clr in self.emg_clrs for i in range(n_rep)]
+        # Repeat each colour n_clr_rep times
+        self.emg_clrs = [clr for clr in self.emg_clrs for i in range(self.n_clr_rep)]
 
         # Make pens
         pens = [pg.mkPen(color=clr, width=1.5) for clr in self.emg_clrs]
@@ -172,14 +184,25 @@ class EMGPlotWidget(QWidget):
                     )
                     self.line_ref.append(line_ref)
                 self.plot_w.setBackground("w")
+                self.plot_w.hideButtons()  # to remove autoscale option
                 self.plot_w.showGrid(x=True, y=False)
                 self.plot_w.getPlotItem().hideAxis(
                     "left"
                 )  # hide axis, will make custom
-                emg_axis = EMGAxisItem(pens, "left")
+                emg_axis = EMGAxisItem(pens, "left", maxTickLength=-2)
                 self.plot_w.setAxisItems({"left": emg_axis})
+
+                # Ticks
                 self.set_y_ticks_and_range()
                 self.set_x_ticks_and_range()
+
+                # font sizes
+                # TODO: consider other fonts
+                # TODO: consider setting font size as an option
+                font = QFont("Lucida Sans Typewriter", self.y_font_size)
+                self.plot_w.getAxis("left").setStyle(tickFont=font)
+                font = QFont("Lucida Sans Typewriter", self.x_font_size)
+                self.plot_w.getAxis("bottom").setStyle(tickFont=font)
 
     def update_plot(self):
         # Update plotted data using existing axes
@@ -260,14 +283,18 @@ class EMGPlotWidget(QWidget):
         # Label with recording time in minutes and seconds
 
         # Compute x-tick locations
-        x_ticks = list(
-            np.linspace(self.start_t, self.compute_stop_time(), self.n_div + 1)
-        )
+        stop_t = self.compute_stop_time()
+        x_ticks = list(np.linspace(self.start_t, stop_t, self.n_div + 1))
+
+        # Make labels
+        with_ms = self.div_size < 1
+        n_dec = int(np.floor(np.log10(self.div_size))) * -1
+        t_list = list(np.linspace(self.start_t, stop_t, 11))
+        t_labels = [convert_seconds_to_time_label(t, with_ms, n_dec) for t in t_list]
 
         # Apply to x-axis
-        # TODO: labels
         x_ax = self.plot_w.getAxis("bottom")
-        x_ax.setTicks([[(tick, "") for tick in x_ticks]])
+        x_ax.setTicks([[(tick, t) for [tick, t] in zip(x_ticks, t_labels)]])
 
         # TODO: range
 
@@ -276,7 +303,7 @@ class EMGPlotWidget(QWidget):
         # Downsampling prevents slow plotting when large time interval is plotted
         # Set to divison size * 50, with min of 1 and max of 80
 
-        ds_factor = min(self.div_size * 50, 80)
+        ds_factor = min(self.div_size * 50, 100)
         ds_factor = max(ds_factor, 1)
         ds_factor = int(ds_factor)
 
