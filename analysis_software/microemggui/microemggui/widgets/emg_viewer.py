@@ -10,7 +10,6 @@ import os
 from math import ceil
 
 import numpy as np
-from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 
 from PySide6.QtWidgets import (
     QWidget,
@@ -32,7 +31,7 @@ from microemggui.widgets.base import (
     ExpandingVSpacer,
     WidgetControlButton,
 )
-from microemggui.widgets.base_pyqtgraph import EMGAxisItem
+from microemggui.widgets.base_pyqtgraph import EMGYAxisItem
 
 
 # --- Local helper functions ----
@@ -61,8 +60,7 @@ def convert_seconds_to_time_label(time_s: float, with_ms: bool = False, n_dec=4)
 
 class EMGPlotWidget(QWidget):
     """
-    Widget for plotting EMG time series data in EMG viewer widget
-    TODO: consider using pyqtgraph for potentially better performance
+    Widget for plotting EMG time series data in EMG viewer widget.
     """
 
     # Signal to emit when start time is incremented
@@ -78,8 +76,6 @@ class EMGPlotWidget(QWidget):
     def __init__(self, emg_data_model, emg_clrs: list[str], parent=None):
         super().__init__(parent)
 
-        # temporary attribute for controlling which visualisation library is used
-        # self.vis_library = "matplotlib"
         self.vis_library = "pyqtgraph"
 
         self.emg_data_model = emg_data_model
@@ -91,7 +87,7 @@ class EMGPlotWidget(QWidget):
         self.offset = 1000  # initial vertical offset between signals
         self.n_div = 10  # number of divisions per "page"
 
-        # style options
+        # Style options
         self.emg_clrs = emg_clrs  # colors for plot
         self.n_clr_rep = 8  # times each colour will be repeated in adjacent channels
         self.y_font_size = 12  # font size for y-tick labels
@@ -99,22 +95,15 @@ class EMGPlotWidget(QWidget):
 
         # Initial plot
         self.make_fig()
-        match self.vis_library:
-            case "matplotlib":
-                self.plot_w = FigureCanvasQTAgg(self.fig)
-            case "pyqtgraph":
-                self.plot_w.plotItem.setMouseEnabled(x=False, y=False)
-                self.plot_w.viewport().installEventFilter(self)  # to catch wheel events
+        self.plot_w.plotItem.setMouseEnabled(x=False, y=False)
+        self.plot_w.viewport().installEventFilter(self)  # to catch wheel events
 
         # Add figure to layout and set figure to expand to fill available space
         layout = QVBoxLayout()
         layout.addWidget(self.plot_w)
+        layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-        # Connect scroll (wheel) event on canvas to incrementing start time
-        if self.vis_library == "matplotlib":
-            self.fig.canvas.mpl_connect("scroll_event", self.on_scroll)
 
         # Flags for whether time series can be progressed forward/backwards
         self.can_move_forward = True
@@ -137,7 +126,7 @@ class EMGPlotWidget(QWidget):
         self.emg_clrs = self.emg_clrs * ceil(n_clrs / n_emg_clrs)
         self.emg_clrs = self.emg_clrs[:n_clrs]
 
-        # Repeat each colour n_clr_rep times
+        # Make pens, repeating each colour n_clr_rep times
         self.emg_clrs = [clr for clr in self.emg_clrs for i in range(self.n_clr_rep)]
 
         # Make pens
@@ -151,71 +140,58 @@ class EMGPlotWidget(QWidget):
         stop_t = self.compute_stop_time()
 
         # Make figure and axes
-        match self.vis_library:
-            case "matplotlib":
-                self.fig, self.ax = self.emg_data_model.emg_data.plot_emg_ts(
-                    start_t=self.start_t,
-                    stop_t=stop_t,
-                    downsample_factor=self.ds_factor,
-                    offset=self.offset,
-                )
-                xlim = [self.start_t, stop_t]
-                self.ax.set_xlim(
-                    xlim
-                )  # fixes width, even if at the end of the EMG time series
-            case "pyqtgraph":
-                # Compute section of data to plot
-                emg_t = self.emg_data_model.emg_data.get_emg_t()
-                plot_idx = self.emg_data_model.emg_data._get_t_idx(self.start_t, stop_t)
-                plot_idx = plot_idx[0 :: self.ds_factor]
 
-                # Make pens
-                pens = self.make_plot_pens()
+        # Compute section of data to plot
+        emg_t = self.emg_data_model.emg_data.get_emg_t()
+        plot_idx = self.emg_data_model.emg_data._get_t_idx(self.start_t, stop_t)
+        plot_idx = plot_idx[0 :: self.ds_factor]
 
-                # Make plot widget and plot
-                self.plot_w = pg.PlotWidget()
-                self.line_ref = list()
-                for i in range(self.emg_data_model.emg_data.n_chan):
-                    line_ref = self.plot_w.plot(
-                        emg_t[plot_idx],
-                        self.emg_data_model.emg_data.emg_ts[i, plot_idx]
-                        - self.offset * i,
-                        pen=pens[i],
-                    )
-                    self.line_ref.append(line_ref)
-                self.plot_w.setBackground("w")
-                self.plot_w.hideButtons()  # to remove autoscale option
-                self.plot_w.showGrid(x=True, y=False)
-                self.plot_w.getPlotItem().hideAxis(
-                    "left"
-                )  # hide axis, will make custom
-                emg_axis = EMGAxisItem(pens, "left", maxTickLength=-2)
-                self.plot_w.setAxisItems({"left": emg_axis})
+        # Make pens
+        pens = self.make_plot_pens()
 
-                # Ticks
-                self.set_y_ticks_and_range()
-                self.set_x_ticks_and_range()
+        # Make plot widget and plot
+        self.plot_w = pg.PlotWidget()
+        self.line_ref = list()
+        for i in range(self.emg_data_model.emg_data.n_chan):
+            line_ref = self.plot_w.plot(
+                emg_t[plot_idx],
+                self.emg_data_model.emg_data.emg_ts[i, plot_idx] - self.offset * i,
+                pen=pens[i],
+            )
+            self.line_ref.append(line_ref)
+        self.plot_w.setBackground("w")
+        self.plot_w.hideButtons()  # to remove autoscale option
 
-                # font sizes
-                # TODO: consider other fonts
-                # TODO: consider setting font size as an option
-                font = QFont("Lucida Sans Typewriter", self.y_font_size)
-                self.plot_w.getAxis("left").setStyle(tickFont=font)
-                font = QFont("Lucida Sans Typewriter", self.x_font_size)
-                self.plot_w.getAxis("bottom").setStyle(tickFont=font)
+        # Axes and ticks
+        self.plot_w.showGrid(x=True, y=False)  # only keep x-axis (vertical) grid
+        y_ax = EMGYAxisItem(pens, orientation="left", maxTickLength=-2)
+        self.plot_w.setAxisItems({"left": y_ax})
+        x_ax = self.plot_w.getAxis("bottom")
+        x_ax.setGrid(False)
+        x_ax.setStyle(hideOverlappingLabels=False, autoExpandTextSpace=True)
+        self.plot_w.showAxis("top")  # Show grid via top axis (prevents text clipping)
+        self.set_y_ticks_and_range()
+        self.set_x_ticks_and_range()
+
+        # Tick label fonts
+        # TODO: consider other fonts
+        # TODO: consider setting font size as an option
+        font = QFont("Lucida Sans Typewriter", self.y_font_size)
+        self.plot_w.getAxis("left").setStyle(tickFont=font)
+        font = QFont("Lucida Sans Typewriter", self.x_font_size)
+        self.plot_w.getAxis("bottom").setStyle(tickFont=font)
 
     def update_plot(self):
         # Update plotted data using existing axes
 
         # Compute stop time
         stop_t = self.compute_stop_time()
-        xlim = [self.start_t, stop_t]
 
         # If requested stop time > EMG duration, change to EMG duration
         if stop_t > self.emg_data_model.emg_data.emg_dur:
             stop_t = self.emg_data_model.emg_data.emg_dur
 
-            # stop further progression
+            # Stop further progression
             self.can_move_forward = False
             self.at_stop.emit(self.can_move_forward)
 
@@ -224,35 +200,16 @@ class EMGPlotWidget(QWidget):
             self.can_move_forward = True
             self.at_stop.emit(self.can_move_forward)
 
-        match self.vis_library:
-            case "matplotlib":
-                # Make figure using existing axes
-                self.ax.cla()  # clear axis
-                _, self.ax = self.emg_data_model.emg_data.plot_emg_ts(
-                    start_t=self.start_t,
-                    stop_t=stop_t,
-                    downsample_factor=self.ds_factor,
-                    offset=self.offset,
-                    ax=self.ax,
-                )
-                self.ax.set_xlim(
-                    xlim
-                )  # fixes width, even if at the end of the EMG time series
-
-                # redraw
-                self.fig.canvas.draw_idle()
-
-            case "pyqtgraph":
-                emg_t = self.emg_data_model.emg_data.get_emg_t()
-                plot_idx = self.emg_data_model.emg_data._get_t_idx(self.start_t, stop_t)
-                plot_idx = plot_idx[0 :: self.ds_factor]
-                for i in range(len(self.line_ref)):
-                    self.line_ref[i].setData(
-                        emg_t[plot_idx],
-                        self.emg_data_model.emg_data.emg_ts[i, plot_idx]
-                        - self.offset * i,
-                    )
-                self.set_x_ticks_and_range()
+        # Update data in plot
+        emg_t = self.emg_data_model.emg_data.get_emg_t()
+        plot_idx = self.emg_data_model.emg_data._get_t_idx(self.start_t, stop_t)
+        plot_idx = plot_idx[0 :: self.ds_factor]
+        for i in range(len(self.line_ref)):
+            self.line_ref[i].setData(
+                emg_t[plot_idx],
+                self.emg_data_model.emg_data.emg_ts[i, plot_idx] - self.offset * i,
+            )
+        self.set_x_ticks_and_range()  # update x-axis
 
     def set_y_ticks_and_range(self):
         # Fix y-axis ticks and range of pyqtgraph plot based on offset value and
@@ -273,13 +230,14 @@ class EMGPlotWidget(QWidget):
         y_ax.setTicks([[(tick, chan) for (tick, chan) in zip(y_ticks, chan_names)]])
 
         # Set y axis range
-        y_buff = self.offset * 2
+        y_buff = self.offset * 2  # Extra space at top and bottom
         self.plot_w.setYRange(
             y_ticks[0] + y_buff, y_ticks[len(y_ticks) - 1] - y_buff, padding=0
         )
 
     def set_x_ticks_and_range(self):
-        # Set the x ticks to form 10 divisions
+        # Set x-axis ticks and range of pyqtgraph plot based on the plotted time segment
+        # Set the x-axis ticks to form 10 divisions
         # Label with recording time in minutes and seconds
 
         # Compute x-tick locations
@@ -292,16 +250,20 @@ class EMGPlotWidget(QWidget):
         t_list = list(np.linspace(self.start_t, stop_t, 11))
         t_labels = [convert_seconds_to_time_label(t, with_ms, n_dec) for t in t_list]
 
-        # Apply to x-axis
+        # Apply to x-axis and "top" axis (latter is for grid lines)
         x_ax = self.plot_w.getAxis("bottom")
         x_ax.setTicks([[(tick, t) for [tick, t] in zip(x_ticks, t_labels)]])
+        top_ax = self.plot_w.getAxis("top")
+        top_ax.setTicks([[(tick, "") for tick in x_ticks]])
 
-        # TODO: range
+        # set range (leave buffer so all x-tick labels are visible)
+        x_buff = self.div_size / 5
+        self.plot_w.setXRange(self.start_t - x_buff, stop_t + (x_buff * 1.5), padding=0)
 
     def compute_ds_factor(self) -> int:
         # Compute downsampling factor based on division size
         # Downsampling prevents slow plotting when large time interval is plotted
-        # Set to divison size * 50, with min of 1 and max of 80
+        # Set to divison size * 50, with min of 1 and max of 100
 
         ds_factor = min(self.div_size * 50, 100)
         ds_factor = max(ds_factor, 1)
@@ -311,7 +273,6 @@ class EMGPlotWidget(QWidget):
 
     def update_div_size(self, div_size: float):
         # Update division size (includes updated downsampling factor correspondingly)
-        # TODO: consider best relationship between div size and downsample factor
 
         self.div_size = div_size  # new division size
         self.ds_factor = self.compute_ds_factor()  # update downsample factor
@@ -352,7 +313,7 @@ class EMGPlotWidget(QWidget):
             self.can_move_backward = True
             self.at_start.emit(self.can_move_backward)
 
-        start_t = min(start_t, self.get_max_start_time())  # force < duration
+        start_t = min(start_t, self.get_max_start_time())  # force < duration - div_size
 
         # Update start time for plot
         self.update_start_time(start_t)
@@ -368,20 +329,6 @@ class EMGPlotWidget(QWidget):
         self.offset = self.offset / scale  # scale offset
         self.update_plot()  # update plot
         self.set_y_ticks_and_range()  # update y-axis ticks
-
-    def on_scroll(self, event: str):
-        # Slot for scroll event on plot canvas.
-        # Matplotlib event returns whether scroll is up (on Mac trackpad, moving towards
-        # user) or down (moving away from user). Up scrolls progress EMG time series
-        # forward; down scrolls progress backwards.
-        # Note this type of event is called a wheel event in Qt.
-
-        match event.button:
-            case "up":
-                n_div = 1
-            case "down":
-                n_div = -1
-        self.increment_start_time(n_div)
 
     def eventFilter(self, obj, event):
         # Catch wheel events on pyqtgraph plot
@@ -494,7 +441,6 @@ class EMGArrowsWidget(QWidget):
 
     def __init__(self, plot_widget, parent=None):
         super().__init__(parent)
-        # TODO: create class for icon buttons
 
         # Reference to widget with plot
         self.plot_widget = plot_widget
@@ -628,8 +574,6 @@ class EMGStartTimeWidget(QWidget):
         start_t = self.plot_widget.start_t
 
         # Set max start division and set slider to correct corresponding start time
-        # TODO: consider whether to set max to minimise white space or to minimise
-        # movement when changing division size (determines end behaviour)
         self.widgets["slider"].setMaximum(
             int(self.emg_dur / self.plot_widget.div_size) - (self.plot_widget.n_div - 1)
         )  # Set maximum
@@ -717,8 +661,6 @@ class EMGGainWidget(QWidget):
 
     def __init__(self, plot_widget, parent=None):
         super().__init__(parent)
-
-        # TODO: button class
 
         # Reference to plot widget
         self.plot_widget = plot_widget
