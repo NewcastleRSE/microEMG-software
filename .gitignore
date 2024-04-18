@@ -9,5 +9,5 @@ __pycache__/
 data/*
 .sp
 .mat
-.csv
-.txt
+recordings/**.csv
+Recordings/**.txt
