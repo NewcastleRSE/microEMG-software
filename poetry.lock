@@ -678,6 +678,18 @@ files = [
 ]
 
 [[package]]
+name = "palettable"
+version = "3.3.3"
+description = "Color palettes for Python"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "palettable-3.3.3-py2.py3-none-any.whl", hash = "sha256:74e9e7d7fe5a9be065e02397558ed1777b2df0b793a6f4ce1a5ee74f74fb0caa"},
+    {file = "palettable-3.3.3.tar.gz", hash = "sha256:094dd7d9a5fc1cca4854773e5c1fc6a315b33bd5b3a8f47064928facaf0490a8"},
+]
+
+[[package]]
 name = "pathspec"
 version = "0.12.1"
 description = "Utility library for gitignore style pattern matching of file paths."
@@ -878,6 +890,21 @@ files = [
 
 [package.extras]
 diagrams = ["jinja2", "railroad-diagrams"]
+
+[[package]]
+name = "pyqtgraph"
+version = "0.13.4"
+description = "Scientific Graphics and GUI Library for Python"
+category = "main"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "pyqtgraph-0.13.4-py3-none-any.whl", hash = "sha256:1dc9a786aa43cd787114366058dc3b4b8cb96a0e318f334720c7e6cc6c285940"},
+    {file = "pyqtgraph-0.13.4.tar.gz", hash = "sha256:67b0d371405c4fd5f35afecfeb37d4b73bc118f187c52a965ed68d62f59b67b3"},
+]
+
+[package.dependencies]
+numpy = ">=1.22.0"
 
 [[package]]
 name = "pyside6"
@@ -1172,4 +1199,4 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "4e07bd9b452434dbcd01fcd94953ae27d0b634034f587be5133e3a07e4f6c4c9"
+content-hash = "5ba87f3ed0ef781da4fe3c7ab46e1c3fa765de0f6e8edaf2da0d5d7a1b87835a"
