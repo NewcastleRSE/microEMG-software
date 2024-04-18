@@ -39,7 +39,40 @@ class EMGPreprocSettings:
         # Butterworth filter
         self.butterworth_filter = False
         self.butterworth_filter_settings = {}
+    
+    def __str__(self):
+        """
+        Return a string for the object
 
+        Returns
+        -------
+        String
+
+        """
+        
+        ans = "EMG Preprocessing Settings\n"
+        ans += "Remove mains noise: "
+        if(self.remove_mains):
+            ans += "True\n"
+        else:
+            ans += "False\n"
+            
+        ans += "Remove mains noise settings:\n"
+        ans += str(self.remove_mains_settings)
+        ans += "\n"
+        
+        ans += "Butterworth filter: "
+        if(self.butterworth_filter):
+            ans += "True\n"
+        else:
+            ans += "False\n"
+        
+        ans += "Butterworth filter settings:\n"
+        ans += str(self.butterworth_filter_settings)
+        ans += "\n"
+        
+        return ans
+    
     @staticmethod
     def _get_filter_types_allowed() -> list[str]:
         """
