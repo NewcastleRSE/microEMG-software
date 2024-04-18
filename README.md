@@ -16,7 +16,7 @@ The microEMG team’s primary goal is for their microEMG electrode technology an
 To meet this goal, the microEMG team requires RSE team assistance in the following: 
 
 1.	Development of a real-time recording GUI for EMG recordings with multiple channels. 
-2.	Development analysis scripts and GUI to allow clinicians to perform microEMG recording analyses within a reasonable runtime. 
+2.	Development of analysis scripts and GUI to allow clinicians to perform microEMG recording analyses within a reasonable runtime. 
 3.	The microEMG team will conduct a small pilot study to collect microEMG data from patients with neuromuscular disorders. The current analytical pipeline needs to be extended to describe more features of the patients’ motor units, and the data from all patients will need to be analysed using the updated software.
 
 See project documentation for a detailed description.
