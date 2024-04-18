@@ -50,7 +50,7 @@ See pyproject.toml file for list of Python package dependencies.
 
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit) for running checks on committed code (run `pre-commit install` to use the included pre-commit hooks)
 
-[Git Large File Storage](https://git-lfs.com/) to store demo recordings (see page for installation instructions)
+[Git Large File Storage](https://git-lfs.com/) to store demo recordings (see page for installation instructions). Use ```git lfs ls-files``` to check which files are tracked using Git LFS.
 
 ### Installation
 
