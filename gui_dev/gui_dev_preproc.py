@@ -18,10 +18,11 @@ import microemggui
 
 from microemggui.widgets.preproc.preproc_step import PreprocWidget
 from microemggui.models.settings import EMGPreprocSettingsModel
-from pymicroemg.emg_preproc_settings import EMGPreprocSettings
-
 from microemggui.models.emg import EMGDataModel
+
+from pymicroemg.emg_preproc_settings import EMGPreprocSettings
 from pymicroemg.emg_files import EMGFiles
+import pymicroemg.helper_config as cfg
 
 # %%
 
@@ -31,10 +32,8 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         # EMG data
-        recording_ID = "Stuart_E2"
-        emg_dir = os.path.join(
-            "data", "sample_data_20231124", "real", recording_ID, "raw"
-        )
+        recording_num = 0
+        emg_dir, _ = cfg.get_recording_path_and_id(recording_num)
         emg_files = EMGFiles(emg_dir)
         emg_data = emg_files.load_emg_data()
         raw_emg_data_model = EMGDataModel(emg_data)
