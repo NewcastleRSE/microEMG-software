@@ -5,33 +5,24 @@ Load, visualise, and preprocess example EMG data.
 
 """
 
-import os
 import matplotlib.pyplot as plt
 
 from pymicroemg.emg_files import EMGFiles
 from pymicroemg.emg_preproc_settings import EMGPreprocSettings
 from pymicroemg.emg_data import EMGData
+import pymicroemg.helper_config as cfg
 
 # increase figure resolution (needed for Spyder IDE)
 plt.rcParams["figure.dpi"] = 600
 
 # %% Choose recording (uncomment one)
 
-# recording_ID = 'low amplitude- 20150324'
-recording_ID = "Stuart_E2"
-
+recording_num = 0
+# recording_num = 1
 # %% Load data
 
-# Directory containing example data
-match recording_ID:
-    case "low amplitude- 20150324":
-        emg_dir = os.path.join(
-            "data", "sample_data_20231124", "real", "Low quality", recording_ID, "raw"
-        )
-    case "Stuart_E2":
-        emg_dir = os.path.join(
-            "data", "sample_data_20231124", "real", recording_ID, "raw"
-        )
+# Recording directory and ID
+emg_dir, recording_id = cfg.get_recording_path_and_id(recording_num)
 
 # Instantiate EMG files object for emg_dir - will use to load data
 emg_files = EMGFiles(emg_dir)
@@ -46,7 +37,7 @@ emg_data = emg_files.load_emg_data()
 start_t = 10
 stop_t = 20
 fig, ax = emg_data.plot_emg_ts(start_t=start_t, stop_t=stop_t, offset=2000)
-ax.set_title(f"{recording_ID}, {start_t} to {stop_t} seconds of original time series")
+ax.set_title(f"{recording_id}, {start_t} to {stop_t} seconds of original time series")
 
 # Trim original data (time segment 10-110s)
 emg_data.trim_emg_ts(start_t=10, stop_t=110)
@@ -56,7 +47,7 @@ emg_data.trim_emg_ts(start_t=10, stop_t=110)
 start_t = 0
 stop_t = 10
 fig, ax = emg_data.plot_emg_ts(start_t=start_t, stop_t=stop_t, offset=2000)
-ax.set_title(f"{recording_ID}, {start_t} to {stop_t} seconds of trimmed time series")
+ax.set_title(f"{recording_id}, {start_t} to {stop_t} seconds of trimmed time series")
 
 
 # %% Preprocessing example
@@ -77,10 +68,10 @@ start_t = 3
 stop_t = 4
 
 fig, ax = emg_data.plot_emg_ts(start_t=start_t, stop_t=stop_t, offset=2000)
-ax.set_title(f"{recording_ID} raw")
+ax.set_title(f"{recording_id} raw")
 
 fig, ax = emg_data_preproc.plot_emg_ts(start_t=start_t, stop_t=stop_t)
-ax.set_title(f"{recording_ID} preprocessed")
+ax.set_title(f"{recording_id} preprocessed")
 
 # %% PSD example
 start_f = 500
