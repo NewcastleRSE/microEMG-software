@@ -13,3 +13,4 @@ recordings/**.csv
 recordings/**.txt
 recordings/**/board-*.dat
 recordings/**/aux-*.dat
+recordings/**/vdd-*.dat
