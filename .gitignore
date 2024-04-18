@@ -9,8 +9,8 @@ __pycache__/
 data/*
 .sp
 .mat
-recordings/**.csv
-recordings/**.txt
+recordings/**/*.csv
+recordings/**/*.txt
 recordings/**/board-*.dat
 recordings/**/aux-*.dat
 recordings/**/vdd-*.dat
