@@ -42,4 +42,4 @@ disallow_subclassing_any = true
 disallow_untyped_decorators = true
 
 [tool.black]
-extend-exclude = 'analysis_software/intanutil/'
+extend-exclude = "analysis_software/intanutil/"

@@ -26,7 +26,7 @@ Newcastle University
 This section is intended to list the frameworks and tools you're using to develop this software. Please link to the home page or documentation in each case.
 
 [Python 3.11](https://www.python.org/)  
-[Framework 2](https://something.com)  
+[PySide6](https://www.qt.io/qt-for-python)  
 [Framework 3](https://something.com)  
 
 ## Getting Started
@@ -50,24 +50,9 @@ See pyproject.toml file for list of Python package dependencies.
 
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit) for running checks on committed code (run `pre-commit install` to use the included pre-commit hooks)
 
+[Git Large File Storage](https://git-lfs.com/) to store demo recordings (see page for installation instructions). Use ```git lfs ls-files``` to check which files are tracked using Git LFS.
 
 ### Installation
-
-How to build or install the application.
-
-### Running Locally
-
-How to run the application on your local system.
-
-### Running Tests
-
-How to run tests on your local system.
-
-## Deployment
-
-### Local
-
-(Local installation instructions TBC)
 
 First install poetry in your Python environment:
 
@@ -87,6 +72,17 @@ Next, [install the packages using poetry](https://python-poetry.org/docs/basic-u
 poetry install
 ```
 
+### Running Locally
+
+How to run the application on your local system.
+
+### Running Tests
+
+How to run tests on your local system.
+
+## Deployment
+
+### Local
 
 ### Production
 
