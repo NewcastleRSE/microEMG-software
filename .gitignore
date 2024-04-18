@@ -1,7 +1,13 @@
+# Mac
 .DS_Store
-.dat
-.sp
-.mat
+
+# Python
 __pycache__/
 .spyproject/*
+
+# Data
 data/*
+.sp
+.mat
+.csv
+.txt
