@@ -14,3 +14,6 @@ recordings/**/*.txt
 recordings/**/board-*.dat
 recordings/**/aux-*.dat
 recordings/**/vdd-*.dat
+
+# Remove below to easily add new demo recordings
+recordings/**
