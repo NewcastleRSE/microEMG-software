@@ -10,4 +10,6 @@ data/*
 .sp
 .mat
 recordings/**.csv
-Recordings/**.txt
+recordings/**.txt
+recordings/**/board-*.dat
+recordings/**/aux-*.dat
