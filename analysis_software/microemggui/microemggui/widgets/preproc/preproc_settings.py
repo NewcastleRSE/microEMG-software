@@ -119,6 +119,7 @@ class FilterOrderWidget(QWidget):
 
 class FilterFreqWidget(QWidget):
     # Widget for specifying the filter frequencies from input boxes
+
     def __init__(self, settings_model: EMGPreprocSettingsModel, parent=None):
         super().__init__(parent)
 
@@ -157,12 +158,19 @@ class FilterFreqWidget(QWidget):
         self.freq_input = QWidget(self)
         self.freq_input.setLayout(layout_input)
 
+        # Set "Hz" label to expand if necessary
+        # self.freq_inlinelabel['hz'].setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+        # self.freq_inlinelabel['to'].setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+
         # Valid range for frequencies
         self.freq_val_low = 0
         self.freq_val_high = 10000  # Nyquist frequency for 20k Hz sampling frequency
         freq_val = QDoubleValidator(self.freq_val_low, self.freq_val_high, 2)
         for _, w in self.freq_lineedit.items():
             w.setValidator(freq_val)
+
+        # Get current widget size to limit size of warning labels
+        w_width = self.width()
 
         # Warning label for each frequency input if not valid
         self.warning_labels = {}
@@ -176,6 +184,7 @@ class FilterFreqWidget(QWidget):
                 self,
             )
             self.warning_labels[k].hide()  # Initially hidden since settings validated
+            self.warning_labels[k].setMaximumWidth(w_width * 1.75)
 
         # Add label and input to overall layout
         layout = QVBoxLayout()

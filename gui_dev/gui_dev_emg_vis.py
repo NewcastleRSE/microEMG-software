@@ -15,7 +15,7 @@ from PySide6.QtCore import QFile
 
 import microemggui
 from microemggui.widgets.emg_viewer import EMGViewerWidget
-from microemggui.models.emg import EMGDataModel
+from microemggui.models.emg import EMGDataRawModel
 from pymicroemg.emg_files import EMGFiles
 import pymicroemg.helper_config as cfg
 
@@ -31,7 +31,7 @@ class MainWindow(QMainWindow):
         emg_dir, _ = cfg.get_recording_path_and_id(recording_num)
         emg_files = EMGFiles(emg_dir)
         emg_data = emg_files.load_emg_data()
-        emg_data_model = EMGDataModel(emg_data)
+        emg_data_model = EMGDataRawModel(emg_data)
 
         # colors
         # avoiding red (reserving for indicating bad channels)

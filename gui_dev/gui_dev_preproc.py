@@ -18,7 +18,7 @@ import microemggui
 
 from microemggui.widgets.preproc.preproc_step import PreprocWidget
 from microemggui.models.settings import EMGPreprocSettingsModel
-from microemggui.models.emg import EMGDataModel
+from microemggui.models.emg import EMGDataRawModel
 
 from pymicroemg.emg_preproc_settings import EMGPreprocSettings
 from pymicroemg.emg_files import EMGFiles
@@ -36,7 +36,7 @@ class MainWindow(QMainWindow):
         emg_dir, _ = cfg.get_recording_path_and_id(recording_num)
         emg_files = EMGFiles(emg_dir)
         emg_data = emg_files.load_emg_data()
-        raw_emg_data_model = EMGDataModel(emg_data)
+        raw_emg_data_model = EMGDataRawModel(emg_data)
 
         # Create preprocessing settings and model - will eventually add via method
         # TODO: set default filter specification settings (and/or initial values for
@@ -44,7 +44,7 @@ class MainWindow(QMainWindow):
         settings = EMGPreprocSettings()
         settings.add_remove_mains()  # Remain mains noise
         settings.add_butterworth_filter(
-            filter_type="highpass", cutoff_freq=100, apply_filter=False
+            filter_type="bandpass", cutoff_freq=[100, 2000], apply_filter=True
         )
 
         self.settings_model = EMGPreprocSettingsModel(settings)

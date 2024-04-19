@@ -8,21 +8,31 @@ from PySide6.QtWidgets import (
     QWidget,
     QGridLayout,
     QHBoxLayout,
+    QVBoxLayout,
     QSizePolicy,
 )
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 
 from microemggui.widgets.preproc.preproc_settings import PreprocSettingsWidget
 from microemggui.widgets.emg_viewer import EMGViewerWidget
-from microemggui.models.emg import EMGDataModel
+from microemggui.models.emg import EMGDataRawModel, EMGDataPreprocModel
 from microemggui.models.settings import EMGPreprocSettingsModel
-from microemggui.widgets.base import SectionTitle, LargePushButton
+from microemggui.widgets.base import (
+    SectionTitle,
+    LargePushButton,
+    TabButton,
+    ExpandingHSpacer,
+)
 
 # --- Component widgets ---
 
 
 class ApplyPreprocButton(LargePushButton):
     # Button for applying preprocessing settings to EMG data
+    # TODO: enable reapply when settings change
+
+    # Signal to emit when "apply" button is clicked
+    apply_clicked = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -30,9 +40,23 @@ class ApplyPreprocButton(LargePushButton):
         self.setText("Apply")
         self.setToolTip("Apply preprocessing settings")
 
+        # Connections
+        self.clicked.connect(self.button_clicked)
+
+    def button_clicked(self):
+        # Send signal to preprocess data
+        self.apply_clicked.emit()
+
+        # Update text and disable (will only change if settings updated)
+        self.setText("Re-apply")
+        self.setEnabled(False)
+
 
 class NextButton(LargePushButton):
     # Button for proceeding to the next step
+
+    # TODO: Signal when "next" button is clicked
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -53,20 +77,78 @@ class MainButtons(QWidget):
         layout = QHBoxLayout()
         layout.addWidget(self.widgets["apply"], alignment=Qt.AlignLeft | Qt.AlignTop)
         layout.addWidget(self.widgets["next"], alignment=Qt.AlignRight | Qt.AlignTop)
-        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
 
-class EMGViewerMultiWidget(QWidget):
-    # EMG viewer with tabs for switching between raw and preprocessed time series
+class EMGViewerTabbedWidget(QWidget):
+    # EMG viewer with "tabs" for switching between raw and preprocessed time series.
+    # Initialised without preprocessed data; added later via a method.
+    # The tab functionality is mimicked by swapping the data in the EMG viewer - the
+    # EMG viewer widget remains the same.
+
+    # TODO: change color/style of tab based on whether it is active
 
     def __init__(
         self,
-        raw_emg_data_model: EMGDataModel,
-        preproc_emg_data_model: EMGDataModel,
+        raw_emg_model: EMGDataRawModel,
+        emg_clrs: list[str],
         parent=None,
     ):
         super().__init__(parent)
+
+        self.emg_model = {"raw": raw_emg_model}
+
+        self.emg_clrs = emg_clrs
+
+        # Tab widgets
+        self.widgets_tabs = {
+            "raw": TabButton("Raw EMG", parent=self),
+            "preproc": TabButton("Preprocessed EMG", parent=self),
+        }
+        layout_tabs = QHBoxLayout()
+        for _, w in self.widgets_tabs.items():
+            layout_tabs.addWidget(w, alignment=Qt.AlignLeft)
+        layout_tabs.addItem(ExpandingHSpacer())  # Spacer to push tabs to left
+        layout_tabs.setContentsMargins(0, 0, 0, 0)
+
+        # All widgets - start viewer with raw EMG data
+        self.widgets = {
+            "tabs": QWidget(parent=self),
+            "viewer": EMGViewerWidget(self.emg_model["raw"], self.emg_clrs),
+        }
+        self.widgets["tabs"].setLayout(layout_tabs)  # add tabs to tabs widget
+
+        layout = QVBoxLayout()
+        for _, w in self.widgets.items():
+            layout.addWidget(w)
+        self.setLayout(layout)
+
+        self.widgets_tabs["preproc"].hide()  # hide preproc tab until preprocessing
+
+        # Connections
+        self.connect_tabs_to_data()
+
+    def add_preproc_emg_model(self, preproc_emg_model: EMGDataPreprocModel):
+        # Add preprocessed EMG data model and set to data in viewer
+
+        self.emg_model["preproc"] = preproc_emg_model
+        self.widgets["viewer"].widgets["plot"].replace_emg_model(
+            self.emg_model["preproc"]
+        )
+        self.widgets_tabs["preproc"].show()
+
+    def connect_tabs_to_data(self):
+        # Set up connections between tabs and the data in the viewer
+        # TODO: try to change to clicked signal
+
+        for k, w in self.widgets_tabs.items():
+            w.pressed.connect(lambda data=k: self.switch_emg_model(data))
+
+    def switch_emg_model(self, data: str):
+        # Switch EMG data in viewer (slot for tab clicks)
+
+        self.widgets["viewer"].widgets["plot"].replace_emg_model(self.emg_model[data])
 
 
 # --- Preprocessing widget ----
@@ -77,28 +159,29 @@ class PreprocWidget(QWidget):
 
     def __init__(
         self,
-        raw_emg_data_model: EMGDataModel,
+        raw_emg_model: EMGDataRawModel,
         settings_model: EMGPreprocSettingsModel,
         emg_clrs: list[str],
         parent=None,
     ):
         super().__init__(parent)
 
-        self.raw_emg_data_model = raw_emg_data_model
+        self.emg_model = {"raw": raw_emg_model}
         self.settings_model = settings_model
+        self.emg_clrs = emg_clrs
 
         # Create widgets
         self.widgets = {
             "title": SectionTitle("Preprocessing", self),
             "settings": PreprocSettingsWidget(self.settings_model, parent=self),
-            "viewer": EMGViewerWidget(
-                self.raw_emg_data_model, emg_clrs=emg_clrs, parent=self
+            "tabbedviewer": EMGViewerTabbedWidget(
+                self.emg_model["raw"], self.emg_clrs, parent=self
             ),
             "buttons": MainButtons(self),
         }
 
         # Set viewer to expand to fill extra space
-        self.widgets["viewer"].setSizePolicy(
+        self.widgets["tabbedviewer"].setSizePolicy(
             QSizePolicy.Expanding, QSizePolicy.Expanding
         )
 
@@ -107,5 +190,22 @@ class PreprocWidget(QWidget):
         layout.addWidget(self.widgets["title"], 0, 0)
         layout.addWidget(self.widgets["settings"], 1, 0)
         layout.addWidget(self.widgets["buttons"], 2, 0)
-        layout.addWidget(self.widgets["viewer"], 0, 1, 3, 1)
-        self.setLayout(layout)
+        layout.addWidget(self.widgets["tabbedviewer"], 0, 1, 3, 1)
+        self.layout = layout
+        self.setLayout(self.layout)
+
+        # Connections
+        self.widgets["buttons"].widgets["apply"].apply_clicked.connect(
+            self.apply_preproc
+        )
+
+    def apply_preproc(self):
+        # Apply preprocessing settings to raw data to generate preprocessed data.
+        # Add preprocessed data to viewer.
+        # TODO: also send preprocessed data to main window for downstream steps
+        # TODO: pop up while preprocessing is happening
+
+        self.emg_model["preproc"] = self.emg_model["raw"].apply_preproc(
+            self.settings_model.settings
+        )
+        self.widgets["tabbedviewer"].add_preproc_emg_model(self.emg_model["preproc"])

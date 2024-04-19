@@ -73,12 +73,10 @@ class EMGPlotWidget(QWidget):
     # Signal when division size is changed
     div_size_changed = Signal()
 
-    def __init__(self, emg_data_model, emg_clrs: list[str], parent=None):
+    def __init__(self, emg_model, emg_clrs: list[str], parent=None):
         super().__init__(parent)
 
-        self.vis_library = "pyqtgraph"
-
-        self.emg_data_model = emg_data_model
+        self.emg_model = emg_model
 
         # EMG data segment options
         self.start_t = 0  # start time (in seconds)
@@ -118,7 +116,7 @@ class EMGPlotWidget(QWidget):
     def make_plot_pens(self) -> list[QPen]:
         # Make a pen for drawing each EMG signal in the pyqtgraph plot
 
-        n_chan = self.emg_data_model.emg_data.n_chan  # number of channels
+        n_chan = self.emg_model.emg_data.n_chan  # number of channels
 
         # Repeat provided colours to meet required number of colours
         n_clrs = ceil(n_chan / self.n_clr_rep)  # number of colours needed
@@ -142,8 +140,8 @@ class EMGPlotWidget(QWidget):
         # Make figure and axes
 
         # Compute section of data to plot
-        emg_t = self.emg_data_model.emg_data.get_emg_t()
-        plot_idx = self.emg_data_model.emg_data._get_t_idx(self.start_t, stop_t)
+        emg_t = self.emg_model.emg_data.get_emg_t()
+        plot_idx = self.emg_model.emg_data._get_t_idx(self.start_t, stop_t)
         plot_idx = plot_idx[0 :: self.ds_factor]
 
         # Make pens
@@ -152,10 +150,10 @@ class EMGPlotWidget(QWidget):
         # Make plot widget and plot
         self.plot_w = pg.PlotWidget()
         self.line_ref = list()
-        for i in range(self.emg_data_model.emg_data.n_chan):
+        for i in range(self.emg_model.emg_data.n_chan):
             line_ref = self.plot_w.plot(
                 emg_t[plot_idx],
-                self.emg_data_model.emg_data.emg_ts[i, plot_idx] - self.offset * i,
+                self.emg_model.emg_data.emg_ts[i, plot_idx] - self.offset * i,
                 pen=pens[i],
             )
             self.line_ref.append(line_ref)
@@ -188,8 +186,8 @@ class EMGPlotWidget(QWidget):
         stop_t = self.compute_stop_time()
 
         # If requested stop time > EMG duration, change to EMG duration
-        if stop_t > self.emg_data_model.emg_data.emg_dur:
-            stop_t = self.emg_data_model.emg_data.emg_dur
+        if stop_t > self.emg_model.emg_data.emg_dur:
+            stop_t = self.emg_model.emg_data.emg_dur
 
             # Stop further progression
             self.can_move_forward = False
@@ -201,15 +199,24 @@ class EMGPlotWidget(QWidget):
             self.at_stop.emit(self.can_move_forward)
 
         # Update data in plot
-        emg_t = self.emg_data_model.emg_data.get_emg_t()
-        plot_idx = self.emg_data_model.emg_data._get_t_idx(self.start_t, stop_t)
+        emg_t = self.emg_model.emg_data.get_emg_t()
+        plot_idx = self.emg_model.emg_data._get_t_idx(self.start_t, stop_t)
         plot_idx = plot_idx[0 :: self.ds_factor]
         for i in range(len(self.line_ref)):
             self.line_ref[i].setData(
                 emg_t[plot_idx],
-                self.emg_data_model.emg_data.emg_ts[i, plot_idx] - self.offset * i,
+                self.emg_model.emg_data.emg_ts[i, plot_idx] - self.offset * i,
             )
         self.set_x_ticks_and_range()  # update x-axis
+
+    def replace_emg_model(self, emg_model):
+        # Replace EMG model with a new model (and new EMG data).
+        # Assumes the number of channels is the same (e.g., the new data is a
+        # transformed version of the original data).
+        # TODO: consider adding check for number of channels
+
+        self.emg_model = emg_model
+        self.update_plot()
 
     def set_y_ticks_and_range(self):
         # Fix y-axis ticks and range of pyqtgraph plot based on offset value and
@@ -219,13 +226,13 @@ class EMGPlotWidget(QWidget):
         y_ticks = list(
             np.linspace(
                 0,
-                (self.emg_data_model.emg_data.n_chan - 1) * self.offset * -1,
-                self.emg_data_model.emg_data.n_chan,
+                (self.emg_model.emg_data.n_chan - 1) * self.offset * -1,
+                self.emg_model.emg_data.n_chan,
             )
         )
 
         # Apply to y-axis
-        chan_names = self.emg_data_model.emg_data.chan.chan_names
+        chan_names = self.emg_model.emg_data.chan.chan_names
         y_ax = self.plot_w.getAxis("left")
         y_ax.setTicks([[(tick, chan) for (tick, chan) in zip(y_ticks, chan_names)]])
 
@@ -290,7 +297,7 @@ class EMGPlotWidget(QWidget):
         # Compute maximum allowed start time given division size and number of
         # divisions
 
-        max_start = self.emg_data_model.emg_data.emg_dur - self.div_size
+        max_start = self.emg_model.emg_data.emg_dur - (self.div_size * (self.n_div - 1))
         return max_start
 
     def increment_start_time(self, n_div: int):
@@ -536,7 +543,7 @@ class EMGStartTimeWidget(QWidget):
 
         # EMG plot and duration
         self.plot_widget = plot_widget
-        self.emg_dur = plot_widget.emg_data_model.emg_data.emg_dur
+        self.emg_dur = plot_widget.emg_model.emg_data.emg_dur
 
         # Create widgets
         self.widgets = {
@@ -718,11 +725,11 @@ class EMGGainWidget(QWidget):
 class EMGViewerWidget(QWidget):
     # Widget for viewing EMG time series data
 
-    def __init__(self, emg_data_model, emg_clrs: list[str], parent=None):
+    def __init__(self, emg_model, emg_clrs: list[str], parent=None):
         super().__init__(parent)
 
         # Create plot widget for provided EMG data
-        plot_widget = EMGPlotWidget(emg_data_model, emg_clrs, parent=self)
+        plot_widget = EMGPlotWidget(emg_model, emg_clrs, parent=self)
 
         # Create widgets for viewer
         self.widgets = {

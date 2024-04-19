@@ -15,19 +15,28 @@ SubsectionTitle{
 /* Buttons */
 
 LargePushButton {
-    font-size: 20pt;
+    font-size: 16pt;
     background-color: 'white';
     border-style: solid;
     border-width: 1px;
     border-color: #D9D9D9;
-    min-width: 10em;
     padding: 4;
+    width: 100px;
     border-radius: 2;
 }
 
 LargePushButton:pressed {
     background-color: 'grey';
 }
+
+TabButton {
+    font-size: 12pt;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #D9D9D9;
+    padding: 4;
+    width: 150px;
+    border-radius: 2;}
 
 WidgetControlButton {
     background-color: 'white';
