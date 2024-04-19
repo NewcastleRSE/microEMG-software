@@ -8,6 +8,7 @@ For use with preprocessed EMG data.
 """
 import numpy as np
 import numpy.typing as npt
+import emg_analyser_python.emg_analyser_functions as tk
 
 from pymicroemg.emg_data_preproc import EMGDataPreproc
 
@@ -51,7 +52,7 @@ class EMGAnalysisReconstructSettings:
 
         # Default settings
         self.n_electrodes = 0
-        self.trigger_channel = 0
+        self.trigger_channel = -1
         # set as bad channels in preprocessed data
         #self.broken_channels = []
         self.exhaustive = False
@@ -187,8 +188,71 @@ class EMGAnalysisReconstruct:
         self.calculate_SNR_ranks() 
         
         print(self.signal_noise_ratios_ranks)
+        print(self.signal_noise_ratios[self.signal_noise_ratios_ranks])
         
-        # Find all MUAPs in channel with best signal
+        sampling_freq = self.emg_data_preproc.fs
+        
+        # Find all MUAPs in channel with best signal    
+        if self.settings.trigger_channel >= 0:
+            sig_ind = self.settings.trigger_channel
+        else:
+            if self.signal_noise_ratios[self.signal_noise_ratios_ranks[0]] > 0:
+                sig_ind = self.signal_noise_ratios_ranks[0]
+            else:
+                raise Exception("Sorry, no channels with a calculable signal to noise ratio!")
+            
+        # Apply Multi-dimensional TK operator (Teager-Kaiser)
+        # to return MUAPs in channel
+        used_data = self.emg_data_preproc.emg_ts[sig_ind, :]
+        print(used_data.shape)
+        indices, locs = tk.TK_filter(used_data, sampling_freq)         
+        n_peaks = max(locs)
+        
+ 
+      
+        print("MUs found: " + str(max(locs)) + " via channel: " + str(sig_ind))
+
+        #range(max(locs))
+        for loc_select in range(2):
+            
+            # Save the concurrent signal from all other channels for each spike
+            all_spikes = np.zeros(((indices[locs==loc_select]).shape[0], self.settings.n_electrodes, 401)) #401?
+            all_onsets = indices[locs==loc_select]
+    
+            # Zero reused vars
+            t = 1
+            opr = []
+    
+            for sample in range(indices.shape[0]):
+                if locs[sample] == loc_select:
+                    # exclude spikes right at the edge of the recording
+                    if indices[sample] < 201 or indices[sample] > self.emg_data_preproc.emg_ts.shape[1] - 201:
+                        continue 
+                    
+                    
+                    for channel in range(self.settings.n_electrodes):
+                        # Skip bad channels
+                        if not self.emg_data_preproc.chan.analyse_chan[channel]:
+                            continue
+                        
+                        all_spikes[t, channel, :] = self.emg_data_preproc.emg_ts[channel, indices[sample] - 200:indices[sample] + 200]
+                    
+                    t += 1
+                
+            
+            print('MU' + str(loc_select) + ': firings: ' + str(t))
+            
+            if self.settings.mavg_all:
+                self.settings.mavg_length = all_spikes.shape[0] - 1
+            elif t < self.settings.mavg_length:
+                # if there aren't enough spikes to model the MU, skip it
+                print('low number of firings found')
+                continue
+            
+            if t < 2:
+                continue
+            
+
 
 
         return motor_unit

@@ -36,7 +36,8 @@ match recording_ID:
             "data", "sample_data_20231124", "real", "Low quality", recording_ID, "raw"
         )
     case "Stuart_E2":
-        emg_dir = "C:\\Users\\nrajh\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\multi-emg\\data\\sample_data_20231116\\original_data\\Stuart_E2\\raw"
+        #emg_dir = "C:\\Users\\nrajh\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\multi-emg\\data\\sample_data_20231116\\original_data\\Stuart_E2\\raw"
+        emg_dir = "C:\\Users\\richa\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\multi-emg\\data\\sample_data_20231116\\original_data\\Stuart_E2\\raw"
         #emg_dir = os.path.join(
         #    "data", "sample_data_20231124", "real", recording_ID, "raw"            
         #)
@@ -126,10 +127,25 @@ print(preproc_settings)
 
 analysis_settings = EMGAnalysisReconstructSettings()
 
+# Set the number of electrodes, same as the number of channels?
+analysis_settings.n_electrodes = my_data.shape[0]
+
 print(analysis_settings)
+
+
+import time
+
+t0 = time.time()
 
 reconstruct = EMGAnalysisReconstruct(my_data, analysis_settings)
 
 motor_unit = reconstruct.run_reconstruction()
+
+t1 = time.time()
+
+total = t1-t0
+
+print("total Time =")
+print(total)
 
 

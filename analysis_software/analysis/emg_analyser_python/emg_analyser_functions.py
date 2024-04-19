@@ -438,10 +438,10 @@ def spike_separator(S_block, template, S_neighbor, window, threshold):
 
             if len(minima_1) > 0:
                 minima_1 = minima_1[0]
-                minima_1 = maxima_1 + minima_1
+                end_pos = maxima_1 + minima_1 + 1
                 # make the uncorrelated zero
-                S_block[0, :minima_1] = 0
-                template[0, :minima_1] = 0
+                S_block[:end_pos] = 0
+                template[:end_pos] = 0
 
     # 2nd Part
     maxima_2 = find_peaks(S_block[(S_neighbor - 1) :])
