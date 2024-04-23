@@ -57,7 +57,7 @@ def detect_peaks(
     Returns
     -------
     ind : 1D array_like
-        indeces of the peaks in `x`.
+        indices of the peaks in `x`.
 
     Notes
     -----

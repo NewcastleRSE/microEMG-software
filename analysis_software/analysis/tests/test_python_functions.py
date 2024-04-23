@@ -7,6 +7,22 @@ import emg_analyser_python.emg_analyser_functions as emg
 from emg_analyser_python.detect_peaks import detect_peaks
 
 
+S_neighbor = 4
+window = 2
+TH = 1
+S_block = np.array([1, 2, 1, 3, 1, 1, 1, 1, 2, 1, 7, 3, 1, 7, 1, 3, 1,  5, 7, 1, 2, 1, 1, 1, 1, 1, 1, ])
+template = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+
+print(S_block) 
+print(template)
+
+S_block, template = emg.spike_separator(S_block, template, S_neighbor, window, TH)
+
+print(S_block) 
+print(template)
+
+#input("stopsdf")
+
 # length of vector to test
 l = 70
 #test vector
@@ -302,7 +318,7 @@ print(peaks)
 
 ############################
 
-name = "richa" #"nrajh" #
+name = "nrajh" #
 filename = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\test_data.csv'
 
 # Importing csv module
@@ -317,7 +333,7 @@ print(test_data.shape)
 import time
 
 t0 = time.time()
-index, locs = emg.TK_filter(test_data,20000,0.1,0.1,True,0.004)
+index, locs = emg.TK_filter(test_data, 20000,0.1,0.1,True,0.004)
 t1 = time.time()
 
 total = t1-t0
@@ -329,12 +345,19 @@ df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-
 df = pd.DataFrame(locs)
 df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\results_python_locs2.csv', header= False, index=False, na_rep='nan')
  
-#print("index =")
-#print(index)
-#print("loc =")
-#print(loc)
+print("index =")
+print(index)
+print("loc =")
+print(locs)
 #print("temps =")
 #print(temps)
+
+print("index shape =")
+print(index.shape)
+print("locs shape =")
+print(locs.shape)
+
+print(locs[locs != -1].shape)
 
 print('MUs found: ')
 if len(locs) > 0:

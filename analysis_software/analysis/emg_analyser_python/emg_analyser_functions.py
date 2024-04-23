@@ -1,7 +1,5 @@
-import numpy as np
-import scipy.signal as sg
-from emg_analyser_python.detect_peaks import detect_peaks
-
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 These functions are reimplemented in Python by Richard Howey
 2024, RSE team, Newcastle University
@@ -20,11 +18,12 @@ June 2015, Linkoping University
 Please cite the paper if any of the methods were helpful
 """
 
+import numpy as np
+import scipy.signal as sg
+from emg_analyser_python.detect_peaks import detect_peaks
+from emg_analyser_python.constants import QUICK_VERSION
+
 MAP_RANGE = [1, 9]
-
-# Use Python package for find peaks and quicker clustering approach
-QUICK_VERSION = False  # True
-
 
 def round_int(val):
     """
@@ -420,13 +419,13 @@ def spike_separator(S_block, template, S_neighbor, window, threshold):
 
     # First Part
     maxima_1 = find_peaks(S_block[:S_neighbor])
-
+   
     if len(maxima_1) > 0:
         amp_M1 = S_block[:S_neighbor][maxima_1]
         dist_m = (S_neighbor - (maxima_1 + 1)) >= window
         dist_a = amp_M1 >= threshold
         maxima_1 = maxima_1[dist_m & dist_a]
-
+       
         if len(maxima_1) > 0:
             # closest to peak
             maxima_1 = maxima_1[0]
@@ -436,9 +435,9 @@ def spike_separator(S_block, template, S_neighbor, window, threshold):
             )
             minima_1 = find_peaks(inverted)
 
-            if len(minima_1) > 0:
+            if len(minima_1) > 0:                         
                 minima_1 = minima_1[0]
-                end_pos = maxima_1 + minima_1 + 1
+                end_pos = maxima_1 + minima_1 + 2              
                 # make the uncorrelated zero
                 S_block[:end_pos] = 0
                 template[:end_pos] = 0

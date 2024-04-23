@@ -36,8 +36,8 @@ match recording_ID:
             "data", "sample_data_20231124", "real", "Low quality", recording_ID, "raw"
         )
     case "Stuart_E2":
-        #emg_dir = "C:\\Users\\nrajh\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\multi-emg\\data\\sample_data_20231116\\original_data\\Stuart_E2\\raw"
-        emg_dir = "C:\\Users\\richa\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\multi-emg\\data\\sample_data_20231116\\original_data\\Stuart_E2\\raw"
+        emg_dir = "C:\\Users\\nrajh\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\multi-emg\\data\\sample_data_20231116\\original_data\\Stuart_E2\\raw"
+        #emg_dir = "C:\\Users\\richa\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\multi-emg\\data\\sample_data_20231116\\original_data\\Stuart_E2\\raw"
         #emg_dir = os.path.join(
         #    "data", "sample_data_20231124", "real", recording_ID, "raw"            
         #)
@@ -128,7 +128,7 @@ print(preproc_settings)
 analysis_settings = EMGAnalysisReconstructSettings()
 
 # Set the number of electrodes, same as the number of channels?
-analysis_settings.n_electrodes = my_data.shape[0]
+analysis_settings.n_electrodes = my_data.emg_ts.shape[0]
 
 print(analysis_settings)
 

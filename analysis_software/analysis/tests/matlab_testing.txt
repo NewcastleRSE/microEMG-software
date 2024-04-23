@@ -1,0 +1,15 @@
+MUs found: 24 via channel: 59
+MU1: firings: 6406
+MU2: firings: 1028
+Elapsed time is 1675.722641 seconds.
+
+config = 
+
+  struct with fields:
+
+      channels: 64
+            Fs: 20000
+        broken: []
+    recordings: {}
+
+

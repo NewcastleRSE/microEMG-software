@@ -182,11 +182,11 @@ disp("Removed common")
 % GS: folder can be changed to any folder contain .sp files (to plot data
 % from different preprocessing stages)
 % Press key to advance plot to the next data segment.
-disp("Plotting data...")
-tic
-plotData(out_dir,20000,settings.n_electrodes,settings.broken_channels);
-toc
-disp("Plotted data")
+%disp("Plotting data...")
+%tic
+%plotData(out_dir,20000,settings.n_electrodes,settings.broken_channels);
+%toc
+%disp("Plotted data")
 %% Localisation
 
 % GS: this step is very slow!
