@@ -87,7 +87,7 @@ class EMGPlotWidget(QWidget):
 
         # Style options
         self.emg_clrs = emg_clrs  # colors for plot
-        self.n_clr_rep = 8  # times each colour will be repeated in adjacent channels
+        self.n_clr_rep = 1  # times each colour will be repeated in adjacent channels
         self.y_font_size = 12  # font size for y-tick labels
         self.x_font_size = 12  # font size for x-tick labels
 
@@ -293,6 +293,17 @@ class EMGPlotWidget(QWidget):
         self.start_t = start_t
         self.update_plot()
 
+        # Disable/enable buttons depending on start time
+        if start_t == 0:
+            # Send signal that at start to disable buttons
+            self.can_move_backward = False
+            self.at_start.emit(self.can_move_backward)
+
+        elif self.can_move_backward is False:
+            # If previously at start, enable backwards buttons
+            self.can_move_backward = True
+            self.at_start.emit(self.can_move_backward)
+
     def get_max_start_time(self) -> float:
         # Compute maximum allowed start time given division size and number of
         # divisions
@@ -310,15 +321,6 @@ class EMGPlotWidget(QWidget):
         # Restrict to valid times
         if start_t <= 0:
             start_t = 0  # force start_t to be >= 0
-
-            # Send signal that at start to disable buttons
-            self.can_move_backward = False
-            self.at_start.emit(self.can_move_backward)
-
-        elif self.can_move_backward is False:
-            # If previously at start, enable backwards buttons
-            self.can_move_backward = True
-            self.at_start.emit(self.can_move_backward)
 
         start_t = min(start_t, self.get_max_start_time())  # force < duration - div_size
 
