@@ -29,7 +29,6 @@ from microemggui.widgets.base import (
 
 class ApplyPreprocButton(LargePushButton):
     # Button for applying preprocessing settings to EMG data
-    # TODO: enable reapply when settings change
 
     # Signal to emit when "apply" button is clicked
     apply_clicked = Signal()
@@ -129,7 +128,8 @@ class EMGViewerTabbedWidget(QWidget):
             layout.addWidget(w)
         self.setLayout(layout)
 
-        self.widgets_tabs["preproc"].hide()  # hide preproc tab until preprocessing
+        self.widgets_tabs["preproc"].hide()  # Hide preproc tab until preprocessing
+        self.widgets_tabs["raw"].setEnabled(False)  # Disable raw EMG tab
 
         # Connections
         self.connect_tabs_to_data()
@@ -138,10 +138,8 @@ class EMGViewerTabbedWidget(QWidget):
         # Add preprocessed EMG data model and set to data in viewer
 
         self.emg_model["preproc"] = preproc_emg_model
-        self.widgets["viewer"].widgets["plot"].replace_emg_model(
-            self.emg_model["preproc"]
-        )
         self.widgets_tabs["preproc"].show()
+        self.switch_emg_model("preproc")
 
     def connect_tabs_to_data(self):
         # Set up connections between tabs and the data in the viewer
@@ -152,8 +150,12 @@ class EMGViewerTabbedWidget(QWidget):
 
     def switch_emg_model(self, data: str):
         # Switch EMG data in viewer (slot for tab clicks)
+        # Also changes appearance of tab buttons by enabling/disabling them
 
         self.widgets["viewer"].widgets["plot"].replace_emg_model(self.emg_model[data])
+        for k, w in self.widgets_tabs.items():
+            # Disable if key matches EMG model key; otherwise, enable
+            w.setEnabled(k != data)
 
 
 # --- Preprocessing widget ----
@@ -211,6 +213,7 @@ class PreprocWidget(QWidget):
     def apply_preproc(self):
         # Apply preprocessing settings to raw data to generate preprocessed data.
         # Add preprocessed data to viewer.
+        # Will overwrite any previously computed preprocessed data.
         # TODO: also send preprocessed data to main window for downstream steps
         # TODO: pop up while preprocessing is happening
 
