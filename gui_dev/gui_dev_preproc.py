@@ -54,7 +54,7 @@ class MainWindow(QMainWindow):
         # colors
         # avoiding red (reserving for indicating bad channels)
         clrs = Prism_10.hex_colors
-        clrs = [clrs[i] for i in [0, 4, 1, 5]]  # purple, green, blue, yellow
+        # clrs = [clrs[i] for i in [0, 4, 1, 5]]  # purple, green, blue, yellow
         # clrs = [clrs[1]] # only dark blue
 
         # Preprocessing widdget

@@ -36,7 +36,7 @@ class MainWindow(QMainWindow):
         # colors
         # avoiding red (reserving for indicating bad channels)
         clrs = Prism_10.hex_colors
-        clrs = [clrs[i] for i in [0, 4, 1, 5]]  # purple, green, blue, yellow
+        # clrs = [clrs[i] for i in [0, 4, 1, 5]]  # purple, green, blue, yellow
         # clrs = [clrs[i] for i in [1, 2]] # dark blue, light blue
         # clrs = [clrs[i] for i in [1, 8]] # dark blue, pink-purple
         # clrs = [clrs[1]] # only dark blue
