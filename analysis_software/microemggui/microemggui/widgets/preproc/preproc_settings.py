@@ -178,7 +178,7 @@ class FilterFreqWidget(QWidget):
         # Get current widget size to limit size of warning labels
         w_width = self.width()
 
-        # Warning label for each frequency input if not valid
+        # Warning label for each frequency input if not valid (based on validator)
         self.warning_labels = {}
         w_count = ["First", "Second"]
         for k, c in zip(self.freq_lineedit.keys(), w_count):
@@ -189,8 +189,16 @@ class FilterFreqWidget(QWidget):
                 ),
                 self,
             )
-            self.warning_labels[k].hide()  # Initially hidden since settings validated
-            self.warning_labels[k].setMaximumWidth(w_width * 1.75)
+
+        # Additional warning label if relationship between frequencies is not correct
+        self.warning_labels["freq_relationship"] = InputWarningLabel(
+            "First frequency must be less than the second frequency"
+        )
+
+        # Initially hidden warnings since settings validated; set width
+        for _, w in self.warning_labels.items():
+            w.hide()
+            w.setMaximumWidth(w_width * 1.75)
 
         # Add label and input to overall layout
         layout = QVBoxLayout()
@@ -206,7 +214,7 @@ class FilterFreqWidget(QWidget):
 
         # Connections
         self.connect_to_settings()  # To filter settings interface
-        self.connect_input_to_warning()  # To warning labels
+        self.connect_input_to_validator_warning()  # To warning labels
         self.connect_input_to_check_freq_values_valid()  # To check for frequency validity
 
     def set_n_freq(self, filter_type):
@@ -239,8 +247,6 @@ class FilterFreqWidget(QWidget):
             )
 
         elif n_freq == 2:
-            # TODO: store that cutoff2 input is not valid since still empty
-
             # Show widgets
             self.freq_lineedit["cutoff2"].show()
             self.freq_inlinelabel["to"].show()
@@ -285,18 +291,24 @@ class FilterFreqWidget(QWidget):
                 )
             )
 
-    def change_warning_visibility(self, has_acceptable_input: bool, cutoff_type: str):
+    def change_validator_warning_visibility(
+        self, has_acceptable_input: bool, cutoff_type: str
+    ):
+        # Slot for changing warning message visibility for whether frequency is within
+        # valid range
+        # Validator warnings have keys that match the line edit widget keys
+
         if has_acceptable_input:
             self.warning_labels[cutoff_type].hide()
         else:
             self.warning_labels[cutoff_type].show()
 
-    def connect_input_to_warning(self):
-        # Connect line edit values to visibility of warning messages
+    def connect_input_to_validator_warning(self):
+        # Connect line edit values to visibility of warning messages based on validator
 
         for k, w in self.freq_lineedit.items():
             w.textChanged.connect(
-                lambda text, w=w, cutoff_type=k: self.change_warning_visibility(
+                lambda text, w=w, cutoff_type=k: self.change_validator_warning_visibility(
                     w.hasAcceptableInput(), cutoff_type
                 )
             )
@@ -308,7 +320,10 @@ class FilterFreqWidget(QWidget):
             w.textChanged.connect(self.check_freq_values_valid)
 
     def check_freq_values_valid(self):
-        # TODO: show/hide warning message if not valid
+        # Check if frequency values are valid based on 1) validator range (will also be
+        # invalid if empty) and 2) whether frequency cutoff1 is less than cutoff2.
+        # Also shows/hides warning message for whether frequency cutoff1 is less than
+        # cutoff2 if frequencies are otherwise in a valid range.
 
         filter_n_freq = self.settings_model.settings._get_n_freq_per_filter_type()
         n_freq = filter_n_freq[self.filter_type]
@@ -321,13 +336,20 @@ class FilterFreqWidget(QWidget):
             # Check if empty or outside of valid range
             if (not w1.hasAcceptableInput()) or (not w2.hasAcceptableInput()):
                 self.freq_values_valid = False
+                # Hide frequency relationship warning to focus on other warning messages
+                self.warning_labels["freq_relationship"].hide()
             # Check that relationship between frequencies is valid
             elif float(w1.displayText()) >= float(w2.displayText()):
                 self.freq_values_valid = False
+                self.warning_labels["freq_relationship"].show()
             else:
                 self.freq_values_valid = True
+                self.warning_labels["freq_relationship"].hide()
 
         elif n_freq == 1:
+            # Bandpass warning label no longer relevant; ensure hidden
+            self.warning_labels["freq_relationship"].hide()
+
             # Check if empty or outside of valid range
             if not w1.hasAcceptableInput():
                 self.freq_values_valid = False
