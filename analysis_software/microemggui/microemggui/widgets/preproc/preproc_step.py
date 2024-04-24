@@ -51,6 +51,11 @@ class ApplyPreprocButton(LargePushButton):
         self.setText("Re-apply")
         self.setEnabled(False)
 
+    def change_enabled(self, freq_values_valid):
+        # Enable/disable button based on whether filter frequency values are valid
+
+        self.setEnabled(freq_values_valid)
+
 
 class NextButton(LargePushButton):
     # Button for proceeding to the next step
@@ -197,6 +202,10 @@ class PreprocWidget(QWidget):
         # Connections
         self.widgets["buttons"].widgets["apply"].apply_clicked.connect(
             self.apply_preproc
+        )
+        freq_w = self.widgets["settings"].widgets["filter_spec"].widgets["filter_freq"]
+        freq_w.validity_checked.connect(
+            self.widgets["buttons"].widgets["apply"].change_enabled
         )
 
     def apply_preproc(self):

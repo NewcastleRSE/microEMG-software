@@ -46,7 +46,9 @@ class EMGPreprocSettingsModel:
 
         self.settings.butterworth_filter_settings["order"] = order
 
-    def filter_cutoff_changed(self, cutoff_freq, cutoff_type):
+    def filter_cutoff_changed(self, cutoff_freq, cutoff_type, is_valid_input):
         # Slot for filter cutoff line edit, first cutoff
+        # Value only changed if input is valid
 
-        self.settings.butterworth_filter_settings[cutoff_type] = cutoff_freq
+        if is_valid_input:
+            self.settings.butterworth_filter_settings[cutoff_type] = float(cutoff_freq)
