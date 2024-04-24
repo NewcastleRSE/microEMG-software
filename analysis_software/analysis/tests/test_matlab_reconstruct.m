@@ -143,6 +143,11 @@ switch data_subdir
         error('recording file not specified - check if file has config.mat metadata')
 end
 
+disp("settings.broken_channels")
+disp(settings.broken_channels)
+disp("settings.n_electrodes")
+disp(settings.n_electrodes)
+
 %% Preprocessing
 % Noted times are using Stuart_E2 with 64 channels on an Apple M2 Pro Mac
 % with Matlab R2021a (designed for Intel chip)

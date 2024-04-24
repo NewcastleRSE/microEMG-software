@@ -9,6 +9,8 @@ For use with preprocessed EMG data.
 import numpy as np
 import numpy.typing as npt
 import scipy.signal as sg
+import matplotlib.pyplot as plt
+import os
 import emg_analyser_python.emg_analyser_functions as tk
 from emg_analyser_python.constants import QUICK_VERSION
 
@@ -129,6 +131,7 @@ class EMGAnalysisReconstruct:
 
         self.emg_data_preproc = emg_data_preproc
         self.settings = settings
+        self.number_of_channels = self.emg_data_preproc.emg_ts.shape[0]
         
         # SNRs: The SNR values for each channel
         self.signal_noise_ratios = []
@@ -152,12 +155,11 @@ class EMGAnalysisReconstruct:
         
         #sampling_freq = self.emg_data_preproc.fs
         
-        number_of_channels = self.emg_data_preproc.emg_ts.shape[0]
         
         # Set up vector for signal to noise ratios for each channel
-        self.signal_noise_ratios = np.zeros(number_of_channels)
+        self.signal_noise_ratios = np.zeros(self.number_of_channels)
         
-        for channel in range(number_of_channels):
+        for channel in range(self.number_of_channels):
             # Skip "bad" channels
             if self.emg_data_preproc.chan.analyse_chan[channel]:                        
                 temp = self.emg_data_preproc.emg_ts[channel, :]
@@ -204,57 +206,75 @@ class EMGAnalysisReconstruct:
             
         # Apply Multi-dimensional TK operator (Teager-Kaiser)
         # to return MUAPs in channel
-        used_data = self.emg_data_preproc.emg_ts[sig_ind, :]
-        print(used_data.shape)
-        # indices, locs = tk.TK_filter(used_data, sampling_freq)         
+        #used_data = self.emg_data_preproc.emg_ts[sig_ind, :]
+        #print(used_data.shape)
+        #indices, locs = tk.TK_filter(used_data, sampling_freq)         
         
-        # load test data instead for dev
-        import csv
-        name = "nrajh" #
+        # Plot for testing purposes
+        #self.plot_MUs(used_data, indices, locs)
         
-        # Importing csv module  
-        filename = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\loc_test_data.csv'
-        with open(filename, 'r') as x:
-            locs = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
+        ########################
+        if True:
+            # load test data instead for dev
+            import csv
+            name = "richa" #"nrajh" #
+        
+            # Importing csv module  
+            filename = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\loc_test_data.csv'
+            with open(filename, 'r') as x:
+                locs = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
 
-        filename = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\index_test_data.csv'
-        with open(filename, 'r') as x:
-            indices = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
+            filename = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\index_test_data.csv'
+            with open(filename, 'r') as x:
+                indices = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
 
-        locs = (np.array(locs)).flatten()
-        indices = (np.array(indices)).flatten()
-        indices = np.round(indices - 1)
-        locs = np.round(locs - 1)
-        
+            locs = (np.array(locs)).flatten()
+            indices = (np.array(indices)).flatten()
+            indices = np.round(indices - 1)
+            locs = np.round(locs - 1)
+            
+            # Set all to non broken likeMATLAB analysis for this data
+            self.emg_data_preproc.chan.analyse_chan = np.full(self.number_of_channels, True)
+            
+        ########################
+
         n_peaks = np.max(locs) + 1
         
         print("MUs found: " + str(np.max(locs) + 1) + " via channel: " + str(sig_ind))
 
         print(self.emg_data_preproc.preproc_settings)
+        print("Good channels:")
+        print(self.emg_data_preproc.chan.analyse_chan)
         
+        print(self.emg_data_preproc.emg_ts.shape[1] - 201 - 1)
         #range(max(locs))
+        print(np.sum(locs == 0))
+        print(np.sum(locs == 1))
+        
+        print("pre loop")
         for loc_select in range(2):
             
             # Save the concurrent signal from all other channels for each spike
-            all_spikes = np.zeros(((indices[locs==loc_select]).shape[0], self.settings.n_electrodes, 401)) #401?
+            all_spikes = np.zeros((len(indices[locs==loc_select]), self.settings.n_electrodes, 401)) #401?
             all_onsets = indices[locs==loc_select]
     
             # Zero reused vars
             t = 0
             opr = []
     
-            for sample in range(indices.shape[0]):
+            for sample in range(len(indices)):
                 if locs[sample] == loc_select:
                     # exclude spikes right at the edge of the recording
+                    
                     if indices[sample] < 201 or indices[sample] > self.emg_data_preproc.emg_ts.shape[1] - 201 - 1:
+                        print("indices[sample]")
+                        print(indices[sample])
                         continue 
                     
                     
                     for channel in range(self.settings.n_electrodes):
                         # Skip bad channels
-                        if not self.emg_data_preproc.chan.analyse_chan[channel]:
-                            print("bad")
-                            print(channel)
+                        if not self.emg_data_preproc.chan.analyse_chan[channel]:                            
                             continue
                         
                         #print(channel)
@@ -265,7 +285,7 @@ class EMGAnalysisReconstruct:
                     t += 1
                 
             
-            print('MU' + str(loc_select) + ': firings: ' + str(t))
+            print('MU' + str(loc_select) + ': firings: ' + str(t + 1))
             
             if self.settings.mavg_all:
                 self.settings.mavg_length = all_spikes.shape[0] - 1
@@ -277,21 +297,160 @@ class EMGAnalysisReconstruct:
             if t < 2:
                 continue
             
-            #mean_spikes = np.squeeze(np.mean(all_spikes, axis = 0))
-            #clusters, _ = self.peak_group(np.max(mean_spikes, axis = 1))
+            mean_spikes = np.squeeze(np.mean(all_spikes, axis = 0))
+            clusters = self.peak_group(np.max(mean_spikes, axis = 1))
             
             #for broken_index in range(len(settings.broken_channels))
             #    clusters{settings.broken_channels(broken_index)}=[];
-            
-    
+            for channel in range(self.number_of_channels):
+                # Empty bad channels
+                if not self.emg_data_preproc.chan.analyse_chan[channel]: 
+                    clusters[channel] = []
 
+
+        ##Fibre location reconstruction
+        options = optimset('MaxIter',10000);
+        #options = optimset('PlotFcns',@optimplotfval,'MaxIter',10000);
+        ##disp(['- cluster no: ' num2str(max([clusters{:}]))])
+        pos=[];
+        onsets=[];
+        found_index=1;
+    
+        if settings.localise_first:
+            max_signal_id=1;
+        else:
+            max_signal_id=size(all_spikes,1)-settings.mavg_length;
+       
+    
+            for signal_id = 1:max_signal_id
+                %sig = mean_spikes(e_index,:);
+                if settings.localise_first
+                    sig = squeeze(all_spikes(signal_id:signal_id+settings.mavg_length,:,:));
+                else
+                    sig = squeeze(mean(all_spikes(signal_id:signal_id+settings.mavg_length,:,:)));
+                end
+        
+                sub_clusters = findpeaks_2d(sig,0.15);
+                if ~sub_clusters
+                    continue
+                end
+                for sub_cluster_index = 1:size(sub_clusters,1)
+                    % Ensure we don't get spikes outside of recording duration
+                    % (400 samples)
+                    spike_dur = 20;
+                    time_peak = max([sub_clusters(sub_cluster_index,1),spike_dur+1]);
+                    time_peak = min([time_peak,400-spike_dur]);
+                    % Get the mean spikes for the fibre peak amplitude
+                    peak_electrode = sub_clusters(sub_cluster_index,2);
+                    peak_start = max(peak_electrode-3,1);
+                    peak_stop = min(peak_electrode+3,settings.n_electrodes);
+                    included_electrodes = peak_start:peak_stop;
+                    included_electrodes(ismember(included_electrodes,settings.broken_channels))=[];
+                    sn=sig(included_electrodes,time_peak-spike_dur:time_peak+spike_dur)';
+                    needle=buildNeedleModel('nonlinear',settings.n_electrodes, settings.offset); % Needle model pos in mm
+                    needle = needle * 4; % Scaling factor from mm to scaled AU
+                    x0=needle(peak_electrode,:);
+                    needle=needle(included_electrodes,:);
+
+                    %% Non-linear optimisation algorithm for fibre positioning
+
+                    [pos(found_index,1:2),fval,~] = fminsearch(@deconv_wrapper,x0, options);
+                    %% Exhaustive search is used when we don't want to use the non-linear search algorithm
+                    % ie to demonstrate the variance at various putative fibre
+                    % coordinates near to the electrode
+                    if settings.exhaustive == 1
+                        % Start with the position of the nearest electrode
+                        x0=pos(found_index,1:2);
+                        [p, errs] = exhaustive_search(x0);
+                        % Append the array of variances to the motor unit
+                        motor_unit{loc_select}.err_curve{cluster_index}={errs};
+                        motor_unit{loc_select}.err_locs{cluster_index}={p};
+                    end
+                    pos(found_index,1) = pos(found_index,1)/4;
+                    %pos(found_index,2) = pos(found_index,2)*-1; % invert y axis localisation
+
+                    onsets(found_index) = all_onsets(signal_id);
+
+                    found_index=found_index+1;
+                end
+            end
+        
+            %% This is some optional pruning of unrealistic results for the localisation
+            if settings.prune
+                if pos(cluster_index,1)>settings.prune_xlim(2)
+                   pos(cluster_index,:)=[];
+                elseif pos(cluster_index,1)<settings.prune_xlim(1)
+                   pos(cluster_index,:)=[];
+                elseif abs(pos(cluster_index,2))>settings.prune_ylim(1)
+                    pos(cluster_index,:)=[];
+                end
+            end
+    
+            %% Append the results to the motor unit object to return
+            if pos
+                motor_unit{loc_select}.fibre_centres=pos;
+                motor_unit{loc_select}.mean_spikes=mean_spikes;
+                motor_unit{loc_select}.onsets=onsets;
+                motor_unit{loc_select}.all_spikes = all_spikes;
+                motor_unit{loc_select}.gn_potential = opr;
+            end
+        end
+        motor_unit=motor_unit(~cellfun('isempty',motor_unit));
 
         return motor_unit
     
-
-    def find_peaks(data, distance = 1, min_peak_height = None):
+    def plot_MUs(self, used_data, indices, locs):
         """
-        Try to return as near as possible the same answer as findpeaks in MatLab
+        Plot MUs for testing purposes
+
+        Parameters
+        ----------
+        Index : 1D numpy NDArray[int]
+                Index of MUAPs clustered
+        loc : 1D numpy NDArray[int]
+                location of the MUAPs in the signal
+
+        Returns
+        -------
+        None
+
+        """
+        
+        no_MUs = np.max(locs) + 1
+        xmax = len(used_data)
+        ymin = np.min(used_data)
+        ymax = np.max(used_data)
+        
+        plt.subplots(no_MUs, 1)
+        
+        # Loop thro' MUs
+        for one_MU in range(no_MUs):
+            # Plot subplot
+            plt.subplot(no_MUs, 1, one_MU + 1)
+            # Get subset for this MU
+            subset_MU = (one_MU == locs)
+            # Get index positions for this MU
+            positions = indices[subset_MU]
+            plt.plot(indices[subset_MU], used_data[positions], 'k-', linewidth=1)
+            plt.xlim(0, xmax)
+            plt.ylim(ymin, ymax)
+
+        # Save the plot
+        # Firstly ensure the execution path is the same as the file path       
+        abspath = os.path.abspath(__file__)
+        dname = os.path.dirname(abspath)
+        #os.chdir(dname)
+        
+        # Save all images in the Images folder
+        plt.savefig(os.path.join(dname, "MUs.png"), format = "png")
+    
+        # Close the plot
+        plt.close()
+
+       
+    def find_peaks(self, data, distance = 1, min_peak_height = None):
+        """
+        Try to return as near as possible the same answer as findpeaks in MatLab if not QUICK VERSION
         """
 
         if QUICK_VERSION:
@@ -301,7 +460,7 @@ class EMGAnalysisReconstruct:
             return tk.detect_peaks(data, mph = min_peak_height, mpd = distance)
 
     
-    def peak_group(signal):
+    def peak_group(self, signal):
         """
         Function to group electrodes by related signal
         Identifies peaks in the signal, and then adjacent rows are assigned into
@@ -317,20 +476,18 @@ class EMGAnalysisReconstruct:
         groups: 1D numpy NDArray[int]
             array of integers & zeros reflecting the signal groups that
             the electrodes are placed into
-        locs: 1D numpy NDArray[int]
-            List of peak indices found
         """
          
         locs = self.find_peaks(signal, 4, np.max(signal)/3)
                
-        groups = np.array((1, len(signal)))
+        # Create list of empty lists
+        groups = [ [] for _ in range(len(signal)) ]
             
         for peak in range(len(locs)):                
-            left_index = np.max([1, locs[peak] - 3])
-            right_index = np.min([len(signal), locs[peak] + 3])
+            left_index = np.max([0, locs[peak] - 3])
+            right_index = np.min([len(signal) - 1, locs[peak] + 3])
                 
-            for index in range(left_index, (right_index + 1)):
-                groups[index] = [groups[index], peak]
-                
-            
-        return groups, locs
+            for index in range(left_index, (right_index + 1)):                 
+                groups[index].append(peak)
+                          
+        return groups

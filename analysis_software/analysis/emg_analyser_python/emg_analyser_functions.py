@@ -908,9 +908,9 @@ def TK_filter(sig, sampling_freq, C=0.1, threshold_PsC=0.1, init=True, wind=0.02
 
     Returns
     -------
-    Index :
+    Index : 1D numpy NDArray[int]
         Index of MUAPs clustered
-    loc :
+    loc : 1D numpy NDArray[int]
         location of the MUAPs in the signal
     """
 
