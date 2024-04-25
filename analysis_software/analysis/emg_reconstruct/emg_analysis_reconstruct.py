@@ -9,11 +9,13 @@ For use with preprocessed EMG data.
 import numpy as np
 import numpy.typing as npt
 import scipy.signal as sg
+from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
+import cv2 
 import os
 import emg_analyser_python.emg_analyser_functions as tk
 from emg_analyser_python.constants import QUICK_VERSION
-
+from findpeaks import findpeaks
 from pymicroemg.emg_data_preproc import EMGDataPreproc
 
 class EMGMotorUnit:
@@ -247,11 +249,14 @@ class EMGAnalysisReconstruct:
         print(self.emg_data_preproc.chan.analyse_chan)
         
         print(self.emg_data_preproc.emg_ts.shape[1] - 201 - 1)
-        #range(max(locs))
+       
         print(np.sum(locs == 0))
         print(np.sum(locs == 1))
         
-        print("pre loop")
+        print("pre loop") 
+        
+        # Loop thro' moter units
+        #range(max(locs))
         for loc_select in range(2):
             
             # Save the concurrent signal from all other channels for each spike
@@ -308,97 +313,103 @@ class EMGAnalysisReconstruct:
                     clusters[channel] = []
 
 
-        ##Fibre location reconstruction
-        options = optimset('MaxIter',10000);
-        #options = optimset('PlotFcns',@optimplotfval,'MaxIter',10000);
-        ##disp(['- cluster no: ' num2str(max([clusters{:}]))])
-        pos=[];
-        onsets=[];
-        found_index=1;
+            ##Fibre location reconstruction
+            #options = optimset('MaxIter',10000);
+            #options = optimset('PlotFcns',@optimplotfval,'MaxIter',10000);
+            ##disp(['- cluster no: ' num2str(max([clusters{:}]))])
+            pos = np.array([])
+            onsets = np.array([])
+            found_index = 0
     
-        if settings.localise_first:
-            max_signal_id=1;
-        else:
-            max_signal_id=size(all_spikes,1)-settings.mavg_length;
+            if self.settings.localise_first:
+                max_signal_id = 0
+            else:
+                max_signal_id = all_spikes.shape[0] - self.settings.mavg_length
        
     
-            for signal_id = 1:max_signal_id
-                %sig = mean_spikes(e_index,:);
-                if settings.localise_first
-                    sig = squeeze(all_spikes(signal_id:signal_id+settings.mavg_length,:,:));
-                else
-                    sig = squeeze(mean(all_spikes(signal_id:signal_id+settings.mavg_length,:,:)));
-                end
+            for signal_id in range(max_signal_id):
+            
+                if self.settings.localise_first:
+                    sig = np.squeeze(all_spikes[signal_id:(signal_id + self.settings.mavg_length + 1), :, :])
+                else:
+                    sig = np.squeeze(np.mean(all_spikes[signal_id:(signal_id + self.settings.mavg_length + 1), :, :]))
+            
         
-                sub_clusters = findpeaks_2d(sig,0.15);
-                if ~sub_clusters
+                sub_clusters = self.findpeaks_2d(sig, 0.15)
+            
+                if sub_clusters.shape[0] == 0:
                     continue
-                end
-                for sub_cluster_index = 1:size(sub_clusters,1)
-                    % Ensure we don't get spikes outside of recording duration
-                    % (400 samples)
-                    spike_dur = 20;
-                    time_peak = max([sub_clusters(sub_cluster_index,1),spike_dur+1]);
-                    time_peak = min([time_peak,400-spike_dur]);
-                    % Get the mean spikes for the fibre peak amplitude
-                    peak_electrode = sub_clusters(sub_cluster_index,2);
-                    peak_start = max(peak_electrode-3,1);
-                    peak_stop = min(peak_electrode+3,settings.n_electrodes);
-                    included_electrodes = peak_start:peak_stop;
-                    included_electrodes(ismember(included_electrodes,settings.broken_channels))=[];
-                    sn=sig(included_electrodes,time_peak-spike_dur:time_peak+spike_dur)';
-                    needle=buildNeedleModel('nonlinear',settings.n_electrodes, settings.offset); % Needle model pos in mm
-                    needle = needle * 4; % Scaling factor from mm to scaled AU
-                    x0=needle(peak_electrode,:);
-                    needle=needle(included_electrodes,:);
+                      
+                for sub_cluster_index in range(sub_clusters.shape[0]):
+                    # Ensure we don't get spikes outside of recording duration
+                    # (400 samples)
+                    spike_dur = 20
+                    time_peak = np.max(np.hstack((sub_clusters[sub_cluster_index, 0], spike_dur + 1)))
+                    time_peak = np.min(np.hstack((time_peak, 400 - spike_dur)))
+                                   
+                    # Get the mean spikes for the fibre peak amplitude
+                    peak_electrode = sub_clusters[sub_cluster_index, 1]
+                    peak_start = np.max(np.hstack((peak_electrode - 3, 0)))
+                    peak_stop = np.min(np.hstack((peak_electrode + 3, self.settings.n_electrodes - 1)))
+                
+                    included_electrodes = np.arange(peak_start, peak_stop + 1)
+                    # Remove bad channels
+                    included_electrodes = included_electrodes[self.emg_data_preproc.chan.analyse_chan]
+                
+                    sn = sig[included_electrodes, (time_peak - spike_dur):(time_peak + spike_dur)]
+                    # Needle model pos in mm
+                    needle = buildNeedleModel('nonlinear', self.settings.n_electrodes, self.settings.offset)
+                    # Scaling factor from mm to scaled AU
+                    needle = needle * 4
+                    x0 = needle[peak_electrode, :]
+                    needle = needle[included_electrodes, :]
 
-                    %% Non-linear optimisation algorithm for fibre positioning
+                    ## Non-linear optimisation algorithm for fibre positioning
 
-                    [pos(found_index,1:2),fval,~] = fminsearch(@deconv_wrapper,x0, options);
-                    %% Exhaustive search is used when we don't want to use the non-linear search algorithm
-                    % ie to demonstrate the variance at various putative fibre
-                    % coordinates near to the electrode
-                    if settings.exhaustive == 1
-                        % Start with the position of the nearest electrode
-                        x0=pos(found_index,1:2);
-                        [p, errs] = exhaustive_search(x0);
-                        % Append the array of variances to the motor unit
+                    pos[found_index, 0:1], fval, _ = fminsearch(@deconv_wrapper, x0, options)
+                    ## Exhaustive search is used when we don't want to use the non-linear search algorithm
+                    # ie to demonstrate the variance at various putative fibre
+                    # coordinates near to the electrode
+                    if self.settings.exhaustive == 1:
+                        # Start with the position of the nearest electrode
+                        x0=pos[found_index, 0:1]
+                        p, errs = exhaustive_search(x0);
+                        # Append the array of variances to the motor unit
                         motor_unit{loc_select}.err_curve{cluster_index}={errs};
                         motor_unit{loc_select}.err_locs{cluster_index}={p};
-                    end
-                    pos(found_index,1) = pos(found_index,1)/4;
-                    %pos(found_index,2) = pos(found_index,2)*-1; % invert y axis localisation
+                
+                    pos[found_index, 0] = pos[found_index, 0]/4
+             
+                    onsets[found_index] = all_onsets[signal_id]
 
-                    onsets(found_index) = all_onsets(signal_id);
-
-                    found_index=found_index+1;
-                end
-            end
+                    found_index = found_index + 1
+            
+            # End of signal_id loop
         
-            %% This is some optional pruning of unrealistic results for the localisation
-            if settings.prune
-                if pos(cluster_index,1)>settings.prune_xlim(2)
-                   pos(cluster_index,:)=[];
-                elseif pos(cluster_index,1)<settings.prune_xlim(1)
-                   pos(cluster_index,:)=[];
-                elseif abs(pos(cluster_index,2))>settings.prune_ylim(1)
-                    pos(cluster_index,:)=[];
-                end
-            end
+            ## This is some optional pruning of unrealistic results for the localisation
+            if self.settings.prune:
+                if (pos[cluster_index, 0] > self.settings.prune_xlim[1] or
+                   pos[cluster_index, 0] < self.settings.prune_xlim[0] or
+                   abs(pos(cluster_index,2)) > settings.prune_ylim(1)):
+                    pos = pos[cluster_index, :]
+                
+           
     
-            %% Append the results to the motor unit object to return
-            if pos
-                motor_unit{loc_select}.fibre_centres=pos;
-                motor_unit{loc_select}.mean_spikes=mean_spikes;
+            ## Append the results to the motor unit object to return
+            if pos.shape[0] > 0:
+                motor_unit{loc_select}.fibre_centres = pos;
+                motor_unit{loc_select}.mean_spikes = mean_spikes;
                 motor_unit{loc_select}.onsets=onsets;
                 motor_unit{loc_select}.all_spikes = all_spikes;
                 motor_unit{loc_select}.gn_potential = opr;
             end
-        end
+        
+        
         motor_unit=motor_unit(~cellfun('isempty',motor_unit));
 
         return motor_unit
     
+
     def plot_MUs(self, used_data, indices, locs):
         """
         Plot MUs for testing purposes
@@ -491,3 +502,98 @@ class EMGAnalysisReconstruct:
                 groups[index].append(peak)
                           
         return groups
+    
+    def findpeaks_2d_package(self, image, threshold):
+        """
+        Finds local maxima of a 2-dimensional image area
+        Dependent on findpeaks algorithm from findpeaks package
+        See https://erdogant.github.io/findpeaks/pages/html/Topology.html
+        Parameters
+        ----------
+        signal: 2D numpy NDArray[float, float]
+                n*m array of signal data
+        threshold: float
+                cutoff for defining a peak
+        Returns
+        -------
+        locs: 2D numpy NDArray[int, int]
+            2D array of location of peaks
+        """
+        
+        # Initialize
+        fp = findpeaks(method='topology', whitelist=['peak'], threshold = threshold)
+      
+        # Fit topology method on the 2d-vector
+        results = fp.fit(image)
+        # The output contains multiple variables
+        #print(results.keys())
+        # dict_keys(['Xraw', 'Xproc', 'Xdetect', 'Xranked', 'persistence', 'groups0'])
+        return results.Xdetect
+
+
+    def findpeaks_2d(self, sig, threshold):
+        """
+        Finds local maxima of a 2-dimensional image area
+        Dependent on findpeaks algorithm from findpeaks package
+
+        Parameters
+        ----------
+        signal: 2D numpy NDArray[float, float]
+                n*m array of signal data
+        threshold: float
+                cutoff for defining a peak as a prop
+        Returns
+        -------
+        locs: 2D numpy NDArray[int, int]
+            2D array of location of peaks
+        """
+        
+        base = sig
+        # remove negative deflection to discount 'doubling peaks'
+        # from negative initial deflection of SFAP
+        base[base < 0] = 0 
+                
+        # Interpolate between the electrodes in order to make gaussian filter
+        # have roughly equal effect on distance as time
+        interp_n = 4 
+        # Points to interpolate over
+        Xi = np.arange(1, base.shape[0] + 1) * interp_n - 1 
+        # Points to return after interpolation
+        Xo = np.arange(interp_n - 1, Xi[-1] + 1)
+        b = np.interp(Xo, Xi, base)
+    
+        sigma = 3
+        im = np.abs(gaussian_filter(b, sigma, truncate=np.ceil(2*sigma)/sigma))   #imgaussfilt(b, 3))
+        # tophat transform       
+        # Applying the Top-Hat operation
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (6, 6))  
+        im2 = cv2.morphologyEx(im, cv2.MORPH_TOPHAT, kernel) 
+        
+        # Extract each blob
+        # s=regionprops(im3,'Centroid','PixelIdxList');
+        locs = np.array([])
+        found = False
+        parse_limit = 0
+        
+        while not found:
+            parse_limit = parse_limit + 1
+            locs = self.findpeaks_2d_package(im2, np.max(im2) * threshold)
+            locs = locs.reshape(2, -1)
+            
+            if locs.shape[0] < 1:
+                threshold = threshold - 0.02
+            elif locs.shape[0] > 22:
+                threshold = threshold + 0.02
+            else:
+                found = True
+            
+            if threshold <= 0.05 or threshold > 1 or parse_limit > 20:
+                locs = []
+                found = True
+            
+        if locs.shape[0] > 0:
+            #Interpolated locs back to electrode indices
+            locs[:, 2] = np.round((locs[:, 2] + 1)/interp_n - 1) 
+           
+        return locs
+    
