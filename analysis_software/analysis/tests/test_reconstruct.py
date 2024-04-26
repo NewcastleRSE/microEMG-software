@@ -139,7 +139,7 @@ t0 = time.time()
 
 reconstruct = EMGAnalysisReconstruct(my_data, analysis_settings)
 
-motor_unit = reconstruct.run_reconstruction()
+motor_units = reconstruct.run_reconstruction()
 
 t1 = time.time()
 

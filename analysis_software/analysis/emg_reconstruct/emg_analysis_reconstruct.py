@@ -9,6 +9,8 @@ For use with preprocessed EMG data.
 import numpy as np
 import numpy.typing as npt
 import scipy.signal as sg
+import scipy.optimize as opt
+from scipy.linalg import toeplitz
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
 import cv2 
@@ -20,12 +22,14 @@ from pymicroemg.emg_data_preproc import EMGDataPreproc
 
 class EMGMotorUnit:
     """
-    Class for storing motor unit data returned from reconstruction analysis
+    Class for storing motor unit data returned
+    from reconstruction analysis
 
     """
     
     def __init__(
-        self                  
+        self,
+        loc
     ):
         """
         Initialise EMGMotorUnit object.
@@ -39,7 +43,85 @@ class EMGMotorUnit:
         None.
 
         """
-         
+        
+        self.motor_unit_number = loc
+        self.fibre_centres = np.array([])
+        self.mean_spikes = np.array([])
+        self.onsets = np.array([])
+        self.all_spikes = np.array([])
+        self.gn_potential = np.array([])
+        
+    def __str__(self):
+        """
+        Return a string for the object
+
+        Returns
+        -------
+        String
+
+        """
+        
+        ans = "EMG Motor Unit"
+        ans += "\nMotor unit number: "
+        ans += str(self.motor_unit_number)    
+        ans += "\nFibre centres dimensions: "
+        ans += str(self.fibre_centres.shape)
+        ans += "\nMean spikes dimensions: "
+        ans += str(self.mean_spikes.shape)
+        ans += "\nOnsets dimensions: "
+        ans += str(self.onsets.shape)
+        ans += "\nAll spikes dimensions: "
+        ans += str(self.all_spikes.shape)
+        ans += "\nGN potential dimensions: "
+        ans += str(self.gn_potential.shape)           
+        
+        ans += "\n"
+        
+        return ans
+    
+class EMGMotorUnits:
+    """
+    Class for storing motor unit data returned from reconstruction analysis
+
+    """
+    
+    def __init__(
+        self
+    ):
+        """
+        Initialise EMGMotorUnit object.
+
+        Parameters
+        ----------
+        
+
+        Returns
+        -------
+        None.
+
+        """
+        
+        self.motor_units = []
+        
+    def __str__(self):
+        """
+        Return a string for the object
+
+        Returns
+        -------
+        String
+
+        """
+        
+        ans = "EMG Motor Units"
+        ans += "\nNumber of motor units: "
+        ans += str(len(self.motor_units))     
+        
+        ans += "\n"
+        
+        return ans
+        
+        
 class EMGAnalysisReconstructSettings:
     """
     Class for storing EMG Analysis reconstruct settings.
@@ -156,8 +238,7 @@ class EMGAnalysisReconstruct:
         """
         
         #sampling_freq = self.emg_data_preproc.fs
-        
-        
+               
         # Set up vector for signal to noise ratios for each channel
         self.signal_noise_ratios = np.zeros(self.number_of_channels)
         
@@ -167,11 +248,11 @@ class EMGAnalysisReconstruct:
                 temp = self.emg_data_preproc.emg_ts[channel, :]
                 self.signal_noise_ratios[channel] = np.mean(temp[temp > 0])
                 # SNRs(channel)=sfdr(signal(channel,:),Fs);          
-          
-            
+                
         # Sort SNRs in decending order
         self.signal_noise_ratios_ranks = np.argsort(-self.signal_noise_ratios)
     
+
     def run_reconstruction(self):
         """
         Do the reconstruction analysis
@@ -182,12 +263,12 @@ class EMGAnalysisReconstruct:
 
         Returns
         -------
-        motor_unit: MotorUnit
+        motor_units: MotorUnit
 
         """
         
         # Create motor unit object to store final results       
-        motor_unit = EMGMotorUnit()
+        returned_motor_units = EMGMotorUnits()
         
         # Order by highest Signal to Noise Ratio
         self.calculate_SNR_ranks() 
@@ -265,7 +346,7 @@ class EMGAnalysisReconstruct:
     
             # Zero reused vars
             t = 0
-            opr = []
+            self.opr = []
     
             for sample in range(len(indices)):
                 if locs[sample] == loc_select:
@@ -285,7 +366,8 @@ class EMGAnalysisReconstruct:
                         #print(channel)
                         #print(int(indices[sample] - 200))
                         #print(int(indices[sample] + 200 + 1))
-                        all_spikes[t, channel, :] = self.emg_data_preproc.emg_ts[channel, int(indices[sample] - 200):int(indices[sample] + 200 + 1)]
+                        all_spikes[t, channel, :] = self.emg_data_preproc.emg_ts[channel,
+                                                    int(indices[sample] - 200):int(indices[sample] + 200 + 1)]
                     
                     t += 1
                 
@@ -332,7 +414,7 @@ class EMGAnalysisReconstruct:
                 if self.settings.localise_first:
                     sig = np.squeeze(all_spikes[signal_id:(signal_id + self.settings.mavg_length + 1), :, :])
                 else:
-                    sig = np.squeeze(np.mean(all_spikes[signal_id:(signal_id + self.settings.mavg_length + 1), :, :]))
+                    sig = np.squeeze(np.mean(all_spikes[signal_id:(signal_id + self.settings.mavg_length + 1), :, :], axis = 0))
             
         
                 sub_clusters = self.findpeaks_2d(sig, 0.15)
@@ -356,27 +438,37 @@ class EMGAnalysisReconstruct:
                     # Remove bad channels
                     included_electrodes = included_electrodes[self.emg_data_preproc.chan.analyse_chan]
                 
-                    sn = sig[included_electrodes, (time_peak - spike_dur):(time_peak + spike_dur)]
-                    # Needle model pos in mm
-                    needle = buildNeedleModel('nonlinear', self.settings.n_electrodes, self.settings.offset)
+                    self.sn = sig[included_electrodes, (time_peak - spike_dur):(time_peak + spike_dur)]
+                    
+                    # Needle model pos in mm                    
+                    self.needle = np.zeros((self.settings.n_electrodes, 2))
+                    # the tip of the needle is assumed to be 1 mm far from the first electrode on the x axis
+                    baseX = 0.8
+                    for i in range(self.settings.n_electrodes):
+                        # add interElectrodeDist
+                        self.needle[i, 0] = baseX + self.settings.offset
+                        self.needle[i, 1] = 0
+                        baseX = self.needle[i, 0]
+                    
                     # Scaling factor from mm to scaled AU
-                    needle = needle * 4
-                    x0 = needle[peak_electrode, :]
-                    needle = needle[included_electrodes, :]
+                    self.needle = self.needle * 4
+                    x0 = self.needle[peak_electrode, :]
+                    self.needle = self.needle[included_electrodes, :]
 
                     ## Non-linear optimisation algorithm for fibre positioning
-
-                    pos[found_index, 0:1], fval, _ = fminsearch(@deconv_wrapper, x0, options)
+                    #pos[found_index, 0:1], fval, _ = fminsearch(@deconv_wrapper, x0, options)
+                    opt.fmin(self.deconv_wrapper, x0 = x0, maxiter = 10000)
+                    
                     ## Exhaustive search is used when we don't want to use the non-linear search algorithm
                     # ie to demonstrate the variance at various putative fibre
                     # coordinates near to the electrode
-                    if self.settings.exhaustive == 1:
-                        # Start with the position of the nearest electrode
-                        x0=pos[found_index, 0:1]
-                        p, errs = exhaustive_search(x0);
-                        # Append the array of variances to the motor unit
-                        motor_unit{loc_select}.err_curve{cluster_index}={errs};
-                        motor_unit{loc_select}.err_locs{cluster_index}={p};
+                    #if self.settings.exhaustive == 1:
+                    #    # Start with the position of the nearest electrode
+                    #    x0=pos[found_index, 0:1]
+                    #    p, errs = exhaustive_search(x0);
+                    #    # Append the array of variances to the motor unit
+                    #    motor_unit{loc_select}.err_curve{cluster_index}={errs};
+                    #    motor_unit{loc_select}.err_locs{cluster_index}={p};
                 
                     pos[found_index, 0] = pos[found_index, 0]/4
              
@@ -387,27 +479,26 @@ class EMGAnalysisReconstruct:
             # End of signal_id loop
         
             ## This is some optional pruning of unrealistic results for the localisation
-            if self.settings.prune:
-                if (pos[cluster_index, 0] > self.settings.prune_xlim[1] or
-                   pos[cluster_index, 0] < self.settings.prune_xlim[0] or
-                   abs(pos(cluster_index,2)) > settings.prune_ylim(1)):
-                    pos = pos[cluster_index, :]
+            #if self.settings.prune:
+            #    if (pos[cluster_index, 0] > self.settings.prune_xlim[1] or
+            #       pos[cluster_index, 0] < self.settings.prune_xlim[0] or
+            #       abs(pos(cluster_index,2)) > settings.prune_ylim(1)):
+            #        pos = pos[cluster_index, :]
                 
            
     
             ## Append the results to the motor unit object to return
             if pos.shape[0] > 0:
-                motor_unit{loc_select}.fibre_centres = pos;
-                motor_unit{loc_select}.mean_spikes = mean_spikes;
-                motor_unit{loc_select}.onsets=onsets;
-                motor_unit{loc_select}.all_spikes = all_spikes;
-                motor_unit{loc_select}.gn_potential = opr;
-            end
+                motor_unit = EMGMotorUnit(loc_select)
+                motor_unit.fibre_centres = pos
+                motor_unit.mean_spikes = mean_spikes
+                motor_unit.onsets=onsets
+                motor_unit.all_spikes = all_spikes
+                motor_unit.gn_potential = self.opr
+                returned_motor_units.motor_units.append(motor_unit)
+            
         
-        
-        motor_unit=motor_unit(~cellfun('isempty',motor_unit));
-
-        return motor_unit
+        return returned_motor_units
     
 
     def plot_MUs(self, used_data, indices, locs):
@@ -557,10 +648,10 @@ class EMGAnalysisReconstruct:
         # have roughly equal effect on distance as time
         interp_n = 4 
         # Points to interpolate over
-        Xi = np.arange(1, base.shape[0] + 1) * interp_n - 1 
+        Xi = np.arange(0, base.shape[0] + 1) * interp_n - 1 
         # Points to return after interpolation
         Xo = np.arange(interp_n - 1, Xi[-1] + 1)
-        b = np.interp(Xo, Xi, base)
+        b = np.interp(Xo, Xi, base) #base is 2D ?? so not working
     
         sigma = 3
         im = np.abs(gaussian_filter(b, sigma, truncate=np.ceil(2*sigma)/sigma))   #imgaussfilt(b, 3))
@@ -596,4 +687,97 @@ class EMGAnalysisReconstruct:
             locs[:, 2] = np.round((locs[:, 2] + 1)/interp_n - 1) 
            
         return locs
+    
+    
+
+    def deconv_wrapper(self, loc):
+        """
+        Deconvolution
+        Now reconstruct without using gn!
+        Calculate deconvolution for each channel in a 50x50 grid
+        Region is 0-1000u (Y) and 100-500u (X)
+        Error is abs mismatch across the reconstructions of 'gn'
+        Calculated as the max variance across the centre of the 5 recontructions.
+        This example is a blind hunt across 2500 locations near the needle.
+        Here, cn is 400 samples long so that a Toeplitz matrix can be created.
+
+        Parameters
+        ----------
+        loc
+        
+        Returns
+        -------
+        total_var: 
+        """
+          
+        self.opr = np.zeros((41, self.n_electrodes))
+       
+        cn = self.calc_cn(loc[0], loc[1], 400)
+        for k in range(self.n_electrodes):
+             self.opr[:, k] = self.tconv(cn[:, k], self.sn[:,k], 41)
+        
+        total_var = -1/np.max(np.var(self.opr, axis = 1, ddof=1))
+        
+        return total_var
+    
+
+    def calc_cn(self, fbx, fby, isz):
+        """
+        Channel functions
+        Generate 1/r conv functions for coords fbx,fby for each channel.
+
+        Parameters
+        ----------
+        loc
+        
+        Returns
+        -------
+        fbx:
+        
+        fby:
+       
+        isz: 
+        """
+         
+        cn = np.zeros((isz, self.n_electrodes))
+        for channel in range(self.n_electrodes):
+            for j in range(isz):
+                dx = np.abs(fbx - self.needle[channel, 0])  # X offset
+                dy = np.abs(fby - self.needle[channel, 1])  # Y offset of channel i
+                dz = np.abs(j - isz/2)                       # Z distance along fibre
+                cn[j, channel] = 1/np.sqrt(dx*dx + dy*dy + dz*dz)
+            
+        return cn
+  
+
+    def tconv(self, ifn, sig, isz):
+        """
+        Deconvolution method function
+        Create a Toeplitz matrix using the trailing 200 samples of cn
+        First row will have the maximum at index 0, 2nd at 1 .....
+        Use a Parzen window on the signal. See FFT deconvolution as to why!
+        Then deconvolve sig by solving least squares problem.
+
+        Parameters
+        ----------
+        ifn:
+    
+        sig:
+   
+        isz:
+        
+        Returns
+        -------
+        rsl
+        """
+    
+        wsig = sg.windows.parzen(isz) * sig
+        start_pos = len(ifn) - isz - 1
+        end_pos = len(ifn) - 1
+        tpl = toeplitz(ifn[start_pos:end_pos])
+    
+        rsl = np.linalg.lstsq(tpl, wsig)
+    
+        return rsl
+
     
