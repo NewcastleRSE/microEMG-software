@@ -16,4 +16,4 @@ recordings/**/aux-*.dat
 recordings/**/vdd-*.dat
 
 # Remove below to easily add new demo recordings
-#recordings/**
+recordings/**
