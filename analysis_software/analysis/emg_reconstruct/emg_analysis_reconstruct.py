@@ -6,6 +6,7 @@ A class, EMGAnalysisReconstruct for localisation.
 For use with preprocessed EMG data.
 
 """
+from xml.etree.ElementInclude import include
 import numpy as np
 import numpy.typing as npt
 import scipy.signal as sg
@@ -434,10 +435,21 @@ class EMGAnalysisReconstruct:
                     peak_start = np.max(np.hstack((peak_electrode - 3, 0)))
                     peak_stop = np.min(np.hstack((peak_electrode + 3, self.settings.n_electrodes - 1)))
                 
-                    included_electrodes = np.arange(peak_start, peak_stop + 1)
-                    # Remove bad channels
-                    included_electrodes = included_electrodes[self.emg_data_preproc.chan.analyse_chan]
-                
+                    included_electrodes = np.arange(peak_start, peak_stop + 1, dtype = "int")
+                    
+                    # Remove bad channels                  
+                    good_channels = np.arange(0, self.settings.n_electrodes, dtype = "int") * self.emg_data_preproc.chan.analyse_chan  
+                    
+                    print(included_electrodes)
+                    
+                    included_electrodes = np.intersect1d(included_electrodes, good_channels)
+                    
+                    print(included_electrodes)
+                    print(good_channels)
+                    
+                    if included_electrodes.shape[0] == 0:
+                        continue
+                  
                     self.sn = sig[included_electrodes, (time_peak - spike_dur):(time_peak + spike_dur)]
                     
                     # Needle model pos in mm                    
@@ -594,6 +606,7 @@ class EMGAnalysisReconstruct:
                           
         return groups
     
+
     def findpeaks_2d_package(self, image, threshold):
         """
         Finds local maxima of a 2-dimensional image area
@@ -612,14 +625,20 @@ class EMGAnalysisReconstruct:
         """
         
         # Initialize
-        fp = findpeaks(method='topology', whitelist=['peak'], threshold = threshold)
+        fp = findpeaks(whitelist=['peak'])
       
+        # apply threshold
+        imageThres = image[image > threshold]
+  
         # Fit topology method on the 2d-vector
-        results = fp.fit(image)
+        results = fp.fit(imageThres)['df']
         # The output contains multiple variables
         #print(results.keys())
         # dict_keys(['Xraw', 'Xproc', 'Xdetect', 'Xranked', 'persistence', 'groups0'])
-        return results.Xdetect
+        #print(results)
+        #print(type(results))
+        
+        return np.array(results.loc[results['peak'], ['x', 'y']])
 
 
     def findpeaks_2d(self, sig, threshold):
@@ -648,11 +667,20 @@ class EMGAnalysisReconstruct:
         # have roughly equal effect on distance as time
         interp_n = 4 
         # Points to interpolate over
-        Xi = np.arange(0, base.shape[0] + 1) * interp_n - 1 
+        Xi = np.arange(1, base.shape[0] + 1) * interp_n - 1 
         # Points to return after interpolation
         Xo = np.arange(interp_n - 1, Xi[-1] + 1)
-        b = np.interp(Xo, Xi, base) #base is 2D ?? so not working
+        #print("findpeaks_2d")
+        #print(Xi.shape)
+        #print(base.shape)
+        #print(Xo.shape)
+        
+        # Need a loop here as in Python the base must be 1D
+        b = np.zeros((Xo.shape[0], base.shape[1]))
+        for i in range(base.shape[1]):
+            b[:, i] = np.interp(Xo, Xi, base[:, i]) #base is 2D ?? so not working
     
+        #print(b.shape)
         sigma = 3
         im = np.abs(gaussian_filter(b, sigma, truncate=np.ceil(2*sigma)/sigma))   #imgaussfilt(b, 3))
         # tophat transform       
@@ -669,7 +697,7 @@ class EMGAnalysisReconstruct:
         while not found:
             parse_limit = parse_limit + 1
             locs = self.findpeaks_2d_package(im2, np.max(im2) * threshold)
-            locs = locs.reshape(2, -1)
+            #locs = locs.reshape(-1, 2)
             
             if locs.shape[0] < 1:
                 threshold = threshold - 0.02
@@ -684,7 +712,7 @@ class EMGAnalysisReconstruct:
             
         if locs.shape[0] > 0:
             #Interpolated locs back to electrode indices
-            locs[:, 2] = np.round((locs[:, 2] + 1)/interp_n - 1) 
+            locs[:, 1] = np.round((locs[:, 1] + 1)/interp_n - 1) 
            
         return locs
     
