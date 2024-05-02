@@ -20,6 +20,7 @@ import emg_analyser_python.emg_analyser_functions as tk
 from emg_analyser_python.constants import QUICK_VERSION
 from findpeaks import findpeaks
 from pymicroemg.emg_data_preproc import EMGDataPreproc
+import time
 
 class EMGMotorUnit:
     """
@@ -152,7 +153,11 @@ class EMGAnalysisReconstructSettings:
         self.mavg_length = 1
         self.mavg_all = False
         self.localise_first = False
+        self.spike_dur = 20
+        self.half_subsample_size = 200
+        self.max_opt_iterations = 200
        
+
     def __str__(self):
         """
         Return a string for the object
@@ -183,7 +188,13 @@ class EMGAnalysisReconstructSettings:
         ans += "\nMoving average all: "
         ans += str(self.mavg_all)
         ans += "\nLocalise first: "
-        ans += str(self.localise_first)      
+        ans += str(self.localise_first)
+        ans += "\nSpike duration: "
+        ans += str(self.spike_dur)
+        ans += "\nSubsample size: "
+        ans += str(self.half_subsample_size)
+        ans += "\nMaximum optimisation steps: "
+        ans += str(self.max_opt_iterations) 
         
         ans += "\n"
         
@@ -277,7 +288,7 @@ class EMGAnalysisReconstruct:
         print(self.signal_noise_ratios_ranks)
         print(self.signal_noise_ratios[self.signal_noise_ratios_ranks])
         
-        sampling_freq = self.emg_data_preproc.fs
+        #sampling_freq = self.emg_data_preproc.fs
         
         # Find all MUAPs in channel with best signal    
         if self.settings.trigger_channel >= 0:
@@ -301,7 +312,7 @@ class EMGAnalysisReconstruct:
         if True:
             # load test data instead for dev
             import csv
-            name = "richa" #"nrajh" #
+            name = "nrajh" #
         
             # Importing csv module  
             filename = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\loc_test_data.csv'
@@ -330,7 +341,7 @@ class EMGAnalysisReconstruct:
         print("Good channels:")
         print(self.emg_data_preproc.chan.analyse_chan)
         
-        print(self.emg_data_preproc.emg_ts.shape[1] - 201 - 1)
+        print(self.emg_data_preproc.emg_ts.shape[1] - self.settings.half_subsample_size - 1 - 1)
        
         print(np.sum(locs == 0))
         print(np.sum(locs == 1))
@@ -342,7 +353,7 @@ class EMGAnalysisReconstruct:
         for loc_select in range(2):
             
             # Save the concurrent signal from all other channels for each spike
-            all_spikes = np.zeros((len(indices[locs==loc_select]), self.settings.n_electrodes, 401)) #401?
+            all_spikes = np.zeros((len(indices[locs==loc_select]), self.settings.n_electrodes, self.settings.half_subsample_size * 2 + 1)) #401?
             all_onsets = indices[locs==loc_select]
     
             # Zero reused vars
@@ -353,7 +364,7 @@ class EMGAnalysisReconstruct:
                 if locs[sample] == loc_select:
                     # exclude spikes right at the edge of the recording
                     
-                    if indices[sample] < 201 or indices[sample] > self.emg_data_preproc.emg_ts.shape[1] - 201 - 1:
+                    if indices[sample] < (self.settings.half_subsample_size + 1) or indices[sample] > (self.emg_data_preproc.emg_ts.shape[1] - self.settings.half_subsample_size - 1 - 1):
                         print("indices[sample]")
                         print(indices[sample])
                         continue 
@@ -368,7 +379,7 @@ class EMGAnalysisReconstruct:
                         #print(int(indices[sample] - 200))
                         #print(int(indices[sample] + 200 + 1))
                         all_spikes[t, channel, :] = self.emg_data_preproc.emg_ts[channel,
-                                                    int(indices[sample] - 200):int(indices[sample] + 200 + 1)]
+                                                    int(indices[sample] - self.settings.half_subsample_size):int(indices[sample] + self.settings.half_subsample_size + 1)]
                     
                     t += 1
                 
@@ -400,9 +411,9 @@ class EMGAnalysisReconstruct:
             #options = optimset('MaxIter',10000);
             #options = optimset('PlotFcns',@optimplotfval,'MaxIter',10000);
             ##disp(['- cluster no: ' num2str(max([clusters{:}]))])
-            pos = np.array([])
+            pos = np.zeros((0,2))
             onsets = np.array([])
-            found_index = 0
+            #found_index = 0
     
             if self.settings.localise_first:
                 max_signal_id = 0
@@ -426,9 +437,9 @@ class EMGAnalysisReconstruct:
                 for sub_cluster_index in range(sub_clusters.shape[0]):
                     # Ensure we don't get spikes outside of recording duration
                     # (400 samples)
-                    spike_dur = 20
-                    time_peak = np.max(np.hstack((sub_clusters[sub_cluster_index, 0], spike_dur + 1)))
-                    time_peak = np.min(np.hstack((time_peak, 400 - spike_dur)))
+                    
+                    time_peak = np.max(np.hstack((sub_clusters[sub_cluster_index, 0], self.settings.spike_dur + 1)))
+                    time_peak = np.min(np.hstack((time_peak, self.settings.half_subsample_size * 2 - self.settings.spike_dur)))
                                    
                     # Get the mean spikes for the fibre peak amplitude
                     peak_electrode = sub_clusters[sub_cluster_index, 1]
@@ -440,17 +451,17 @@ class EMGAnalysisReconstruct:
                     # Remove bad channels                  
                     good_channels = np.arange(0, self.settings.n_electrodes, dtype = "int") * self.emg_data_preproc.chan.analyse_chan  
                     
-                    print(included_electrodes)
+                    #print(included_electrodes)
                     
                     included_electrodes = np.intersect1d(included_electrodes, good_channels)
                     
                     print(included_electrodes)
-                    print(good_channels)
+                    #print(good_channels)
                     
                     if included_electrodes.shape[0] == 0:
                         continue
                   
-                    self.sn = sig[included_electrodes, (time_peak - spike_dur):(time_peak + spike_dur)]
+                    self.sn = (sig[included_electrodes, int(time_peak - self.settings.spike_dur):int(time_peak + self.settings.spike_dur + 1)]).T
                     
                     # Needle model pos in mm                    
                     self.needle = np.zeros((self.settings.n_electrodes, 2))
@@ -464,12 +475,28 @@ class EMGAnalysisReconstruct:
                     
                     # Scaling factor from mm to scaled AU
                     self.needle = self.needle * 4
-                    x0 = self.needle[peak_electrode, :]
+                    x0 = self.needle[int(peak_electrode), :]
                     self.needle = self.needle[included_electrodes, :]
-
+                    print(x0.shape)
                     ## Non-linear optimisation algorithm for fibre positioning
                     #pos[found_index, 0:1], fval, _ = fminsearch(@deconv_wrapper, x0, options)
-                    opt.fmin(self.deconv_wrapper, x0 = x0, maxiter = 10000)
+                    t0 = time.time()
+                    opt_paras, _, iters, fcalls, wflag  = opt.fmin(self.deconv_wrapper, x0 = x0, maxiter = self.settings.max_opt_iterations, full_output=True)#, disp = False)
+                    t1 = time.time()
+
+                    total = t1-t0
+                    print("total Time = ")
+                    print(total)
+                    
+                    print(opt_paras)
+                    print(iters)
+                    print(fcalls)
+                    print(wflag)
+                    print("\n")
+                    #opt_paras = opt_paras[0]
+                    #print(opt_paras.shape)
+                    #print(opt_paras)
+                    pos = np.vstack((pos, opt_paras))
                     
                     ## Exhaustive search is used when we don't want to use the non-linear search algorithm
                     # ie to demonstrate the variance at various putative fibre
@@ -482,14 +509,16 @@ class EMGAnalysisReconstruct:
                     #    motor_unit{loc_select}.err_curve{cluster_index}={errs};
                     #    motor_unit{loc_select}.err_locs{cluster_index}={p};
                 
-                    pos[found_index, 0] = pos[found_index, 0]/4
+                    #pos[found_index, 0] = pos[found_index, 0]/4
              
-                    onsets[found_index] = all_onsets[signal_id]
+                    onsets = np.append(onsets, all_onsets[signal_id])
 
-                    found_index = found_index + 1
+                    #found_index = found_index + 1
             
             # End of signal_id loop
         
+            pos[:, 0] = pos[:, 0]/4
+            
             ## This is some optional pruning of unrealistic results for the localisation
             #if self.settings.prune:
             #    if (pos[cluster_index, 0] > self.settings.prune_xlim[1] or
@@ -712,7 +741,7 @@ class EMGAnalysisReconstruct:
             
         if locs.shape[0] > 0:
             #Interpolated locs back to electrode indices
-            locs[:, 1] = np.round((locs[:, 1] + 1)/interp_n - 1) 
+            locs[:, 1] = np.round((locs[:, 1] + 1)/interp_n - 1).astype(int) 
            
         return locs
     
@@ -738,11 +767,13 @@ class EMGAnalysisReconstruct:
         total_var: 
         """
           
-        self.opr = np.zeros((41, self.n_electrodes))
+        self.no_needle_channels = self.needle.shape[0]
+        self.opr = np.zeros((self.settings.spike_dur*2 + 1, self.no_needle_channels))
        
-        cn = self.calc_cn(loc[0], loc[1], 400)
-        for k in range(self.n_electrodes):
-             self.opr[:, k] = self.tconv(cn[:, k], self.sn[:,k], 41)
+        cn = self.calc_cn(loc[0], loc[1], self.settings.half_subsample_size * 2)
+        for k in range(self.no_needle_channels):
+             a = self.tconv(cn[:, k], self.sn[:,k], self.settings.spike_dur*2 + 1)            
+             self.opr[:, k] = self.tconv(cn[:, k], self.sn[:,k], self.settings.spike_dur*2 + 1)
         
         total_var = -1/np.max(np.var(self.opr, axis = 1, ddof=1))
         
@@ -766,9 +797,9 @@ class EMGAnalysisReconstruct:
        
         isz: 
         """
-         
-        cn = np.zeros((isz, self.n_electrodes))
-        for channel in range(self.n_electrodes):
+        
+        cn = np.zeros((isz, self.no_needle_channels))
+        for channel in range(self.no_needle_channels):
             for j in range(isz):
                 dx = np.abs(fbx - self.needle[channel, 0])  # X offset
                 dy = np.abs(fby - self.needle[channel, 1])  # Y offset of channel i
@@ -804,7 +835,7 @@ class EMGAnalysisReconstruct:
         end_pos = len(ifn) - 1
         tpl = toeplitz(ifn[start_pos:end_pos])
     
-        rsl = np.linalg.lstsq(tpl, wsig)
+        rsl = (np.linalg.lstsq(tpl, wsig))[0]
     
         return rsl
 

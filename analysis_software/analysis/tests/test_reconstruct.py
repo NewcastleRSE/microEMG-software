@@ -36,8 +36,8 @@ match recording_ID:
             "data", "sample_data_20231124", "real", "Low quality", recording_ID, "raw"
         )
     case "Stuart_E2":
-        #emg_dir = "C:\\Users\\nrajh\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\multi-emg\\data\\sample_data_20231116\\original_data\\Stuart_E2\\raw"
-        emg_dir = "C:\\Users\\richa\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\multi-emg\\data\\sample_data_20231116\\original_data\\Stuart_E2\\raw"
+        emg_dir = "C:\\Users\\nrajh\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\multi-emg\\data\\sample_data_20231116\\original_data\\Stuart_E2\\raw"
+        #emg_dir = "C:\\Users\\richa\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\multi-emg\\data\\sample_data_20231116\\original_data\\Stuart_E2\\raw"
         #emg_dir = os.path.join(
         #    "data", "sample_data_20231124", "real", recording_ID, "raw"            
         #)
