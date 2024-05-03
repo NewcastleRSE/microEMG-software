@@ -156,7 +156,8 @@ class EMGAnalysisReconstructSettings:
         self.spike_dur = 20
         self.half_subsample_size = 200
         self.max_opt_iterations = 200
-       
+        self.needle_type = 'nonlinear'
+
 
     def __str__(self):
         """
@@ -191,10 +192,12 @@ class EMGAnalysisReconstructSettings:
         ans += str(self.localise_first)
         ans += "\nSpike duration: "
         ans += str(self.spike_dur)
-        ans += "\nSubsample size: "
+        ans += "\nHalf subsample size: "
         ans += str(self.half_subsample_size)
         ans += "\nMaximum optimisation steps: "
         ans += str(self.max_opt_iterations) 
+        ans += "\nNeedle type: "
+        ans += str(self.needle_type) 
         
         ans += "\n"
         
@@ -279,6 +282,19 @@ class EMGAnalysisReconstruct:
 
         """
         
+        ###############################################
+        #Set same data as MATLAB for testing...
+        import csv
+        name = "richa" #"nrajh" #
+        
+        # Importing csv module  
+        filename = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\processed_multi_emg_matlab.csv'
+        with open(filename, 'r') as x:
+            self.emg_data_preproc.emg_ts = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC)) 
+            
+        self.emg_data_preproc.emg_ts = np.array(self.emg_data_preproc.emg_ts)
+        ###############################################
+
         # Create motor unit object to store final results       
         returned_motor_units = EMGMotorUnits()
         
@@ -312,7 +328,7 @@ class EMGAnalysisReconstruct:
         if True:
             # load test data instead for dev
             import csv
-            name = "nrajh" #
+            name = "richa" #"nrajh" #
         
             # Importing csv module  
             filename = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\loc_test_data.csv'
@@ -347,6 +363,9 @@ class EMGAnalysisReconstruct:
         print(np.sum(locs == 1))
         
         print("pre loop") 
+        
+        # Initial threshold for 2D peak detection
+        self.threshold = 0.15
         
         # Loop thro' moter units
         #range(max(locs))
@@ -396,17 +415,22 @@ class EMGAnalysisReconstruct:
             if t < 2:
                 continue
             
+            import pandas as pd 
+            name = "richa"
+            #df = pd.DataFrame(all_spikes[:,0,:])
+            #df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\spikes_python.csv', header= False, index=False, na_rep='nan')
+
             mean_spikes = np.squeeze(np.mean(all_spikes, axis = 0))
-            clusters = self.peak_group(np.max(mean_spikes, axis = 1))
+            #clusters = self.peak_group(np.max(mean_spikes, axis = 1))
             
             #for broken_index in range(len(settings.broken_channels))
             #    clusters{settings.broken_channels(broken_index)}=[];
-            for channel in range(self.number_of_channels):
-                # Empty bad channels
-                if not self.emg_data_preproc.chan.analyse_chan[channel]: 
-                    clusters[channel] = []
+            #for channel in range(self.number_of_channels):
+            #    # Empty bad channels
+            #    if not self.emg_data_preproc.chan.analyse_chan[channel]: 
+            #        clusters[channel] = []
 
-
+            #print(clusters)
             ##Fibre location reconstruction
             #options = optimset('MaxIter',10000);
             #options = optimset('PlotFcns',@optimplotfval,'MaxIter',10000);
@@ -420,7 +444,8 @@ class EMGAnalysisReconstruct:
             else:
                 max_signal_id = all_spikes.shape[0] - self.settings.mavg_length
        
-    
+            print(max_signal_id)
+            
             for signal_id in range(max_signal_id):
             
                 if self.settings.localise_first:
@@ -428,9 +453,13 @@ class EMGAnalysisReconstruct:
                 else:
                     sig = np.squeeze(np.mean(all_spikes[signal_id:(signal_id + self.settings.mavg_length + 1), :, :], axis = 0))
             
-        
-                sub_clusters = self.findpeaks_2d(sig, 0.15)
+                #df = pd.DataFrame(sig)
+                #df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\sig_python.csv', header= False, index=False, na_rep='nan')
+
+                sub_clusters = self.findpeaks_2d(sig, self.threshold)
             
+                print(sub_clusters)
+                
                 if sub_clusters.shape[0] == 0:
                     continue
                       
@@ -463,36 +492,40 @@ class EMGAnalysisReconstruct:
                   
                     self.sn = (sig[included_electrodes, int(time_peak - self.settings.spike_dur):int(time_peak + self.settings.spike_dur + 1)]).T
                     
-                    # Needle model pos in mm                    
-                    self.needle = np.zeros((self.settings.n_electrodes, 2))
-                    # the tip of the needle is assumed to be 1 mm far from the first electrode on the x axis
-                    baseX = 0.8
-                    for i in range(self.settings.n_electrodes):
-                        # add interElectrodeDist
-                        self.needle[i, 0] = baseX + self.settings.offset
-                        self.needle[i, 1] = 0
-                        baseX = self.needle[i, 0]
+                    # Needle model pos in mm
+                    self.build_needle_model()                    
                     
                     # Scaling factor from mm to scaled AU
                     self.needle = self.needle * 4
                     x0 = self.needle[int(peak_electrode), :]
                     self.needle = self.needle[included_electrodes, :]
-                    print(x0.shape)
+                    
                     ## Non-linear optimisation algorithm for fibre positioning
                     #pos[found_index, 0:1], fval, _ = fminsearch(@deconv_wrapper, x0, options)
                     t0 = time.time()
-                    opt_paras, _, iters, fcalls, wflag  = opt.fmin(self.deconv_wrapper, x0 = x0, maxiter = self.settings.max_opt_iterations, full_output=True)#, disp = False)
+                    opt_paras, fopt, iters, fcalls, wflag  = opt.fmin(self.deconv_wrapper, x0 = x0, maxiter = self.settings.max_opt_iterations, full_output=True)#, disp = False)
                     t1 = time.time()
 
                     total = t1-t0
                     print("total Time = ")
                     print(total)
                     
-                    print(opt_paras)
+                    print("fminsearch...")
+                   
+                    print(included_electrodes);
+                    print(self.needle);
+                    print(self.sn);
+                    print(x0);
                     print(iters)
                     print(fcalls)
-                    print(wflag)
+                    print(opt_paras)
+                    print(fopt);
+                    print("###")
+                                
+                    #print(wflag)
+                    
                     print("\n")
+                    input("stop....")
                     #opt_paras = opt_paras[0]
                     #print(opt_paras.shape)
                     #print(opt_paras)
@@ -653,21 +686,36 @@ class EMGAnalysisReconstruct:
             2D array of location of peaks
         """
         
+        
+        
         # Initialize
         fp = findpeaks(whitelist=['peak'])
-      
-        # apply threshold
-        imageThres = image[image > threshold]
-  
+        print(image.shape)
+        # apply threshold        
+        image[image < threshold] = 0
+
+        #fp.peaks2d
+        #print(image.shape)
+        #print(type(image))
+        
+        ans = fp.peaks2d(image, method='topology')
+        ans = ans['persistence']    
+        
+        return np.array(ans.loc[ans['peak'], ['x', 'y']])
+
+        #return np.array(results.loc[results['persistence'], ['x', 'y']]) 
+    
         # Fit topology method on the 2d-vector
-        results = fp.fit(imageThres)['df']
+        #results = fp.fit(imageThres) #['df']
         # The output contains multiple variables
         #print(results.keys())
         # dict_keys(['Xraw', 'Xproc', 'Xdetect', 'Xranked', 'persistence', 'groups0'])
         #print(results)
         #print(type(results))
-        
-        return np.array(results.loc[results['peak'], ['x', 'y']])
+        #results = results['df']
+        #print(results)
+        #print(type(results))
+        #return np.array(results.loc[results['peak'], ['labx', 'y']])
 
 
     def findpeaks_2d(self, sig, threshold):
@@ -709,6 +757,13 @@ class EMGAnalysisReconstruct:
         for i in range(base.shape[1]):
             b[:, i] = np.interp(Xo, Xi, base[:, i]) #base is 2D ?? so not working
     
+        ###print
+        #import pandas as pd 
+        #name = "richa"
+        #df = pd.DataFrame(b)
+        #df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\b_findpeaks_2d_python.csv', header= False, index=False, na_rep='nan')
+        #####
+
         #print(b.shape)
         sigma = 3
         im = np.abs(gaussian_filter(b, sigma, truncate=np.ceil(2*sigma)/sigma))   #imgaussfilt(b, 3))
@@ -717,35 +772,138 @@ class EMGAnalysisReconstruct:
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (6, 6))  
         im2 = cv2.morphologyEx(im, cv2.MORPH_TOPHAT, kernel) 
         
+        ###print
+        #import pandas as pd 
+        #name = "richa"
+        #df = pd.DataFrame(im)
+        #df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\im_findpeaks_2d_python.csv', header= False, index=False, na_rep='nan')
+        #df = pd.DataFrame(im2)
+        #df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\im2_findpeaks_2d_python.csv', header= False, index=False, na_rep='nan')       
+        #####
+
+
         # Extract each blob
         # s=regionprops(im3,'Centroid','PixelIdxList');
         locs = np.array([])
         found = False
         parse_limit = 0
+        im2_max = np.max(im2)
         
         while not found:
             parse_limit = parse_limit + 1
-            locs = self.findpeaks_2d_package(im2, np.max(im2) * threshold)
+            locs = self.findpeaks_2d_package(im2, im2_max * threshold)
             #locs = locs.reshape(-1, 2)
-            
+            print(locs)
+            print(locs.shape)
             if locs.shape[0] < 1:
                 threshold = threshold - 0.02
             elif locs.shape[0] > 22:
                 threshold = threshold + 0.02
             else:
                 found = True
+                # save nice threshold for next time to perhaps speed it up
+                self.threshold = threshold
             
             if threshold <= 0.05 or threshold > 1 or parse_limit > 20:
-                locs = []
+                locs = np.array([])
                 found = True
-            
+        
+        print("threshold ")
+        print(threshold)
+        
+        ###print
+        import pandas as pd 
+        name = "richa"
+        df = pd.DataFrame(locs)
+        df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\locs_findpeaks_2d_python.csv', header= False, index=False, na_rep='nan')
+        #####
+
         if locs.shape[0] > 0:
             #Interpolated locs back to electrode indices
             locs[:, 1] = np.round((locs[:, 1] + 1)/interp_n - 1).astype(int) 
-           
+        
+        df = pd.DataFrame(locs)
+        df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\locs2_findpeaks_2d_python.csv', header= False, index=False, na_rep='nan')
+       
         return locs
     
-    
+
+    def plot_2d_peaks(self, im, peak_locs):
+        """
+        Method to plot 2D image and found peaks from the findpeaks_2d method
+        for testing purposes
+        
+        Parameters
+        ----------
+        im: 2D numpy NDArray[float, float]
+            2D array of image
+        locs: 2D numpy NDArray[int, int]
+            2D array of location of peaks
+            
+        Returns
+        -------
+        None
+        """
+        
+        _, ax = plt.subplots()
+        im = ax.imshow(im)
+        ax.plot(peak_locs[:,0], peak_locs[:, 1], 'bX')
+        
+        plt.show()
+        
+        
+    def build_needle_model(self):
+        """
+        Build model for the needle stored in the object self.needle
+        Method to build a needle structure.
+        needle_type: 'linear' the electrodes are placed on a line with a spacing of 200
+                      mu Meter
+                     'nonlinear' the electrodes are placed on either side of the needle
+                      in a zig zag way 200mu Meter seperate between the electrodes
+        Orignal MATLAB Author: Bashar Awwad ShiekH Hasan, Newcastle University
+
+        all the dimensions are relative to the tip of the needle, all distances
+        in mm needle width is set to 0.36 mm (provided by Enrique)
+        
+        Parameters
+        ----------
+        
+        
+        Returns
+        -------
+        
+        """
+        
+        self.needle = np.zeros((self.settings.n_electrodes, 2)) 
+        nwidth = 0.36
+        
+        if self.settings.needle_type == 'nonlinear':
+            # the tip of the needle is assumed to be 1 mm far from the first electrode on the x axis
+            baseX = 0.3
+            baseY = 0
+            for i in range(self.settings.n_electrodes):
+                
+                self.needle[i, 0] = baseX + self.settings.offset
+                
+                if baseY <= 0:
+                    self.needle[i, 1] = nwidth * 0.5
+                else:
+                    self.needle[i, 1] = -nwidth * 0.5
+                        
+                baseX = self.needle[i, 0]
+                baseY = self.needle[i, 1]
+            
+        else:
+                             
+            # the tip of the needle is assumed to be 1 mm far from the first electrode on the x axis
+            baseX = 0.8
+            
+            for i in range(self.settings.n_electrodes):
+                # add interElectrodeDist
+                self.needle[i, 0] = baseX + self.settings.offset
+                self.needle[i, 1] = 0
+                baseX = self.needle[i, 0]
+
 
     def deconv_wrapper(self, loc):
         """
@@ -754,7 +912,7 @@ class EMGAnalysisReconstruct:
         Calculate deconvolution for each channel in a 50x50 grid
         Region is 0-1000u (Y) and 100-500u (X)
         Error is abs mismatch across the reconstructions of 'gn'
-        Calculated as the max variance across the centre of the 5 recontructions.
+        Calculated as the max variance across the centre of the 5 reconstructions.
         This example is a blind hunt across 2500 locations near the needle.
         Here, cn is 400 samples long so that a Toeplitz matrix can be created.
 
@@ -771,11 +929,12 @@ class EMGAnalysisReconstruct:
         self.opr = np.zeros((self.settings.spike_dur*2 + 1, self.no_needle_channels))
        
         cn = self.calc_cn(loc[0], loc[1], self.settings.half_subsample_size * 2)
-        for k in range(self.no_needle_channels):
-             a = self.tconv(cn[:, k], self.sn[:,k], self.settings.spike_dur*2 + 1)            
-             self.opr[:, k] = self.tconv(cn[:, k], self.sn[:,k], self.settings.spike_dur*2 + 1)
         
-        total_var = -1/np.max(np.var(self.opr, axis = 1, ddof=1))
+        for k in range(self.no_needle_channels):                        
+             self.opr[:, k] = self.tconv(cn[:, k], self.sn[:, k], self.settings.spike_dur*2 + 1)
+        
+        total_var = -1.0/np.max(np.var(self.opr, axis = 1, ddof=1))
+        #total_var = np.max(np.var(self.opr, axis = 1, ddof=1))
         
         return total_var
     
@@ -783,28 +942,30 @@ class EMGAnalysisReconstruct:
     def calc_cn(self, fbx, fby, isz):
         """
         Channel functions
-        Generate 1/r conv functions for coords fbx,fby for each channel.
+        Generate 1/r conv functions for coords fbx, fby for each channel.
 
         Parameters
         ----------
-        loc
-        
-        Returns
-        -------
         fbx:
         
         fby:
        
         isz: 
+        
+        Returns
+        -------
+        cn: 
+        
         """
         
         cn = np.zeros((isz, self.no_needle_channels))
+        
         for channel in range(self.no_needle_channels):
             for j in range(isz):
                 dx = np.abs(fbx - self.needle[channel, 0])  # X offset
                 dy = np.abs(fby - self.needle[channel, 1])  # Y offset of channel i
-                dz = np.abs(j - isz/2)                       # Z distance along fibre
-                cn[j, channel] = 1/np.sqrt(dx*dx + dy*dy + dz*dz)
+                dz = np.abs(j - isz/2)                      # Z distance along fibre
+                cn[j, channel] = 1.0/np.sqrt(dx*dx + dy*dy + dz*dz)
             
         return cn
   

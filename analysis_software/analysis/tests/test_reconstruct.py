@@ -36,8 +36,8 @@ match recording_ID:
             "data", "sample_data_20231124", "real", "Low quality", recording_ID, "raw"
         )
     case "Stuart_E2":
-        emg_dir = "C:\\Users\\nrajh\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\multi-emg\\data\\sample_data_20231116\\original_data\\Stuart_E2\\raw"
-        #emg_dir = "C:\\Users\\richa\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\multi-emg\\data\\sample_data_20231116\\original_data\\Stuart_E2\\raw"
+        #emg_dir = "C:\\Users\\nrajh\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\multi-emg\\data\\sample_data_20231116\\original_data\\Stuart_E2\\raw"
+        emg_dir = "C:\\Users\\richa\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\multi-emg\\data\\sample_data_20231116\\original_data\\Stuart_E2\\raw"
         #emg_dir = os.path.join(
         #    "data", "sample_data_20231124", "real", recording_ID, "raw"            
         #)
@@ -72,11 +72,15 @@ emg_data = emg_files.load_emg_data()
 
 # Create and specify preprocessing settings using EMGPreprocSettings object
 preproc_settings = EMGPreprocSettings()
+
 preproc_settings.add_butterworth_filter()  # for defaults
-# preproc_settings.add_butterworth_filter(
-#    cutoff_freq=[400, 2100], order=4, filter_type='bandpass'
-# )
+
+## preproc_settings.add_butterworth_filter(
+##    cutoff_freq=[400, 2100], order=4, filter_type='bandpass'
+## )
+
 preproc_settings.add_remove_mains()
+
 
 # Apply preprocessing settings to raw EMG data to generate preprocessed EMG data
 emg_data_preproc = emg_data.preprocess(preproc_settings)
