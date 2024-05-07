@@ -91,8 +91,6 @@ class EMGViewerTabbedWidget(QWidget):
     # The tab functionality is mimicked by swapping the data in the EMG viewer - the
     # EMG viewer widget remains the same.
 
-    # TODO: change color/style of tab based on whether it is active
-
     def __init__(
         self,
         raw_emg_model: EMGDataRawModel,
@@ -143,10 +141,9 @@ class EMGViewerTabbedWidget(QWidget):
 
     def connect_tabs_to_data(self):
         # Set up connections between tabs and the data in the viewer
-        # TODO: try to change to clicked signal
 
         for k, w in self.widgets_tabs.items():
-            w.pressed.connect(lambda data=k: self.switch_emg_model(data))
+            w.clicked.connect(lambda checked=None, data=k: self.switch_emg_model(data))
 
     def switch_emg_model(self, data: str):
         # Switch EMG data in viewer (slot for tab clicks)

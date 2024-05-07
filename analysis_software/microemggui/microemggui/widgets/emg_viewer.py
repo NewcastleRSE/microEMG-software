@@ -3,7 +3,6 @@ Widget for viewing EMG time series.
 
 Current icons from https://icons.getbootstrap.com/
 
-TODO: consider fixing yaxis limits so labels do not move
 """
 
 import os
@@ -341,7 +340,7 @@ class EMGPlotWidget(QWidget):
 
     def eventFilter(self, obj, event):
         # Catch wheel events on pyqtgraph plot
-        # TODO: check that works as expect using mouse and WindowsOS
+        # TODO: check that works as expected using mouse and WindowsOS
 
         if "QWheelEvent" in str(event):
             wheel_delta = event.angleDelta().y()
@@ -492,7 +491,7 @@ class EMGArrowsWidget(QWidget):
             w.setToolTip(txt)
 
         # Number of divisions moved by each button
-        # (will send with button pressed signals)
+        # (will send with button clicked signals)
         # Disable buttons for moving backwards
         self.button_n_div = [-10, -1, 1, 10]
         self.toggle_previous_buttons(False)
@@ -515,7 +514,9 @@ class EMGArrowsWidget(QWidget):
         # Will increment start time by the number of divisions moved by the button
 
         for w, n in zip(self.widgets.values(), self.button_n_div):
-            w.pressed.connect(lambda n=n: self.plot_widget.increment_start_time(n))
+            w.clicked.connect(
+                lambda checked=None, n=n: self.plot_widget.increment_start_time(n)
+            )
 
     def toggle_next_buttons(self, can_move_forward):
         # Enable/disable buttons for progressing time series.
@@ -718,7 +719,9 @@ class EMGGainWidget(QWidget):
         # Will scale offset by widget_scale value
 
         for w, scale in zip(self.widgets.values(), self.widget_scale):
-            w.pressed.connect(lambda scale=scale: self.plot_widget.scale_offset(scale))
+            w.clicked.connect(
+                lambda checked=None, scale=scale: self.plot_widget.scale_offset(scale)
+            )
 
 
 # --- Widget for viewer ---
