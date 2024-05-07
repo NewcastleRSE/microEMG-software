@@ -4,12 +4,16 @@
 Widget for the preprocessing step in the EMG data analysis pipeline.
 """
 
+import logging
+
 from PySide6.QtWidgets import (
     QWidget,
     QGridLayout,
     QHBoxLayout,
     QVBoxLayout,
     QSizePolicy,
+    QProgressDialog,
+    QDialog,
 )
 from PySide6.QtCore import Qt, Signal
 
@@ -23,6 +27,7 @@ from microemggui.widgets.base import (
     TabButton,
     ExpandingHSpacer,
 )
+from microemggui.gui_logger import QtHandler
 
 # --- Component widgets ---
 
@@ -155,6 +160,13 @@ class EMGViewerTabbedWidget(QWidget):
             w.setEnabled(k != data)
 
 
+class PreprocProgressDialog(QDialog):
+    def __init__(self, settings_model: EMGPreprocSettingsModel, parent=None):
+        super().__init__(parent)
+
+        self.setWindowTitle("progress bar")
+
+
 # --- Preprocessing widget ----
 
 
@@ -212,9 +224,50 @@ class PreprocWidget(QWidget):
         # Add preprocessed data to viewer.
         # Will overwrite any previously computed preprocessed data.
         # TODO: also send preprocessed data to main window for downstream steps
-        # TODO: pop up while preprocessing is happening
+        # TODO: figure out how to nicely cancel preprocessing using dialog window
+        # TODO: create variable/config for logger name
 
+        # Create handler for processing logger; create connections to log records
+        self.handler = QtHandler(self.update_progress_bar_from_log)
+        logging.getLogger("EMGDataRawLogger").addHandler(self.handler)
+
+        # Create progress bar
+        n_chan = self.emg_model["raw"].emg_data.n_chan
+        self.progress = QProgressDialog("Preprocessing", None, 0, n_chan, parent=self)
+        self.progress.setWindowModality(Qt.WindowModal)
+        self.progress.setMinimumDuration(0)
+
+        # Preprocess; logs from analysis will be output to GUI using connection
         self.emg_model["preproc"] = self.emg_model["raw"].apply_preproc(
             self.settings_model.settings
         )
+
+        # Set progress bar to max value to close dialog window
+        self.progress.setValue(n_chan)
+
+        # Add preprocessed data to viewer
         self.widgets["tabbedviewer"].add_preproc_emg_model(self.emg_model["preproc"])
+
+    def update_progress_bar_from_log(self, record):
+        # Slot for logs from EMGDataRaw; used to update progress bar for preprocessing
+        # steps.
+
+        # If start of a new analysis step, change progress bar label and reset bar to 0
+        if record.record_context.analysis_start:
+            # Format text
+            analysis_step = record.record_context.analysis_step
+            analysis_step = analysis_step.replace("_", " ")
+            analysis_step = analysis_step[:1].upper() + analysis_step[1:].lower()
+            bar_label = f"{analysis_step}..."
+
+            # Add text to progress bar
+            self.progress.setLabelText(bar_label)
+
+            # Set bar to zero
+            self.progress.setValue(0)
+
+        # Otherwise, use loop iterator to change progress bar
+        # Note i will never reach the max value of the progress bar - this allows the
+        # bar to be reset for different analysis steps
+        elif record.record_context.loop_i:
+            self.progress.setValue(record.record_context.loop_i)
