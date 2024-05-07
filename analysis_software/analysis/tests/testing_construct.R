@@ -1,4 +1,4 @@
-name<-"richa" #"nrajh"
+name<-"nrajh"
 
 spikes_mat<-read.csv(paste0('C:\\Users\\',name,'\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\spikes_matlab.csv'), header = FALSE)#, nrows=80000)
 
@@ -82,8 +82,8 @@ peaks2_mat<-read.csv(paste0('C:\\Users\\',name,'\\OneDrive - Newcastle Universit
 
 peaks2_py<-read.csv(paste0('C:\\Users\\',name,'\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\locs2_findpeaks_2d_python.csv'), header = FALSE)#, nrows=80000)
 
-ymax=dim(im_mat)[1]
-xmax=dim(im_mat)[2]
+ymax=dim(im2_mat)[1]
+xmax=dim(im2_mat)[2]
 
 dev.new()
 image(t(as.matrix(im2_mat)), useRaster=TRUE, axes=TRUE, main="MATLAB")
@@ -93,12 +93,13 @@ points(peaks_mat[,1]/xmax, peaks_mat[,2]/ymax, col="black", pch=4, cex=5, lwd=2)
 #image(t(as.matrix(im2_mat)), useRaster=TRUE, axes=TRUE, main="MATLAB 2")
 #points(peaks2_mat[,1]/xmax, peaks2_mat[,2]/ymax, col="black", pch=4, cex=5, lwd=2)
 
-ymaxp=dim(im_py)[1]
-xmaxp=dim(im_py)[2]
+ymaxp=dim(im2_py)[1]
+xmaxp=dim(im2_py)[2]
 
 dev.new()
 image(t(as.matrix(im2_py)), useRaster=TRUE, axes=TRUE, main="Python 1")
 points(peaks_py[,1]/xmaxp, peaks_py[,2]/ymaxp, col="black", pch=4, cex=5, lwd=2)
+
 
 #dev.new()
 #image(t(as.matrix(im2_py)), useRaster=TRUE, axes=TRUE, main="Python 2")
@@ -106,8 +107,25 @@ points(peaks_py[,1]/xmaxp, peaks_py[,2]/ymaxp, col="black", pch=4, cex=5, lwd=2)
 
 
 
+im2_py<-read.csv(paste0('C:\\Users\\',name,'\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\im_findpeaks_2d_python.csv'), header = FALSE)#, nrows=80000)
+
+peaks_py<-read.csv(paste0('C:\\Users\\',name,'\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\locs_findpeaks_2d_python.csv'), header = FALSE)#, nrows=80000)
+
+#peaks_py<-t(peaks_py)
+
+ymaxp=dim(im2_py)[1]
+xmaxp=dim(im2_py)[2]
+
+dev.new()
+image(t(as.matrix(im2_py)), useRaster=TRUE, axes=TRUE, main="Python 1")
+points(peaks_py[,1]/xmaxp, peaks_py[,2]/ymaxp, col="black", pch=4, cex=5, lwd=2)
 
 
+a<-max(im2_py)
+
+rowMaxs(im2_py)
+
+(im2_py)
 
 
 

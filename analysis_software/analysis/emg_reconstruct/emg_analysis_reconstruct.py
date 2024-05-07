@@ -9,6 +9,7 @@ For use with preprocessed EMG data.
 from xml.etree.ElementInclude import include
 import numpy as np
 import numpy.typing as npt
+import scipy
 import scipy.signal as sg
 import scipy.optimize as opt
 from scipy.linalg import toeplitz
@@ -18,8 +19,11 @@ import cv2
 import os
 import emg_analyser_python.emg_analyser_functions as tk
 from emg_analyser_python.constants import QUICK_VERSION
-from findpeaks import findpeaks
-from pymicroemg.emg_data_preproc import EMGDataPreproc
+#from findpeaks import findpeaks
+#from findmaxima2d import find_maxima, find_local_maxima, cfindmaxima2d
+import scipy.ndimage as ndimage
+import scipy.ndimage.filters as filters
+from pymicroemg.emg_data_preproc import EMGDataPreproc  
 import time
 
 class EMGMotorUnit:
@@ -285,7 +289,7 @@ class EMGAnalysisReconstruct:
         ###############################################
         #Set same data as MATLAB for testing...
         import csv
-        name = "richa" #"nrajh" #
+        name = "nrajh" #
         
         # Importing csv module  
         filename = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\processed_multi_emg_matlab.csv'
@@ -328,7 +332,7 @@ class EMGAnalysisReconstruct:
         if True:
             # load test data instead for dev
             import csv
-            name = "richa" #"nrajh" #
+            name = "nrajh" #
         
             # Importing csv module  
             filename = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\loc_test_data.csv'
@@ -670,6 +674,55 @@ class EMGAnalysisReconstruct:
     
 
     def findpeaks_2d_package(self, image, threshold):
+        
+        neighborhood_size = 5
+        #threshold = 1500
+
+        data = image #scipy.misc.imread(fname)
+
+        data_max = filters.maximum_filter(data, neighborhood_size)
+        maxima = (data == data_max)
+        data_min = filters.minimum_filter(data, neighborhood_size)
+        diff = ((data_max - data_min) > threshold)
+        maxima[diff == 0] = 0
+
+        labeled, _ = ndimage.label(maxima)
+        slices = ndimage.find_objects(labeled)
+        x, y = [], []
+        
+        for dy, dx in slices:
+            x_center = (dx.start + dx.stop - 1)/2
+            x.append(x_center)
+            y_center = (dy.start + dy.stop - 1)/2    
+            y.append(y_center)
+
+        
+        ans = np.vstack((x, y)).T        
+        
+        return ans
+    
+    def findpeaks_2d_packageX(self, image, threshold):
+        
+        ntol = 10 #Noise Tolerance.
+        img_data = np.array(image).astype(np.float64)
+
+        maxVal = max(img_data)
+        
+        if maxVal > 0:
+            img_data = img_data * (255.0/maxVal)
+            
+        #Finds the local maxima using maximum filter.
+        #local_max = find_local_maxima(img_data)
+
+        #y, x, _ = find_maxima(img_data, local_max, ntol)
+
+        #print(regs)
+        
+        ans = np.vstack(x, y)        
+        
+        return ans
+    
+    def findpeaks_2d_package0(self, image, threshold):
         """
         Finds local maxima of a 2-dimensional image area
         Dependent on findpeaks algorithm from findpeaks package
@@ -689,16 +742,18 @@ class EMGAnalysisReconstruct:
         
         
         # Initialize
-        fp = findpeaks(whitelist=['peak'])
+        
+        fp = findpeaks(whitelist=['peak'], togray = False, limit = threshold, denoise = None, scale = False, lookahead = 50)
         print(image.shape)
         # apply threshold        
-        image[image < threshold] = 0
+        #image[image < threshold] = 0
 
         #fp.peaks2d
         #print(image.shape)
         #print(type(image))
         
-        ans = fp.peaks2d(image, method='topology')
+        #ans = fp.peaks2d(image, method='topology')
+        ans = fp.fit(image)
         ans = ans['persistence']    
         
         return np.array(ans.loc[ans['peak'], ['x', 'y']])
@@ -773,12 +828,12 @@ class EMGAnalysisReconstruct:
         im2 = cv2.morphologyEx(im, cv2.MORPH_TOPHAT, kernel) 
         
         ###print
-        #import pandas as pd 
-        #name = "richa"
-        #df = pd.DataFrame(im)
-        #df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\im_findpeaks_2d_python.csv', header= False, index=False, na_rep='nan')
-        #df = pd.DataFrame(im2)
-        #df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\im2_findpeaks_2d_python.csv', header= False, index=False, na_rep='nan')       
+        import pandas as pd 
+        name = "nrajh" #"richa"
+        df = pd.DataFrame(im)
+        df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\im_findpeaks_2d_python.csv', header= False, index=False, na_rep='nan')
+        df = pd.DataFrame(im2)
+        df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\im2_findpeaks_2d_python.csv', header= False, index=False, na_rep='nan')       
         #####
 
 
@@ -788,16 +843,20 @@ class EMGAnalysisReconstruct:
         found = False
         parse_limit = 0
         im2_max = np.max(im2)
+        max_number_of_peaks = 22
         
         while not found:
             parse_limit = parse_limit + 1
+            print("shape of im2: ")
+            print(im2.shape)
             locs = self.findpeaks_2d_package(im2, im2_max * threshold)
             #locs = locs.reshape(-1, 2)
             print(locs)
             print(locs.shape)
+            
             if locs.shape[0] < 1:
                 threshold = threshold - 0.02
-            elif locs.shape[0] > 22:
+            elif locs.shape[0] > max_number_of_peaks:
                 threshold = threshold + 0.02
             else:
                 found = True
@@ -808,19 +867,27 @@ class EMGAnalysisReconstruct:
                 locs = np.array([])
                 found = True
         
-        print("threshold ")
-        print(threshold)
+            print("threshold ")
+            print(threshold)
         
         ###print
         import pandas as pd 
-        name = "richa"
+        name = "nrajh" #"richa"
         df = pd.DataFrame(locs)
         df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\locs_findpeaks_2d_python.csv', header= False, index=False, na_rep='nan')
         #####
 
         if locs.shape[0] > 0:
             #Interpolated locs back to electrode indices
-            locs[:, 1] = np.round((locs[:, 1] + 1)/interp_n - 1).astype(int) 
+            #a = (locs[:, 1] + 1)/interp_n - 1
+            #print(a)
+            #locs[:, 1] = np.round(np.array(a, dtype=float), 0) #.astype(int) 
+            #print(locs[:, 1])
+            #locs[:, 1] = np.array(locs[:, 1], dtype=int)
+            #print(locs[:, 1])
+            locs[:, 1] = np.array(np.round(np.array((locs[:, 1] + 1)/interp_n, dtype=float), 0), dtype=int)
+            locs[locs[:, 1] < 0, 1] = 0
+            print(locs[:, 1])
         
         df = pd.DataFrame(locs)
         df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\locs2_findpeaks_2d_python.csv', header= False, index=False, na_rep='nan')
@@ -964,7 +1031,7 @@ class EMGAnalysisReconstruct:
             for j in range(isz):
                 dx = np.abs(fbx - self.needle[channel, 0])  # X offset
                 dy = np.abs(fby - self.needle[channel, 1])  # Y offset of channel i
-                dz = np.abs(j - isz/2)                      # Z distance along fibre
+                dz = np.abs(j - isz/2)                      # Z distance along fibre             
                 cn[j, channel] = 1.0/np.sqrt(dx*dx + dy*dy + dz*dz)
             
         return cn
@@ -996,7 +1063,7 @@ class EMGAnalysisReconstruct:
         end_pos = len(ifn) - 1
         tpl = toeplitz(ifn[start_pos:end_pos])
     
-        rsl = (np.linalg.lstsq(tpl, wsig))[0]
+        rsl = (np.linalg.lstsq(tpl, wsig, rcond=None))[0]
     
         return rsl
 
