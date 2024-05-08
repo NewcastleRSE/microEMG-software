@@ -21,6 +21,7 @@ import emg_analyser_python.emg_analyser_functions as tk
 from emg_analyser_python.constants import QUICK_VERSION
 #from findpeaks import findpeaks
 #from findmaxima2d import find_maxima, find_local_maxima, cfindmaxima2d
+from scipy.interpolate import RegularGridInterpolator
 import scipy.ndimage as ndimage
 import scipy.ndimage.filters as filters
 from pymicroemg.emg_data_preproc import EMGDataPreproc  
@@ -282,14 +283,14 @@ class EMGAnalysisReconstruct:
 
         Returns
         -------
-        motor_units: MotorUnit
+        motor_units: MotorUnits
 
         """
         
         ###############################################
         #Set same data as MATLAB for testing...
         import csv
-        name = "nrajh" #
+        name = "richa" #"nrajh" #
         
         # Importing csv module  
         filename = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\processed_multi_emg_matlab.csv'
@@ -302,37 +303,39 @@ class EMGAnalysisReconstruct:
         # Create motor unit object to store final results       
         returned_motor_units = EMGMotorUnits()
         
-        # Order by highest Signal to Noise Ratio
-        self.calculate_SNR_ranks() 
+        #Add back later after dev
+        if False:
+            # Order by highest Signal to Noise Ratio
+            self.calculate_SNR_ranks() 
         
-        print(self.signal_noise_ratios_ranks)
-        print(self.signal_noise_ratios[self.signal_noise_ratios_ranks])
+            print(self.signal_noise_ratios_ranks)
+            print(self.signal_noise_ratios[self.signal_noise_ratios_ranks])
         
-        #sampling_freq = self.emg_data_preproc.fs
+            #sampling_freq = self.emg_data_preproc.fs
         
-        # Find all MUAPs in channel with best signal    
-        if self.settings.trigger_channel >= 0:
-            sig_ind = self.settings.trigger_channel
-        else:
-            if self.signal_noise_ratios[self.signal_noise_ratios_ranks[0]] > 0:
-                sig_ind = self.signal_noise_ratios_ranks[0]
+            # Find all MUAPs in channel with best signal    
+            if self.settings.trigger_channel >= 0:
+                sig_ind = self.settings.trigger_channel
             else:
-                raise Exception("Sorry, no channels with a calculable signal to noise ratio!")
+                if self.signal_noise_ratios[self.signal_noise_ratios_ranks[0]] > 0:
+                    sig_ind = self.signal_noise_ratios_ranks[0]
+                else:
+                    raise Exception("Sorry, no channels with a calculable signal to noise ratio!")
             
-        # Apply Multi-dimensional TK operator (Teager-Kaiser)
-        # to return MUAPs in channel
-        #used_data = self.emg_data_preproc.emg_ts[sig_ind, :]
-        #print(used_data.shape)
-        #indices, locs = tk.TK_filter(used_data, sampling_freq)         
+            # Apply Multi-dimensional TK operator (Teager-Kaiser)
+            # to return MUAPs in channel
+            used_data = self.emg_data_preproc.emg_ts[sig_ind, :]
+            #print(used_data.shape)
+            indices, locs = tk.TK_filter(used_data, sampling_freq)         
         
-        # Plot for testing purposes
-        #self.plot_MUs(used_data, indices, locs)
+            # Plot for testing purposes
+            #self.plot_MUs(used_data, indices, locs)
         
         ########################
         if True:
             # load test data instead for dev
             import csv
-            name = "nrajh" #
+            ##name = "nrajh" #
         
             # Importing csv module  
             filename = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\loc_test_data.csv'
@@ -355,7 +358,7 @@ class EMGAnalysisReconstruct:
 
         n_peaks = np.max(locs) + 1
         
-        print("MUs found: " + str(np.max(locs) + 1) + " via channel: " + str(sig_ind))
+        #print("MUs found: " + str(np.max(locs) + 1) + " via channel: " + str(sig_ind))
 
         print(self.emg_data_preproc.preproc_settings)
         print("Good channels:")
@@ -798,19 +801,34 @@ class EMGAnalysisReconstruct:
         # Interpolate between the electrodes in order to make gaussian filter
         # have roughly equal effect on distance as time
         interp_n = 4 
-        # Points to interpolate over
-        Xi = np.arange(1, base.shape[0] + 1) * interp_n - 1 
+        
+        #xg, yg = np.meshgrid(x, y, indexing='ij')
+        #data = ff(xg, yg)
+        #x = np.arange(base.shape[0]) #1, base.shape[0] + 1) * interp_n - 1
+        #y = np.arange(base.shape[1])
+        #interp = RegularGridInterpolator((x, y), base, bounds_error=False, fill_value=None)
+
         # Points to return after interpolation
-        Xo = np.arange(interp_n - 1, Xi[-1] + 1)
+        #x2 = np.arange(interp_n - 1, x[-1] + 1)
+        #ut, vt = np.meshgrid(x2, y, indexing='ij')
+
+        #test_points = np.array([ut.ravel(), vt.ravel()]).T
+
+        #b = interp(test_points).reshape(len(ut), len(vt))
+        
+        # Points to interpolate over
+        #Xi = np.arange(1, base.shape[0] + 1) * interp_n - 1 
+        # Points to return after interpolation
+        #Xo = np.arange(interp_n - 1, Xi[-1] + 1)
         #print("findpeaks_2d")
         #print(Xi.shape)
         #print(base.shape)
         #print(Xo.shape)
         
         # Need a loop here as in Python the base must be 1D
-        b = np.zeros((Xo.shape[0], base.shape[1]))
-        for i in range(base.shape[1]):
-            b[:, i] = np.interp(Xo, Xi, base[:, i]) #base is 2D ?? so not working
+        #b = np.zeros((Xo.shape[0], base.shape[1]))
+        #for i in range(base.shape[1]):
+        #    b[:, i] = np.interp(Xo, Xi, base[:, i]) #base is 2D ?? so not working
     
         ###print
         #import pandas as pd 
@@ -820,18 +838,21 @@ class EMGAnalysisReconstruct:
         #####
 
         #print(b.shape)
-        sigma = 3
-        im = np.abs(gaussian_filter(b, sigma, truncate=np.ceil(2*sigma)/sigma))   #imgaussfilt(b, 3))
+        sigma = 2
+        im = np.abs(gaussian_filter(base, sigma, truncate=np.ceil(2*sigma)/sigma))   #imgaussfilt(b, 3))
+        
         # tophat transform       
         # Applying the Top-Hat operation
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (6, 6))  
-        im2 = cv2.morphologyEx(im, cv2.MORPH_TOPHAT, kernel) 
+        #kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (6, 6))  
+        #im2 = cv2.morphologyEx(im, cv2.MORPH_TOPHAT, kernel) 
+        
+        im2 = im #base
         
         ###print
         import pandas as pd 
-        name = "nrajh" #"richa"
-        df = pd.DataFrame(im)
-        df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\im_findpeaks_2d_python.csv', header= False, index=False, na_rep='nan')
+        name = "richa"
+        #df = pd.DataFrame(im)
+        #df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\im_findpeaks_2d_python.csv', header= False, index=False, na_rep='nan')
         df = pd.DataFrame(im2)
         df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\im2_findpeaks_2d_python.csv', header= False, index=False, na_rep='nan')       
         #####
@@ -849,6 +870,8 @@ class EMGAnalysisReconstruct:
             parse_limit = parse_limit + 1
             print("shape of im2: ")
             print(im2.shape)
+            print("parse_limit = ")
+            print(parse_limit)
             locs = self.findpeaks_2d_package(im2, im2_max * threshold)
             #locs = locs.reshape(-1, 2)
             print(locs)
@@ -872,7 +895,7 @@ class EMGAnalysisReconstruct:
         
         ###print
         import pandas as pd 
-        name = "nrajh" #"richa"
+        name = "richa"
         df = pd.DataFrame(locs)
         df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\locs_findpeaks_2d_python.csv', header= False, index=False, na_rep='nan')
         #####
@@ -885,7 +908,7 @@ class EMGAnalysisReconstruct:
             #print(locs[:, 1])
             #locs[:, 1] = np.array(locs[:, 1], dtype=int)
             #print(locs[:, 1])
-            locs[:, 1] = np.array(np.round(np.array((locs[:, 1] + 1)/interp_n, dtype=float), 0), dtype=int)
+            #locs[:, 1] = np.array(np.round(np.array((locs[:, 1] + 1)/interp_n, dtype=float), 0), dtype=int)
             locs[locs[:, 1] < 0, 1] = 0
             print(locs[:, 1])
         

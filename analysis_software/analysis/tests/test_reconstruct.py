@@ -36,8 +36,8 @@ match recording_ID:
             "data", "sample_data_20231124", "real", "Low quality", recording_ID, "raw"
         )
     case "Stuart_E2":
-        emg_dir = "C:\\Users\\nrajh\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\multi-emg\\data\\sample_data_20231116\\original_data\\Stuart_E2\\raw"
-        #emg_dir = "C:\\Users\\richa\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\multi-emg\\data\\sample_data_20231116\\original_data\\Stuart_E2\\raw"
+        #emg_dir = "C:\\Users\\nrajh\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\multi-emg\\data\\sample_data_20231116\\original_data\\Stuart_E2\\raw"
+        emg_dir = "C:\\Users\\richa\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\multi-emg\\data\\sample_data_20231116\\original_data\\Stuart_E2\\raw"
         #emg_dir = os.path.join(
         #    "data", "sample_data_20231124", "real", recording_ID, "raw"            
         #)
@@ -73,42 +73,42 @@ emg_data = emg_files.load_emg_data()
 # Create and specify preprocessing settings using EMGPreprocSettings object
 preproc_settings = EMGPreprocSettings()
 
-preproc_settings.add_butterworth_filter()  # for defaults
+#preproc_settings.add_butterworth_filter()  # for defaults
 
 ## preproc_settings.add_butterworth_filter(
 ##    cutoff_freq=[400, 2100], order=4, filter_type='bandpass'
 ## )
 
-preproc_settings.add_remove_mains()
+#preproc_settings.add_remove_mains()
 
 
 # Apply preprocessing settings to raw EMG data to generate preprocessed EMG data
 emg_data_preproc = emg_data.preprocess(preproc_settings)
 
 # %% Plot part of segment, before and after preprocessing
-start_t = 3
-stop_t = 4
+#start_t = 3
+#stop_t = 4
 
-fig, ax = emg_data.plot_emg_ts(start_t=start_t, stop_t=stop_t, offset=2000)
-ax.set_title(f"{recording_ID} raw")
+#fig, ax = emg_data.plot_emg_ts(start_t=start_t, stop_t=stop_t, offset=2000)
+#ax.set_title(f"{recording_ID} raw")
 
-fig, ax = emg_data_preproc.plot_emg_ts(start_t=start_t, stop_t=stop_t)
-ax.set_title(f"{recording_ID} preprocessed")
+#fig, ax = emg_data_preproc.plot_emg_ts(start_t=start_t, stop_t=stop_t)
+#ax.set_title(f"{recording_ID} preprocessed")
 
 # %% PSD example
-start_f = 500
+#start_f = 500
 
 # Compute and plot PSD
-emg_pxx = emg_data.compute_pxx(10)
-emg_pxx.plot_pxx(start_f, 2500, plot_chan=2)
+#emg_pxx = emg_data.compute_pxx(10)
+#emg_pxx.plot_pxx(start_f, 2500, plot_chan=2)
 
-emg_pxx_preproc = emg_data_preproc.compute_pxx(10)
-emg_pxx_preproc.plot_pxx(start_f, 2500, plot_chan=2)
+#emg_pxx_preproc = emg_data_preproc.compute_pxx(10)
+#emg_pxx_preproc.plot_pxx(start_f, 2500, plot_chan=2)
 
 # %% Setting data to analyse from preprocessed data
 
 # Sets boolean for timepoints (10-20 s)
-emg_data_preproc.set_analyse_t(start_t=10, stop_t=20)
+#emg_data_preproc.set_analyse_t(start_t=10, stop_t=20)
 
 # Sets boolean for channels
 bad_chan = [0, 1, 8]
@@ -116,7 +116,7 @@ emg_data_preproc.set_bad_chan(bad_chan)
 
 # %% header file
 
-hfile = emg_files.read_header()
+#hfile = emg_files.read_header()
 # %% Demonstrate that parent class EMGData cannot be instatiated (will throw error)
 
 #my_data = EMGData(

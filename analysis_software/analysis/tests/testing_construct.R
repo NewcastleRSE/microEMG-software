@@ -1,4 +1,4 @@
-name<-"nrajh"
+name<-"richa" #"nrajh"
 
 spikes_mat<-read.csv(paste0('C:\\Users\\',name,'\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\spikes_matlab.csv'), header = FALSE)#, nrows=80000)
 
@@ -56,9 +56,9 @@ sum(im_mat - im_py)
 ###
 
 
-im2_mat<-read.csv(paste0('C:\\Users\\',name,'\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\im_findpeaks_2d_matlab.csv'), header = FALSE)#, nrows=80000)
+im2_mat<-read.csv(paste0('C:\\Users\\',name,'\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\im2_findpeaks_2d_matlab.csv'), header = FALSE)#, nrows=80000)
 
-im2_py<-read.csv(paste0('C:\\Users\\',name,'\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\im_findpeaks_2d_python.csv'), header = FALSE)#, nrows=80000)
+im2_py<-read.csv(paste0('C:\\Users\\',name,'\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\im2_findpeaks_2d_python.csv'), header = FALSE)#, nrows=80000)
 
 head(im2_mat)
 
@@ -81,7 +81,7 @@ peaks_py<-read.csv(paste0('C:\\Users\\',name,'\\OneDrive - Newcastle University\
 peaks2_mat<-read.csv(paste0('C:\\Users\\',name,'\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\locs2_findpeaks_2d_matlab.csv'), header = FALSE)#, nrows=80000)
 
 peaks2_py<-read.csv(paste0('C:\\Users\\',name,'\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\locs2_findpeaks_2d_python.csv'), header = FALSE)#, nrows=80000)
-
+           
 ymax=dim(im2_mat)[1]
 xmax=dim(im2_mat)[2]
 
@@ -107,7 +107,7 @@ points(peaks_py[,1]/xmaxp, peaks_py[,2]/ymaxp, col="black", pch=4, cex=5, lwd=2)
 
 
 
-im2_py<-read.csv(paste0('C:\\Users\\',name,'\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\im_findpeaks_2d_python.csv'), header = FALSE)#, nrows=80000)
+im2_py<-read.csv(paste0('C:\\Users\\',name,'\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\im2_findpeaks_2d_python.csv'), header = FALSE)#, nrows=80000)
 
 peaks_py<-read.csv(paste0('C:\\Users\\',name,'\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\locs_findpeaks_2d_python.csv'), header = FALSE)#, nrows=80000)
 
@@ -118,7 +118,7 @@ xmaxp=dim(im2_py)[2]
 
 dev.new()
 image(t(as.matrix(im2_py)), useRaster=TRUE, axes=TRUE, main="Python 1")
-points(peaks_py[,1]/xmaxp, peaks_py[,2]/ymaxp, col="black", pch=4, cex=5, lwd=2)
+points((peaks_py[,1]+1)/xmaxp, (peaks_py[,2]+1)/ymaxp, col="black", pch=4, cex=5, lwd=2)
 
 
 a<-max(im2_py)
