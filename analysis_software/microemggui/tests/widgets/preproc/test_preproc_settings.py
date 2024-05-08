@@ -195,7 +195,7 @@ def test_preproc_widget_modifying_filter_cutoff1(qtbot, settings_model, freq):
     w = window.widgets["filter_spec"].widgets["filter_freq"].freq_lineedit["cutoff1"]
 
     # Change frequency
-    freq_str = str(float(freq))
+    freq_str = str(freq)
     w.setText(freq_str)
     assert w.text() == freq_str
 
@@ -244,7 +244,7 @@ def test_preproc_widget_modifying_filter_cutoff2(
     w = window.widgets["filter_spec"].widgets["filter_freq"].freq_lineedit["cutoff2"]
 
     # Change frequency
-    freq_str = str(float(freq))
+    freq_str = str(freq)
     w.setText(freq_str)
     assert w.text() == freq_str
 
