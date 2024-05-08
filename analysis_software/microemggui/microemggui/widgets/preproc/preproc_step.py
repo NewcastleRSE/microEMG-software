@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
     QProgressDialog,
     QDialog,
 )
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt
 
 from microemggui.widgets.preproc.preproc_settings import PreprocSettingsWidget
 from microemggui.widgets.emg_viewer import EMGViewerWidget
@@ -35,9 +35,6 @@ from microemggui.gui_logger import QtHandler
 class ApplyPreprocButton(LargePushButton):
     # Button for applying preprocessing settings to EMG data
 
-    # Signal to emit when "apply" button is clicked
-    apply_clicked = Signal()
-
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -47,16 +44,16 @@ class ApplyPreprocButton(LargePushButton):
         # Connections
         self.clicked.connect(self.button_clicked)
 
-    def button_clicked(self):
-        # Send signal to preprocess data
-        self.apply_clicked.emit()
+        # Connections for preprocessing data are added in main preprocessing widget
 
+    def button_clicked(self):
         # Update text and disable (will only change if settings updated)
         self.setText("Re-apply")
         self.setEnabled(False)
 
     def change_enabled(self, freq_values_valid):
-        # Enable/disable button based on whether filter frequency values are valid
+        # Slot for enable/disabling button based on whether filter frequency values are
+        # valid
 
         self.setEnabled(freq_values_valid)
 
@@ -64,13 +61,19 @@ class ApplyPreprocButton(LargePushButton):
 class NextButton(LargePushButton):
     # Button for proceeding to the next step
 
-    # TODO: Signal when "next" button is clicked
+    # TODO: Connections when "next" button is clicked
 
     def __init__(self, parent=None):
         super().__init__(parent)
 
         self.setText("Next")
         self.setToolTip("Proceed to next step")
+
+        self.hide()  # hide initially
+
+    def show_button(self):
+        # Slot for revealing next button after preprocessing
+        self.show()
 
 
 class MainButtons(QWidget):
@@ -172,6 +175,7 @@ class PreprocProgressDialog(QDialog):
 
 class PreprocWidget(QWidget):
     # Widget for preprocessing step
+    # TODO: add signal for overall validity of settings (to pass to apply button)
 
     def __init__(
         self,
@@ -211,13 +215,16 @@ class PreprocWidget(QWidget):
         self.setLayout(self.layout)
 
         # Connections
-        self.widgets["buttons"].widgets["apply"].apply_clicked.connect(
+        self.widgets["buttons"].widgets["apply"].clicked.connect(
             self.apply_preproc
-        )
+        )  # for applying preprocessing
+        self.widgets["buttons"].widgets["apply"].clicked.connect(
+            self.widgets["buttons"].widgets["next"].show_button
+        )  # for showing next button
         freq_w = self.widgets["settings"].widgets["filter_spec"].widgets["filter_freq"]
         freq_w.validity_checked.connect(
             self.widgets["buttons"].widgets["apply"].change_enabled
-        )
+        )  # for enabling/disabling preprocessing based on frequency settings validity
 
     def apply_preproc(self):
         # Apply preprocessing settings to raw data to generate preprocessed data.
