@@ -195,14 +195,8 @@ def test_preproc_widget_modifying_filter_cutoff1(qtbot, settings_model, freq):
     w = window.widgets["filter_spec"].widgets["filter_freq"].freq_lineedit["cutoff1"]
 
     # Change frequency
-    # Ensure focus is on cutoff1 line edit
-    window.widgets["filter_spec"].widgets["filter_freq"].freq_lineedit[
-        "cutoff1"
-    ].setFocus()
     freq_str = str(float(freq))
     w.setText(freq_str)
-    # Change focus to another widget so text is stored
-    window.widgets["filter_spec"].widgets["filter_order"].order_spinbox.setFocus()
     assert w.text() == freq_str
 
     # Check all settings match
@@ -225,17 +219,11 @@ def test_preproc_widget_modifying_filter_cutoff1_fails_when_input_invalid(
     freq_original = float(w.text())
 
     # Change frequency
-    # Ensure focus is on cutoff1 line edit
-    window.widgets["filter_spec"].widgets["filter_freq"].freq_lineedit[
-        "cutoff1"
-    ].setFocus()
     if isinstance(freq, float) or isinstance(freq, int):
         freq_str = str(freq)
     else:
         freq_str = freq
     w.setText(freq_str)
-    # Change focus to another widget so widget attempts to store text
-    window.widgets["filter_spec"].widgets["filter_order"].order_spinbox.setFocus()
     assert w.text() == freq_str
 
     # Check that cutoff1 setting has not changed
@@ -256,16 +244,8 @@ def test_preproc_widget_modifying_filter_cutoff2(
     w = window.widgets["filter_spec"].widgets["filter_freq"].freq_lineedit["cutoff2"]
 
     # Change frequency
-    # Ensure focus is on cutoff2 line edit
-    window.widgets["filter_spec"].widgets["filter_freq"].freq_lineedit[
-        "cutoff2"
-    ].setFocus()
     freq_str = str(float(freq))
     w.setText(freq_str)
-    # Change focus to another widget so text is stored
-    window.widgets["filter_spec"].widgets["filter_freq"].freq_lineedit[
-        "cutoff1"
-    ].setFocus()
     assert w.text() == freq_str
 
     # Check all settings match
@@ -288,17 +268,11 @@ def test_preproc_widget_modifying_filter_cutoff2_fails_when_input_invalid(
     freq_original = float(w.text())
 
     # Change frequency
-    # Ensure focus is on cutoff2 line edit
-    window.widgets["filter_spec"].widgets["filter_freq"].freq_lineedit[
-        "cutoff2"
-    ].setFocus()
     if isinstance(freq, float) or isinstance(freq, int):
         freq_str = str(freq)
     else:
         freq_str = freq
     w.setText(freq_str)
-    # Change focus to another widget so widget attempts to store text
-    window.widgets["filter_spec"].widgets["filter_order"].order_spinbox.setFocus()
     assert w.text() == freq_str
 
     # Check that cutoff1 setting has not changed
