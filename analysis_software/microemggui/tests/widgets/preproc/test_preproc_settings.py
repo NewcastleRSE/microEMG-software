@@ -110,15 +110,13 @@ def assert_settings_match(window, settings, is_initial=False):
         settings.butterworth_filter_settings["order"]
         == spec_w["filter_order"].order_spinbox.value()
     )
-    assert float(
-        settings.butterworth_filter_settings["cutoff1"]
-    ) == float(  # Cast to float if int
+    assert settings.butterworth_filter_settings["cutoff1"] == float(
         spec_w["filter_freq"].freq_lineedit["cutoff1"].text()
     )
     # Can only guarantee cutoff2 frequency for bandpass filter if initial settings
     if is_initial:
         if settings.butterworth_filter_settings["filter_type"] == "bandpass":
-            assert float(settings.butterworth_filter_settings["cutoff2"]) == float(
+            assert settings.butterworth_filter_settings["cutoff2"] == float(
                 spec_w["filter_freq"].freq_lineedit["cutoff2"].text()
             )
         # If not a bandpass filter, cutoff2 line edit is empty string, setting is None
@@ -127,7 +125,7 @@ def assert_settings_match(window, settings, is_initial=False):
             assert settings.butterworth_filter_settings["cutoff2"] is None
     else:
         if settings.butterworth_filter_settings["cutoff2"] is not None:
-            assert float(settings.butterworth_filter_settings["cutoff2"]) == float(
+            assert settings.butterworth_filter_settings["cutoff2"] == float(
                 spec_w["filter_freq"].freq_lineedit["cutoff2"].text()
             )
         else:
@@ -224,7 +222,7 @@ def test_preproc_widget_modifying_filter_cutoff1_fails_when_input_invalid(
     w = window.widgets["filter_spec"].widgets["filter_freq"].freq_lineedit["cutoff1"]
 
     # Original frequency
-    freq_str_original = w.text()
+    freq_original = float(w.text())
 
     # Change frequency
     # Ensure focus is on cutoff1 line edit
@@ -242,8 +240,7 @@ def test_preproc_widget_modifying_filter_cutoff1_fails_when_input_invalid(
 
     # Check that cutoff1 setting has not changed
     settings = settings_model.settings
-    assert str(settings.butterworth_filter_settings["cutoff1"]) != w.text()
-    assert str(settings.butterworth_filter_settings["cutoff1"]) == freq_str_original
+    assert settings.butterworth_filter_settings["cutoff1"] == freq_original
 
 
 @pytest.mark.parametrize("freq", [550, 550.01, 550.1])  # keep above fixture's cutoff1
@@ -288,7 +285,7 @@ def test_preproc_widget_modifying_filter_cutoff2_fails_when_input_invalid(
     w = window.widgets["filter_spec"].widgets["filter_freq"].freq_lineedit["cutoff2"]
 
     # Original frequency
-    freq_str_original = w.text()
+    freq_original = float(w.text())
 
     # Change frequency
     # Ensure focus is on cutoff2 line edit
@@ -306,8 +303,7 @@ def test_preproc_widget_modifying_filter_cutoff2_fails_when_input_invalid(
 
     # Check that cutoff1 setting has not changed
     settings = settings_model_with_bandpass_filter.settings
-    assert str(settings.butterworth_filter_settings["cutoff2"]) != w.text()
-    assert str(settings.butterworth_filter_settings["cutoff2"]) == freq_str_original
+    assert settings.butterworth_filter_settings["cutoff2"] == freq_original
 
 
 # Parameterise with checkbox and corresponding attribute

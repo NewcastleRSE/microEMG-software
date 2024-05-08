@@ -133,6 +133,7 @@ class FilterFreqWidget(QWidget):
 
         # Bool indicating if relative values of frequencies are valid
         # (e.g., cutoff 1 < cutoff 2 if bandpower filter)
+        # Will check that initial settings are valid when match GUI input to settings.
         self.freq_values_valid = True
 
         # Label
@@ -189,7 +190,7 @@ class FilterFreqWidget(QWidget):
             "First frequency must be less than the second frequency"
         )
 
-        # Initially hidden warnings since settings validated; set width
+        # Initially hidden warnings (will check validity below); set width
         for _, w in self.warning_labels.items():
             w.hide()
             w.setMaximumWidth(w_width * 1.75)
@@ -203,13 +204,15 @@ class FilterFreqWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
-        # Set initial values and widget visibility using provided settings
-        self.match_input_to_settings()
-
         # Connections
         self.connect_to_settings()  # To filter settings interface
         self.connect_input_to_validator_warning()  # To warning labels
-        self.connect_input_to_check_freq_values_valid()  # To check for frequency validity
+        self.connect_input_to_check_freq_values_valid()  # To check frequency validity
+
+        # Set initial values and widget visibility using provided settings
+        # This step is last so that any warnings are also display if initial settings
+        # are not valid.
+        self.match_input_to_settings()
 
     def set_n_freq(self, filter_type):
         # Set frequency input to match the number of frequencies needed (determined
@@ -254,8 +257,8 @@ class FilterFreqWidget(QWidget):
                 )
             )
 
-            # check validity (may be empty)
-            self.check_freq_values_valid()
+        # check validity (input may be empty)
+        self.check_freq_values_valid()
 
     def match_input_to_settings(self):
         # Set line edit box text to the corresponding values in the preprocessing
@@ -264,7 +267,11 @@ class FilterFreqWidget(QWidget):
         # Match lineedit inputs to frequencies
         # If cutoff2 is None, will be replaced by empty string by self.set_n_freq
         for k, w in self.freq_lineedit.items():
-            w.setText(str(self.settings_model.settings.butterworth_filter_settings[k]))
+            freq = self.settings_model.settings.butterworth_filter_settings[k]
+            if freq:  # if not None, check if integer number
+                if freq == int(freq):
+                    freq = int(freq)  # Display as int, not float, if integer number
+            w.setText(str(freq))
 
         # Match widgets to filter type
         self.set_n_freq(
@@ -326,7 +333,6 @@ class FilterFreqWidget(QWidget):
 
         if n_freq == 2:
             w2 = self.freq_lineedit["cutoff2"]
-
             # Check if empty or outside of valid range
             if (not w1.hasAcceptableInput()) or (not w2.hasAcceptableInput()):
                 self.freq_values_valid = False

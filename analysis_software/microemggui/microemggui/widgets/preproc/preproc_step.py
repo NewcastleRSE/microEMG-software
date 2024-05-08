@@ -231,6 +231,9 @@ class PreprocWidget(QWidget):
             self.widgets["buttons"].widgets["apply"].change_enabled
         )
 
+        # Check if initial settings are valid
+        self.widgets["settings"].settings_changed()
+
     def apply_preproc(self):
         # Apply preprocessing settings to raw data to generate preprocessed data.
         # Add preprocessed data to viewer.
