@@ -63,15 +63,15 @@ class MainWindow(QMainWindow):
         )
 
         # signal for verifying settings update
-        self.widget.widgets["settings"].settings_changed.connect(
+        self.widget.widgets["settings"].settings_valid.connect(
             self.main_window_settings
         )
 
         self.setCentralWidget(self.widget)
 
-    def main_window_settings(self):
+    def main_window_settings(self, settings_valid):
         # slot for verifying settings update
-        print("MAIN WINDOW UPDATED SETTINGS")
+        print(f"MAIN WINDOW UPDATED SETTINGS (valid = {settings_valid})")
         self.settings_model.settings.print_settings()
 
 

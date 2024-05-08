@@ -120,16 +120,10 @@ class FilterOrderWidget(QWidget):
 class FilterFreqWidget(QWidget):
     # Widget for specifying the filter frequencies from input boxes
 
-    # Signal for whether frequencies are valid
-    validity_checked = Signal(bool)
-
     def __init__(self, settings_model: EMGPreprocSettingsModel, parent=None):
         super().__init__(parent)
 
-        # TODO: block preprocessing from being applied if freq are not valid
         # TODO: set validator based on data sampling frequency
-        # TODO: check upper allowed range for filter frequencies
-        # TODO: ensure upper cutoff is greater than lower cutoff
 
         # Settings
         self.settings_model = settings_model
@@ -356,8 +350,6 @@ class FilterFreqWidget(QWidget):
             else:
                 self.freq_values_valid = True
 
-        self.validity_checked.emit(self.freq_values_valid)  # send signal for validity
-
 
 class FilterSpecWidget(QWidget):
     # Widget for all filter specifications
@@ -396,9 +388,8 @@ class FilterSpecWidget(QWidget):
 class PreprocSettingsWidget(QWidget):
     # Widget for all preprocessing settings
 
-    # Custom signal to emit when data is updated - using to check data in main window
-    # TODO: potentially modify or remove
-    settings_changed = Signal()
+    # Signal for whether settings are valid (emitted when settings changed)
+    settings_valid = Signal(bool)
 
     def __init__(self, settings_model: EMGPreprocSettingsModel, parent=None):
         super().__init__(parent)
@@ -455,19 +446,18 @@ class PreprocSettingsWidget(QWidget):
             filter_spec.widgets["filter_freq"].set_n_freq
         )
 
-        # Temporary checks (whether settings data is updated in main window)
-        # TODO: remove or incorporate in logger
-        mains_checkbox.toggled.connect(self.settings_changed_func)
-        filter_checkbox.toggled.connect(self.settings_changed_func)
+        # Connections to settings_changed (when any setting changed)
+        mains_checkbox.toggled.connect(self.settings_changed)
+        filter_checkbox.toggled.connect(self.settings_changed)
         filter_spec.widgets["filter_type"].type_combobox.currentTextChanged.connect(
-            self.settings_changed_func
+            self.settings_changed
         )
         filter_spec.widgets["filter_order"].order_spinbox.valueChanged.connect(
-            self.settings_changed_func
+            self.settings_changed
         )
         freq_widgets = filter_spec.widgets["filter_freq"].freq_lineedit
         for _, w in freq_widgets.items():
-            w.textChanged.connect(self.settings_changed_func)
+            w.textChanged.connect(self.settings_changed)
 
     def match_input_to_settings(self):
         # Set checkboxes to match provided preprocessing settings
@@ -500,7 +490,20 @@ class PreprocSettingsWidget(QWidget):
         for _, w in self.widgets["filter_spec"].widgets.items():
             w.show()
 
-    def settings_changed_func(self):
-        # Currently used to check data in main window
-        # TODO: potentially modify or remove
-        self.settings_changed.emit()
+    def settings_changed(self):
+        # Slot for when any settings changed.
+        # Used to check whether settings are valid, then emit settings_valid signal.
+
+        # If filter checkbox is checked, check filter frequency validity
+        # (Note filter settings are not changed when checkbox is checked/unchecked, so
+        # do not need to re-check if checkbox state changes,)
+        if self.widgets["filter_checkbox"].isChecked():
+            settings_valid = (
+                self.widgets["filter_spec"].widgets["filter_freq"].freq_values_valid
+            )
+
+        # Otherwise, input is restricted to valid settings, so settings will be valid
+        else:
+            settings_valid = True
+
+        self.settings_valid.emit(settings_valid)

@@ -47,15 +47,17 @@ class ApplyPreprocButton(LargePushButton):
         # Connections for preprocessing data are added in main preprocessing widget
 
     def button_clicked(self):
-        # Update text and disable (will only change if settings updated)
+        # Update text and disable (will re-enable if settings updated)
+
         self.setText("Re-apply")
         self.setEnabled(False)
 
-    def change_enabled(self, freq_values_valid):
-        # Slot for enable/disabling button based on whether filter frequency values are
-        # valid
+    def change_enabled(self, settings_valid):
+        # Slot for enable/disabling button based on whether settings are valid.
+        # This approach is also used to re-enable the button if the preprocessing
+        # settings are changed after the initial preprocessing.
 
-        self.setEnabled(freq_values_valid)
+        self.setEnabled(settings_valid)
 
 
 class NextButton(LargePushButton):
@@ -215,16 +217,19 @@ class PreprocWidget(QWidget):
         self.setLayout(self.layout)
 
         # Connections
-        self.widgets["buttons"].widgets["apply"].clicked.connect(
-            self.apply_preproc
-        )  # for applying preprocessing
+
+        # For applying preprocessing
+        self.widgets["buttons"].widgets["apply"].clicked.connect(self.apply_preproc)
+
+        # For showing next button
         self.widgets["buttons"].widgets["apply"].clicked.connect(
             self.widgets["buttons"].widgets["next"].show_button
-        )  # for showing next button
-        freq_w = self.widgets["settings"].widgets["filter_spec"].widgets["filter_freq"]
-        freq_w.validity_checked.connect(
+        )
+
+        # For enabling/disabling preprocessing based on settings validity
+        self.widgets["settings"].settings_valid.connect(
             self.widgets["buttons"].widgets["apply"].change_enabled
-        )  # for enabling/disabling preprocessing based on frequency settings validity
+        )
 
     def apply_preproc(self):
         # Apply preprocessing settings to raw data to generate preprocessed data.
