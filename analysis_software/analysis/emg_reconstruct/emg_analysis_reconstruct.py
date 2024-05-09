@@ -17,9 +17,10 @@ from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
 import cv2 
 import os
+import struct
 import emg_analyser_python.emg_analyser_functions as tk
 from emg_analyser_python.constants import QUICK_VERSION
-#from findpeaks import findpeaks
+from findpeaks import findpeaks
 #from findmaxima2d import find_maxima, find_local_maxima, cfindmaxima2d
 from scipy.interpolate import RegularGridInterpolator
 import scipy.ndimage as ndimage
@@ -161,6 +162,8 @@ class EMGAnalysisReconstructSettings:
         self.spike_dur = 20
         self.half_subsample_size = 200
         self.max_opt_iterations = 200
+        self.xtol = 0.01
+        self.ftol = 1
         self.needle_type = 'nonlinear'
 
 
@@ -201,6 +204,10 @@ class EMGAnalysisReconstructSettings:
         ans += str(self.half_subsample_size)
         ans += "\nMaximum optimisation steps: "
         ans += str(self.max_opt_iterations) 
+        ans += "\nOptimisation parameter tolerance: "
+        ans += str(self.xtol) 
+        ans += "\nOptimisation function value tolerance: "
+        ans += str(self.ftol) 
         ans += "\nNeedle type: "
         ans += str(self.needle_type) 
         
@@ -451,7 +458,7 @@ class EMGAnalysisReconstruct:
             else:
                 max_signal_id = all_spikes.shape[0] - self.settings.mavg_length
        
-            print(max_signal_id)
+            #print(max_signal_id)
             
             for signal_id in range(max_signal_id):
             
@@ -491,7 +498,7 @@ class EMGAnalysisReconstruct:
                     
                     included_electrodes = np.intersect1d(included_electrodes, good_channels)
                     
-                    print(included_electrodes)
+                    #print(included_electrodes)
                     #print(good_channels)
                     
                     if included_electrodes.shape[0] == 0:
@@ -510,32 +517,33 @@ class EMGAnalysisReconstruct:
                     ## Non-linear optimisation algorithm for fibre positioning
                     #pos[found_index, 0:1], fval, _ = fminsearch(@deconv_wrapper, x0, options)
                     t0 = time.time()
-                    opt_paras, fopt, iters, fcalls, wflag  = opt.fmin(self.deconv_wrapper, x0 = x0, maxiter = self.settings.max_opt_iterations, full_output=True)#, disp = False)
+                    opt_paras, fopt, iters, fcalls, wflag  = opt.fmin(self.deconv_wrapper, x0 = x0, maxiter = self.settings.max_opt_iterations,
+                                                                full_output=True, xtol = self.settings.xtol, ftol = self.settings.ftol)#, disp = False)
                     t1 = time.time()
 
                     total = t1-t0
                     print("total Time = ")
                     print(total)
                     
-                    print("fminsearch...")
+                    #print("fminsearch...")
                    
-                    print(included_electrodes);
-                    print(self.needle);
-                    print(self.sn);
-                    print(x0);
-                    print(iters)
-                    print(fcalls)
-                    print(opt_paras)
-                    print(fopt);
-                    print("###")
+                    #print(included_electrodes);
+                    #print(self.needle);
+                    #print(self.sn);
+                    #print(x0);
+                    #print(iters)
+                    #print(fcalls)
+                    #print(opt_paras)
+                    #print(fopt);
+                    #print("###")
                                 
                     #print(wflag)
                     
-                    print("\n")
-                    input("stop....")
+                    #print("\n")
+                    #input("stop....")
                     #opt_paras = opt_paras[0]
                     #print(opt_paras.shape)
-                    #print(opt_paras)
+                    print(opt_paras)
                     pos = np.vstack((pos, opt_paras))
                     
                     ## Exhaustive search is used when we don't want to use the non-linear search algorithm
@@ -849,12 +857,12 @@ class EMGAnalysisReconstruct:
         im2 = im #base
         
         ###print
-        import pandas as pd 
+        #import pandas as pd 
         name = "richa"
         #df = pd.DataFrame(im)
         #df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\im_findpeaks_2d_python.csv', header= False, index=False, na_rep='nan')
-        df = pd.DataFrame(im2)
-        df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\im2_findpeaks_2d_python.csv', header= False, index=False, na_rep='nan')       
+        #df = pd.DataFrame(im2)
+        #df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\im2_findpeaks_2d_python.csv', header= False, index=False, na_rep='nan')       
         #####
 
 
@@ -868,14 +876,14 @@ class EMGAnalysisReconstruct:
         
         while not found:
             parse_limit = parse_limit + 1
-            print("shape of im2: ")
-            print(im2.shape)
-            print("parse_limit = ")
-            print(parse_limit)
+            #print("shape of im2: ")
+            #print(im2.shape)
+            #print("parse_limit = ")
+            #print(parse_limit)
             locs = self.findpeaks_2d_package(im2, im2_max * threshold)
             #locs = locs.reshape(-1, 2)
-            print(locs)
-            print(locs.shape)
+            #print(locs)
+            #print(locs.shape)
             
             if locs.shape[0] < 1:
                 threshold = threshold - 0.02
@@ -890,14 +898,14 @@ class EMGAnalysisReconstruct:
                 locs = np.array([])
                 found = True
         
-            print("threshold ")
-            print(threshold)
+            #print("threshold ")
+            #print(threshold)
         
         ###print
-        import pandas as pd 
+        #import pandas as pd 
         name = "richa"
-        df = pd.DataFrame(locs)
-        df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\locs_findpeaks_2d_python.csv', header= False, index=False, na_rep='nan')
+        #df = pd.DataFrame(locs)
+        #df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\locs_findpeaks_2d_python.csv', header= False, index=False, na_rep='nan')
         #####
 
         if locs.shape[0] > 0:
@@ -910,10 +918,10 @@ class EMGAnalysisReconstruct:
             #print(locs[:, 1])
             #locs[:, 1] = np.array(np.round(np.array((locs[:, 1] + 1)/interp_n, dtype=float), 0), dtype=int)
             locs[locs[:, 1] < 0, 1] = 0
-            print(locs[:, 1])
+            #print(locs[:, 1])
         
-        df = pd.DataFrame(locs)
-        df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\locs2_findpeaks_2d_python.csv', header= False, index=False, na_rep='nan')
+        #df = pd.DataFrame(locs)
+        #df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\locs2_findpeaks_2d_python.csv', header= False, index=False, na_rep='nan')
        
         return locs
     
@@ -1023,13 +1031,51 @@ class EMGAnalysisReconstruct:
         for k in range(self.no_needle_channels):                        
              self.opr[:, k] = self.tconv(cn[:, k], self.sn[:, k], self.settings.spike_dur*2 + 1)
         
-        total_var = -1.0/np.max(np.var(self.opr, axis = 1, ddof=1))
+        total_var = -np.reciprocal(np.max(np.var(self.opr, axis = 1, ddof=1)))
         #total_var = np.max(np.var(self.opr, axis = 1, ddof=1))
         
         return total_var
     
 
-    def calc_cn(self, fbx, fby, isz):
+    def inverse_rsqrt(self, number):
+        """
+        The following code is the fast inverse square root implementation
+        from Quake III Arena (exact original comment written in Quake III Arena Game). 
+        https://www.geeksforgeeks.org/fast-inverse-square-root/
+        
+        Parameters
+        ----------
+        number: float
+        
+        Returns
+        -------
+        1.0/sqrt(number) 
+        
+        """
+        threehalfs = 1.5
+        x2 = number * 0.5
+        y = number
+ 
+        # evil floating point bit level hacking
+        i = struct.unpack('I', struct.pack('f', y))[0]
+        i = 0x5f3759df - (i >> 1)
+        y = struct.unpack('f', struct.pack('I', i))[0]
+ 
+        # 1st iteration
+        y = y * (threehalfs - (x2 * y * y))
+ 
+        # 2nd iteration, this can be removed
+        # y = y * (threehalfs - (x2 * y * y))
+        result_bits = struct.unpack('I', struct.pack('f', y))[0]
+        size = struct.calcsize('I')
+ 
+        if result_bits < 0 or result_bits >= (1 << (size * 8)):
+            raise ValueError('result_bits out of range')
+ 
+        return struct.unpack('f', struct.pack('I', result_bits))[0]
+ 
+
+    def calc_cn0(self, fbx, fby, isz):
         """
         Channel functions
         Generate 1/r conv functions for coords fbx, fby for each channel.
@@ -1047,19 +1093,72 @@ class EMGAnalysisReconstruct:
         cn: 
         
         """
-        
+        isz_half = isz/2
         cn = np.zeros((isz, self.no_needle_channels))
         
         for channel in range(self.no_needle_channels):
-            for j in range(isz):
+            for j in range(1, isz + 1):
                 dx = np.abs(fbx - self.needle[channel, 0])  # X offset
                 dy = np.abs(fby - self.needle[channel, 1])  # Y offset of channel i
-                dz = np.abs(j - isz/2)                      # Z distance along fibre             
-                cn[j, channel] = 1.0/np.sqrt(dx*dx + dy*dy + dz*dz)
+                dz = np.abs(j - isz_half)                      # Z distance along fibre             
+                cn[j, channel] = self.inverse_rsqrt(dx*dx + dy*dy + dz*dz)
             
         return cn
   
 
+    def cn_element(self, z, channel):
+        """        
+        Generate element of the cn matrix, row 'z', column 'channel'
+
+        Parameters
+        ----------
+        z:
+        
+        fby:
+       
+        
+        
+        Returns
+        -------
+        float            
+        
+        """
+        
+        dx = np.fabs(self.fbx - self.needle[channel, 0])  # X offset
+        dy = np.fabs(self.fby - self.needle[channel, 1])  # Y offset of channel i
+        dz = np.fabs(z - self.isz_half)                   # Z distance along fibre             
+        return np.reciprocal(np.sqrt(dx*dx + dy*dy + dz*dz))
+    
+        #return self.inverse_rsqrt(dx*dx + dy*dy + dz*dz)
+       
+        
+    def calc_cn(self, fbx, fby, isz):
+        """
+        Channel functions
+        Generate 1/r conv functions for coords fbx, fby for each channel.
+
+        Parameters
+        ----------
+        fbx:
+        
+        fby:
+       
+        isz: 
+        
+        Returns
+        -------
+        cn: 2D numpy NDArray[int, int]            
+        
+        """
+        
+        self.isz_half = isz/2
+        self.fbx = fbx
+        self.fby = fby
+        cn = np.fromfunction(lambda i, j: self.cn_element(i, j), (isz, self.no_needle_channels), dtype=int)
+        
+        return cn
+
+    
     def tconv(self, ifn, sig, isz):
         """
         Deconvolution method function
