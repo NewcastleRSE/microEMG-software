@@ -312,3 +312,103 @@ def test_toggle_checkbox_changes_settings_bool_and_checkbox_state(
 
     # Check all settings match
     assert_settings_match(window, window.settings_model.settings)
+
+
+# Parameterise how much to change frequency above/below valid range
+@pytest.mark.parametrize("delta", [0.1, 1, 1000])
+def test_invalid_cutoff1_freq_changes_freq_values_valid_attribute_to_false(
+    qtbot, settings_model, delta
+):
+    # Set up window
+    window = preproc_set.PreprocSettingsWidget(settings_model)
+    window.show()
+    qtbot.addWidget(window)
+
+    # Frequency widget - has freq_values_valid attribute
+    w = window.widgets["filter_spec"].widgets["filter_freq"]
+
+    # Get valid range for frequency from widget
+    freq_val_low = w.freq_val_low
+    freq_val_high = w.freq_val_high
+
+    # Frequency input line edit
+    w_lineedit = w.freq_lineedit["cutoff1"]
+    freq_original_str = w_lineedit.text()
+
+    # Confirm original values are valid
+    assert w.freq_values_valid is True
+
+    # Change frequency to below range and check freq_values_valid is False
+    w_lineedit.setText(str(freq_val_low - delta))
+    assert w.freq_values_valid is False
+
+    # Change frequency back to original
+    w_lineedit.setText(freq_original_str)
+    assert w.freq_values_valid is True
+
+    # Change frequency to above range and check freq_values_valid is False
+    w_lineedit.setText(str(freq_val_high + delta))
+    assert w.freq_values_valid is False
+
+
+# Parameterise how much to change frequency above/below valid range
+@pytest.mark.parametrize("delta", [0.1, 1, 1000])
+def test_invalid_cutoff2_freq_changes_freq_values_valid_attribute_to_false(
+    qtbot, settings_model_with_bandpass_filter, delta
+):
+    # Set up window
+    window = preproc_set.PreprocSettingsWidget(settings_model_with_bandpass_filter)
+    window.show()
+    qtbot.addWidget(window)
+
+    # Frequency widget - has freq_values_valid attribute
+    w = window.widgets["filter_spec"].widgets["filter_freq"]
+
+    # Get valid range for frequency from widget
+    freq_val_low = w.freq_val_low
+    freq_val_high = w.freq_val_high
+
+    # Frequency input line edit
+    w_lineedit = w.freq_lineedit["cutoff2"]
+    freq_original_str = w_lineedit.text()
+
+    # Confirm original values are valid
+    assert w.freq_values_valid is True
+
+    # Change frequency to below range and check freq_values_valid is False
+    w_lineedit.setText(str(freq_val_low - delta))
+    assert w.freq_values_valid is False
+
+    # Change frequency back to original
+    w_lineedit.setText(freq_original_str)
+    assert w.freq_values_valid is True
+
+    # Change frequency to above range and check freq_values_valid is False
+    w_lineedit.setText(str(freq_val_high + delta))
+    assert w.freq_values_valid is False
+
+
+# Parameterise how much to change frequency above/below valid range
+@pytest.mark.parametrize("freqs", [(10, 0.1), (100, 100), (1000, 10)])
+def test_cutoff2_less_than_or_equal_tocutoff1_changes_freq_values_attribute_to_false(
+    qtbot, settings_model_with_bandpass_filter, freqs
+):
+    # Set up window
+    window = preproc_set.PreprocSettingsWidget(settings_model_with_bandpass_filter)
+    window.show()
+    qtbot.addWidget(window)
+
+    # Frequency widget - has freq_values_valid attribute
+    w = window.widgets["filter_spec"].widgets["filter_freq"]
+
+    # Frequency input line edit for each frequency
+    w_lineedit1 = w.freq_lineedit["cutoff1"]
+    w_lineedit2 = w.freq_lineedit["cutoff2"]
+
+    # Confirm original values are valid
+    assert w.freq_values_valid is True
+
+    # Change frequencies so cutoff2 is less than or equal to cutoff1
+    w_lineedit1.setText(str(freqs[0]))
+    w_lineedit2.setText(str(freqs[1]))
+    assert w.freq_values_valid is False
