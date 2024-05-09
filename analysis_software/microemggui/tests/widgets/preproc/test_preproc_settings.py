@@ -70,7 +70,7 @@ def settings_model(request):
     return settings_model
 
 
-# Setting smodel fixture, only parameterised to have bandpass filter
+# Settings model fixture, only parameterised to have bandpass filter
 # Parameters are (whether to apply mains removal, filter type)
 @pytest.fixture(
     params=[(False, "bandpass"), (True, "bandpass")],
