@@ -69,6 +69,8 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(self.widget)
 
+        self.resize(1200, 850)
+
     def main_window_settings(self, settings_valid):
         # slot for verifying settings update
         print(f"MAIN WINDOW UPDATED SETTINGS (valid = {settings_valid})")
