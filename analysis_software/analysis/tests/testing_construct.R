@@ -106,6 +106,7 @@ points(peaks_py[,1]/xmaxp, peaks_py[,2]/ymaxp, col="black", pch=4, cex=5, lwd=2)
 #points(peaks2_py[,1]/xmax, peaks_py[,2]/ymax, col="black", pch=4, cex=5, lwd=2)
 
 
+name<-"nrajh"
 
 im2_py<-read.csv(paste0('C:\\Users\\',name,'\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\im2_findpeaks_2d_python.csv'), header = FALSE)#, nrows=80000)
 

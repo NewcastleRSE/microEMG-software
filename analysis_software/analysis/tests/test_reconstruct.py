@@ -36,8 +36,8 @@ match recording_ID:
             "data", "sample_data_20231124", "real", "Low quality", recording_ID, "raw"
         )
     case "Stuart_E2":
-        #emg_dir = "C:\\Users\\nrajh\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\multi-emg\\data\\sample_data_20231116\\original_data\\Stuart_E2\\raw"
-        emg_dir = "C:\\Users\\richa\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\multi-emg\\data\\sample_data_20231116\\original_data\\Stuart_E2\\raw"
+        emg_dir = "C:\\Users\\nrajh\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\multi-emg\\data\\sample_data_20231116\\original_data\\Stuart_E2\\raw"
+        #emg_dir = "C:\\Users\\richa\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\multi-emg\\data\\sample_data_20231116\\original_data\\Stuart_E2\\raw"
         #emg_dir = os.path.join(
         #    "data", "sample_data_20231124", "real", recording_ID, "raw"            
         #)
@@ -151,5 +151,21 @@ total = t1-t0
 
 print("total Time =")
 print(total)
+
+#output results
+name = "nrajh"
+output_dir = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\'
+
+import pandas as pd
+
+for motor_unit in motor_units.motor_units:
+    pd.DataFrame(motor_unit.fibre_centres).to_csv(output_dir + 'py_fibre_centres' + str(motor_unit.motor_unit_number) + '.csv', header= False, index=False, na_rep='nan')
+    pd.DataFrame(motor_unit.mean_spikes).to_csv(output_dir + 'py_mean_spikes' + str(motor_unit.motor_unit_number) + '.csv', header= False, index=False, na_rep='nan')
+    pd.DataFrame(motor_unit.onsets).to_csv(output_dir + 'py_onsets' + str(motor_unit.motor_unit_number) + '.csv', header= False, index=False, na_rep='nan')    
+    pd.DataFrame(motor_unit.gn_potential).to_csv(output_dir + 'py_gn_potential' + str(motor_unit.motor_unit_number) + '.csv', header= False, index=False, na_rep='nan')
+    # Not 2D, not sure how MATLAB handled this!
+    #pd.DataFrame(motor_unit.all_spikes).to_csv(output_dir + 'py_all_spikes' + str(motor_unit.motor_unit_number) + '.csv', header= False, index=False, na_rep='nan')
+    
+       
 
 
