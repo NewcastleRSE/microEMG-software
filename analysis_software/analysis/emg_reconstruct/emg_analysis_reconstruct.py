@@ -9,7 +9,6 @@ For use with preprocessed EMG data.
 from xml.etree.ElementInclude import include
 import numpy as np
 import numpy.typing as npt
-import scipy
 import scipy.signal as sg
 import scipy.optimize as opt
 from scipy.linalg import toeplitz
@@ -17,23 +16,22 @@ from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
 import cv2 
 import os
-import struct
 import emg_analyser_python.emg_analyser_functions as tk
 from emg_analyser_python.constants import QUICK_VERSION
 from findpeaks import findpeaks
 #from findmaxima2d import find_maxima, find_local_maxima, cfindmaxima2d
-from scipy.interpolate import RegularGridInterpolator
+#from scipy.interpolate import RegularGridInterpolator
 import scipy.ndimage as ndimage
 import scipy.ndimage.filters as filters
 from pymicroemg.emg_data_preproc import EMGDataPreproc  
-import time
+#import time
 
 import pandas as pd 
 
 class EMGMotorUnit:
     """
-    Class for storing motor unit data returned
-    from reconstruction analysis
+    Class for storing data for one motor unit
+    returned from reconstruction analysis
 
     """
     
@@ -46,11 +44,13 @@ class EMGMotorUnit:
 
         Parameters
         ----------
-        
+        number: int
+                number labelling this motor unit
+                matches number returned from TK_filter
 
         Returns
         -------
-        None.
+        None
 
         """
         
@@ -92,7 +92,8 @@ class EMGMotorUnit:
 
 class EMGMotorUnits:
     """
-    Class for storing motor unit data returned from reconstruction analysis
+    Class for storing all motor unit data
+    returned from reconstruction analysis
 
     """
     
@@ -108,7 +109,7 @@ class EMGMotorUnits:
 
         Returns
         -------
-        None.
+        None
 
         """
         
@@ -151,9 +152,7 @@ class EMGAnalysisReconstructSettings:
 
         # Default settings
         self.n_electrodes = 0
-        self.trigger_channel = -1
-        # set as bad channels in preprocessed data
-        #self.broken_channels = []
+        self.trigger_channel = -1        
         self.exhaustive = False
         self.offset = 0.3000
         self.prune = False
@@ -217,7 +216,8 @@ class EMGAnalysisReconstructSettings:
         ans += "\n"
         
         return ans
-            
+        
+    
 class EMGAnalysisReconstruct:
     """
     Class for performing reconstruct analysis
@@ -239,7 +239,7 @@ class EMGAnalysisReconstruct:
 
         Returns
         -------
-        None.
+        None
 
         """
 
@@ -248,14 +248,26 @@ class EMGAnalysisReconstruct:
         self.number_of_channels = self.emg_data_preproc.emg_ts.shape[0]
         
         # SNRs: The SNR values for each channel
-        self.signal_noise_ratios = []
+        self.signal_noise_ratios = np.array([])
         # ranks: The rank of each channel on highest SNR
-        self.signal_noise_ratios_ranks = []
+        self.signal_noise_ratios_ranks = np.array([])
         
+        # Found by running find_motor_units
+        self.indices = np.array([])
+        self.locs = np.array([])
         
-    def calculate_SNR_ranks(self):
+        # Create motor unit object to store final results 
+        # Fill in motor unit data by running fibre_reconstruction      
+        self.found_motor_units = EMGMotorUnits()
+      
+        # Initial threshold for 2D peak detection,
+        # when decting multiple peaks
+        self.threshold = 0.15
+
+
+    def load_test_data(self):
         """
-        Calculate the signal to noise ratios and rank them
+        Load test data for test dev
 
         Parameters
         ----------
@@ -264,36 +276,6 @@ class EMGAnalysisReconstruct:
         Returns
         -------
         None
-
-        """
-        
-        #sampling_freq = self.emg_data_preproc.fs
-               
-        # Set up vector for signal to noise ratios for each channel
-        self.signal_noise_ratios = np.zeros(self.number_of_channels)
-        
-        for channel in range(self.number_of_channels):
-            # Skip "bad" channels
-            if self.emg_data_preproc.chan.analyse_chan[channel]:                        
-                temp = self.emg_data_preproc.emg_ts[channel, :]
-                self.signal_noise_ratios[channel] = np.mean(temp[temp > 0])
-                # SNRs(channel)=sfdr(signal(channel,:),Fs);          
-                
-        # Sort SNRs in decending order
-        self.signal_noise_ratios_ranks = np.argsort(-self.signal_noise_ratios)
-    
-
-    def run_reconstruction(self):
-        """
-        Do the reconstruction analysis
-
-        Parameters
-        ----------
-
-
-        Returns
-        -------
-        motor_units: MotorUnits
 
         """
         
@@ -310,291 +292,207 @@ class EMGAnalysisReconstruct:
         self.emg_data_preproc.emg_ts = np.array(self.emg_data_preproc.emg_ts)
         ###############################################
 
-        # Create motor unit object to store final results       
-        returned_motor_units = EMGMotorUnits()
+
+    def calculate_SNR_ranks(self):
+        """
+        Calculate the signal to noise ratios and rank them
+
+        Parameters
+        ----------
         
-        #Add back later after dev
-        if False:
-            # Order by highest Signal to Noise Ratio
-            self.calculate_SNR_ranks() 
+
+        Returns
+        -------
+        None
+
+        """
+                
+        # Set up vector for signal to noise ratios for each channel
+        self.signal_noise_ratios = np.zeros(self.number_of_channels)
         
-            print(self.signal_noise_ratios_ranks)
-            print(self.signal_noise_ratios[self.signal_noise_ratios_ranks])
+        for channel in range(self.number_of_channels):
+            # Skip "bad" channels
+            if self.emg_data_preproc.chan.analyse_chan[channel]:                        
+                temp = self.emg_data_preproc.emg_ts[channel, :]
+                self.signal_noise_ratios[channel] = np.mean(temp[temp > 0])
+                
+        # Sort SNRs in decending order
+        self.signal_noise_ratios_ranks = np.argsort(-self.signal_noise_ratios)
+    
+
+    def find_motor_units(self):
+        """
+        Finds the motor units and records results in self.indices and self.locs
+        self.locs motor unit labels, 0, 1, 2, ...
+        self.indices indicates which motor unit against the used data
         
-            #sampling_freq = self.emg_data_preproc.fs
+        Parameters
+        ----------
+
+
+        Returns
+        -------
+        None
+
+        """
         
-            # Find all MUAPs in channel with best signal    
-            if self.settings.trigger_channel >= 0:
-                sig_ind = self.settings.trigger_channel
+        # Order by highest Signal to Noise Ratio
+        self.calculate_SNR_ranks() 
+         
+        sampling_freq = self.emg_data_preproc.fs
+        
+        # Find all MUAPs in channel with best signal    
+        if self.settings.trigger_channel >= 0:
+            sig_ind = self.settings.trigger_channel
+        else:
+            if self.signal_noise_ratios[self.signal_noise_ratios_ranks[0]] > 0:
+                sig_ind = self.signal_noise_ratios_ranks[0]
             else:
-                if self.signal_noise_ratios[self.signal_noise_ratios_ranks[0]] > 0:
-                    sig_ind = self.signal_noise_ratios_ranks[0]
-                else:
-                    raise Exception("Sorry, no channels with a calculable signal to noise ratio!")
+                raise Exception("Sorry, no channels with a calculable signal to noise ratio!")
             
-            # Apply Multi-dimensional TK operator (Teager-Kaiser)
-            # to return MUAPs in channel
-            used_data = self.emg_data_preproc.emg_ts[sig_ind, :]
-            #print(used_data.shape)
-            indices, locs = tk.TK_filter(used_data, sampling_freq)         
-        
-            # Plot for testing purposes
-            #self.plot_MUs(used_data, indices, locs)
-        
-        ########################
-        if True:
-            # load test data instead for dev
-            import csv
-            ##name = "nrajh" #
-        
-            # Importing csv module  
-            filename = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\loc_test_data.csv'
-            with open(filename, 'r') as x:
-                locs = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
-
-            filename = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\index_test_data.csv'
-            with open(filename, 'r') as x:
-                indices = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
-
-            locs = (np.array(locs)).flatten()
-            indices = (np.array(indices)).flatten()
-            indices = np.round(indices - 1)
-            locs = np.round(locs - 1)
-            
-            # Set all to non broken likeMATLAB analysis for this data
-            self.emg_data_preproc.chan.analyse_chan = np.full(self.number_of_channels, True)
-            
-        ########################
-
-        n_peaks = np.max(locs) + 1
-        
-        #print("MUs found: " + str(np.max(locs) + 1) + " via channel: " + str(sig_ind))
-
-        print(self.emg_data_preproc.preproc_settings)
-        print("Good channels:")
-        print(self.emg_data_preproc.chan.analyse_chan)
-        
-        print(self.emg_data_preproc.emg_ts.shape[1] - self.settings.half_subsample_size - 1 - 1)
+        # Apply Multi-dimensional TK operator (Teager-Kaiser)
+        # to return MUAPs in channel
+        used_data = self.emg_data_preproc.emg_ts[sig_ind, :]
        
-        print(np.sum(locs == 0))
-        print(np.sum(locs == 1))
+        self.indices, self.locs = tk.TK_filter(used_data, sampling_freq)         
         
-        print("pre loop") 
+        print("MUs found: " + str(np.max(self.locs) + 1) + " via channel: " + str(sig_ind))
         
-        # Initial threshold for 2D peak detection
-        self.threshold = 0.15
+        # Create motor unit objects for each motor unit
+        for i in range(np.max(self.locs)):
+            motor_unit = EMGMotorUnit(i)                
+            self.found_motor_units.motor_units.append(motor_unit)
+         
+
+    def reconstruct_fibres(self, motor_unit_number): 
+        """
+        Fills in fibre construction data and stores it
+        in the corresponding motor unit object.
         
-        # Loop thro' moter units
-        #range(max(locs))
-        for loc_select in range(2):
-            
-            # Save the concurrent signal from all other channels for each spike
-            all_spikes = np.zeros((len(indices[locs==loc_select]), self.settings.n_electrodes, self.settings.half_subsample_size * 2 + 1)) #401?
-            all_onsets = indices[locs==loc_select]
-    
-            # Zero reused vars
-            t = 0
-            self.opr = []
-    
-            for sample in range(len(indices)):
-                if locs[sample] == loc_select:
-                    # exclude spikes right at the edge of the recording
-                    
-                    if indices[sample] < (self.settings.half_subsample_size + 1) or indices[sample] > (self.emg_data_preproc.emg_ts.shape[1] - self.settings.half_subsample_size - 1 - 1):
-                        print("indices[sample]")
-                        print(indices[sample])
-                        continue 
-                    
-                    
-                    for channel in range(self.settings.n_electrodes):
-                        # Skip bad channels
-                        if not self.emg_data_preproc.chan.analyse_chan[channel]:                            
-                            continue
-                        
-                        #print(channel)
-                        #print(int(indices[sample] - 200))
-                        #print(int(indices[sample] + 200 + 1))
-                        all_spikes[t, channel, :] = self.emg_data_preproc.emg_ts[channel,
-                                                    int(indices[sample] - self.settings.half_subsample_size):int(indices[sample] + self.settings.half_subsample_size + 1)]
-                    
-                    t += 1
-                
-            
-            print('MU' + str(loc_select) + ': firings: ' + str(t + 1))
-            
-            if self.settings.mavg_all:
-                self.settings.mavg_length = all_spikes.shape[0] - 1
-            elif t < self.settings.mavg_length:
-                # if there aren't enough spikes to model the MU, skip it
-                print('low number of firings found')
-                continue
-            
-            if t < 2:
-                continue
-            
-            import pandas as pd 
-            name = "nrajh"
-            #df = pd.DataFrame(all_spikes[:,0,:])
-            #df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\spikes_python.csv', header= False, index=False, na_rep='nan')
+        Parameters
+        ----------
+        motor_unit_number: int
+            motor unit number used as a label
 
-            mean_spikes = np.squeeze(np.mean(all_spikes, axis = 0))
-            #clusters = self.peak_group(np.max(mean_spikes, axis = 1))
-            
-            #for broken_index in range(len(settings.broken_channels))
-            #    clusters{settings.broken_channels(broken_index)}=[];
-            #for channel in range(self.number_of_channels):
-            #    # Empty bad channels
-            #    if not self.emg_data_preproc.chan.analyse_chan[channel]: 
-            #        clusters[channel] = []
+        Returns
+        -------
+        None
 
-            #print(clusters)
-            ##Fibre location reconstruction
-            #options = optimset('MaxIter',10000);
-            #options = optimset('PlotFcns',@optimplotfval,'MaxIter',10000);
-            ##disp(['- cluster no: ' num2str(max([clusters{:}]))])
-            pos = np.zeros((0,2))
-            onsets = np.array([])
-            #found_index = 0
+        """
+              
+        # Save the concurrent signal from all other channels for each spike
+        all_spikes = np.zeros((len(self.indices[self.locs==motor_unit_number]),
+                               self.settings.n_electrodes, self.settings.half_subsample_size * 2 + 1)) 
+        
+        all_onsets = self.indices[self.locs==motor_unit_number]
     
-            if self.settings.localise_first:
-                max_signal_id = 0
-            else:
-                max_signal_id = all_spikes.shape[0] - self.settings.mavg_length
-       
-            #print(max_signal_id)
-            
-            for signal_id in range(max_signal_id):
-            
-                if self.settings.localise_first:
-                    sig = np.squeeze(all_spikes[signal_id:(signal_id + self.settings.mavg_length + 1), :, :])
-                else:
-                    sig = np.squeeze(np.mean(all_spikes[signal_id:(signal_id + self.settings.mavg_length + 1), :, :], axis = 0))
-            
-                #df = pd.DataFrame(sig)
-                #df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\sig_python.csv', header= False, index=False, na_rep='nan')
-
-                sub_clusters = self.findpeaks_2d(sig, self.threshold)
-            
-                #print("sub_clusters ")
-                #print(sub_clusters)
-                #print("sub_clusters end ")
+        # Zero reused vars
+        t = 0
+        self.opr = []
+    
+        for sample in range(len(self.indices)):
+            if self.locs[sample] == motor_unit_number:
                 
-                if sub_clusters.shape[0] == 0:
-                    continue
-                      
-                for sub_cluster_index in range(sub_clusters.shape[0]):
-                    # Ensure we don't get spikes outside of recording duration
-                    # (400 samples)
-                    
-                    time_peak = np.max(np.hstack((sub_clusters[sub_cluster_index, 0], self.settings.spike_dur + 1)))
-                    time_peak = np.min(np.hstack((time_peak, self.settings.half_subsample_size * 2 - self.settings.spike_dur)))
-                                   
-                    # Get the mean spikes for the fibre peak amplitude
-                    peak_electrode = sub_clusters[sub_cluster_index, 1]
-                    peak_start = np.max(np.hstack((peak_electrode - 3, 0)))
-                    peak_stop = np.min(np.hstack((peak_electrode + 3, self.settings.n_electrodes - 1)))
-                
-                    included_electrodes = np.arange(peak_start, peak_stop + 1, dtype = "int")
-                    
-                    # Remove bad channels                  
-                    good_channels = np.arange(0, self.settings.n_electrodes, dtype = "int") * self.emg_data_preproc.chan.analyse_chan  
-                    
-                    #print(included_electrodes)
-                    
-                    included_electrodes = np.intersect1d(included_electrodes, good_channels)
-                    
-                    #print(included_electrodes)
-                    #print(good_channels)
-                    
-                    if included_electrodes.shape[0] == 0:
+                # exclude spikes right at the edge of the recording                    
+                if (self.indices[sample] < (self.settings.half_subsample_size + 1)
+                    or self.indices[sample] >
+                    (self.emg_data_preproc.emg_ts.shape[1] - self.settings.half_subsample_size - 1 - 1)):                   
+                    continue 
+                                      
+                for channel in range(self.settings.n_electrodes):
+                    # Skip bad channels
+                    if not self.emg_data_preproc.chan.analyse_chan[channel]:                            
                         continue
+                        
+                    all_spikes[t, channel, :] = self.emg_data_preproc.emg_ts[channel,
+                                                int(self.indices[sample] - self.settings.half_subsample_size):
+                                                int(self.indices[sample] + self.settings.half_subsample_size + 1)]
+                    
+                t += 1
+                
+            
+        print('MU' + str(motor_unit_number) + ': firings: ' + str(t + 1))
+            
+        if self.settings.mavg_all:
+            self.settings.mavg_length = all_spikes.shape[0] - 1
+        elif t < self.settings.mavg_length or t < 2:
+            # if there aren't enough spikes to model the MU, skip it
+            print('Too few firings found to model this motor unit')
+            return
+            
+      
+        mean_spikes = np.squeeze(np.mean(all_spikes, axis = 0))
+        pos = np.zeros((0,2))
+        onsets = np.array([])
+       
+        if self.settings.localise_first:
+            max_signal_id = 0
+        else:
+            max_signal_id = all_spikes.shape[0] - self.settings.mavg_length
+            
+        for signal_id in range(max_signal_id):
+            
+            if self.settings.localise_first:
+                sig = np.squeeze(all_spikes[signal_id:(signal_id + self.settings.mavg_length + 1), :, :])
+            else:
+                sig = np.squeeze(np.mean(all_spikes[signal_id:(signal_id + self.settings.mavg_length + 1), :, :], axis = 0))
+            
+            sub_clusters = self.find_peaks_2d(sig)
+                          
+            if sub_clusters.shape[0] == 0:
+                continue
+                      
+            for sub_cluster_index in range(sub_clusters.shape[0]):
+                # Ensure we don't get spikes outside of recording duration                    
+                time_peak = np.max(np.hstack((sub_clusters[sub_cluster_index, 0], self.settings.spike_dur + 1)))
+                time_peak = np.min(np.hstack((time_peak, self.settings.half_subsample_size * 2 - self.settings.spike_dur)))
+                                   
+                # Get the mean spikes for the fibre peak amplitude
+                peak_electrode = sub_clusters[sub_cluster_index, 1]
+                peak_start = np.max(np.hstack((peak_electrode - 3, 0)))
+                peak_stop = np.min(np.hstack((peak_electrode + 3, self.settings.n_electrodes - 1)))
+                
+                included_electrodes = np.arange(peak_start, peak_stop + 1, dtype = "int")
+                    
+                # Remove bad channels                  
+                good_channels = np.arange(0, self.settings.n_electrodes, dtype = "int") * self.emg_data_preproc.chan.analyse_chan                         
+                included_electrodes = np.intersect1d(included_electrodes, good_channels)
+                    
+                if included_electrodes.shape[0] == 0:
+                    continue
                   
-                    self.sn = (sig[included_electrodes, int(time_peak - self.settings.spike_dur):int(time_peak + self.settings.spike_dur + 1)]).T
+                self.sn = (sig[included_electrodes, int(time_peak - self.settings.spike_dur):int(time_peak + self.settings.spike_dur + 1)]).T
                     
-                    # Needle model pos in mm
-                    self.build_needle_model()                    
+                # Needle model pos in mm
+                self.build_needle_model()                    
                     
-                    # Scaling factor from mm to scaled AU
-                    self.needle = self.needle * 4
-                    x0 = self.needle[int(peak_electrode), :]
-                    self.needle = self.needle[included_electrodes, :]
+                # Scaling factor from mm to scaled AU
+                self.needle = self.needle * 4
+                x0 = self.needle[int(peak_electrode), :]
+                self.needle = self.needle[included_electrodes, :]
                     
-                    ## Non-linear optimisation algorithm for fibre positioning
-                    #pos[found_index, 0:1], fval, _ = fminsearch(@deconv_wrapper, x0, options)
-                    #t0 = time.time()
-                    opt_paras, fopt, iters, fcalls, wflag  = opt.fmin(self.deconv_wrapper, x0 = x0, maxiter = self.settings.max_opt_iterations,
-                                                                full_output=True, xtol = self.settings.xtol, ftol = self.settings.ftol, disp = False)
-                    #t1 = time.time()
-
-                    #total = t1-t0
-                    #print("total Time = ")
-                    #print(total)
-                    
-                    #print("fminsearch...")
-                   
-                    #print(included_electrodes);
-                    #print(self.needle);
-                    #print(self.sn);
-                    #print(x0);
-                    #print(iters)
-                    #print(fcalls)
-                    #print(opt_paras)
-                    #print(fopt);
-                    #print("###")
-                                
-                    #print(wflag)
-                    
-                    #print("\n")
-                    #input("stop....")
-                    #opt_paras = opt_paras[0]
-                    #print(opt_paras.shape)
-                    #print(opt_paras)
-                    pos = np.vstack((pos, opt_paras))
-                    
-                    ## Exhaustive search is used when we don't want to use the non-linear search algorithm
-                    # ie to demonstrate the variance at various putative fibre
-                    # coordinates near to the electrode
-                    #if self.settings.exhaustive == 1:
-                    #    # Start with the position of the nearest electrode
-                    #    x0=pos[found_index, 0:1]
-                    #    p, errs = exhaustive_search(x0);
-                    #    # Append the array of variances to the motor unit
-                    #    motor_unit{loc_select}.err_curve{cluster_index}={errs};
-                    #    motor_unit{loc_select}.err_locs{cluster_index}={p};
-                
-                    #pos[found_index, 0] = pos[found_index, 0]/4
+                ## Non-linear optimisation algorithm for fibre positioning               
+                opt_paras = opt.fmin(self.deconv_wrapper, x0 = x0, maxiter = self.settings.max_opt_iterations,
+                              full_output=False, xtol = self.settings.xtol, ftol = self.settings.ftol, disp = False)
+               
+                pos = np.vstack((pos, opt_paras))                    
+              
+                onsets = np.append(onsets, all_onsets[signal_id])
+        
+        # End of signal_id loop
+        
+        pos[:, 0] = pos[:, 0]/4
+                  
+        ## Add the results to the motor unit object
+        if pos.shape[0] > 0:
+            motor_unit = self.found_motor_units.motor_units[motor_unit_number]
+            motor_unit.fibre_centres = pos
+            motor_unit.mean_spikes = mean_spikes
+            motor_unit.onsets=onsets
+            motor_unit.all_spikes = all_spikes
+            motor_unit.gn_potential = self.opr
              
-                    onsets = np.append(onsets, all_onsets[signal_id])
-
-                    #found_index = found_index + 1
-            
-            # End of signal_id loop
         
-            pos[:, 0] = pos[:, 0]/4
-            
-            ## This is some optional pruning of unrealistic results for the localisation
-            #if self.settings.prune:
-            #    if (pos[cluster_index, 0] > self.settings.prune_xlim[1] or
-            #       pos[cluster_index, 0] < self.settings.prune_xlim[0] or
-            #       abs(pos(cluster_index,2)) > settings.prune_ylim(1)):
-            #        pos = pos[cluster_index, :]
-                
-           
-    
-            ## Append the results to the motor unit object to return
-            if pos.shape[0] > 0:
-                motor_unit = EMGMotorUnit(loc_select)
-                motor_unit.fibre_centres = pos
-                motor_unit.mean_spikes = mean_spikes
-                motor_unit.onsets=onsets
-                motor_unit.all_spikes = all_spikes
-                motor_unit.gn_potential = self.opr
-                returned_motor_units.motor_units.append(motor_unit)
-            
-        
-        return returned_motor_units
-    
-
     def plot_MUs(self, used_data, indices, locs):
         """
         Plot MUs for testing purposes
@@ -635,7 +533,6 @@ class EMGAnalysisReconstruct:
         # Firstly ensure the execution path is the same as the file path       
         abspath = os.path.abspath(__file__)
         dname = os.path.dirname(abspath)
-        #os.chdir(dname)
         
         # Save all images in the Images folder
         plt.savefig(os.path.join(dname, "MUs.png"), format = "png")
@@ -689,11 +586,10 @@ class EMGAnalysisReconstruct:
         return groups
     
 
-    def findpeaks_2d_package(self, image, threshold):
+    def findpeaks_2d_package_1(self, image, threshold):
         
         neighborhood_size = 5
-        #threshold = 1500
-
+     
         data = image #scipy.misc.imread(fname)
 
         data_max = filters.maximum_filter(data, neighborhood_size)
@@ -711,34 +607,13 @@ class EMGAnalysisReconstruct:
             x.append(x_center)
             y_center = (dy.start + dy.stop - 1)/2    
             y.append(y_center)
-
-        
+      
         ans = np.vstack((x, y)).T        
         
         return ans
     
-    def findpeaks_2d_packageX(self, image, threshold):
-        
-        ntol = 10 #Noise Tolerance.
-        img_data = np.array(image).astype(np.float64)
-
-        maxVal = max(img_data)
-        
-        if maxVal > 0:
-            img_data = img_data * (255.0/maxVal)
-            
-        #Finds the local maxima using maximum filter.
-        #local_max = find_local_maxima(img_data)
-
-        #y, x, _ = find_maxima(img_data, local_max, ntol)
-
-        #print(regs)
-        
-        ans = np.vstack(x, y)        
-        
-        return ans
     
-    def findpeaks_2d_package0(self, image, threshold):
+    def findpeaks_2d_package_0(self, image, threshold):
         """
         Finds local maxima of a 2-dimensional image area
         Dependent on findpeaks algorithm from findpeaks package
@@ -755,39 +630,17 @@ class EMGAnalysisReconstruct:
             2D array of location of peaks
         """
                
-        # Initialize
-        
-        fp = findpeaks(whitelist=['peak'], togray = False, limit = threshold, denoise = None, scale = False, lookahead = 50)
-        print(image.shape)
-        # apply threshold        
-        #image[image < threshold] = 0
-
-        #fp.peaks2d
-        #print(image.shape)
-        #print(type(image))
-        
-        #ans = fp.peaks2d(image, method='topology')
+        # Initialize  
+        fp = findpeaks(whitelist=['peak'], togray = False, limit = threshold,
+                       denoise = None, scale = False, lookahead = 50)
+      
         ans = fp.fit(image)
         ans = ans['persistence']    
         
         return np.array(ans.loc[ans['peak'], ['x', 'y']])
 
-        #return np.array(results.loc[results['persistence'], ['x', 'y']]) 
-    
-        # Fit topology method on the 2d-vector
-        #results = fp.fit(imageThres) #['df']
-        # The output contains multiple variables
-        #print(results.keys())
-        # dict_keys(['Xraw', 'Xproc', 'Xdetect', 'Xranked', 'persistence', 'groups0'])
-        #print(results)
-        #print(type(results))
-        #results = results['df']
-        #print(results)
-        #print(type(results))
-        #return np.array(results.loc[results['peak'], ['labx', 'y']])
 
-
-    def findpeaks_2d0(self, sig, threshold):
+    def find_peaks_2d_0(self, sig):
         """
         Finds local maxima of a 2-dimensional image area
         Dependent on findpeaks algorithm from findpeaks package
@@ -796,14 +649,14 @@ class EMGAnalysisReconstruct:
         ----------
         signal: 2D numpy NDArray[float, float]
                 n*m array of signal data
-        threshold: float
-                cutoff for defining a peak as a prop
+       
         Returns
         -------
         locs: 2D numpy NDArray[int, int]
             2D array of location of peaks
         """
         
+        threshold = self.threshold
         base = sig
         # remove negative deflection to discount 'doubling peaks'
         # from negative initial deflection of SFAP
@@ -811,43 +664,8 @@ class EMGAnalysisReconstruct:
                 
         # Interpolate between the electrodes in order to make gaussian filter
         # have roughly equal effect on distance as time
-        interp_n = 4 
+        #interp_n = 4 
         
-        #xg, yg = np.meshgrid(x, y, indexing='ij')
-        #data = ff(xg, yg)
-        #x = np.arange(base.shape[0]) #1, base.shape[0] + 1) * interp_n - 1
-        #y = np.arange(base.shape[1])
-        #interp = RegularGridInterpolator((x, y), base, bounds_error=False, fill_value=None)
-
-        # Points to return after interpolation
-        #x2 = np.arange(interp_n - 1, x[-1] + 1)
-        #ut, vt = np.meshgrid(x2, y, indexing='ij')
-
-        #test_points = np.array([ut.ravel(), vt.ravel()]).T
-
-        #b = interp(test_points).reshape(len(ut), len(vt))
-        
-        # Points to interpolate over
-        #Xi = np.arange(1, base.shape[0] + 1) * interp_n - 1 
-        # Points to return after interpolation
-        #Xo = np.arange(interp_n - 1, Xi[-1] + 1)
-        #print("findpeaks_2d")
-        #print(Xi.shape)
-        #print(base.shape)
-        #print(Xo.shape)
-        
-        # Need a loop here as in Python the base must be 1D
-        #b = np.zeros((Xo.shape[0], base.shape[1]))
-        #for i in range(base.shape[1]):
-        #    b[:, i] = np.interp(Xo, Xi, base[:, i]) #base is 2D ?? so not working
-    
-        ###print
-        #import pandas as pd 
-        #name = "nrajh"
-        #df = pd.DataFrame(b)
-        #df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\b_findpeaks_2d_python.csv', header= False, index=False, na_rep='nan')
-        #####
-
         #print(b.shape)
         sigma = 2
         im = np.abs(gaussian_filter(base, sigma, truncate=np.ceil(2*sigma)/sigma))   #imgaussfilt(b, 3))
@@ -856,21 +674,8 @@ class EMGAnalysisReconstruct:
         # Applying the Top-Hat operation
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (6, 6))  
         im2 = cv2.morphologyEx(im, cv2.MORPH_TOPHAT, kernel) 
-        
-        #im2 = im #base
-        
-        ###print
-        #import pandas as pd 
-        name = "nrajh"
-        df = pd.DataFrame(im)
-        df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\im_findpeaks_2d_python.csv', header= False, index=False, na_rep='nan')
-        df = pd.DataFrame(im2)
-        df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\im2_findpeaks_2d_python.csv', header= False, index=False, na_rep='nan')       
-        #####
-
-
+         
         # Extract each blob
-        # s=regionprops(im3,'Centroid','PixelIdxList');
         locs = np.array([])
         found = False
         parse_limit = 0
@@ -878,16 +683,9 @@ class EMGAnalysisReconstruct:
         max_number_of_peaks = 22
         
         while not found:
-            parse_limit = parse_limit + 1
-            #print("shape of im2: ")
-            #print(im2.shape)
-            #print("parse_limit = ")
-            #print(parse_limit)
-            locs = self.findpeaks_2d_package(im2, im2_max * threshold)
-            #locs = locs.reshape(-1, 2)
-            #print(locs)
-            #print(locs.shape)
-            
+            parse_limit = parse_limit + 1           
+            locs = self.find_peaks_2d_package_0(im2, im2_max * threshold)
+           
             if locs.shape[0] < 1:
                 threshold = threshold - 0.02
             elif locs.shape[0] > max_number_of_peaks:
@@ -900,36 +698,14 @@ class EMGAnalysisReconstruct:
             if threshold <= 0.05 or threshold > 1 or parse_limit > 20:
                 locs = np.array([])
                 found = True
-        
-            #print("threshold ")
-            #print(threshold)
-        
-        ###print
-        #import pandas as pd 
-        name = "nrajh"
-        df = pd.DataFrame(locs)
-        df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\locs_findpeaks_2d_python.csv', header= False, index=False, na_rep='nan')
-        #####
-
-        if locs.shape[0] > 0:
-            #Interpolated locs back to electrode indices
-            #a = (locs[:, 1] + 1)/interp_n - 1
-            #print(a)
-            #locs[:, 1] = np.round(np.array(a, dtype=float), 0) #.astype(int) 
-            #print(locs[:, 1])
-            #locs[:, 1] = np.array(locs[:, 1], dtype=int)
-            #print(locs[:, 1])
-            #locs[:, 1] = np.array(np.round(np.array((locs[:, 1] + 1)/interp_n, dtype=float), 0), dtype=int)
+          
+        if locs.shape[0] > 0:           
             locs[locs[:, 1] < 0, 1] = 0
-            #print(locs[:, 1])
-        
-        #df = pd.DataFrame(locs)
-        #df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\locs2_findpeaks_2d_python.csv', header= False, index=False, na_rep='nan')
-       
+            
         return locs
     
 
-    def findpeaks_2d(self, sig, threshold):
+    def find_peaks_2d(self, sig):
         """
         Finds local maxima of a 2-dimensional image area
         Dependent on findpeaks algorithm from findpeaks package
@@ -951,43 +727,21 @@ class EMGAnalysisReconstruct:
         # from negative initial deflection of SFAP
         base[base < 0] = 0 
                 
-       
-        #print(b.shape)
         sigma = 2
         im = np.abs(gaussian_filter(base, sigma, truncate=np.ceil(2*sigma)/sigma))   #imgaussfilt(b, 3))
         
         # Get coords of maximum in image
         loc = np.unravel_index(np.argmax(im), im.shape)
  
-        # Reverse coords
+        # Reverse coords so that they are in the order needed later
         loc = loc[::-1]
         
-        ###print
-        #import pandas as pd 
-        #name = "nrajh"
-        #df = pd.DataFrame(im)
-        #df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\im_findpeaks_2d_python.csv', header= False, index=False, na_rep='nan')
-        #df = pd.DataFrame(im2)
-        #df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\im2_findpeaks_2d_python.csv', header= False, index=False, na_rep='nan')       
-        #####
-
-
-        ###print
-        #import pandas as pd 
-        #name = "nrajh"
-        #df = pd.DataFrame(locs)
-        #df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\locs_findpeaks_2d_python.csv', header= False, index=False, na_rep='nan')
-        #####
-
-        #df = pd.DataFrame(locs)
-        #df.to_csv('C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\locs2_findpeaks_2d_python.csv', header= False, index=False, na_rep='nan')
-       
         return (np.array(loc).reshape(1, 2))
     
 
     def plot_2d_peaks(self, im, peak_locs):
         """
-        Method to plot 2D image and found peaks from the findpeaks_2d method
+        Method to plot 2D image and found peaks from the find_peaks_2d method
         for testing purposes
         
         Parameters
@@ -1091,10 +845,10 @@ class EMGAnalysisReconstruct:
              self.opr[:, k] = self.tconv(cn[:, k], self.sn[:, k], self.settings.spike_dur*2 + 1)
         
         total_var = -np.reciprocal(np.max(np.var(self.opr, axis = 1, ddof=1)))
-        #total_var = np.max(np.var(self.opr, axis = 1, ddof=1))
         
         return total_var
     
+
     def cn_element(self, z, channel):
         """        
         Generate element of the cn matrix, row 'z', column 'channel'
@@ -1115,11 +869,10 @@ class EMGAnalysisReconstruct:
         dx = np.fabs(self.fbx - self.needle[channel, 0])  # X offset
         dy = np.fabs(self.fby - self.needle[channel, 1])  # Y offset of channel i
         dz = np.fabs(z - self.isz_half)                   # Z distance along fibre             
+        
         return np.reciprocal(np.sqrt(dx*dx + dy*dy + dz*dz))
     
-        #return self.inverse_rsqrt(dx*dx + dy*dy + dz*dz)
-       
-        
+    
     def calc_cn(self, fbx, fby, isz):
         """
         Channel functions

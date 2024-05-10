@@ -8,6 +8,7 @@ Initially taken from GS code to preprocess data
 """
 
 import os
+import re
 import matplotlib.pyplot as plt
 
 from pymicroemg.emg_data_preproc import EMGDataPreproc
@@ -127,6 +128,7 @@ my_data = EMGDataPreproc(
     emg_data.emg_ts, emg_data.fs, emg_data.chan, emg_data.segment_of_recording, preproc_settings
 )
 
+
 print(preproc_settings)
 
 analysis_settings = EMGAnalysisReconstructSettings()
@@ -143,13 +145,38 @@ t0 = time.time()
 
 reconstruct = EMGAnalysisReconstruct(my_data, analysis_settings)
 
-motor_units = reconstruct.run_reconstruction()
-
+t0 = time.time()
+print("Loading test data...\n")
+reconstruct.load_test_data()
 t1 = time.time()
-
 total = t1-t0
+print("Time = ")
+print(total)
 
-print("total Time =")
+print("Finding motor units...\n")
+reconstruct.find_motor_units()
+t2 = time.time()
+total = t2-t1
+print("Time = ")
+print(total)
+
+print("Reconstructing fibres for MU 0...\n")
+reconstruct.reconstruct_fibres(0)
+t3 = time.time()
+total = t3-t2
+print("Time = ")
+print(total)
+
+motor_units = reconstruct.found_motor_units
+
+# To separate different test output
+extra_label = "_v1_"
+
+tX = time.time()
+
+total = tX-t0
+
+print("Total Time =")
 print(total)
 
 #output results
@@ -159,10 +186,10 @@ output_dir = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Mic
 import pandas as pd
 
 for motor_unit in motor_units.motor_units:
-    pd.DataFrame(motor_unit.fibre_centres).to_csv(output_dir + 'py_fibre_centres' + str(motor_unit.motor_unit_number) + '.csv', header= False, index=False, na_rep='nan')
-    pd.DataFrame(motor_unit.mean_spikes).to_csv(output_dir + 'py_mean_spikes' + str(motor_unit.motor_unit_number) + '.csv', header= False, index=False, na_rep='nan')
-    pd.DataFrame(motor_unit.onsets).to_csv(output_dir + 'py_onsets' + str(motor_unit.motor_unit_number) + '.csv', header= False, index=False, na_rep='nan')    
-    pd.DataFrame(motor_unit.gn_potential).to_csv(output_dir + 'py_gn_potential' + str(motor_unit.motor_unit_number) + '.csv', header= False, index=False, na_rep='nan')
+    pd.DataFrame(motor_unit.fibre_centres).to_csv(output_dir + 'py_fibre_centres' + extra_label + str(motor_unit.motor_unit_number) + '.csv', header= False, index=False, na_rep='nan')
+    pd.DataFrame(motor_unit.mean_spikes).to_csv(output_dir + 'py_mean_spikes' + extra_label + str(motor_unit.motor_unit_number) + '.csv', header= False, index=False, na_rep='nan')
+    pd.DataFrame(motor_unit.onsets).to_csv(output_dir + 'py_onsets' + extra_label + str(motor_unit.motor_unit_number) + '.csv', header= False, index=False, na_rep='nan')    
+    pd.DataFrame(motor_unit.gn_potential).to_csv(output_dir + 'py_gn_potential' + extra_label + str(motor_unit.motor_unit_number) + '.csv', header= False, index=False, na_rep='nan')
     # Not 2D, not sure how MATLAB handled this!
     #pd.DataFrame(motor_unit.all_spikes).to_csv(output_dir + 'py_all_spikes' + str(motor_unit.motor_unit_number) + '.csv', header= False, index=False, na_rep='nan')
     
