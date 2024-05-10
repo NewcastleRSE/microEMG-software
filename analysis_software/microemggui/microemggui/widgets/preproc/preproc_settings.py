@@ -287,30 +287,30 @@ class FilterFreqWidget(QWidget):
 
         for k, w in self.freq_lineedit.items():
             w.textChanged.connect(
-                lambda text, cutoff_type=k, w=w: self.settings_model.filter_cutoff_changed(
-                    text, cutoff_type, w.hasAcceptableInput()
+                lambda text, cutoff=k, w=w: self.settings_model.filter_cutoff_changed(
+                    text, cutoff, w.hasAcceptableInput()
                 )
             )
 
     def change_validator_warning_visibility(
-        self, has_acceptable_input: bool, cutoff_type: str
+        self, has_acceptable_input: bool, cutoff: str
     ):
         # Slot for changing warning message visibility for whether frequency is within
         # valid range
         # Validator warnings have keys that match the line edit widget keys
 
         if has_acceptable_input:
-            self.warning_labels[cutoff_type].hide()
+            self.warning_labels[cutoff].hide()
         else:
-            self.warning_labels[cutoff_type].show()
+            self.warning_labels[cutoff].show()
 
     def connect_input_to_validator_warning(self):
         # Connect line edit values to visibility of warning messages based on validator
 
         for k, w in self.freq_lineedit.items():
             w.textChanged.connect(
-                lambda text, w=w, cutoff_type=k: self.change_validator_warning_visibility(
-                    w.hasAcceptableInput(), cutoff_type
+                lambda text, w=w, cutoff=k: self.change_validator_warning_visibility(
+                    w.hasAcceptableInput(), cutoff
                 )
             )
 
