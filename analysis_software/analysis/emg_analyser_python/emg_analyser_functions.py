@@ -1,7 +1,5 @@
-import numpy as np
-import scipy.signal as sg
-from emg_analyser_python.detect_peaks import detect_peaks
-
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 These functions are reimplemented in Python by Richard Howey
 2024, RSE team, Newcastle University
@@ -20,10 +18,12 @@ June 2015, Linkoping University
 Please cite the paper if any of the methods were helpful
 """
 
-MAP_RANGE = [1, 9]
+import numpy as np
+import scipy.signal as sg
+from emg_analyser_python.detect_peaks import detect_peaks
+from emg_analyser_python.constants import QUICK_VERSION
 
-# Use Python package for find peaks and quicker clustering approach
-QUICK_VERSION = False  # True
+MAP_RANGE = [1, 9]
 
 
 def round_int(val):
@@ -41,6 +41,7 @@ def round_int(val):
 
     """
 
+    # return round_int_banker(val)
     return int(np.round(val))
 
 
@@ -59,7 +60,61 @@ def round_ints(vals):
 
     """
 
+    # return round_ints_banker(vals)
     return np.round(vals)
+
+
+def round_int_banker(val):
+    """
+    Rounds the given float to the nearest integer.
+    In the case of a value half way the number
+    is rounded up to be consistent with MatLab, e.g. 0.5 rounds to 1.
+
+    Parameters
+    ----------
+    val : float
+        number to be rounded
+
+    Returns
+    -------
+    integer
+
+    """
+
+    if np.isnan(val):
+        return val
+
+    # Avoid rounding down when half way. If first decimal is 5
+    # then add a bit to ensure it rounds up
+    first_dec = int((val % 1) * 10)
+
+    if first_dec == 5:
+        if val > 0:
+            val += 0.1
+        else:
+            val -= 0.1
+
+    return int(np.round(val))
+
+
+def round_ints_banker(vals):
+    """
+    Rounds the given array of floats to the nearest integers.
+    In the case of a values half way the numbers
+    are rounded up to be consistent with MatLab, e.g. 0.5 rounds to 1.
+
+    Parameters
+    ----------
+    val : 1D numpy NDArray[float]
+        number to be rounded
+
+    Returns
+    -------
+    1D numpy NDArray[int]
+
+    """
+
+    return np.array([round_int(x) for x in vals])
 
 
 def find_peaks(data, distance=1):
@@ -438,10 +493,10 @@ def spike_separator(S_block, template, S_neighbor, window, threshold):
 
             if len(minima_1) > 0:
                 minima_1 = minima_1[0]
-                minima_1 = maxima_1 + minima_1
+                end_pos = maxima_1 + minima_1 + 2
                 # make the uncorrelated zero
-                S_block[0, :minima_1] = 0
-                template[0, :minima_1] = 0
+                S_block[:end_pos] = 0
+                template[:end_pos] = 0
 
     # 2nd Part
     maxima_2 = find_peaks(S_block[(S_neighbor - 1) :])
@@ -909,9 +964,9 @@ def TK_filter(sig, sampling_freq, C=0.1, threshold_PsC=0.1, init=True, wind=0.02
 
     Returns
     -------
-    Index :
+    Index : 1D numpy NDArray[int]
         Index of MUAPs clustered
-    loc :
+    loc : 1D numpy NDArray[int]
         location of the MUAPs in the signal
     """
 
