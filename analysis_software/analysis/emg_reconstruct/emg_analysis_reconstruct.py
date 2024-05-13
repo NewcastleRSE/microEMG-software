@@ -8,6 +8,7 @@ For use with preprocessed EMG data.
 """
 # from xml.etree.ElementInclude import include
 import numpy as np
+
 # import numpy.typing as npt
 import scipy.signal as sg
 import scipy.optimize as opt
@@ -436,7 +437,6 @@ class EMGAnalysisReconstruct:
 
         for sample in range(len(self.indices)):
             if self.locs[sample] == motor_unit_number:
-
                 # exclude spikes right at the edge of the recording
                 if self.indices[sample] < (
                     self.settings.half_subsample_size + 1
@@ -483,7 +483,6 @@ class EMGAnalysisReconstruct:
             max_signal_id = all_spikes.shape[0] - self.settings.mavg_length
 
         for signal_id in range(max_signal_id):
-
             if self.settings.localise_first:
                 sig = np.squeeze(
                     all_spikes[
@@ -683,7 +682,6 @@ class EMGAnalysisReconstruct:
         return groups
 
     def findpeaks_2d_package_1(self, image, threshold):
-
         neighborhood_size = 5
 
         data = image  # scipy.misc.imread(fname)
@@ -895,7 +893,6 @@ class EMGAnalysisReconstruct:
             baseX = 0.3
             baseY = 0
             for i in range(self.settings.n_electrodes):
-
                 self.needle[i, 0] = baseX + self.settings.offset
 
                 if baseY <= 0:
@@ -907,7 +904,6 @@ class EMGAnalysisReconstruct:
                 baseY = self.needle[i, 1]
 
         else:
-
             # the tip of the needle is assumed to be 1 mm far
             # from the first electrode on the x axis
             baseX = 0.8
