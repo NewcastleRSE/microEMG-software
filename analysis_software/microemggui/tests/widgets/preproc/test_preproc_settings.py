@@ -70,7 +70,7 @@ def settings_model(request):
     return settings_model
 
 
-# Setting smodel fixture, only parameterised to have bandpass filter
+# Settings model fixture, only parameterised to have bandpass filter
 # Parameters are (whether to apply mains removal, filter type)
 @pytest.fixture(
     params=[(False, "bandpass"), (True, "bandpass")],
@@ -110,15 +110,13 @@ def assert_settings_match(window, settings, is_initial=False):
         settings.butterworth_filter_settings["order"]
         == spec_w["filter_order"].order_spinbox.value()
     )
-    assert float(
-        settings.butterworth_filter_settings["cutoff1"]
-    ) == float(  # Cast to float if int
+    assert settings.butterworth_filter_settings["cutoff1"] == float(
         spec_w["filter_freq"].freq_lineedit["cutoff1"].text()
     )
     # Can only guarantee cutoff2 frequency for bandpass filter if initial settings
     if is_initial:
         if settings.butterworth_filter_settings["filter_type"] == "bandpass":
-            assert float(settings.butterworth_filter_settings["cutoff2"]) == float(
+            assert settings.butterworth_filter_settings["cutoff2"] == float(
                 spec_w["filter_freq"].freq_lineedit["cutoff2"].text()
             )
         # If not a bandpass filter, cutoff2 line edit is empty string, setting is None
@@ -127,7 +125,7 @@ def assert_settings_match(window, settings, is_initial=False):
             assert settings.butterworth_filter_settings["cutoff2"] is None
     else:
         if settings.butterworth_filter_settings["cutoff2"] is not None:
-            assert float(settings.butterworth_filter_settings["cutoff2"]) == float(
+            assert settings.butterworth_filter_settings["cutoff2"] == float(
                 spec_w["filter_freq"].freq_lineedit["cutoff2"].text()
             )
         else:
@@ -197,14 +195,8 @@ def test_preproc_widget_modifying_filter_cutoff1(qtbot, settings_model, freq):
     w = window.widgets["filter_spec"].widgets["filter_freq"].freq_lineedit["cutoff1"]
 
     # Change frequency
-    # Ensure focus is on cutoff1 line edit
-    window.widgets["filter_spec"].widgets["filter_freq"].freq_lineedit[
-        "cutoff1"
-    ].setFocus()
-    freq_str = str(float(freq))
+    freq_str = str(freq)
     w.setText(freq_str)
-    # Change focus to another widget so text is stored
-    window.widgets["filter_spec"].widgets["filter_order"].order_spinbox.setFocus()
     assert w.text() == freq_str
 
     # Check all settings match
@@ -224,26 +216,19 @@ def test_preproc_widget_modifying_filter_cutoff1_fails_when_input_invalid(
     w = window.widgets["filter_spec"].widgets["filter_freq"].freq_lineedit["cutoff1"]
 
     # Original frequency
-    freq_str_original = w.text()
+    freq_original = float(w.text())
 
     # Change frequency
-    # Ensure focus is on cutoff1 line edit
-    window.widgets["filter_spec"].widgets["filter_freq"].freq_lineedit[
-        "cutoff1"
-    ].setFocus()
     if isinstance(freq, float) or isinstance(freq, int):
         freq_str = str(freq)
     else:
         freq_str = freq
     w.setText(freq_str)
-    # Change focus to another widget so widget attempts to store text
-    window.widgets["filter_spec"].widgets["filter_order"].order_spinbox.setFocus()
     assert w.text() == freq_str
 
     # Check that cutoff1 setting has not changed
     settings = settings_model.settings
-    assert str(settings.butterworth_filter_settings["cutoff1"]) != w.text()
-    assert str(settings.butterworth_filter_settings["cutoff1"]) == freq_str_original
+    assert settings.butterworth_filter_settings["cutoff1"] == freq_original
 
 
 @pytest.mark.parametrize("freq", [550, 550.01, 550.1])  # keep above fixture's cutoff1
@@ -259,16 +244,8 @@ def test_preproc_widget_modifying_filter_cutoff2(
     w = window.widgets["filter_spec"].widgets["filter_freq"].freq_lineedit["cutoff2"]
 
     # Change frequency
-    # Ensure focus is on cutoff2 line edit
-    window.widgets["filter_spec"].widgets["filter_freq"].freq_lineedit[
-        "cutoff2"
-    ].setFocus()
-    freq_str = str(float(freq))
+    freq_str = str(freq)
     w.setText(freq_str)
-    # Change focus to another widget so text is stored
-    window.widgets["filter_spec"].widgets["filter_freq"].freq_lineedit[
-        "cutoff1"
-    ].setFocus()
     assert w.text() == freq_str
 
     # Check all settings match
@@ -288,26 +265,19 @@ def test_preproc_widget_modifying_filter_cutoff2_fails_when_input_invalid(
     w = window.widgets["filter_spec"].widgets["filter_freq"].freq_lineedit["cutoff2"]
 
     # Original frequency
-    freq_str_original = w.text()
+    freq_original = float(w.text())
 
     # Change frequency
-    # Ensure focus is on cutoff2 line edit
-    window.widgets["filter_spec"].widgets["filter_freq"].freq_lineedit[
-        "cutoff2"
-    ].setFocus()
     if isinstance(freq, float) or isinstance(freq, int):
         freq_str = str(freq)
     else:
         freq_str = freq
     w.setText(freq_str)
-    # Change focus to another widget so widget attempts to store text
-    window.widgets["filter_spec"].widgets["filter_order"].order_spinbox.setFocus()
     assert w.text() == freq_str
 
     # Check that cutoff1 setting has not changed
     settings = settings_model_with_bandpass_filter.settings
-    assert str(settings.butterworth_filter_settings["cutoff2"]) != w.text()
-    assert str(settings.butterworth_filter_settings["cutoff2"]) == freq_str_original
+    assert settings.butterworth_filter_settings["cutoff2"] == freq_original
 
 
 # Parameterise with checkbox and corresponding attribute
@@ -342,3 +312,103 @@ def test_toggle_checkbox_changes_settings_bool_and_checkbox_state(
 
     # Check all settings match
     assert_settings_match(window, window.settings_model.settings)
+
+
+# Parameterise how much to change frequency above/below valid range
+@pytest.mark.parametrize("delta", [0.1, 1, 1000])
+def test_invalid_cutoff1_freq_changes_freq_values_valid_attribute_to_false(
+    qtbot, settings_model, delta
+):
+    # Set up window
+    window = preproc_set.PreprocSettingsWidget(settings_model)
+    window.show()
+    qtbot.addWidget(window)
+
+    # Frequency widget - has freq_values_valid attribute
+    w = window.widgets["filter_spec"].widgets["filter_freq"]
+
+    # Get valid range for frequency from widget
+    freq_val_low = w.freq_val_low
+    freq_val_high = w.freq_val_high
+
+    # Frequency input line edit
+    w_lineedit = w.freq_lineedit["cutoff1"]
+    freq_original_str = w_lineedit.text()
+
+    # Confirm original values are valid
+    assert w.freq_values_valid is True
+
+    # Change frequency to below range and check freq_values_valid is False
+    w_lineedit.setText(str(freq_val_low - delta))
+    assert w.freq_values_valid is False
+
+    # Change frequency back to original
+    w_lineedit.setText(freq_original_str)
+    assert w.freq_values_valid is True
+
+    # Change frequency to above range and check freq_values_valid is False
+    w_lineedit.setText(str(freq_val_high + delta))
+    assert w.freq_values_valid is False
+
+
+# Parameterise how much to change frequency above/below valid range
+@pytest.mark.parametrize("delta", [0.1, 1, 1000])
+def test_invalid_cutoff2_freq_changes_freq_values_valid_attribute_to_false(
+    qtbot, settings_model_with_bandpass_filter, delta
+):
+    # Set up window
+    window = preproc_set.PreprocSettingsWidget(settings_model_with_bandpass_filter)
+    window.show()
+    qtbot.addWidget(window)
+
+    # Frequency widget - has freq_values_valid attribute
+    w = window.widgets["filter_spec"].widgets["filter_freq"]
+
+    # Get valid range for frequency from widget
+    freq_val_low = w.freq_val_low
+    freq_val_high = w.freq_val_high
+
+    # Frequency input line edit
+    w_lineedit = w.freq_lineedit["cutoff2"]
+    freq_original_str = w_lineedit.text()
+
+    # Confirm original values are valid
+    assert w.freq_values_valid is True
+
+    # Change frequency to below range and check freq_values_valid is False
+    w_lineedit.setText(str(freq_val_low - delta))
+    assert w.freq_values_valid is False
+
+    # Change frequency back to original
+    w_lineedit.setText(freq_original_str)
+    assert w.freq_values_valid is True
+
+    # Change frequency to above range and check freq_values_valid is False
+    w_lineedit.setText(str(freq_val_high + delta))
+    assert w.freq_values_valid is False
+
+
+# Parameterise how much to change frequency above/below valid range
+@pytest.mark.parametrize("freqs", [(10, 0.1), (100, 100), (1000, 10)])
+def test_cutoff2_less_than_or_equal_tocutoff1_changes_freq_values_attribute_to_false(
+    qtbot, settings_model_with_bandpass_filter, freqs
+):
+    # Set up window
+    window = preproc_set.PreprocSettingsWidget(settings_model_with_bandpass_filter)
+    window.show()
+    qtbot.addWidget(window)
+
+    # Frequency widget - has freq_values_valid attribute
+    w = window.widgets["filter_spec"].widgets["filter_freq"]
+
+    # Frequency input line edit for each frequency
+    w_lineedit1 = w.freq_lineedit["cutoff1"]
+    w_lineedit2 = w.freq_lineedit["cutoff2"]
+
+    # Confirm original values are valid
+    assert w.freq_values_valid is True
+
+    # Change frequencies so cutoff2 is less than or equal to cutoff1
+    w_lineedit1.setText(str(freqs[0]))
+    w_lineedit2.setText(str(freqs[1]))
+    assert w.freq_values_valid is False

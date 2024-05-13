@@ -50,7 +50,6 @@ See pyproject.toml file for list of Python package dependencies.
 
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit) for running checks on committed code (run `pre-commit install` to use the included pre-commit hooks)
 
-[Git Large File Storage](https://git-lfs.com/) to store demo recordings (see page for installation instructions). Use ```git lfs ls-files``` to check which files are tracked using Git LFS.
 
 ### Installation
 
@@ -71,6 +70,8 @@ Next, [install the packages using poetry](https://python-poetry.org/docs/basic-u
 ```
 poetry install
 ```
+
+Example recording data needs to be manually added in a "recordings" folder at the root level. See the paths in helper_config.py in pymicroemg. These paths are the same as in the provided data, with the exception that the "64 channel" directory is replaced with "64-channel".
 
 ### Running Locally
 

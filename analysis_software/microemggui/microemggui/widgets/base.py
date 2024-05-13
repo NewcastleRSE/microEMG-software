@@ -10,6 +10,8 @@ from PySide6.QtWidgets import (
     QLabel,
     QSpinBox,
     QLineEdit,
+    QPushButton,
+    QToolButton,
     QSpacerItem,
     QSizePolicy,
 )
@@ -31,7 +33,21 @@ class InputLabel(QLabel):
 
 
 class InputInlineLabel(QLabel):
-    # Label for text that is inline with other widgets
+    # Inline label for input field
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class InputInlineText(QLabel):
+    # Text that is inline with other widget, but not label for widget (e.g., units)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class InputInlineHighlightedText(QLabel):
+    # Text that is inline with other widget, but not label for widget (e.g., units)
+    # Highlighted in a different colour to make more prominent
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -40,6 +56,7 @@ class InputWarningLabel(QLabel):
     # Label for warning/error text for input fields
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.setWordWrap(True)
 
 
 class InputComboBox(QComboBox):
@@ -60,6 +77,44 @@ class InputLineEdit(QLineEdit):
         super().__init__(*args, **kwargs)
 
 
+# --- Titles ---
+
+
+class SubsectionTitle(QLabel):
+    # Label for subsection of a larger widget (e.g., settings)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class SectionTitle(QLabel):
+    # Label for a larger widget (e.g., preprocessing step)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+# --- Buttons ---
+
+
+class LargePushButton(QPushButton):
+    # Large push buttons
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class WidgetControlButton(QToolButton):
+    # Button for controlling widget (e.g., EMG viewer plot settings)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class TabButton(QPushButton):
+    # "Button" for tabs
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
 # --- Spacers ---
 
 
@@ -69,3 +124,19 @@ class ExpandingSpacer(QSpacerItem):
     # Used to keep other widgets a fixed size.
     def __init__(self):
         super().__init__(0, 0, QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+
+class ExpandingVSpacer(QSpacerItem):
+    # Spacer with minimum size of (0, 0) that will expand vertically to fill available
+    # space in widget.
+    # Used to keep other widgets a fixed size.
+    def __init__(self):
+        super().__init__(0, 0, QSizePolicy.Fixed, QSizePolicy.Expanding)
+
+
+class ExpandingHSpacer(QSpacerItem):
+    # Spacer with minimum size of (0, 0) that will expand horizontally to fill available
+    # space in widget.
+    # Used to keep other widgets a fixed size.
+    def __init__(self):
+        super().__init__(0, 0, QSizePolicy.Expanding, QSizePolicy.Fixed)

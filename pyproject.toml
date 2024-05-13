@@ -4,7 +4,6 @@ version = "0.1.0"
 description = ""
 authors = ["Gabrielle M. Schroeder <8205451+gmschroe@users.noreply.github.com>"]
 readme = "README.md"
-packages = [{include = "microemg_software"}]
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.13"
@@ -15,6 +14,8 @@ pymicroemg = {path = "analysis_software/pymicroemg", develop = true}
 intanutil = {path = "analysis_software/intanutil", develop = true}
 pyside6 = "^6.6.1"
 microemggui = {path = "analysis_software/microemggui", develop = true}
+pyqtgraph = "^0.13.4"
+palettable = "^3.3.3"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.0"

@@ -11,6 +11,7 @@ Used to perform initial preprocessing steps and visualisations.
 
 from __future__ import annotations
 
+import logging
 import numpy as np
 import numpy.typing as npt
 import scipy.signal
@@ -19,6 +20,44 @@ from pymicroemg.emg_data import EMGData
 from pymicroemg.emg_channels import EMGChannels
 from pymicroemg.emg_preproc_settings import EMGPreprocSettings
 from pymicroemg.emg_data_preproc import EMGDataPreproc
+
+# Logger - will be used for progress updates for GUI
+logger = logging.getLogger("EMGDataRawLogger")
+logger.setLevel(logging.INFO)
+
+# --- Classes for custom logging ---
+
+
+class RecordContext:
+    # Class for storing context about the analysis for the logger
+    # TODO: docstring
+    # TODO: consider changing to a dataclass
+
+    def __init__(
+        self,
+        analysis_step: str = "",
+        analysis_start: bool = False,
+        loop_i: int | None = None,
+        loop_max: int | None = None,
+    ):
+        self.analysis_step = analysis_step
+        self.analysis_start = analysis_start
+        self.loop_i = loop_i
+        self.loop_max = loop_max
+
+
+class EMGDataRawLoggerAdapter(logging.LoggerAdapter):
+    # Adapter to add additional, easily accessible context to the logger
+    # TODO: add docstring
+
+    def __init__(self, logger, extra=None):
+        super().__init__(logger, extra)
+
+        if extra:
+            self.record_context = extra.get("record_context")
+
+
+# --- EMG data class ----
 
 
 class EMGDataRaw(EMGData):
@@ -145,6 +184,14 @@ class EMGDataRaw(EMGData):
 
         """
 
+        # Log
+        analysis_step = "filtering"
+        record_context = RecordContext(
+            analysis_step=analysis_step, analysis_start=True, loop_max=self.n_chan
+        )
+        adapter = EMGDataRawLoggerAdapter(logger, {"record_context": record_context})
+        adapter.info("Started filtering.")
+
         # Design filter
         sos = scipy.signal.butter(
             N=order // 2,
@@ -157,6 +204,13 @@ class EMGDataRaw(EMGData):
 
         # Filter each channel's signal
         for i in range(self.n_chan):
+            # Log progress
+            record_context = RecordContext(analysis_step=analysis_step, loop_i=i)
+            adapter = EMGDataRawLoggerAdapter(
+                logger, {"record_context": record_context}
+            )
+            adapter.info(f"Filtering channel {i}")
+
             emg_ts[i, :] = scipy.signal.sosfiltfilt(sos, emg_ts[i, :])
 
         return emg_ts
@@ -205,6 +259,14 @@ class EMGDataRaw(EMGData):
 
         """
 
+        # Log
+        analysis_step = "removing_mains_noise"
+        record_context = RecordContext(
+            analysis_step=analysis_step, analysis_start=True, loop_max=self.n_chan
+        )
+        adapter = EMGDataRawLoggerAdapter(logger, {"record_context": record_context})
+        adapter.info("Started removing mains noise.")
+
         # Check that number of windows used to average noise is odd.
         # Allows time period used to estimate noise to be centred around the window that
         # is being denoised.
@@ -251,6 +313,13 @@ class EMGDataRaw(EMGData):
 
         # Estimate and remove noise in each recording channel
         for i in range(self.n_chan):
+            # Log progress
+            record_context = RecordContext(analysis_step=analysis_step, loop_i=i)
+            adapter = EMGDataRawLoggerAdapter(
+                logger, {"record_context": record_context}
+            )
+            adapter.info(f"Removing noise from channel {i}")
+
             # Extract channel signal and reshape to form windows (one window per row)
             chan_ts = np.reshape(emg_ts[i, :], (n_win, n_samples_per_win))
 
