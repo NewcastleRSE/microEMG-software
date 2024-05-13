@@ -1,7 +1,7 @@
 name<-"nrajh"
 
 motor_unit_number<-0
-extra_label = "_v1_"
+extra_label = "" #"""_v1_"
 
 py_fibre_locs<-read.csv(paste0('C:\\Users\\',name,'\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\py_fibre_centres',extra_label,motor_unit_number ,'.csv'), header = FALSE)#, nrows=80000)
 

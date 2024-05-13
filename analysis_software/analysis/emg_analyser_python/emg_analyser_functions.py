@@ -25,6 +25,7 @@ from emg_analyser_python.constants import QUICK_VERSION
 
 MAP_RANGE = [1, 9]
 
+
 def round_int(val):
     """
     Rounds the given float to the nearest integer.
@@ -39,7 +40,8 @@ def round_int(val):
     integer
 
     """
-
+     
+    #return round_int_banker(val)
     return int(np.round(val))
 
 
@@ -58,8 +60,61 @@ def round_ints(vals):
 
     """
 
+    #return round_ints_banker(vals)
     return np.round(vals)
 
+
+def round_int_banker(val):
+    """
+    Rounds the given float to the nearest integer.
+    In the case of a value half way the number
+    is rounded up to be consistent with MatLab, e.g. 0.5 rounds to 1.
+
+    Parameters
+    ----------
+    val : float
+        number to be rounded
+
+    Returns
+    -------
+    integer
+
+    """
+    
+    if np.isnan(val):
+        return val
+
+    # Avoid rounding down when half way. If first decimal is 5 then add a bit to ensure it rounds up
+    first_dec = int((val % 1) * 10)
+
+    if first_dec == 5:
+        if val > 0:
+            val += 0.1
+        else:
+            val -= 0.1
+
+    return int(np.round(val))
+
+
+def round_ints_banker(vals):
+    """
+    Rounds the given array of floats to the nearest integers.
+    In the case of a values half way the numbers
+    are rounded up to be consistent with MatLab, e.g. 0.5 rounds to 1.
+
+    Parameters
+    ----------
+    val : 1D numpy NDArray[float]
+        number to be rounded
+
+    Returns
+    -------
+    1D numpy NDArray[int]
+
+    """
+
+    return np.array([round_int(x) for x in vals])
+   
 
 def find_peaks(data, distance=1):
     """

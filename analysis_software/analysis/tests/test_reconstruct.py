@@ -20,6 +20,8 @@ from emg_reconstruct.emg_analysis_reconstruct import EMGAnalysisReconstructSetti
 from emg_reconstruct.emg_analysis_reconstruct import EMGAnalysisReconstruct
 from emg_reconstruct.emg_analysis_reconstruct import EMGMotorUnit
 
+name = "nrajh" #"nrajh" #
+        
 # increase figure resolution (needed for Spyder IDE)
 plt.rcParams["figure.dpi"] = 600
 
@@ -37,7 +39,7 @@ match recording_ID:
             "data", "sample_data_20231124", "real", "Low quality", recording_ID, "raw"
         )
     case "Stuart_E2":
-        emg_dir = "C:\\Users\\nrajh\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\multi-emg\\data\\sample_data_20231116\\original_data\\Stuart_E2\\raw"
+        emg_dir = "C:\\Users\\" + name + "\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\multi-emg\\data\\sample_data_20231116\\original_data\\Stuart_E2\\raw"
         #emg_dir = "C:\\Users\\richa\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\multi-emg\\data\\sample_data_20231116\\original_data\\Stuart_E2\\raw"
         #emg_dir = os.path.join(
         #    "data", "sample_data_20231124", "real", recording_ID, "raw"            
@@ -147,18 +149,24 @@ reconstruct = EMGAnalysisReconstruct(my_data, analysis_settings)
 
 t0 = time.time()
 print("Loading test data...\n")
-reconstruct.load_test_data()
+#Set same data as MATLAB for testing...
+filename = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\processed_multi_emg_matlab.csv'
+reconstruct.load_test_data(filename)
 t1 = time.time()
 total = t1-t0
 print("Time = ")
 print(total)
 
 print("Finding motor units...\n")
-reconstruct.find_motor_units()
+#reconstruct.find_motor_units()
 t2 = time.time()
 total = t2-t1
 print("Time = ")
 print(total)
+
+filename_locs = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\loc_test_data.csv'
+filename_indices = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\index_test_data.csv'
+reconstruct.load_motor_unit_data_from_matlab(filename_locs, filename_indices)
 
 print("Reconstructing fibres for MU 0...\n")
 reconstruct.reconstruct_fibres(0)
