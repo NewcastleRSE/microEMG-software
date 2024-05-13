@@ -250,8 +250,11 @@ class EMGData:
         figsize=(7, 7),
         yticklabel_size=6,
         xticklabel_size=8,
+        dpi=100,
+        downsample_factor=1,
     ):
         """
+        TODO: update documentation
         Plot the specified segment of the EMG time series, with each channel's
         signal staggered vertically by the specified offset.
 
@@ -303,6 +306,7 @@ class EMGData:
         # Create new figure with specified size if no axis provided
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
+            fig.dpi = dpi
         else:
             fig = None
 
@@ -311,6 +315,7 @@ class EMGData:
 
         # Get indices corresponding to requested time segment.
         plot_idx = self._get_t_idx(start_t, stop_t)
+        plot_idx = plot_idx[0::downsample_factor]  # downsample
 
         # Plot each channel's signal, staggered by the specified offset
         for i in range(self.n_chan):

@@ -2,23 +2,21 @@
 Overview of data classes and preprocessing steps for microEMG data.
 """
 
-import os
 import matplotlib.pyplot as plt
 import numpy as np
 
 from pymicroemg.emg_files import EMGFiles
 from pymicroemg.emg_preproc_settings import EMGPreprocSettings
+from pymicroemg import helper_config as cfg
 
 # increase figure resolution (needed for Spyder IDE)
 plt.rcParams["figure.dpi"] = 600
 
-# %% Example recording
-recording_ID = "Stuart_E2"
-
 # %% Load data
 
-# Directory containing example data
-emg_dir = os.path.join("data", "sample_data_20231124", "real", recording_ID, "raw")
+# Recording's directory and ID
+recording_num = 0
+emg_dir, recording_id = cfg.get_recording_path_and_id(recording_num)
 
 # %% EMGFiles
 
@@ -71,7 +69,7 @@ stop_t = 20
 # "offset" controls the amount of space between the channels' signals (and thus their
 # apparent amplitude in the plot)
 fig, ax = emg_data.plot_emg_ts(start_t=start_t, stop_t=stop_t, offset=2000)
-ax.set_title(f"{recording_ID}, {start_t} to {stop_t} seconds of original time series")
+ax.set_title(f"{recording_id}, {start_t} to {stop_t} seconds of original time series")
 
 # Trim original data (keep time segment 10-110s)
 emg_data.trim_emg_ts(start_t=10, stop_t=110)
@@ -81,7 +79,7 @@ emg_data.trim_emg_ts(start_t=10, stop_t=110)
 start_t = 0
 stop_t = 10
 fig, ax = emg_data.plot_emg_ts(start_t=start_t, stop_t=stop_t, offset=2000)
-ax.set_title(f"{recording_ID}, {start_t} to {stop_t} seconds of trimmed time series")
+ax.set_title(f"{recording_id}, {start_t} to {stop_t} seconds of trimmed time series")
 
 # %% EMGPreprocSettings
 # To make it easy to store and apply user input from the GUI, we have a class for
@@ -118,10 +116,10 @@ start_t = 3
 stop_t = 4
 
 fig, ax = emg_data.plot_emg_ts(start_t=start_t, stop_t=stop_t, offset=2000)
-ax.set_title(f"{recording_ID} raw")
+ax.set_title(f"{recording_id} raw")
 
 fig, ax = emg_data_preproc.plot_emg_ts(start_t=start_t, stop_t=stop_t)
-ax.set_title(f"{recording_ID} preprocessed")
+ax.set_title(f"{recording_id} preprocessed")
 
 # %% Selecting data to analysis
 #

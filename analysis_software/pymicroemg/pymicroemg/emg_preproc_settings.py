@@ -165,6 +165,10 @@ class EMGPreprocSettings:
 
         # Split cutoff frequencies so easier to set in GUI
         if isinstance(cutoff_freq, list):
+            # Always store as float to facilitate tests with GUI
+            # (easier to check consistency)
+            cutoff_freq = [float(i) for i in cutoff_freq]
+
             # First cutoff frequency
             cutoff1 = cutoff_freq[0]
 
@@ -182,8 +186,8 @@ class EMGPreprocSettings:
                 cutoff2 = None
 
         elif isinstance(cutoff_freq, int | float):
-            # Only one cutoff frequency
-            cutoff1 = cutoff_freq
+            # Only one cutoff frequency; store as float
+            cutoff1 = float(cutoff_freq)
             cutoff2 = None
         else:
             raise ValueError("cutoff_freq must be a list or float")

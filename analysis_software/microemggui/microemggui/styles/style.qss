@@ -1,10 +1,82 @@
+/* Titles */
+
+SectionTitle{
+    font-weight: bold;
+    font-size: 20pt;
+    min-height: 50;
+    max-height: 50;
+}
+
+SubsectionTitle{
+    font-weight: bold;
+    font-size: 16pt;
+}
+
+/* Buttons */
+
+LargePushButton {
+    font-size: 16pt;
+    background-color: 'white';
+    border-style: solid;
+    border-width: 1px;
+    border-color: #D9D9D9;
+    padding: 4;
+    width: 100px;
+    border-radius: 2;
+}
+
+LargePushButton:pressed {
+    background-color: 'grey';
+}
+
+TabButton {
+    font-size: 12pt;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #D9D9D9;
+    padding: 4;
+    width: 150px;
+    border-radius: 2;
+}
+
+TabButton:disabled {
+    background-color: 'white';
+    font-weight: bold;
+    color: 'black';
+    font-size: 12pt;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #D9D9D9;
+    padding: 4;
+    width: 150px;
+    border-radius: 2;
+}
+
+WidgetControlButton {
+    background-color: 'white';
+    border-style: solid;
+    border-width: 1px;
+    border-color: #D9D9D9;
+    border-radius: 2;
+    padding: 3;
+}
+
+WidgetControlButton:pressed {
+    background-color: #D9D9D9;
+}
+
+WidgetControlButton:disabled {
+    background-color: #D9D9D9;
+}
+
+
 /* Settings input widgets - main section */
 
 CheckBoxMain {
     font-weight: bold;
     font-size: 14pt;
-    min-height: 50;
-    max-height: 50;
+    min-height: 35;
+    max-height: 35;
 }
 
 /* Settings input widgets */
@@ -18,13 +90,22 @@ InputLabel {
 InputInlineLabel {
 }
 
+InputInlineText {
+    color: 'grey';
+}
+
+InputInlineHighlightedText {
+    color: 'blue';
+}
+
 InputWarningLabel {
     color: 'red';
+    font-size: 12pt;
 }
 
 InputComboBox {
-    min-width: 100;
-    max-width: 100;
+    min-width: 150;
+    max-width: 150;
 }
 
 InputSpinBox {
@@ -33,7 +114,12 @@ InputSpinBox {
 }
 
 InputLineEdit {
-    min-width: 100;
-    max-width: 100;
+    min-width: 50;
+    max-width: 50;
+}
+
+QPushButton {
+    min-width: 50;
+    max-width: 50;
 }
 
