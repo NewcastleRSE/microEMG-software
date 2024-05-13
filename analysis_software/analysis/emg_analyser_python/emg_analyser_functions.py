@@ -40,8 +40,8 @@ def round_int(val):
     integer
 
     """
-     
-    #return round_int_banker(val)
+    
+    # return round_int_banker(val)
     return int(np.round(val))
 
 
@@ -60,7 +60,7 @@ def round_ints(vals):
 
     """
 
-    #return round_ints_banker(vals)
+    # return round_ints_banker(vals)
     return np.round(vals)
 
 
@@ -84,7 +84,8 @@ def round_int_banker(val):
     if np.isnan(val):
         return val
 
-    # Avoid rounding down when half way. If first decimal is 5 then add a bit to ensure it rounds up
+    # Avoid rounding down when half way. If first decimal is 5
+    # then add a bit to ensure it rounds up
     first_dec = int((val % 1) * 10)
 
     if first_dec == 5:
@@ -112,7 +113,7 @@ def round_ints_banker(vals):
     1D numpy NDArray[int]
 
     """
-
+    
     return np.array([round_int(x) for x in vals])
    
 
@@ -471,10 +472,10 @@ def spike_separator(S_block, template, S_neighbor, window, threshold):
     template : 1D numpy NDArray[float]
         Storing templates
     """
-
+    
     # First Part
     maxima_1 = find_peaks(S_block[:S_neighbor])
-   
+    
     if len(maxima_1) > 0:
         amp_M1 = S_block[:S_neighbor][maxima_1]
         dist_m = (S_neighbor - (maxima_1 + 1)) >= window
@@ -490,9 +491,9 @@ def spike_separator(S_block, template, S_neighbor, window, threshold):
             )
             minima_1 = find_peaks(inverted)
 
-            if len(minima_1) > 0:                         
+            if len(minima_1) > 0:
                 minima_1 = minima_1[0]
-                end_pos = maxima_1 + minima_1 + 2              
+                end_pos = maxima_1 + minima_1 + 2
                 # make the uncorrelated zero
                 S_block[:end_pos] = 0
                 template[:end_pos] = 0
