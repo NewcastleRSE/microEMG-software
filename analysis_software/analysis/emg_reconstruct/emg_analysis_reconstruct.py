@@ -908,7 +908,8 @@ class EMGAnalysisReconstruct:
 
         else:
 
-            # the tip of the needle is assumed to be 1 mm far from the first electrode on the x axis
+            # the tip of the needle is assumed to be 1 mm far
+            # from the first electrode on the x axis
             baseX = 0.8
 
             for i in range(self.settings.n_electrodes):
