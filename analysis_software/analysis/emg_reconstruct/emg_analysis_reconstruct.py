@@ -6,9 +6,9 @@ A class, EMGAnalysisReconstruct for localisation.
 For use with preprocessed EMG data.
 
 """
-from xml.etree.ElementInclude import include
+# from xml.etree.ElementInclude import include
 import numpy as np
-import numpy.typing as npt
+# import numpy.typing as npt
 import scipy.signal as sg
 import scipy.optimize as opt
 from scipy.linalg import toeplitz
@@ -29,7 +29,7 @@ from pymicroemg.emg_data_preproc import EMGDataPreproc
 
 # import time
 
-import pandas as pd
+# import pandas as pd
 
 
 class EMGMotorUnit:
@@ -297,7 +297,8 @@ class EMGAnalysisReconstruct:
             Indices refer to positions in self.emg_data_preproc.emg_ts
 
         filename_locs: string
-            file name and path of csv file of motor unit labels, which are positive integers
+            file name and path of csv file of motor unit labels,
+            which are positive integers
             These labels correspond to the indices above
 
         set_unbroken: bool
@@ -562,7 +563,7 @@ class EMGAnalysisReconstruct:
                 x0 = self.needle[int(peak_electrode), :]
                 self.needle = self.needle[included_electrodes, :]
 
-                ## Non-linear optimisation algorithm for fibre positioning
+                # Non-linear optimisation algorithm for fibre positioning
                 opt_paras = opt.fmin(
                     self.deconv_wrapper,
                     x0=x0,
@@ -581,7 +582,7 @@ class EMGAnalysisReconstruct:
 
         pos[:, 0] = pos[:, 0] / 4
 
-        ## Add the results to the motor unit object
+        # Add the results to the motor unit object
         if pos.shape[0] > 0:
             motor_unit = self.found_motor_units.motor_units[motor_unit_number]
             motor_unit.fibre_centres = pos
@@ -639,7 +640,8 @@ class EMGAnalysisReconstruct:
 
     def find_peaks(self, data, distance=1, min_peak_height=None):
         """
-        Try to return as near as possible the same answer as findpeaks in MatLab if not QUICK VERSION
+        Try to return as near as possible the same answer
+        as findpeaks in MatLab if not QUICK VERSION
         """
 
         if QUICK_VERSION:
@@ -888,7 +890,8 @@ class EMGAnalysisReconstruct:
         nwidth = 0.36
 
         if self.settings.needle_type == "nonlinear":
-            # the tip of the needle is assumed to be 1 mm far from the first electrode on the x axis
+            # the tip of the needle is assumed to be 1 mm far from
+            # the first electrode on the x axis
             baseX = 0.3
             baseY = 0
             for i in range(self.settings.n_electrodes):
