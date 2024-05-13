@@ -40,7 +40,7 @@ def round_int(val):
     integer
 
     """
-    
+
     # return round_int_banker(val)
     return int(np.round(val))
 
@@ -80,7 +80,7 @@ def round_int_banker(val):
     integer
 
     """
-    
+
     if np.isnan(val):
         return val
 
@@ -113,9 +113,9 @@ def round_ints_banker(vals):
     1D numpy NDArray[int]
 
     """
-    
+
     return np.array([round_int(x) for x in vals])
-   
+
 
 def find_peaks(data, distance=1):
     """
@@ -472,16 +472,16 @@ def spike_separator(S_block, template, S_neighbor, window, threshold):
     template : 1D numpy NDArray[float]
         Storing templates
     """
-    
+
     # First Part
     maxima_1 = find_peaks(S_block[:S_neighbor])
-    
+
     if len(maxima_1) > 0:
         amp_M1 = S_block[:S_neighbor][maxima_1]
         dist_m = (S_neighbor - (maxima_1 + 1)) >= window
         dist_a = amp_M1 >= threshold
         maxima_1 = maxima_1[dist_m & dist_a]
-       
+
         if len(maxima_1) > 0:
             # closest to peak
             maxima_1 = maxima_1[0]
