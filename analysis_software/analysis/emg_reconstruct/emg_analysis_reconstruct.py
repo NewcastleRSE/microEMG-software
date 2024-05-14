@@ -11,6 +11,8 @@ For use with preprocessed EMG data.
 
 # from xml.etree.ElementInclude import include
 import numpy as np
+import numpy.typing as npt
+
 
 # import numpy.typing as npt
 import scipy.signal as sg
@@ -47,7 +49,7 @@ class EMGMotorUnit:
 
     """
 
-    def __init__(self, number):
+    def __init__(self, number, potentials_t_idx: npt.NDArray[np.int64]):
         """
         Initialise EMGMotorUnit object.
 
@@ -57,6 +59,9 @@ class EMGMotorUnit:
                 number labelling this motor unit
                 matches number returned from TK_filter
 
+        potentials_t_idx: npt.NDArray[np.int64]
+            Time indices of the motor unit's potentials in the EMG recording
+
         Returns
         -------
         None
@@ -64,6 +69,8 @@ class EMGMotorUnit:
         """
 
         self.motor_unit_number = number
+        self.potentials_t_idx = potentials_t_idx  # Time indices of potentials in EMG
+        self.n_potentials = len(potentials_t_idx)  # Number of potentials assigned to MU
         self.fibre_centres = np.array([])
         self.mean_spikes = np.array([])
         self.onsets = np.array([])
@@ -257,6 +264,7 @@ class EMGAnalysisReconstruct:
         self.signal_noise_ratios_ranks = np.array([])
 
         # Found by running find_motor_units
+        # TODO: rename these attributes and/or remove (store in MU class instead)
         self.indices = np.array([])
         self.locs = np.array([])
 
@@ -408,7 +416,9 @@ class EMGAnalysisReconstruct:
 
         # Create motor unit objects for each motor unit
         for i in range(np.max(self.locs)):
-            motor_unit = EMGMotorUnit(i)
+            motor_unit = EMGMotorUnit(
+                number=i, potentials_t_idx=self.indices[self.locs == i]
+            )
             self.found_motor_units.motor_units.append(motor_unit)
 
     def reconstruct_fibres(self, motor_unit_number):
