@@ -9,9 +9,11 @@ For use with preprocessed EMG data.
 # TODO: remove noqa
 # flake8: noqa
 
+from __future__ import annotations  # for type hints - must be at beginning of file
+
 # from xml.etree.ElementInclude import include
 import numpy as np
-import numpy.typing as npt
+import numpy.typing as npt  # for type hints
 
 
 # import numpy.typing as npt
@@ -115,21 +117,26 @@ class EMGMotorUnits:
 
     """
 
-    def __init__(self):
+    def __init__(self, motor_units: list[EMGMotorUnit]):
         """
-        Initialise EMGMotorUnit object.
+        Initialise EMGMotorUnits object.
 
         Parameters
         ----------
-
+        motor_units : list[EMGMotorUnit]
+            List of motor units (class EMGMotorUnit) to add to the EMGMotorUnits object.
 
         Returns
         -------
-        None
+        None.
 
         """
 
-        self.motor_units = []
+        self.motor_units = motor_units
+        self.n_motor_units = len(motor_units)
+
+        # Get and store number of potentials of each motor unit
+        self.n_potentials = [mu.n_potentials for mu in self.motor_units]
 
     def __str__(self):
         """
@@ -143,11 +150,23 @@ class EMGMotorUnits:
 
         ans = "EMG Motor Units"
         ans += "\nNumber of motor units: "
-        ans += str(len(self.motor_units))
+        ans += str(self.n_motor_units)
 
         ans += "\n"
 
         return ans
+
+    def __len__(self) -> int:
+        """
+        Return the number of motor units.
+
+        Returns
+        -------
+        int
+            Number of motor units stored in object.
+
+        """
+        return self.n_motor_units
 
 
 class EMGAnalysisReconstructSettings:
@@ -270,9 +289,10 @@ class EMGAnalysisReconstruct:
         self.indices = np.array([])
         self.locs = np.array([])
 
-        # Create motor unit object to store final results
-        # Fill in motor unit data by running fibre_reconstruction
-        self.found_motor_units = EMGMotorUnits()
+        # Space for motor unit results
+        # Initialise in find_motor_units
+        # Fill in additional motor unit data by running fibre_reconstruction
+        self.found_motor_units = []
 
         # Initial threshold for 2D peak detection,
         # when decting multiple peaks
@@ -417,11 +437,13 @@ class EMGAnalysisReconstruct:
         )
 
         # Create motor unit objects for each motor unit
+        all_motor_units = []
         for i in range(np.max(self.locs)):
             motor_unit = EMGMotorUnit(
                 number=i, potentials_t_idx=self.indices[self.locs == i]
             )
-            self.found_motor_units.motor_units.append(motor_unit)
+            all_motor_units.append(motor_unit)
+        self.found_motor_units = EMGMotorUnits(all_motor_units)
 
     def reconstruct_fibres(self, motor_unit_number):
         """

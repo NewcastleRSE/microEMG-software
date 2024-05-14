@@ -49,7 +49,7 @@ emg_data = emg_files.load_emg_data()
 
 # %% Optional: Trim original time series to first minute to speed up analysis
 
-emg_data.trim_emg_ts(start_t=0, stop_t=60)
+emg_data.trim_emg_ts(start_t=0, stop_t=10)
 
 # %% Optional: Plot specified segment of the EMG recording
 start_t = 0
@@ -106,13 +106,16 @@ emg_data_preproc.set_bad_chan(bad_chan)
 
 # %% Find motor units
 
+# Create settings for this part of the analysis
 # TODO: update this step when n_electrodes is removed as attribute
 analysis_settings = EMGAnalysisReconstructSettings()
 analysis_settings.n_electrodes = emg_data_preproc.n_chan
-
 print(analysis_settings)
 
+# Find motor units
 reconstruct = EMGAnalysisReconstruct(emg_data_preproc, analysis_settings)
 reconstruct.find_motor_units()
 
-motor_units = reconstruct.found_motor_units
+# %% Analyse the motor units
+reconstruct_mu = reconstruct.found_motor_units
+print(f"Number of motor units: {len(reconstruct_mu)}")
