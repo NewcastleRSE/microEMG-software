@@ -15,5 +15,10 @@ recordings/**/board-*.dat
 recordings/**/aux-*.dat
 recordings/**/vdd-*.dat
 
+# Images
+*.png
+*.jpg
+*.jpeg
+
 # Remove below to easily add new demo recordings
 recordings/**
