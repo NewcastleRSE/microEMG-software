@@ -90,6 +90,8 @@ class EMGMotorUnit:
         ans = "EMG Motor Unit"
         ans += "\nMotor unit number: "
         ans += str(self.motor_unit_number)
+        ans += "\nNumber of potentials: "
+        ans += str(self.n_potentials)
         ans += "\nFibre centres dimensions: "
         ans += str(self.fibre_centres.shape)
         ans += "\nMean spikes dimensions: "
