@@ -136,6 +136,25 @@ print(
     np.round(emg_t[reconstruct.found_motor_units.motor_units[mu].potentials_t_idx], 2)
 )
 
+
+# Plot MUPs
+chan_idx = 23
+for i in np.arange(reconstruct.found_motor_units.n_motor_units):
+    mu_num = reconstruct.found_motor_units.motor_units[i].motor_unit_number
+
+    # avg MUP time series
+    fig, ax = reconstruct.plot_average_motor_unit_potential(i, offset=400)
+    ax.set_title(f"{recording_id}: Average motor unit potential of motor unit {mu_num}")
+
+    # all traces in one channel with average highlighted
+    fig, ax = reconstruct.plot_all_potentials_one_channel(
+        motor_unit_idx=i, chan_idx=chan_idx
+    )
+    ax.set_title(
+        f"{recording_id}: Motor unit potentials of motor unit {mu_num} in channel {chan_idx + 1}"
+    )
+
+
 # %% Fibre localisation
 
 # TODO

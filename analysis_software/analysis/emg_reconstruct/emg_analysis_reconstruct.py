@@ -508,6 +508,155 @@ class EMGAnalysisReconstruct:
 
         return fig, ax
 
+    def get_potentials_data_of_one_motor_unit(
+        self, motor_unit_idx: int, n_ms: int = 20
+    ) -> npt.NDArray[np.float64]:
+        # TODO: do the indices always match motor unit numbers? if not, should add as
+        # attribute to EMGMotorUnits class so can easily find and select MUs using
+        # their numeric labels
+        #
+        # TODO: docstring, testing
+        #
+        # n_ms is the approximate length of time to get for each motor unit (number of
+        # samples on each side of onset are rounded up to nearest integer)
+
+        # Calculate number of samples to get before and after MUP onset
+        n_samples = int(np.ceil(self.emg_data_preproc.fs / 1000 * n_ms) / 2)
+
+        # Motor unit
+        motor_unit = self.found_motor_units.motor_units[motor_unit_idx]
+        motor_unit.potentials_t_idx
+
+        # Get potentials from EMG recording data
+        # dimensions are channels x time x MUP
+        potentials_data = np.zeros(
+            (self.emg_data_preproc.n_chan, n_samples * 2, motor_unit.n_potentials)
+        )
+
+        for i in np.arange(motor_unit.n_potentials):
+            # Note that index excludes stop_t sample, which keeps the length to n_ms
+            start_t = motor_unit.potentials_t_idx[i] - n_samples
+            stop_t = motor_unit.potentials_t_idx[i] + n_samples
+            potentials_data[:, :, i] = self.emg_data_preproc.emg_ts[
+                :, start_t:stop_t
+            ].copy()
+
+        return potentials_data
+
+    def plot_average_motor_unit_potential(
+        self,
+        motor_unit_idx: int,
+        n_ms: int = 20,
+        offset=500,
+        ax=None,
+        lw=0.5,
+        figsize=(7, 7),
+        axis_label_size: float = 10,
+        ytick_label_size=6,
+        xtick_label_size=8,
+        dpi=100,
+    ):
+        # Time series plot of average motor unit potential of one motor unit
+        # TODO: documentation, testing
+        # TODO: averaging options? (mean vs median)
+
+        # Offset must be positive to ensure that channels are correctly labelled.
+        if offset < 0:
+            raise ValueError("The vertical spacing, offset, must be positive")
+
+        # Create new figure with specified size if no axis provided
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+            fig.dpi = dpi
+        else:
+            fig = None
+
+        # Get motor unit potentials and average (mean)
+        potentials_data = self.get_potentials_data_of_one_motor_unit(
+            motor_unit_idx, n_ms
+        )
+        potentials_avg = np.mean(potentials_data, axis=2)
+        n_samples = potentials_avg.shape[1]
+
+        # Time vector for x axis (ms)
+        potentials_t = (np.arange(1, n_samples + 1) / self.emg_data_preproc.fs) * 1000
+
+        # Plot each channel's MUP, staggered by the specified offset
+        for i in range(self.emg_data_preproc.n_chan):
+            ax.plot(potentials_t, potentials_avg[i, :] - offset * i, lw=lw)
+
+        # Channel labels
+        chan_y = np.arange(0, self.emg_data_preproc.n_chan * offset * -1, offset * -1)
+        ax.set_yticks(chan_y)
+        ax.set_yticklabels(self.emg_data_preproc.chan.chan_names)
+        ax.tick_params(axis="y", which="major", labelsize=ytick_label_size)
+        ax.set_ylabel("channel", fontsize=axis_label_size)
+
+        # x axis labels and font size
+        ax.set_xlabel("time (ms)", fontsize=axis_label_size)
+        ax.tick_params(axis="x", which="major", labelsize=xtick_label_size)
+        ax.set_xlim(0, max(potentials_t))
+
+        return fig, ax
+
+    def plot_all_potentials_one_channel(
+        self,
+        motor_unit_idx: int,
+        chan_idx: int,
+        n_ms: int = 20,
+        ax=None,
+        lw=0.2,
+        lw_mean=0.5,
+        figsize=(7, 7),
+        axis_label_size: float = 10,
+        ytick_label_size=10,
+        xtick_label_size=10,
+        dpi=100,
+    ):
+        # Time series plot of all motor unit potentials of one motor unit in one channel
+        # Average (mean) overlaid
+        # TODO: documentation, testing
+        # Note using channel index (counting from 0), not numeric label (counting from
+        # 1)
+
+        # Create new figure with specified size if no axis provided
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+            fig.dpi = dpi
+        else:
+            fig = None
+
+        # Get motor unit potentials and average (mean)
+        potentials_data = self.get_potentials_data_of_one_motor_unit(
+            motor_unit_idx, n_ms
+        )
+        potentials_avg = np.mean(potentials_data, axis=2)
+        n_samples = potentials_avg.shape[1]
+
+        # Time vector for x axis (ms)
+        potentials_t = (np.arange(1, n_samples + 1) / self.emg_data_preproc.fs) * 1000
+
+        # Plot each MUP in specified channel
+        ax.plot(
+            potentials_t,
+            np.squeeze(potentials_data[chan_idx, :, :]),
+            lw=lw,
+            color="silver",
+        )
+        ax.plot(potentials_t, potentials_avg[chan_idx, :], lw=lw_mean, color="black")
+
+        # Labels
+        ax.tick_params(axis="y", which="major", labelsize=ytick_label_size)
+        ax.set_ylabel("mV", fontsize=axis_label_size)
+        # TODO: check label
+
+        # x axis labels and font size
+        ax.set_xlabel("time (ms)", fontsize=axis_label_size)
+        ax.tick_params(axis="x", which="major", labelsize=xtick_label_size)
+        ax.set_xlim(0, max(potentials_t))
+
+        return fig, ax
+
     def reconstruct_fibres(self, motor_unit_number):
         """
         Fills in fibre construction data and stores it
