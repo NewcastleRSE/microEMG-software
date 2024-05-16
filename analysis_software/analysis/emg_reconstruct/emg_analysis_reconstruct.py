@@ -6,7 +6,7 @@ A class, EMGAnalysisReconstruct for localisation.
 For use with preprocessed EMG data.
 
 """
-# TODO: remove noqa
+# TODO: remove noqa - added temporarily to allow packages to be commented out
 # flake8: noqa
 
 from __future__ import annotations  # for type hints - must be at beginning of file
@@ -444,6 +444,69 @@ class EMGAnalysisReconstruct:
             )
             all_motor_units.append(motor_unit)
         self.found_motor_units = EMGMotorUnits(all_motor_units)
+
+    def plot_motor_units_raster(
+        self,
+        linelengths=0.9,
+        linewidths=0.75,
+        ax=None,
+        figsize=(10, 5),
+        dpi: int = 100,
+        axis_label_size: float = 14,
+        xtick_label_size: float = 12,
+        ytick_label_size: float = 12,
+        sort_by: str = "default",
+    ):
+        # Create a raster plot of the potentials of each motor unit in the recording.
+        # TODO: full docstring, testing
+
+        # Get motor units and sort if requested
+        motor_units = self.found_motor_units.motor_units
+        sort_options = ["default", "n_potentials"]
+        if sort_by not in sort_options:
+            raise ValueError(f"sort_by must be one of these options: {sort_options}")
+        elif sort_by == "n_potentials":
+            sort_idx = np.argsort(self.found_motor_units.n_potentials)
+            sort_idx = sort_idx[::-1]  # descending order
+            motor_units = [motor_units[i] for i in sort_idx]
+
+        # Labels for motor units - plus 1 to count from 1, rather than 0, for vis
+        motor_units_numbers = [mu.motor_unit_number + 1 for mu in motor_units]
+
+        # Create new figure with specified size if no axis provided
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+            fig.dpi = dpi
+        else:
+            fig = None
+
+        # Time vector for x axis
+        emg_t = self.emg_data_preproc.get_emg_t()
+
+        # Create list of times of MUPs
+        # Each entry is an array of the potential times for one motor unit
+        potential_t = []
+        for mu in motor_units:
+            potential_t.append(emg_t[mu.potentials_t_idx])
+
+        # Raster plot
+        ax.invert_yaxis()  # places first motor unit at the top of the plot
+        ax.eventplot(potential_t, linelengths=linelengths, linewidths=linewidths)
+
+        # Axis ticks and labels
+        # y axis
+        ax.set_yticks(np.arange(self.found_motor_units.n_motor_units))
+        ax.set_yticklabels(motor_units_numbers)
+        ax.tick_params(axis="y", which="major", labelsize=ytick_label_size)
+        ax.set_ylabel("motor unit", fontsize=axis_label_size)
+        # x axis
+        ax.tick_params(axis="x", which="major", labelsize=xtick_label_size)
+        ax.set_xlabel("time (seconds)", fontsize=axis_label_size)
+        ax.set_xlim(min(emg_t) - 1 / self.emg_data_preproc.fs, max(emg_t))
+
+        # TODO: change time tick labels to mm:ss format
+
+        return fig, ax
 
     def reconstruct_fibres(self, motor_unit_number):
         """

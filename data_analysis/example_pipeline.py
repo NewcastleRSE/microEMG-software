@@ -8,6 +8,7 @@ import sys
 import os
 
 import matplotlib.pyplot as plt
+import numpy as np
 
 from pymicroemg.emg_files import EMGFiles
 from pymicroemg.emg_preproc_settings import EMGPreprocSettings
@@ -47,13 +48,15 @@ emg_files = EMGFiles(emg_dir)
 emg_data = emg_files.load_emg_data()
 
 
-# %% Optional: Trim original time series to first minute to speed up analysis
+# %% Optional: Trim original time series to speed up analysis
 
-emg_data.trim_emg_ts(start_t=0, stop_t=10)
+start_t = 0
+stop_t = 30
+
+emg_data.trim_emg_ts(start_t=start_t, stop_t=stop_t)
 
 # %% Optional: Plot specified segment of the EMG recording
-start_t = 0
-stop_t = 10
+
 fig, ax = emg_data.plot_emg_ts(start_t=start_t, stop_t=stop_t, offset=2000)
 ax.set_title(f"{recording_id}, {start_t} to {stop_t}")
 
@@ -72,13 +75,13 @@ preproc_settings.add_remove_mains()
 emg_data_preproc = emg_data.preprocess(preproc_settings)
 
 # %% Optional: Plot specified part of segment, before and after preprocessing
-start_t = 3
-stop_t = 4
+start_t = 0
+stop_t = 30
 
-fig, ax = emg_data.plot_emg_ts(start_t=start_t, stop_t=stop_t, offset=2000)
+fig, ax = emg_data.plot_emg_ts(start_t=start_t, stop_t=stop_t, figsize=(14, 7))
 ax.set_title(f"{recording_id} raw")
 
-fig, ax = emg_data_preproc.plot_emg_ts(start_t=start_t, stop_t=stop_t)
+fig, ax = emg_data_preproc.plot_emg_ts(start_t=start_t, stop_t=stop_t, figsize=(14, 7))
 ax.set_title(f"{recording_id} preprocessed")
 
 # %% Optional: PSD (one channel)
@@ -116,6 +119,23 @@ print(analysis_settings)
 reconstruct = EMGAnalysisReconstruct(emg_data_preproc, analysis_settings)
 reconstruct.find_motor_units()
 
-# %% Analyse the motor units
-reconstruct_mu = reconstruct.found_motor_units
-print(f"Number of motor units: {len(reconstruct_mu)}")
+# %% Visualise/analyse the motor units
+
+print(f"Number of motor units: {len(reconstruct.found_motor_units)}")
+
+# Raster plot
+fig, ax = reconstruct.plot_motor_units_raster(
+    figsize=(14, 7), linelengths=0.75, linewidths=0.75, sort_by="default"
+)
+ax.set_title(f"Timing of motor unit potentials in {recording_id}")
+
+# Print times of one MU
+mu = 0
+emg_t = reconstruct.emg_data_preproc.get_emg_t()
+print(
+    np.round(emg_t[reconstruct.found_motor_units.motor_units[mu].potentials_t_idx], 2)
+)
+
+# %% Fibre localisation
+
+# TODO
