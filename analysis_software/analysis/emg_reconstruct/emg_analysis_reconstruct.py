@@ -7,6 +7,7 @@ For use with preprocessed EMG data.
 
 """
 # from xml.etree.ElementInclude import include
+from re import A
 import numpy as np
 
 # import numpy.typing as npt
@@ -18,6 +19,7 @@ import matplotlib.pyplot as plt
 import csv
 import cv2
 import os
+import math
 import emg_analyser_python.emg_analyser_functions as tk
 from emg_analyser_python.constants import QUICK_VERSION
 from findpeaks import findpeaks
@@ -450,7 +452,7 @@ class EMGAnalysisReconstruct:
        
         # Zero reused vars
         t = 0
-        self.opr = []
+        #self.opr = []
 
         for sample in range(len(self.indices)):
             if self.locs[sample] == motor_unit_number:
@@ -518,6 +520,7 @@ class EMGAnalysisReconstruct:
                     )
                 )
 
+            # sub_clusters = self.find_peaks_2d_highest(sig)
             sub_clusters = self.find_peaks_2d(sig)
 
             if sub_clusters.shape[0] == 0:
@@ -605,7 +608,7 @@ class EMGAnalysisReconstruct:
             motor_unit.mean_spikes = mean_spikes
             motor_unit.onsets = onsets
             motor_unit.all_spikes = all_spikes
-            motor_unit.gn_potential = self.opr
+            motor_unit.gn_potential = np.array(np.transpose(self.opr))
 
     def plot_MUs(self, used_data, indices, locs):
         """
@@ -783,15 +786,17 @@ class EMGAnalysisReconstruct:
 
         # print(b.shape)
         sigma = 2
-        im = np.abs(
+        im2 = np.abs(
             gaussian_filter(base, sigma, truncate=np.ceil(2 * sigma) / sigma)
         )  # imgaussfilt(b, 3))
 
         # tophat transform
         # Applying the Top-Hat operation
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (6, 6))
-        im2 = cv2.morphologyEx(im, cv2.MORPH_TOPHAT, kernel)
-
+        #kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (6, 6))
+        #im2 = cv2.morphologyEx(im, cv2.MORPH_TOPHAT, kernel)
+        
+        #im2 = im
+        
         # Extract each blob
         locs = np.array([])
         found = False
@@ -953,16 +958,13 @@ class EMGAnalysisReconstruct:
         """
 
         self.no_needle_channels = self.needle.shape[0]
-        self.opr = np.zeros((self.settings.spike_dur * 2 + 1, self.no_needle_channels))
-
+       
         cn = self.calc_cn(loc[0], loc[1], self.settings.half_subsample_size * 2)
 
-        for k in range(self.no_needle_channels):
-            self.opr[:, k] = self.tconv(
-                cn[:, k], self.sn[:, k], self.settings.spike_dur * 2 + 1
-            )
+        iterable = (self.tconv(cn[:, k], self.sn[:, k], self.settings.spike_dur * 2 + 1) for k in range(self.no_needle_channels))
+        self.opr = np.fromiter(iterable, dtype=np.ndarray)        
 
-        total_var = -np.reciprocal(np.max(np.var(self.opr, axis=1, ddof=1)))
+        total_var = -np.reciprocal(np.max(np.var(self.opr, axis=0, ddof=1)))
 
         return total_var
 
@@ -985,9 +987,10 @@ class EMGAnalysisReconstruct:
 
         dx = np.fabs(self.fbx - self.needle[channel, 0])  # X offset
         dy = np.fabs(self.fby - self.needle[channel, 1])  # Y offset of channel i
-        dz = np.fabs(z - self.isz_half)  # Z distance along fibre
-
+        dz = np.fabs(z - self.isz_half)  # Z distance along fibre        
+        
         return np.reciprocal(np.sqrt(dx * dx + dy * dy + dz * dz))
+       
 
     def calc_cn(self, fbx, fby, isz):
         """

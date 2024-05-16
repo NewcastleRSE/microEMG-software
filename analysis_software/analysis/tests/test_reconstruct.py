@@ -184,7 +184,7 @@ print(total)
 motor_units = reconstruct.found_motor_units
 
 # To separate different test output
-extra_label = "_filters_"
+extra_label = "_filters3_" #"_highest3_" #"_filters2_" # "_highest2_" #"_filters_"
 
 tX = time.time()
 
