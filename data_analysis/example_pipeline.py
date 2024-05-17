@@ -149,7 +149,8 @@ for i in np.arange(reconstruct.found_motor_units.n_motor_units):
     # all traces in one channel (best SNR by default) with average highlighted
     fig, ax, chan_idx = reconstruct.plot_all_potentials_one_channel(motor_unit_idx=i)
     ax.set_title(
-        f"{recording_id}: Motor unit potentials of motor unit {mu_num} in channel {chan_idx + 1}"
+        f"{recording_id}: Motor unit potentials of motor unit {mu_num} "
+        + f"in channel {chan_idx + 1}"
     )
 
 
