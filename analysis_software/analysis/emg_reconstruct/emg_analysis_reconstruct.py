@@ -428,7 +428,8 @@ class EMGAnalysisReconstruct:
 
         # Apply Multi-dimensional TK operator (Teager-Kaiser)
         # to return MUAPs in channel
-        used_data = self.emg_data_preproc.emg_ts[sig_ind, :]
+        # Deep copy to ensure processing in TK_filter is not stored
+        used_data = self.emg_data_preproc.emg_ts[sig_ind, :].copy()
 
         self.indices, self.locs = tk.TK_filter(used_data, sampling_freq)
 
