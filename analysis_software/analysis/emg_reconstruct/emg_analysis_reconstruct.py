@@ -292,7 +292,8 @@ class EMGAnalysisReconstruct:
         # Space for motor unit results
         # Initialise in find_motor_units
         # Fill in additional motor unit data by running fibre_reconstruction
-        self.found_motor_units = []
+        self.found_motor_units = None
+        self.chan_for_find_motor_units = None
 
         # Initial threshold for 2D peak detection,
         # when decting multiple peaks
@@ -425,6 +426,7 @@ class EMGAnalysisReconstruct:
                 raise Exception(
                     "Sorry, no channels with a calculable signal to noise ratio!"
                 )
+        self.chan_for_find_motor_units = sig_ind  # store channel for plots
 
         # Apply Multi-dimensional TK operator (Teager-Kaiser)
         # to return MUAPs in channel
@@ -460,6 +462,13 @@ class EMGAnalysisReconstruct:
     ):
         # Create a raster plot of the potentials of each motor unit in the recording.
         # TODO: full docstring, testing
+
+        # TODO: if save whether analysis has been run, can provide more specific error
+        # message (analysis has not been run vs has been run and no MUs found)
+        if not self.found_motor_units:
+            raise ValueError(
+                "No motor units identified - confirm that analysis has been run."
+            )
 
         # Get motor units and sort if requested
         motor_units = self.found_motor_units.motor_units
@@ -521,6 +530,11 @@ class EMGAnalysisReconstruct:
         # n_ms is the approximate length of time to get for each motor unit (number of
         # samples on each side of onset are rounded up to nearest integer)
 
+        if not self.found_motor_units:
+            raise ValueError(
+                "No motor units identified - confirm that analysis has been run."
+            )
+
         # Calculate number of samples to get before and after MUP onset
         n_samples = int(np.ceil(self.emg_data_preproc.fs / 1000 * n_ms) / 2)
 
@@ -560,6 +574,11 @@ class EMGAnalysisReconstruct:
         # Time series plot of average motor unit potential of one motor unit
         # TODO: documentation, testing
         # TODO: averaging options? (mean vs median)
+
+        if not self.found_motor_units:
+            raise ValueError(
+                "No motor units identified - confirm that analysis has been run."
+            )
 
         # Offset must be positive to ensure that channels are correctly labelled.
         if offset < 0:
@@ -603,7 +622,7 @@ class EMGAnalysisReconstruct:
     def plot_all_potentials_one_channel(
         self,
         motor_unit_idx: int,
-        chan_idx: int,
+        chan_idx: int = None,  # if none, uses channel used for finding motor units
         n_ms: int = 20,
         ax=None,
         lw=0.2,
@@ -619,6 +638,14 @@ class EMGAnalysisReconstruct:
         # TODO: documentation, testing
         # Note using channel index (counting from 0), not numeric label (counting from
         # 1)
+
+        if not self.found_motor_units:
+            raise ValueError(
+                "No motor units identified - confirm that analysis has been run."
+            )
+
+        if not chan_idx:
+            chan_idx = self.chan_for_find_motor_units
 
         # Create new figure with specified size if no axis provided
         if ax is None:
@@ -656,7 +683,7 @@ class EMGAnalysisReconstruct:
         ax.tick_params(axis="x", which="major", labelsize=xtick_label_size)
         ax.set_xlim(0, max(potentials_t))
 
-        return fig, ax
+        return fig, ax, chan_idx
 
     def reconstruct_fibres(self, motor_unit_number):
         """
