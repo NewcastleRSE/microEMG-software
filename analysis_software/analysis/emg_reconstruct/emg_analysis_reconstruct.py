@@ -6,8 +6,6 @@ A class, EMGAnalysisReconstruct for localisation.
 For use with preprocessed EMG data.
 
 """
-# TODO: remove noqa - added temporarily to allow packages to be commented out
-# flake8: noqa
 
 from __future__ import annotations  # for type hints - must be at beginning of file
 
@@ -24,14 +22,23 @@ from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
 
 # TODO: add csv and cv2 to poetry dependency management
-# import csv
-# import cv2
+# Need to remove try/except block - temporary fix since functions not needed for
+# example pipeline
+try:
+    import csv
+    import cv2
+except Exception as e:
+    print(e)
 import os
 import emg_analyser_python.emg_analyser_functions as tk
 from emg_analyser_python.constants import QUICK_VERSION
 
 # TODO: add findpeaks to poetry dependency managment if kept as dependency
-# from findpeaks import findpeaks
+# TODO: remove try/except block - temporary fix
+try:
+    from findpeaks import findpeaks
+except Exception as e:
+    print(e)
 
 # from findmaxima2d import find_maxima, find_local_maxima, cfindmaxima2d
 # from scipy.interpolate import RegularGridInterpolator
