@@ -675,7 +675,7 @@ class EMGAnalysisReconstruct:
 
         # Labels
         ax.tick_params(axis="y", which="major", labelsize=ytick_label_size)
-        ax.set_ylabel("mV", fontsize=axis_label_size)
+        ax.set_ylabel("\u03bcV", fontsize=axis_label_size)
         # TODO: check label
 
         # x axis labels and font size
