@@ -6,8 +6,13 @@ A class, EMGAnalysisReconstruct for localisation.
 For use with preprocessed EMG data.
 
 """
+
+from __future__ import annotations  # for type hints - must be at beginning of file
+
 # from xml.etree.ElementInclude import include
 import numpy as np
+import numpy.typing as npt  # for type hints
+
 
 # import numpy.typing as npt
 import scipy.signal as sg
@@ -15,12 +20,25 @@ import scipy.optimize as opt
 from scipy.linalg import toeplitz
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
-import csv
-import cv2
+
+# TODO: add csv and cv2 to poetry dependency management
+# Need to remove try/except block - temporary fix since functions not needed for
+# example pipeline
+try:
+    import csv
+    import cv2
+except Exception as e:
+    print(e)
 import os
 import emg_analyser_python.emg_analyser_functions as tk
 from emg_analyser_python.constants import QUICK_VERSION
-from findpeaks import findpeaks
+
+# TODO: add findpeaks to poetry dependency managment if kept as dependency
+# TODO: remove try/except block - temporary fix
+try:
+    from findpeaks import findpeaks
+except Exception as e:
+    print(e)
 
 # from findmaxima2d import find_maxima, find_local_maxima, cfindmaxima2d
 # from scipy.interpolate import RegularGridInterpolator
@@ -40,7 +58,7 @@ class EMGMotorUnit:
 
     """
 
-    def __init__(self, number):
+    def __init__(self, number, potentials_t_idx: npt.NDArray[np.int64]):
         """
         Initialise EMGMotorUnit object.
 
@@ -50,6 +68,9 @@ class EMGMotorUnit:
                 number labelling this motor unit
                 matches number returned from TK_filter
 
+        potentials_t_idx: npt.NDArray[np.int64]
+            Time indices of the motor unit's potentials in the EMG recording
+
         Returns
         -------
         None
@@ -57,6 +78,8 @@ class EMGMotorUnit:
         """
 
         self.motor_unit_number = number
+        self.potentials_t_idx = potentials_t_idx  # Time indices of potentials in EMG
+        self.n_potentials = len(potentials_t_idx)  # Number of potentials assigned to MU
         self.fibre_centres = np.array([])
         self.mean_spikes = np.array([])
         self.onsets = np.array([])
@@ -76,6 +99,8 @@ class EMGMotorUnit:
         ans = "EMG Motor Unit"
         ans += "\nMotor unit number: "
         ans += str(self.motor_unit_number)
+        ans += "\nNumber of potentials: "
+        ans += str(self.n_potentials)
         ans += "\nFibre centres dimensions: "
         ans += str(self.fibre_centres.shape)
         ans += "\nMean spikes dimensions: "
@@ -99,21 +124,26 @@ class EMGMotorUnits:
 
     """
 
-    def __init__(self):
+    def __init__(self, motor_units: list[EMGMotorUnit]):
         """
-        Initialise EMGMotorUnit object.
+        Initialise EMGMotorUnits object.
 
         Parameters
         ----------
-
+        motor_units : list[EMGMotorUnit]
+            List of motor units (class EMGMotorUnit) to add to the EMGMotorUnits object.
 
         Returns
         -------
-        None
+        None.
 
         """
 
-        self.motor_units = []
+        self.motor_units = motor_units
+        self.n_motor_units = len(motor_units)
+
+        # Get and store number of potentials of each motor unit
+        self.n_potentials = [mu.n_potentials for mu in self.motor_units]
 
     def __str__(self):
         """
@@ -127,11 +157,23 @@ class EMGMotorUnits:
 
         ans = "EMG Motor Units"
         ans += "\nNumber of motor units: "
-        ans += str(len(self.motor_units))
+        ans += str(self.n_motor_units)
 
         ans += "\n"
 
         return ans
+
+    def __len__(self) -> int:
+        """
+        Return the number of motor units.
+
+        Returns
+        -------
+        int
+            Number of motor units stored in object.
+
+        """
+        return self.n_motor_units
 
 
 class EMGAnalysisReconstructSettings:
@@ -250,12 +292,15 @@ class EMGAnalysisReconstruct:
         self.signal_noise_ratios_ranks = np.array([])
 
         # Found by running find_motor_units
+        # TODO: rename these attributes and/or remove (store in MU class instead)
         self.indices = np.array([])
         self.locs = np.array([])
 
-        # Create motor unit object to store final results
-        # Fill in motor unit data by running fibre_reconstruction
-        self.found_motor_units = EMGMotorUnits()
+        # Space for motor unit results
+        # Initialise in find_motor_units
+        # Fill in additional motor unit data by running fibre_reconstruction
+        self.found_motor_units = None
+        self.chan_for_find_motor_units = None
 
         # Initial threshold for 2D peak detection,
         # when decting multiple peaks
@@ -388,10 +433,12 @@ class EMGAnalysisReconstruct:
                 raise Exception(
                     "Sorry, no channels with a calculable signal to noise ratio!"
                 )
+        self.chan_for_find_motor_units = sig_ind  # store channel for plots
 
         # Apply Multi-dimensional TK operator (Teager-Kaiser)
         # to return MUAPs in channel
-        used_data = self.emg_data_preproc.emg_ts[sig_ind, :]
+        # Deep copy to ensure processing in TK_filter is not stored
+        used_data = self.emg_data_preproc.emg_ts[sig_ind, :].copy()
 
         self.indices, self.locs = tk.TK_filter(used_data, sampling_freq)
 
@@ -400,9 +447,250 @@ class EMGAnalysisReconstruct:
         )
 
         # Create motor unit objects for each motor unit
+        all_motor_units = []
         for i in range(np.max(self.locs)):
-            motor_unit = EMGMotorUnit(i)
-            self.found_motor_units.motor_units.append(motor_unit)
+            motor_unit = EMGMotorUnit(
+                number=i, potentials_t_idx=self.indices[self.locs == i]
+            )
+            all_motor_units.append(motor_unit)
+        self.found_motor_units = EMGMotorUnits(all_motor_units)
+
+    def plot_motor_units_raster(
+        self,
+        linelengths=0.9,
+        linewidths=0.75,
+        ax=None,
+        figsize=(10, 5),
+        dpi: int = 100,
+        axis_label_size: float = 14,
+        xtick_label_size: float = 12,
+        ytick_label_size: float = 12,
+        sort_by: str = "default",
+    ):
+        # Create a raster plot of the potentials of each motor unit in the recording.
+        # TODO: full docstring, testing
+
+        # TODO: if save whether analysis has been run, can provide more specific error
+        # message (analysis has not been run vs has been run and no MUs found)
+        if not self.found_motor_units:
+            raise ValueError(
+                "No motor units identified - confirm that analysis has been run."
+            )
+
+        # Get motor units and sort if requested
+        motor_units = self.found_motor_units.motor_units
+        sort_options = ["default", "n_potentials"]
+        if sort_by not in sort_options:
+            raise ValueError(f"sort_by must be one of these options: {sort_options}")
+        elif sort_by == "n_potentials":
+            sort_idx = np.argsort(self.found_motor_units.n_potentials)
+            sort_idx = sort_idx[::-1]  # descending order
+            motor_units = [motor_units[i] for i in sort_idx]
+
+        # Labels for motor units - plus 1 to count from 1, rather than 0, for vis
+        motor_units_numbers = [mu.motor_unit_number + 1 for mu in motor_units]
+
+        # Create new figure with specified size if no axis provided
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+            fig.dpi = dpi
+        else:
+            fig = None
+
+        # Time vector for x axis
+        emg_t = self.emg_data_preproc.get_emg_t()
+
+        # Create list of times of MUPs
+        # Each entry is an array of the potential times for one motor unit
+        potential_t = []
+        for mu in motor_units:
+            potential_t.append(emg_t[mu.potentials_t_idx])
+
+        # Raster plot
+        ax.invert_yaxis()  # places first motor unit at the top of the plot
+        ax.eventplot(potential_t, linelengths=linelengths, linewidths=linewidths)
+
+        # Axis ticks and labels
+        # y axis
+        ax.set_yticks(np.arange(self.found_motor_units.n_motor_units))
+        ax.set_yticklabels(motor_units_numbers)
+        ax.tick_params(axis="y", which="major", labelsize=ytick_label_size)
+        ax.set_ylabel("motor unit", fontsize=axis_label_size)
+        # x axis
+        ax.tick_params(axis="x", which="major", labelsize=xtick_label_size)
+        ax.set_xlabel("time (seconds)", fontsize=axis_label_size)
+        ax.set_xlim(min(emg_t) - 1 / self.emg_data_preproc.fs, max(emg_t))
+
+        # TODO: change time tick labels to mm:ss format
+
+        return fig, ax
+
+    def get_potentials_data_of_one_motor_unit(
+        self, motor_unit_idx: int, n_ms: int = 20
+    ) -> npt.NDArray[np.float64]:
+        # TODO: do the indices always match motor unit numbers? if not, should add as
+        # attribute to EMGMotorUnits class so can easily find and select MUs using
+        # their numeric labels
+        #
+        # TODO: docstring, testing
+        #
+        # n_ms is the approximate length of time to get for each motor unit (number of
+        # samples on each side of onset are rounded up to nearest integer)
+
+        if not self.found_motor_units:
+            raise ValueError(
+                "No motor units identified - confirm that analysis has been run."
+            )
+
+        # Calculate number of samples to get before and after MUP onset
+        n_samples = int(np.ceil(self.emg_data_preproc.fs / 1000 * n_ms) / 2)
+
+        # Motor unit
+        motor_unit = self.found_motor_units.motor_units[motor_unit_idx]
+        motor_unit.potentials_t_idx
+
+        # Get potentials from EMG recording data
+        # dimensions are channels x time x MUP
+        potentials_data = np.zeros(
+            (self.emg_data_preproc.n_chan, n_samples * 2, motor_unit.n_potentials)
+        )
+
+        for i in np.arange(motor_unit.n_potentials):
+            # Note that index excludes stop_t sample, which keeps the length to n_ms
+            start_t = motor_unit.potentials_t_idx[i] - n_samples
+            stop_t = motor_unit.potentials_t_idx[i] + n_samples
+            potentials_data[:, :, i] = self.emg_data_preproc.emg_ts[
+                :, start_t:stop_t
+            ].copy()
+
+        return potentials_data
+
+    def plot_average_motor_unit_potential(
+        self,
+        motor_unit_idx: int,
+        n_ms: int = 20,
+        offset=500,
+        ax=None,
+        lw=0.5,
+        figsize=(7, 7),
+        axis_label_size: float = 10,
+        ytick_label_size=6,
+        xtick_label_size=8,
+        dpi=100,
+    ):
+        # Time series plot of average motor unit potential of one motor unit
+        # TODO: documentation, testing
+        # TODO: averaging options? (mean vs median)
+
+        if not self.found_motor_units:
+            raise ValueError(
+                "No motor units identified - confirm that analysis has been run."
+            )
+
+        # Offset must be positive to ensure that channels are correctly labelled.
+        if offset < 0:
+            raise ValueError("The vertical spacing, offset, must be positive")
+
+        # Create new figure with specified size if no axis provided
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+            fig.dpi = dpi
+        else:
+            fig = None
+
+        # Get motor unit potentials and average (mean)
+        potentials_data = self.get_potentials_data_of_one_motor_unit(
+            motor_unit_idx, n_ms
+        )
+        potentials_avg = np.mean(potentials_data, axis=2)
+        n_samples = potentials_avg.shape[1]
+
+        # Time vector for x axis (ms)
+        potentials_t = (np.arange(1, n_samples + 1) / self.emg_data_preproc.fs) * 1000
+
+        # Plot each channel's MUP, staggered by the specified offset
+        for i in range(self.emg_data_preproc.n_chan):
+            ax.plot(potentials_t, potentials_avg[i, :] - offset * i, lw=lw)
+
+        # Channel labels
+        chan_y = np.arange(0, self.emg_data_preproc.n_chan * offset * -1, offset * -1)
+        ax.set_yticks(chan_y)
+        ax.set_yticklabels(self.emg_data_preproc.chan.chan_names)
+        ax.tick_params(axis="y", which="major", labelsize=ytick_label_size)
+        ax.set_ylabel("channel", fontsize=axis_label_size)
+
+        # x axis labels and font size
+        ax.set_xlabel("time (ms)", fontsize=axis_label_size)
+        ax.tick_params(axis="x", which="major", labelsize=xtick_label_size)
+        ax.set_xlim(0, max(potentials_t))
+
+        return fig, ax
+
+    def plot_all_potentials_one_channel(
+        self,
+        motor_unit_idx: int,
+        chan_idx: int = None,  # if none, uses channel used for finding motor units
+        n_ms: int = 20,
+        ax=None,
+        lw=0.2,
+        lw_mean=0.5,
+        figsize=(7, 7),
+        axis_label_size: float = 10,
+        ytick_label_size=10,
+        xtick_label_size=10,
+        dpi=100,
+    ):
+        # Time series plot of all motor unit potentials of one motor unit in one channel
+        # Average (mean) overlaid
+        # TODO: documentation, testing
+        # Note using channel index (counting from 0), not numeric label (counting from
+        # 1)
+
+        if not self.found_motor_units:
+            raise ValueError(
+                "No motor units identified - confirm that analysis has been run."
+            )
+
+        if not chan_idx:
+            chan_idx = self.chan_for_find_motor_units
+
+        # Create new figure with specified size if no axis provided
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+            fig.dpi = dpi
+        else:
+            fig = None
+
+        # Get motor unit potentials and average (mean)
+        potentials_data = self.get_potentials_data_of_one_motor_unit(
+            motor_unit_idx, n_ms
+        )
+        potentials_avg = np.mean(potentials_data, axis=2)
+        n_samples = potentials_avg.shape[1]
+
+        # Time vector for x axis (ms)
+        potentials_t = (np.arange(1, n_samples + 1) / self.emg_data_preproc.fs) * 1000
+
+        # Plot each MUP in specified channel
+        ax.plot(
+            potentials_t,
+            np.squeeze(potentials_data[chan_idx, :, :]),
+            lw=lw,
+            color="silver",
+        )
+        ax.plot(potentials_t, potentials_avg[chan_idx, :], lw=lw_mean, color="black")
+
+        # Labels
+        ax.tick_params(axis="y", which="major", labelsize=ytick_label_size)
+        ax.set_ylabel("\u03bcV", fontsize=axis_label_size)
+        # TODO: check label
+
+        # x axis labels and font size
+        ax.set_xlabel("time (ms)", fontsize=axis_label_size)
+        ax.tick_params(axis="x", which="major", labelsize=xtick_label_size)
+        ax.set_xlim(0, max(potentials_t))
+
+        return fig, ax, chan_idx
 
     def reconstruct_fibres(self, motor_unit_number):
         """
