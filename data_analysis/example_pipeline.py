@@ -159,7 +159,7 @@ for i in np.arange(reconstruct.found_motor_units.n_motor_units):
 motor_units_for_fibre_localisation = [0]
 
 for mu in motor_units_for_fibre_localisation:
-    print(f"Reconstructing fibres for motor unit {mu + 1}\n")   
+    print(f"Reconstructing fibres for motor unit {mu + 1}\n")
     reconstruct.reconstruct_fibres(mu)
 
 # TODO

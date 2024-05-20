@@ -10,7 +10,7 @@ For use with preprocessed EMG data.
 from __future__ import annotations  # for type hints - must be at beginning of file
 
 # from xml.etree.ElementInclude import include
-from re import A
+# from re import A
 import numpy as np
 import numpy.typing as npt  # for type hints
 
@@ -27,11 +27,11 @@ import matplotlib.pyplot as plt
 # example pipeline
 try:
     import csv
-    import cv2
+#    import cv2
 except Exception as e:
     print(e)
 import os
-import math
+# import math
 import emg_analyser_python.emg_analyser_functions as tk
 from emg_analyser_python.constants import QUICK_VERSION
 
