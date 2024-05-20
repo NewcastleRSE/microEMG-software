@@ -107,7 +107,7 @@ emg_pxx_preproc.plot_pxx(start_f, stop_f, plot_chan=plot_chan)
 bad_chan = []
 emg_data_preproc.set_bad_chan(bad_chan)
 
-# %% Find motor units
+# Find motor units
 
 # Create settings for this part of the analysis
 # TODO: update this step when n_electrodes is removed as attribute
@@ -153,7 +153,14 @@ for i in np.arange(reconstruct.found_motor_units.n_motor_units):
         + f"in channel {chan_idx + 1}"
     )
 
+# Fibre localisation
+# Settings should be set above in analysis_settings
 
-# %% Fibre localisation
+motor_units_for_fibre_localisation = [0]
+
+for mu in motor_units_for_fibre_localisation:
+    print(f"Reconstructing fibres for motor unit {mu + 1}\n")   
+    reconstruct.reconstruct_fibres(mu)
 
 # TODO
+# Plot fibre localisations?
