@@ -194,7 +194,7 @@ class EMGAnalysisReconstructSettings:
 
         """
 
-        # Default settings        
+        # Default settings
         self.trigger_channel = -1
         self.exhaustive = False
         self.offset = 0.3000
@@ -221,7 +221,7 @@ class EMGAnalysisReconstructSettings:
 
         """
 
-        ans = "EMG Analysis Reconstruct Settings"        
+        ans = "EMG Analysis Reconstruct Settings"
         ans += "\nTrigger channel: "
         ans += str(self.trigger_channel)
         ans += "\nExhaustive: "
@@ -284,7 +284,7 @@ class EMGAnalysisReconstruct:
         self.emg_data_preproc = emg_data_preproc
         self.settings = settings
         self.n_chan = self.emg_data_preproc.n_chan
-        
+
         # SNRs: The SNR values for each channel
         self.signal_noise_ratios = np.array([])
         # ranks: The rank of each channel on highest SNR
@@ -371,9 +371,7 @@ class EMGAnalysisReconstruct:
 
         if set_unbroken:
             # Set all to non broken like MATLAB analysis for this data
-            self.emg_data_preproc.chan.analyse_chan = np.full(
-                self.n_chan, True
-            )
+            self.emg_data_preproc.chan.analyse_chan = np.full(self.n_chan, True)
 
     def calculate_SNR_ranks(self):
         """
@@ -448,11 +446,10 @@ class EMGAnalysisReconstruct:
 
         # Add motor unit objects
         self.add_motor_units(np.max(self.locs))
-        
 
     def add_motor_units(self, no_motor_units):
         """
-        Adds the motor units 
+        Adds the motor units
 
         Parameters
         ----------
@@ -464,7 +461,7 @@ class EMGAnalysisReconstruct:
         None
 
         """
-        
+
         # Create motor unit objects for each motor unit
         all_motor_units = []
         for i in range(np.max(self.locs)):
@@ -711,7 +708,6 @@ class EMGAnalysisReconstruct:
 
         return fig, ax, chan_idx
 
-
     def reconstruct_fibres(self, motor_unit_number):
         """
         Fills in fibre construction data and stores it
@@ -738,10 +734,10 @@ class EMGAnalysisReconstruct:
         )
 
         all_onsets = self.indices[self.locs == motor_unit_number]
-       
+
         # Zero reused vars
         t = 0
-        #self.opr = []
+        # self.opr = []
 
         for sample in range(len(self.indices)):
             if self.locs[sample] == motor_unit_number:
@@ -753,7 +749,7 @@ class EMGAnalysisReconstruct:
                     - self.settings.half_subsample_size
                     - 1
                     - 1
-                ):                    
+                ):
                     continue
 
                 for channel in range(self.n_chan):
@@ -838,9 +834,7 @@ class EMGAnalysisReconstruct:
                 # Get the mean spikes for the fibre peak amplitude
                 peak_electrode = sub_clusters[sub_cluster_index, 1]
                 peak_start = np.max(np.hstack((peak_electrode - 3, 0)))
-                peak_stop = np.min(
-                    np.hstack((peak_electrode + 3, self.n_chan - 1))
-                )
+                peak_stop = np.min(np.hstack((peak_electrode + 3, self.n_chan - 1)))
 
                 included_electrodes = np.arange(peak_start, peak_stop + 1, dtype="int")
 
@@ -1081,11 +1075,11 @@ class EMGAnalysisReconstruct:
 
         # tophat transform
         # Applying the Top-Hat operation
-        #kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (6, 6))
-        #im2 = cv2.morphologyEx(im, cv2.MORPH_TOPHAT, kernel)
-        
-        #im2 = im
-        
+        # kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (6, 6))
+        # im2 = cv2.morphologyEx(im, cv2.MORPH_TOPHAT, kernel)
+
+        # im2 = im
+
         # Extract each blob
         locs = np.array([])
         found = False
@@ -1120,7 +1114,7 @@ class EMGAnalysisReconstruct:
         """
         Finds only the highest maxima of a 2-dimensional image area
         after applying a filter
-     
+
         Parameters
         ----------
         signal: 2D numpy NDArray[float, float]
@@ -1194,7 +1188,7 @@ class EMGAnalysisReconstruct:
         Returns
         -------
         None
-        
+
         """
 
         self.needle = np.zeros((self.n_chan, 2))
@@ -1247,11 +1241,14 @@ class EMGAnalysisReconstruct:
         """
 
         self.no_needle_channels = self.needle.shape[0]
-       
+
         cn = self.calc_cn(loc[0], loc[1], self.settings.half_subsample_size * 2)
 
-        iterable = (self.tconv(cn[:, k], self.sn[:, k], self.settings.spike_dur * 2 + 1) for k in range(self.no_needle_channels))
-        self.opr = np.fromiter(iterable, dtype=np.ndarray)        
+        iterable = (
+            self.tconv(cn[:, k], self.sn[:, k], self.settings.spike_dur * 2 + 1)
+            for k in range(self.no_needle_channels)
+        )
+        self.opr = np.fromiter(iterable, dtype=np.ndarray)
 
         total_var = -np.reciprocal(np.max(np.var(self.opr, axis=0, ddof=1)))
 
@@ -1276,10 +1273,9 @@ class EMGAnalysisReconstruct:
 
         dx = np.fabs(self.fbx - self.needle[channel, 0])  # X offset
         dy = np.fabs(self.fby - self.needle[channel, 1])  # Y offset of channel i
-        dz = np.fabs(z - self.isz_half)  # Z distance along fibre        
-        
+        dz = np.fabs(z - self.isz_half)  # Z distance along fibre
+
         return np.reciprocal(np.sqrt(dx * dx + dy * dy + dz * dz))
-       
 
     def calc_cn(self, fbx, fby, isz):
         """
