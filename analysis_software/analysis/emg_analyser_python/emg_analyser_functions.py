@@ -41,8 +41,8 @@ def round_int(val):
 
     """
 
-    # return round_int_banker(val)
-    return int(np.round(val))
+    return round_int_banker(val)
+    # return int(np.round(val))
 
 
 def round_ints(vals):
@@ -60,8 +60,8 @@ def round_ints(vals):
 
     """
 
-    # return round_ints_banker(vals)
-    return np.round(vals)
+    return round_ints_banker(vals)
+    # return np.round(vals)
 
 
 def round_int_banker(val):
@@ -935,7 +935,7 @@ def merge_clusters(template, titles, threshold, sampling_freq, sig_len):
     return uniq_c
 
 
-def TK_filter(sig, sampling_freq, C=0.1, threshold_PsC=0.1, init=True, wind=0.020):
+def TK_filter(sig, sampling_freq, C=0.1, threshold_PsC=0.1, init=True, wind=0.004):
     """
     Function for Spike detection and Classification
     This is designed to filter out shallow peaks out of Action potentials
