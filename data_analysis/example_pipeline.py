@@ -145,7 +145,9 @@ for i in np.arange(reconstruct.found_motor_units.n_motor_units):
 
     # avg MUP time series
     fig, ax = reconstruct.plot_average_motor_unit_potential(i, offset=plot_offset_mu)
-    ax.set_title(f"{recording_id}: Average motor unit potential of motor unit {mu_num}")
+    ax.set_title(
+        f"{recording_id}: Average motor unit potential of motor unit {mu_num + 1}"
+    )
 
     # all traces in one channel (best SNR by default) with average highlighted
     fig, ax, chan_idx = reconstruct.plot_all_potentials_one_channel(motor_unit_idx=i)
@@ -157,7 +159,7 @@ for i in np.arange(reconstruct.found_motor_units.n_motor_units):
 # %% Fibre localisation
 # Settings should be set above in analysis_settings
 
-motor_units_for_fibre_localisation = []
+motor_units_for_fibre_localisation = [2]
 
 for mu in motor_units_for_fibre_localisation:
     print(f"Reconstructing fibres for motor unit {mu + 1}\n")

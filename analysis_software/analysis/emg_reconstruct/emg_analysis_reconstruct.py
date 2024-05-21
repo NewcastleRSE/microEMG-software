@@ -31,6 +31,7 @@ try:
 except Exception as e:
     print(e)
 import os
+
 # import math
 import emg_analyser_python.emg_analyser_functions as tk
 from emg_analyser_python.constants import QUICK_VERSION
@@ -80,13 +81,54 @@ class EMGMotorUnit:
         """
 
         self.motor_unit_number = number
-        self.potentials_t_idx = potentials_t_idx  # Time indices of potentials in EMG
+
         self.n_potentials = len(potentials_t_idx)  # Number of potentials assigned to MU
+        self.potentials_t_idx = potentials_t_idx  # Time indices of potentials in EMG
+
+        # Store information about analysis that has been performed for this MU
+        # Note: even if true, may not be results if data was not suitable for analysis
+        self.analysis_performed = {
+            "fibres_localised": False,  # localisation step
+            "fibres_jitter_computed": False,  # jitter analysis step
+        }
+
+        # TODO: check understanding of each attribute
+        # TODO: clean comments and move to docstring for class
+        # TODO: update __str__ method once attributes are finalised
+
+        # Localisation attributes
+
+        # Number of fibre potentials (peaks) found across all MUPs
+        self.n_fibre_potentials = None
+
+        # Estimated fibre x, y coordinate at each time (size n peaks x 2)
+        # TODO: consider renaming something like fibre_xy
         self.fibre_centres = np.array([])
+
+        # average motor unit potential? size n chan x time
+        # TODO: consider replacing functionality with
+        # get_potentials_data_of_one_motor_unit() method of
+        # EMGAnalysisReconstruct if this attribute is only used for plotting (esp.
+        # since the plots are needed before this attribute is added!)
+        # Otherwise, rename to clarify that it is the MUP
         self.mean_spikes = np.array([])
+
+        # Onset of MUP that each peak belongs to? (size n peaks)
+        # TODO: rename to clarify; consider whether MUP label ( = index) would be
+        # easier to work with
         self.onsets = np.array([])
+
+        # each MUP time series? size n potentials x n chan x time
+        # TODO: rename or consider replacing functionality with
+        # get_potentials_data_of_one_motor_unit() method of
+        # EMGAnalysisReconstruct if this attribute is only used for plotting
         self.all_spikes = np.array([])
+
+        # ?? not sure what data or how the size relates to other attributes
         self.gn_potential = np.array([])
+
+        # TODO: currently the exact timing of fibre potentials (peaks) are not saved (?)
+        # Will need this info for jitter analysis
 
     def __str__(self):
         """
@@ -117,6 +159,24 @@ class EMGMotorUnit:
         ans += "\n"
 
         return ans
+
+    def add_fibre_localisation(
+        self, fibre_centres, mean_spikes, onsets, all_spikes, gn_potential
+    ):
+        # TODO: remove any unnecessary attributes
+
+        # Note analysis performed
+        self.analysis_performed["fibres_localised"] = True
+
+        # Store number of fibre potentials (i.e., peaks in the MUPs) found
+        self.n_fibre_potentials = fibre_centres.shape[0]
+
+        # Store provided attributes
+        self.fibre_centres = fibre_centres
+        self.mean_spikes = mean_spikes
+        self.onsets = onsets
+        self.all_spikes = all_spikes
+        self.gn_potential = gn_potential
 
 
 class EMGMotorUnits:
@@ -887,11 +947,13 @@ class EMGAnalysisReconstruct:
         # Add the results to the motor unit object
         if pos.shape[0] > 0:
             motor_unit = self.found_motor_units.motor_units[motor_unit_number]
-            motor_unit.fibre_centres = pos
-            motor_unit.mean_spikes = mean_spikes
-            motor_unit.onsets = onsets
-            motor_unit.all_spikes = all_spikes
-            motor_unit.gn_potential = np.array(np.transpose(self.opr))
+            motor_unit.add_fibre_localisation(
+                fibre_centres=pos,
+                mean_spikes=mean_spikes,
+                onsets=onsets,
+                all_spikes=all_spikes,
+                gn_potential=np.array(np.transpose(self.opr)),
+            )
 
     def plot_MUs(self, used_data, indices, locs):
         """
