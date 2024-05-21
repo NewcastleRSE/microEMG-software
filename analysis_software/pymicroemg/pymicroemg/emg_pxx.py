@@ -114,9 +114,10 @@ class EMGPxx:
         if plot_chan is None:
             for i in range(self.n_chan):
                 ax.plot(self.freq[plot_bool], self.pxx[i, plot_bool], lw=lw)
+                ax.set_title("Channel PSDs")
         else:
             ax.plot(self.freq[plot_bool], self.pxx[plot_chan - 1, plot_bool], lw=lw)
-            ax.set_title(self.chan.chan_names[plot_chan - 1])
+            ax.set_title(f"Channel {self.chan.chan_names[plot_chan - 1]} PSD")
 
         # Axis labels
         ax.set_xlabel("Frequency (Hz)")
