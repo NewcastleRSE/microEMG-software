@@ -159,10 +159,15 @@ for i in np.arange(reconstruct.found_motor_units.n_motor_units):
 # %% Fibre localisation
 # Settings should be set above in analysis_settings
 
-motor_units_for_fibre_localisation = [2]
+match recording_num:
+    case _:
+        motor_units_for_fibre_localisation = [1, 2]
 
 for mu in motor_units_for_fibre_localisation:
     print(f"Reconstructing fibres for motor unit {mu + 1}\n")
     reconstruct.reconstruct_fibres(mu)
 
-# Plot fibre localisations
+# %% Plot fibre localisations
+
+fig, ax = reconstruct.plot_fibre_potential_locations(motor_unit=None, axis_equal=True)
+ax.set_title(f"{recording_id}: fibre localisations (all fibre potentials)")

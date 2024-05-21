@@ -1398,3 +1398,115 @@ class EMGAnalysisReconstruct:
         rsl = (np.linalg.lstsq(tpl, wsig, rcond=None))[0]
 
         return rsl
+
+    def plot_electrodes(
+        self,
+        marker="s",
+        clr="silver",
+        ax=None,
+        figsize=(10, 5),
+        axis_label_size=14,
+        tick_label_size=12,
+        dpi=100,
+    ):
+        # Scatter plot of electrode positions
+        # TODO: add outline for needle?
+
+        # Create new figure with specified size if no axis provided
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+            fig.dpi = dpi
+        else:
+            fig = None
+
+        # Electrode (channel) coordinates)
+        xy = self.emg_data_preproc.chan.chan_xy
+
+        # Plot electrodes
+        ax.scatter(xy[:, 0], xy[:, 1], marker=marker, color=clr)
+
+        # If new figure, add axis labels
+        if fig:
+            ax.set_xlabel("position (mm)", fontsize=axis_label_size)
+            ax.set_ylabel("position (mm)", fontsize=axis_label_size)
+            ax.tick_params(axis="x", which="major", labelsize=tick_label_size)
+            ax.tick_params(axis="y", which="major", labelsize=tick_label_size)
+
+            # y axis limits
+            max_y = np.abs(np.max(xy[:, 1]))
+            ylim_scale = 5
+            ax.set_ylim(max_y * ylim_scale * -1, max_y * ylim_scale)
+
+    def plot_fibre_potential_locations(
+        self,
+        motor_unit=None,  # motor unit index; if None, plot all
+        plot_electrodes=True,
+        pt_size=10,
+        pt_alpha=0.5,
+        legend_pt_size=30,
+        axis_equal=False,
+        ax=None,
+        lw=0.5,
+        figsize=(10, 5),
+        axis_label_size=14,
+        tick_label_size=12,
+        legend_label_size=12,
+        dpi=100,
+    ):
+        # Scatter plot of all fibre potential locations
+        # TODO: docstring, testing
+        # TODO: keep axes the same when plotting subset of motor units
+
+        # Create new figure with specified size if no axis provided
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+            fig.dpi = dpi
+        else:
+            fig = None
+
+        # Add electrodes to plot
+        if plot_electrodes:
+            self.plot_electrodes(ax=ax)
+
+        # Motor unit(s) to plot
+        if motor_unit:
+            motor_units = [self.found_motor_units.motor_units[motor_unit]]
+        else:
+            motor_units = self.found_motor_units.motor_units
+
+        for mu in motor_units:
+            if mu.analysis_performed["fibres_localised"]:
+                print(
+                    f"Plotting fibre locations of motor unit {mu.motor_unit_number + 1}"
+                )
+                ax.scatter(
+                    mu.fibre_centres[:, 0],
+                    mu.fibre_centres[:, 1],
+                    pt_size,
+                    alpha=pt_alpha,
+                    linewidth=0,
+                    label=f"motor unit {mu.motor_unit_number + 1}",
+                )
+
+        # Legend
+        lgnd = ax.legend(
+            bbox_to_anchor=(1, 1),
+            loc="upper left",
+            frameon=False,
+            handletextpad=0.25,
+            fontsize=legend_label_size,
+        )
+        for h in lgnd.legend_handles:
+            h._sizes = [legend_pt_size]
+
+        # Axis and tick labels
+        ax.set_xlabel("position (mm)", fontsize=axis_label_size)
+        ax.set_ylabel("position (mm)", fontsize=axis_label_size)
+        ax.tick_params(axis="x", which="major", labelsize=tick_label_size)
+        ax.tick_params(axis="y", which="major", labelsize=tick_label_size)
+
+        # Equal aspect ratio
+        if axis_equal:
+            ax.axis("equal")
+
+        return fig, ax
