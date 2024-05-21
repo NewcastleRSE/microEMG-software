@@ -32,14 +32,21 @@ except Exception as e:
 # increase figure resolution (needed for Spyder IDE)
 plt.rcParams["figure.dpi"] = 600
 
-# %% Choose recording (uncomment one)
+# %% Choose recording (0 - 5) and set recording-specific properties
 
-recording_num = 0
-# recording_num = 1
+recording_num = 1
+
+match recording_num:
+    case _:
+        trim_start = 0  # start of segment to analyse
+        trim_stop = 30  # end of segment to analyse
+        plot_offset_ts = 2000  # spacing for traces in recording time series plot
+        plot_offset_mu = 300  # spacing for traces in motor unit recording plot
+        bad_chan = []  # indices of bad channels
 # %% Load data
 
 # Recording directory and ID
-emg_dir, recording_id = cfg.get_recording_path_and_id(recording_num)
+emg_dir, recording_id = cfg.get_control_recording_path_and_id(recording_num)
 
 # Instantiate EMG files object for emg_dir - will use to load data
 emg_files = EMGFiles(emg_dir)
@@ -50,18 +57,18 @@ emg_data = emg_files.load_emg_data()
 
 # %% Optional: Trim original time series to speed up analysis
 
-start_t = 0
-stop_t = 30
+emg_data.trim_emg_ts(start_t=trim_start, stop_t=trim_stop)
 
-emg_data.trim_emg_ts(start_t=start_t, stop_t=stop_t)
-
-# %% Optional: Plot specified segment of the EMG recording
-
-fig, ax = emg_data.plot_emg_ts(start_t=start_t, stop_t=stop_t, offset=2000)
-ax.set_title(f"{recording_id}, {start_t} to {stop_t}")
+# Plot specified segment of the EMG recording
+fig, ax = emg_data.plot_emg_ts(
+    start_t=trim_start, stop_t=trim_stop, figsize=(14, 7), offset=plot_offset_ts
+)
+ax.set_title(f"{recording_id}, {trim_start} to {trim_stop} seconds")
 
 
 # %% Preprocessing
+# Note that TK Filter will also filter from 50 to 1000 during the motor unit
+# identification step
 
 # Create and specify preprocessing settings using EMGPreprocSettings object
 # TODO: determine filter settings with Stu
@@ -78,10 +85,14 @@ emg_data_preproc = emg_data.preprocess(preproc_settings)
 start_t = 0
 stop_t = 30
 
-fig, ax = emg_data.plot_emg_ts(start_t=start_t, stop_t=stop_t, figsize=(14, 7))
+fig, ax = emg_data.plot_emg_ts(
+    start_t=start_t, stop_t=stop_t, figsize=(14, 7), offset=plot_offset_ts
+)
 ax.set_title(f"{recording_id} raw")
 
-fig, ax = emg_data_preproc.plot_emg_ts(start_t=start_t, stop_t=stop_t, figsize=(14, 7))
+fig, ax = emg_data_preproc.plot_emg_ts(
+    start_t=start_t, stop_t=stop_t, figsize=(14, 7), offset=plot_offset_ts
+)
 ax.set_title(f"{recording_id} preprocessed")
 
 # %% Optional: PSD (one channel)
@@ -102,9 +113,7 @@ emg_pxx_preproc.plot_pxx(start_f, stop_f, plot_chan=plot_chan)
 # analysis
 
 # Mark any bad channels
-# TODO: add as a case-switch statement depending on the recording
 # TODO: check that incorporated into all downstream analysis
-bad_chan = []
 emg_data_preproc.set_bad_chan(bad_chan)
 
 # Find motor units
@@ -130,20 +139,12 @@ fig, ax = reconstruct.plot_motor_units_raster(
 )
 ax.set_title(f"Timing of motor unit potentials in {recording_id}")
 
-# Print times of one MU
-mu = 0
-emg_t = reconstruct.emg_data_preproc.get_emg_t()
-print(
-    np.round(emg_t[reconstruct.found_motor_units.motor_units[mu].potentials_t_idx], 2)
-)
-
-
 # Plot MUPs
 for i in np.arange(reconstruct.found_motor_units.n_motor_units):
     mu_num = reconstruct.found_motor_units.motor_units[i].motor_unit_number
 
     # avg MUP time series
-    fig, ax = reconstruct.plot_average_motor_unit_potential(i, offset=400)
+    fig, ax = reconstruct.plot_average_motor_unit_potential(i, offset=plot_offset_mu)
     ax.set_title(f"{recording_id}: Average motor unit potential of motor unit {mu_num}")
 
     # all traces in one channel (best SNR by default) with average highlighted
@@ -153,14 +154,13 @@ for i in np.arange(reconstruct.found_motor_units.n_motor_units):
         + f"in channel {chan_idx + 1}"
     )
 
-# Fibre localisation
+# %% Fibre localisation
 # Settings should be set above in analysis_settings
 
-motor_units_for_fibre_localisation = [0]
+motor_units_for_fibre_localisation = []
 
 for mu in motor_units_for_fibre_localisation:
     print(f"Reconstructing fibres for motor unit {mu + 1}\n")
     reconstruct.reconstruct_fibres(mu)
 
-# TODO
-# Plot fibre localisations?
+# Plot fibre localisations
