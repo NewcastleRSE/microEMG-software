@@ -627,17 +627,21 @@ class EMGAnalysisReconstruct:
 
         # Get potentials from EMG recording data
         # dimensions are channels x time x MUP
-        potentials_data = np.zeros(
-            (self.emg_data_preproc.n_chan, n_samples * 2, motor_unit.n_potentials)
+        potentials_data = np.full(
+            (self.emg_data_preproc.n_chan, n_samples * 2, motor_unit.n_potentials),
+            np.nan,
         )
 
         for i in np.arange(motor_unit.n_potentials):
             # Note that index excludes stop_t sample, which keeps the length to n_ms
             start_t = motor_unit.potentials_t_idx[i] - n_samples
             stop_t = motor_unit.potentials_t_idx[i] + n_samples
-            potentials_data[:, :, i] = self.emg_data_preproc.emg_ts[
-                :, start_t:stop_t
-            ].copy()
+
+            # Only add potentials within boundaries of the time series
+            if (start_t > 0) and (stop_t < self.emg_data_preproc.emg_ts.shape[1]):
+                potentials_data[:, :, i] = self.emg_data_preproc.emg_ts[
+                    :, start_t:stop_t
+                ].copy()
 
         return potentials_data
 
@@ -678,7 +682,7 @@ class EMGAnalysisReconstruct:
         potentials_data = self.get_potentials_data_of_one_motor_unit(
             motor_unit_idx, n_ms
         )
-        potentials_avg = np.mean(potentials_data, axis=2)
+        potentials_avg = np.nanmean(potentials_data, axis=2)
         n_samples = potentials_avg.shape[1]
 
         # Time vector for x axis (ms)
@@ -741,7 +745,7 @@ class EMGAnalysisReconstruct:
         potentials_data = self.get_potentials_data_of_one_motor_unit(
             motor_unit_idx, n_ms
         )
-        potentials_avg = np.mean(potentials_data, axis=2)
+        potentials_avg = np.nanmean(potentials_data, axis=2)
         n_samples = potentials_avg.shape[1]
 
         # Time vector for x axis (ms)
@@ -1439,7 +1443,7 @@ class EMGAnalysisReconstruct:
 
     def plot_fibre_potential_locations(
         self,
-        motor_unit=None,  # motor unit index; if None, plot all
+        motor_unit_idx=None,  # motor unit index; if None, plot all
         plot_electrodes=True,
         pt_size=10,
         pt_alpha=0.5,
@@ -1469,8 +1473,8 @@ class EMGAnalysisReconstruct:
             self.plot_electrodes(ax=ax)
 
         # Motor unit(s) to plot
-        if motor_unit:
-            motor_units = [self.found_motor_units.motor_units[motor_unit]]
+        if motor_unit_idx is not None:
+            motor_units = [self.found_motor_units.motor_units[motor_unit_idx]]
         else:
             motor_units = self.found_motor_units.motor_units
 
