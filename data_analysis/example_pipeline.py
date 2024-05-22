@@ -37,6 +37,27 @@ plt.rcParams["figure.dpi"] = 600
 recording_num = 1
 
 match recording_num:
+    case 1:
+        trim_start = 0  # start of segment to analyse
+        trim_stop = 30  # end of segment to analyse
+        plot_offset_ts = 2000  # spacing for traces in recording time series plot
+        plot_offset_mu = 300  # spacing for traces in motor unit recording plot
+        bad_chan = []  # indices of bad channels
+
+    case 3:
+        trim_start = 60  # start of segment to analyse
+        trim_stop = 90  # end of segment to analyse
+        plot_offset_ts = 2000  # spacing for traces in recording time series plot
+        plot_offset_mu = 300  # spacing for traces in motor unit recording plot
+        bad_chan = []  # indices of bad channels
+
+    case 4:
+        trim_start = 145  # start of segment to analyse
+        trim_stop = 175  # end of segment to analyse
+        plot_offset_ts = 2000  # spacing for traces in recording time series plot
+        plot_offset_mu = 300  # spacing for traces in motor unit recording plot
+        bad_chan = []  # indices of bad channels
+
     case _:
         trim_start = 0  # start of segment to analyse
         trim_stop = 30  # end of segment to analyse
@@ -59,12 +80,6 @@ emg_data = emg_files.load_emg_data()
 
 emg_data.trim_emg_ts(start_t=trim_start, stop_t=trim_stop)
 
-# Plot specified segment of the EMG recording
-fig, ax = emg_data.plot_emg_ts(
-    start_t=trim_start, stop_t=trim_stop, figsize=(14, 7), offset=plot_offset_ts
-)
-ax.set_title(f"{recording_id}, {trim_start} to {trim_stop} seconds")
-
 
 # %% Preprocessing
 # Note that TK Filter will also filter from 50 to 1000 during the motor unit
@@ -74,7 +89,7 @@ ax.set_title(f"{recording_id}, {trim_start} to {trim_stop} seconds")
 # TODO: determine filter settings with Stu
 preproc_settings = EMGPreprocSettings()
 preproc_settings.add_butterworth_filter(
-    cutoff_freq=[10, 2500], order=4, filter_type="bandpass"
+    cutoff_freq=[100, 2000], order=6, filter_type="bandpass"
 )
 preproc_settings.add_remove_mains()
 
@@ -142,6 +157,7 @@ ax.set_title(f"Timing of motor unit potentials in {recording_id}")
 # Plot MUPs
 for i in np.arange(reconstruct.found_motor_units.n_motor_units):
     mu_num = reconstruct.found_motor_units.motor_units[i].motor_unit_number
+    print(f"motor unit {mu_num}")
 
     # avg MUP time series
     fig, ax = reconstruct.plot_average_motor_unit_potential(i, offset=plot_offset_mu)
@@ -160,14 +176,33 @@ for i in np.arange(reconstruct.found_motor_units.n_motor_units):
 # Settings should be set above in analysis_settings
 
 match recording_num:
+    case 1:
+        motor_units_for_fibre_localisation = [0, 1, 2]
     case _:
-        motor_units_for_fibre_localisation = [1, 2]
+        motor_units_for_fibre_localisation = []
 
 for mu in motor_units_for_fibre_localisation:
     print(f"Reconstructing fibres for motor unit {mu + 1}\n")
     reconstruct.reconstruct_fibres(mu)
 
-# %% Plot fibre localisations
+# %% Plot fibre localisations (all fibre potentials)
 
-fig, ax = reconstruct.plot_fibre_potential_locations(motor_unit=None, axis_equal=True)
+# All motor units
+fig, ax = reconstruct.plot_fibre_potential_locations(
+    motor_unit_idx=None, axis_equal=True
+)
 ax.set_title(f"{recording_id}: fibre localisations (all fibre potentials)")
+
+# Individual motor units
+for mu_num in motor_units_for_fibre_localisation:
+    fig, ax = reconstruct.plot_fibre_potential_locations(
+        motor_unit_idx=mu_num, axis_equal=True
+    )
+    ax.set_title(
+        f"{recording_id}: motor unit {mu + 1} fibre localisations (all fibre potentials)"
+    )
+
+# %% Cluster fibre potentials and plot median locations
+for mu_num in motor_units_for_fibre_localisation:
+    print(f"Clustering fibres in motor unit {mu_num + 1}")
+    reconstruct.found_motor_units.motor_units[mu_num].cluster_fibre_potentials()
