@@ -21,6 +21,7 @@ import scipy.optimize as opt
 from scipy.linalg import toeplitz
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
 
 # TODO: add csv and cv2 to poetry dependency management
 # Need to remove try/except block - temporary fix since functions not needed for
@@ -89,6 +90,7 @@ class EMGMotorUnit:
         # Note: even if true, may not be results if data was not suitable for analysis
         self.analysis_performed = {
             "fibres_localised": False,  # localisation step
+            "fibres_clustered": False,  # clustering fibres step
             "fibres_jitter_computed": False,  # jitter analysis step
         }
 
@@ -129,6 +131,10 @@ class EMGMotorUnit:
 
         # TODO: currently the exact timing of fibre potentials (peaks) are not saved (?)
         # Will need this info for jitter analysis
+
+        # Dictionaries for storing results of clustering and jitter analysis
+        self.fibre_clustering_results = {}
+        self.fibre_jitter_results = {}
 
     def __str__(self):
         """
@@ -177,6 +183,138 @@ class EMGMotorUnit:
         self.onsets = onsets
         self.all_spikes = all_spikes
         self.gn_potential = gn_potential
+
+    def cluster_fibre_potentials(self):
+        """
+        Cluster the motor units fibre potentials and compute median fibre locations.
+
+        Before this analysis is run, the motor unit's fibres potentials must be
+        identified and localised using the reconstruct_fibres method of the
+        EMGAnalysisReconstruct class.
+
+        Running this method populates the fibre_clustering_results dictionary attribute
+        with the following key/value pairs:
+            mean_n_fps (int): mean number of fibre potentials across all motor unit
+            potentials used in the localisation analysis. Used as input for clustering.
+
+            n_fibre_clusters (int): number of clusters found; may slightly differ from
+            mean_n_fps.
+
+            fibre_clusters (npt.NDArray[np.int32], size (self.fibre_potentials,) ):
+                cluster assignment of each fibre potential
+
+            n_fps_per_mup_and_cluster (npt.NDArray[np.float64],
+                                       size (self.n_potentials, n_fibre_clusters)):
+            Number of fibre potentials (FPs) in each motor unit potential (MUP) that
+            have the same cluster assignment.
+
+            mup_fibre_pos (npt.NDArray[np.float64],
+                           size(self.n_potentials, 2, n_fibre_clusters)):
+            Location estimates ((x,y) coordinates) of each fibre based on each MUP. If
+            the fibre is not found in the MUP, the coordinates are np.nan.
+
+            fibre_centres_median (npt.NDArray[np.float64], size(n_fibre_clusters, 2)):
+            Median coordinates of each fibre.
+
+        Returns
+        -------
+        None.
+
+        TODO: test that analysis reproduces original MATLAB code; some variation
+        expected since k-means is not deterministic (unless initialisation is fixed),
+        but results should be qualitatively the same.
+
+        TODO: add additional measures needed for downstream analysis/reports/vis - check
+        with SM before implementing to determine what is needed.
+         - position changes (based on position change between consecutive MUPs) to get a
+         measure of variability in location estimate (will need to remove nan positions
+        in mup_fibre_pos before computing)
+         - distances between fibres (can also add as a separate method)
+
+        TODO: check other k-means parameters; determine if any defaults should be
+        changed. Also evaluate clustering performance and determine if approach needs to
+        be modified (e.g., how number of clusters is determined)
+
+
+        """
+
+        # Check that localisation has been run
+        if not self.analysis_performed["fibres_localised"]:
+            raise RuntimeError(
+                "Localisation analysis has not been performed; cannot cluster fibres."
+            )
+
+        # Onset indices of all MUPs that have fibre potentials
+        unique_onsets = np.unique(self.onsets)
+        n_unique_onsets = len(unique_onsets)
+
+        # Use rounded mean number of fibre potentials (FPs) per motor unit potential as
+        # k for clustering
+        mean_n_fps = round(len(self.onsets) / n_unique_onsets)
+
+        if mean_n_fps > 0:
+            fibre_kmeans = KMeans(n_clusters=mean_n_fps).fit(self.fibre_centres)
+
+            # fibre cluster assignments
+            n_fibre_clusters = np.max(fibre_kmeans.labels_) + 1
+            fibre_clusters = fibre_kmeans.labels_
+
+            # Initialise arrays for storing results
+
+            # Number of fibre potentials (FPs) in each MUP that belong to the same
+            # cluster
+            n_fps_per_mup_and_cluster = np.zeros((self.n_potentials, n_fibre_clusters))
+
+            # Location estimates of each fibre based on each MUP
+            # Note: unlike original code, data stored so indices match the
+            # self.potentials_t_idx array
+            mup_fibre_pos = np.full((self.n_potentials, 2, n_fibre_clusters), np.nan)
+
+            # Find median location of each fibre
+            for cluster_num in np.arange(n_fibre_clusters):
+                # Sometimes multiple fibre potentials in the same MUP are assigned to
+                # the same fibre clusters. Therefore, first compute average (mean)
+                # position in each MUP in which the fibre cluster appears.
+                # If no fibres with that cluster num appear in the MUP, position is
+                # stored as np.nan.
+
+                # Note: unlike original code, iterate through all MUPs (not just ones
+                # present in "onsets") so dimensions align to other MUP features.
+                for mup_num in np.arange(self.n_potentials):
+                    mup_onset = self.potentials_t_idx[mup_num]
+
+                    # Fibre potentials that belong to the specified onset and cluster.
+                    idx = np.flatnonzero(
+                        np.all(
+                            (
+                                (self.onsets == mup_onset),
+                                (fibre_clusters == cluster_num),
+                            ),
+                            axis=0,
+                        )
+                    )
+
+                    # Store number of fibre potentials found
+                    n_idx = len(idx)
+                    n_fps_per_mup_and_cluster[mup_num, cluster_num] = n_idx
+
+                    # Compute average position of the fibre based on the specified MUP
+                    if n_idx > 0:
+                        pos = self.fibre_centres[idx, :]
+                        mup_fibre_pos[mup_num, :, cluster_num] = np.mean(pos, axis=0)
+
+            # Compute median fibre positions
+            fibre_centres_median = np.transpose(np.nanmedian(mup_fibre_pos, axis=0))
+
+            # Store results as dictionary
+            self.fibre_clustering_results = {
+                "mean_n_fps": mean_n_fps,
+                "n_fibre_clusters": n_fibre_clusters,
+                "fibre_clusters": fibre_clusters,
+                "n_fps_per_mup_and_cluster": n_fps_per_mup_and_cluster,
+                "mup_fibre_pos": mup_fibre_pos,
+                "fibre_centres_median": fibre_centres_median,
+            }
 
 
 class EMGMotorUnits:
