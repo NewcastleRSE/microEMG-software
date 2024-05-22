@@ -188,14 +188,14 @@ for mu in motor_units_for_fibre_localisation:
 # %% Plot fibre localisations (all fibre potentials)
 
 # All motor units
-fig, ax = reconstruct.plot_fibre_potential_locations(
+fig, ax = reconstruct.found_motor_units.plot_fibre_potential_locations(
     motor_unit_idx=None, axis_equal=True
 )
 ax.set_title(f"{recording_id}: fibre localisations (all fibre potentials)")
 
 # Individual motor units
 for mu_num in motor_units_for_fibre_localisation:
-    fig, ax = reconstruct.plot_fibre_potential_locations(
+    fig, ax = reconstruct.found_motor_units.plot_fibre_potential_locations(
         motor_unit_idx=mu_num, axis_equal=True
     )
     ax.set_title(
@@ -205,4 +205,4 @@ for mu_num in motor_units_for_fibre_localisation:
 # %% Cluster fibre potentials and plot median locations
 for mu_num in motor_units_for_fibre_localisation:
     print(f"Clustering fibres in motor unit {mu_num + 1}")
-    reconstruct.found_motor_units.motor_units[mu_num].cluster_fibre_potentials()
+    reconstruct.found_motor_units.cluster_fibre_potentials(mu_num)
