@@ -199,7 +199,8 @@ for mu_num in motor_units_for_fibre_localisation:
         motor_unit_idx=mu_num, plot_legend=False
     )
     ax.set_title(
-        f"{recording_id}: motor unit {mu_num + 1} fibre localisations (all fibre potentials)"
+        f"{recording_id}: motor unit {mu_num + 1}"
+        + " fibre localisations (all fibre potentials)"
     )
 
 # %% Cluster fibre potentials and plot median locations
