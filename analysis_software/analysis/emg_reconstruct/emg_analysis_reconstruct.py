@@ -21,6 +21,7 @@ import scipy.optimize as opt
 from scipy.linalg import toeplitz
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
+from matplotlib import colormaps
 from sklearn.cluster import KMeans
 
 # TODO: add csv and cv2 to poetry dependency management
@@ -293,19 +294,26 @@ class EMGMotorUnits:
         plot_electrodes=True,
         pt_size=10,
         pt_alpha=0.5,
-        legend_pt_size=30,
-        axis_equal=False,
+        pt_facecolor=None,
+        axis_equal=True,
         ax=None,
         lw=0.5,
         figsize=(10, 5),
         axis_label_size=14,
         tick_label_size=12,
+        plot_legend=True,
+        legend_pt_size=30,
         legend_label_size=12,
         dpi=100,
+        cmap=None,
     ):
         # Scatter plot of all fibre potential locations
         # TODO: docstring, testing
         # TODO: keep axes the same when plotting subset of motor units
+
+        # Default colormap - will use if colors not specified
+        if cmap is None:
+            cmap = colormaps["tab10"].colors
 
         # Create new figure with specified size if no axis provided
         if ax is None:
@@ -325,6 +333,13 @@ class EMGMotorUnits:
             motor_units = self.motor_units
 
         for mu in motor_units:
+            # Default color for motor unit - differs depending on motor unit
+            if pt_facecolor is None:
+                idx = mu.motor_unit_number % (int(len(cmap)))
+                mu_pt_facecolor = cmap[idx]
+            else:
+                mu_pt_facecolor = pt_facecolor
+
             if mu.analysis_performed["fibres_localised"]:
                 print(
                     f"Plotting fibre locations of motor unit {mu.motor_unit_number + 1}"
@@ -335,19 +350,21 @@ class EMGMotorUnits:
                     pt_size,
                     alpha=pt_alpha,
                     linewidth=0,
+                    facecolor=mu_pt_facecolor,
                     label=f"motor unit {mu.motor_unit_number + 1}",
                 )
 
         # Legend
-        lgnd = ax.legend(
-            bbox_to_anchor=(1, 1),
-            loc="upper left",
-            frameon=False,
-            handletextpad=0.25,
-            fontsize=legend_label_size,
-        )
-        for h in lgnd.legend_handles:
-            h._sizes = [legend_pt_size]
+        if plot_legend:
+            lgnd = ax.legend(
+                bbox_to_anchor=(1, 1),
+                loc="upper left",
+                frameon=False,
+                handletextpad=0.25,
+                fontsize=legend_label_size,
+            )
+            for h in lgnd.legend_handles:
+                h._sizes = [legend_pt_size]
 
         # Axis and tick labels
         ax.set_xlabel("position (mm)", fontsize=axis_label_size)
@@ -517,6 +534,66 @@ class EMGMotorUnits:
                 "fibre_centres_median": fibre_centres_median,
             }
             motor_unit.analysis_performed["fibres_clustered"] = True
+
+    def plot_fibre_potential_clustering_one_motor_unit(
+        self,
+        motor_unit_idx,
+        plot_electrodes=True,
+        pt_potentials_size=10,
+        pt_potentials_alpha=0.5,
+        pt_potentials_facecolor=None,
+        pt_medians_size=50,
+        pt_medians_marker="o",
+        pt_medians_facecolor="none",
+        pt_medians_edgecolor=None,
+        pt_medians_lw=2.5,
+        axis_equal=True,
+        ax=None,
+        lw=0.5,
+        figsize=(10, 5),
+        axis_label_size=14,
+        tick_label_size=12,
+        dpi=100,
+        cmap=None,
+    ):
+        # Default colors
+        if cmap is None:
+            cmap = colormaps["tab20"].colors
+        idx = motor_unit_idx % (int(len(cmap) / 2))
+        if pt_medians_edgecolor is None:
+            pt_medians_edgecolor = cmap[2 * idx]
+        if pt_medians_facecolor is None:  # note: differs from string 'none' --> no fill
+            pt_medians_edgecolor = cmap[2 * idx]
+        if pt_potentials_facecolor is None:
+            pt_potentials_facecolor = cmap[2 * idx + 1]
+
+        # Plot locations based on all fibre potentials
+        fig, ax = self.plot_fibre_potential_locations(
+            motor_unit_idx=motor_unit_idx,
+            pt_size=pt_potentials_size,
+            pt_alpha=pt_potentials_alpha,
+            pt_facecolor=pt_potentials_facecolor,
+            axis_equal=axis_equal,
+            ax=ax,
+            lw=lw,
+            figsize=figsize,
+            axis_label_size=axis_label_size,
+            tick_label_size=axis_label_size,
+            dpi=dpi,
+            plot_legend=False,
+        )
+
+        # Plot larger markers for median fibre locations
+        mu_clusters = self.motor_units[motor_unit_idx].fibre_clustering_results
+        ax.scatter(
+            mu_clusters["fibre_centres_median"][:, 0],
+            mu_clusters["fibre_centres_median"][:, 1],
+            pt_medians_size,
+            marker=pt_medians_marker,
+            facecolors=pt_medians_facecolor,
+            edgecolors=pt_medians_edgecolor,
+            linewidths=pt_medians_lw,
+        )
 
 
 class EMGAnalysisReconstructSettings:
