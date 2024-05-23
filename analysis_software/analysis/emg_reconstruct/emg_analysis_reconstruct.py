@@ -117,8 +117,9 @@ class EMGMotorUnit:
         self.mean_spikes = np.array([])
 
         # Onset of MUP that each peak belongs to? (size n peaks)
-        # TODO: rename to clarify; consider whether MUP label ( = index) would be
-        # easier to work with
+        # TODO: considering renaming to clarify; consider whether MUP label ( = index)
+        # would be easier to work with (clustering currently implemented using this
+        # variable).
         self.onsets = np.array([])
 
         # each MUP time series? size n potentials x n chan x time
@@ -170,7 +171,33 @@ class EMGMotorUnit:
     def add_fibre_localisation(
         self, fibre_centres, mean_spikes, onsets, all_spikes, gn_potential
     ):
-        # TODO: remove any unnecessary attributes
+        """
+        Add results of the fibre localisation step to the motor unit object. Computes
+        additional attributes and stores that analysis has been performed.
+
+        Called during EMGAnalysisReconstruct method, reconstruct_fibres
+
+        Parameters
+        ----------
+        fibre_centres : TYPE
+            DESCRIPTION.
+        mean_spikes : TYPE
+            DESCRIPTION.
+        onsets : TYPE
+            DESCRIPTION.
+        all_spikes : TYPE
+            DESCRIPTION.
+        gn_potential : TYPE
+            DESCRIPTION.
+
+        Returns
+        -------
+        None.
+
+        TODO: finish docstring once attributes are finalised (some attributes may not
+        be needed)
+
+        """
 
         # Note analysis performed
         self.analysis_performed["fibres_localised"] = True
@@ -263,8 +290,38 @@ class EMGMotorUnits:
         tick_label_size=12,
         dpi=100,
     ):
-        # Scatter plot of electrode positions
-        # TODO: add outline for needle?
+        """
+        Plot electrode locations using their (x,y) coordinates.
+
+        Electrodes are symbolised by grey squares by default.
+
+        Parameters
+        ----------
+        marker : TYPE, optional
+            DESCRIPTION. The default is "s".
+        clr : TYPE, optional
+            DESCRIPTION. The default is "silver".
+        ax : TYPE, optional
+            DESCRIPTION. The default is None.
+        figsize : TYPE, optional
+            DESCRIPTION. The default is (10, 5).
+        axis_label_size : TYPE, optional
+            DESCRIPTION. The default is 14.
+        tick_label_size : TYPE, optional
+            DESCRIPTION. The default is 12.
+        dpi : TYPE, optional
+            DESCRIPTION. The default is 100.
+         : TYPE
+            DESCRIPTION.
+
+        Returns
+        -------
+        None.
+
+        TODO: finish docstring once vis is finalised
+        TODO: consider adding outline for needle
+
+        """
 
         # Create new figure with specified size if no axis provided
         if ax is None:
@@ -307,9 +364,63 @@ class EMGMotorUnits:
         dpi=100,
         cmap=None,
     ):
-        # Scatter plot of all fibre potential locations
-        # TODO: docstring, testing
-        # TODO: keep axes the same when plotting subset of motor units
+        """
+        Create scatter plot of fibre localisations estimated from all fibre potentials
+        (i.e., before clustering step). Can either plot fibre locations of all motor
+        unit potentials or one, specified motor unit potential.
+
+        Default point colour depends on the motor unit number.
+
+        Parameters
+        ----------
+        motor_unit_idx : TYPE, optional
+            DESCRIPTION. The default is None.
+        # motor unit index; if None : TYPE
+            DESCRIPTION.
+        plot all        plot_electrodes : TYPE, optional
+            DESCRIPTION. The default is True.
+        pt_size : TYPE, optional
+            DESCRIPTION. The default is 10.
+        pt_alpha : TYPE, optional
+            DESCRIPTION. The default is 0.5.
+        pt_facecolor : TYPE, optional
+            DESCRIPTION. The default is None.
+        axis_equal : TYPE, optional
+            DESCRIPTION. The default is True.
+        ax : TYPE, optional
+            DESCRIPTION. The default is None.
+        lw : TYPE, optional
+            DESCRIPTION. The default is 0.5.
+        figsize : TYPE, optional
+            DESCRIPTION. The default is (10, 5).
+        axis_label_size : TYPE, optional
+            DESCRIPTION. The default is 14.
+        tick_label_size : TYPE, optional
+            DESCRIPTION. The default is 12.
+        plot_legend : TYPE, optional
+            DESCRIPTION. The default is True.
+        legend_pt_size : TYPE, optional
+            DESCRIPTION. The default is 30.
+        legend_label_size : TYPE, optional
+            DESCRIPTION. The default is 12.
+        dpi : TYPE, optional
+            DESCRIPTION. The default is 100.
+        cmap : TYPE, optional
+            DESCRIPTION. The default is None.
+         : TYPE
+            DESCRIPTION.
+
+        Returns
+        -------
+        fig : TYPE
+            DESCRIPTION.
+        ax : TYPE
+            DESCRIPTION.
+
+        TODO: finish docstring
+        TODO: add option for fixing axis limits across different motor units.
+
+        """
 
         # Default colormap - will use if colors not specified
         if cmap is None:
@@ -556,6 +667,62 @@ class EMGMotorUnits:
         dpi=100,
         cmap=None,
     ):
+        """
+        Create scatter plot of fibre localisations estimated from all fibre potentials
+        (i.e., before clustering step), with the location of each fibre (determined
+        after clustering) overlaid. Plots results from one motor unit potential at a
+        time.
+
+        Default point colour depends on the motor unit number.
+
+        Parameters
+        ----------
+        motor_unit_idx : TYPE
+            DESCRIPTION.
+        plot_electrodes : TYPE, optional
+            DESCRIPTION. The default is True.
+        pt_potentials_size : TYPE, optional
+            DESCRIPTION. The default is 10.
+        pt_potentials_alpha : TYPE, optional
+            DESCRIPTION. The default is 0.5.
+        pt_potentials_facecolor : TYPE, optional
+            DESCRIPTION. The default is None.
+        pt_medians_size : TYPE, optional
+            DESCRIPTION. The default is 50.
+        pt_medians_marker : TYPE, optional
+            DESCRIPTION. The default is "o".
+        pt_medians_facecolor : TYPE, optional
+            DESCRIPTION. The default is "none".
+        pt_medians_edgecolor : TYPE, optional
+            DESCRIPTION. The default is None.
+        pt_medians_lw : TYPE, optional
+            DESCRIPTION. The default is 2.5.
+        axis_equal : TYPE, optional
+            DESCRIPTION. The default is True.
+        ax : TYPE, optional
+            DESCRIPTION. The default is None.
+        lw : TYPE, optional
+            DESCRIPTION. The default is 0.5.
+        figsize : TYPE, optional
+            DESCRIPTION. The default is (10, 5).
+        axis_label_size : TYPE, optional
+            DESCRIPTION. The default is 14.
+        tick_label_size : TYPE, optional
+            DESCRIPTION. The default is 12.
+        dpi : TYPE, optional
+            DESCRIPTION. The default is 100.
+        cmap : TYPE, optional
+            DESCRIPTION. The default is None.
+
+        Returns
+        -------
+        None.
+
+        TODO: finish docstring
+        TODO: add option for fixing axis limits across different motor units.
+
+        """
+
         # Default colors
         if cmap is None:
             cmap = colormaps["tab20"].colors
@@ -893,8 +1060,8 @@ class EMGAnalysisReconstruct:
 
     def plot_motor_units_raster(
         self,
-        linelengths=0.9,
-        linewidths=0.75,
+        linelengths: float = 0.9,
+        linewidths: float = 0.75,
         ax=None,
         figsize=(10, 5),
         dpi: int = 100,
@@ -903,11 +1070,51 @@ class EMGAnalysisReconstruct:
         ytick_label_size: float = 12,
         sort_by: str = "default",
     ):
-        # Create a raster plot of the potentials of each motor unit in the recording.
-        # TODO: full docstring, testing
+        """
+        Create a raster plot of the potentials of each motor unit in the recording.
+        Each motor unit is a row in the visualisation, and vertical lines are drawn at
+        the times of the motor unit's potentials.
 
-        # TODO: if save whether analysis has been run, can provide more specific error
-        # message (analysis has not been run vs has been run and no MUs found)
+        Parameters
+        ----------
+        linelengths : float, optional
+            DESCRIPTION. The default is 0.9.
+        linewidths : float, optional
+            DESCRIPTION. The default is 0.75.
+        ax : TYPE, optional
+            DESCRIPTION. The default is None.
+        figsize : TYPE, optional
+            DESCRIPTION. The default is (10, 5).
+        dpi : int, optional
+            DESCRIPTION. The default is 100.
+        axis_label_size : float, optional
+            DESCRIPTION. The default is 14.
+        xtick_label_size : float, optional
+            DESCRIPTION. The default is 12.
+        ytick_label_size : float, optional
+            DESCRIPTION. The default is 12.
+        sort_by : str, optional
+            DESCRIPTION. The default is "default".
+         : TYPE
+            DESCRIPTION.
+
+        Raises
+        ------
+        ValueError
+            DESCRIPTION.
+
+        Returns
+        -------
+        fig : TYPE
+            DESCRIPTION.
+        ax : TYPE
+            DESCRIPTION.
+
+        TODO: finish docstring once inputs are finalised
+        TODO: update error message to distinguish between cases 1) localisation analysis
+        hasn't been run, and 2) analysis run, but no MUPs found.
+
+        """
         if not self.found_motor_units:
             raise ValueError(
                 "No motor units identified - confirm that analysis has been run."
@@ -964,17 +1171,41 @@ class EMGAnalysisReconstruct:
     def get_potentials_data_of_one_motor_unit(
         self, motor_unit_idx: int, n_ms: int = 20
     ) -> npt.NDArray[np.float64]:
-        # TODO: do the indices always match motor unit numbers? if not, should add as
-        # attribute to EMGMotorUnits class so can easily find and select MUs using
-        # their numeric labels
-        #
-        # TODO: docstring, testing
-        #
-        # n_ms is the approximate length of time to get for each motor unit (number of
-        # samples on each side of onset are rounded up to nearest integer)
+        """
+        Extract the time series of each motor unit potential of the specified motor
+        unit.
+
+        Symmetrical data is extracted around each MUP's onset; total length of each
+        segment is approximately n_ms milliseconds (may be rounded if cannot match time
+        exactly given the recording's sampling rate).
+
+        If requested segment length overlaps with the ends of the EMG recording, NaNs
+        are instead returned for that segment.
+
+        Parameters
+        ----------
+        motor_unit_idx : int
+            Index of motor unit in EMGMotorUnits class for which to extract the
+            potential time series data.
+        n_ms : int, optional
+            Number of milliseconds of data to extract. The data will be centered on the
+            motor unit potential's onset. The default is 20.
+
+        Raises
+        ------
+        RuntimeError
+            Raised if no motor units are stored in the EMGAnalysisReconstruct object.
+
+        Returns
+        -------
+        potentials_data : npt.NDArray[np.float64]
+            Time series of each motor unit potential, size number of EMG channels x
+            time x number of potentials.
+
+        """
 
         if not self.found_motor_units:
-            raise ValueError(
+            raise RuntimeError(
                 "No motor units identified - confirm that analysis has been run."
             )
 
@@ -1009,18 +1240,56 @@ class EMGAnalysisReconstruct:
         self,
         motor_unit_idx: int,
         n_ms: int = 20,
-        offset=500,
+        offset: float = 500,
         ax=None,
-        lw=0.5,
+        lw: float = 0.5,
         figsize=(7, 7),
         axis_label_size: float = 10,
-        ytick_label_size=6,
-        xtick_label_size=8,
-        dpi=100,
+        ytick_label_size: float = 6,
+        xtick_label_size: float = 8,
+        dpi: int = 100,
     ):
-        # Time series plot of average motor unit potential of one motor unit
-        # TODO: documentation, testing
-        # TODO: averaging options? (mean vs median)
+        """
+        Plot the average (mean) time series of the motor unit's potential.
+
+        Parameters
+        ----------
+        motor_unit_idx : int
+            DESCRIPTION.
+        n_ms : int, optional
+            DESCRIPTION. The default is 20.
+        offset : float, optional
+            DESCRIPTION. The default is 500.
+        ax : TYPE, optional
+            DESCRIPTION. The default is None.
+        lw : float, optional
+            DESCRIPTION. The default is 0.5.
+        figsize : TYPE, optional
+            DESCRIPTION. The default is (7, 7).
+        axis_label_size : float, optional
+            DESCRIPTION. The default is 10.
+        ytick_label_size : float, optional
+            DESCRIPTION. The default is 6.
+        xtick_label_size : float, optional
+            DESCRIPTION. The default is 8.
+        dpi : int, optional
+            DESCRIPTION. The default is 100.
+
+        Raises
+        ------
+        ValueError
+            DESCRIPTION.
+
+        Returns
+        -------
+        fig : TYPE
+            DESCRIPTION.
+        ax : TYPE
+            DESCRIPTION.
+
+        TODO: finish docstring once vis arguments are finalised
+
+        """
 
         if not self.found_motor_units:
             raise ValueError(
@@ -1069,22 +1338,73 @@ class EMGAnalysisReconstruct:
     def plot_all_potentials_one_channel(
         self,
         motor_unit_idx: int,
-        chan_idx: int = None,  # if none, uses channel used for finding motor units
+        chan_idx: int = None,
         n_ms: int = 20,
         ax=None,
-        lw=0.2,
-        lw_mean=0.5,
+        lw: float = 0.2,
+        lw_mean: float = 0.5,
         figsize=(7, 7),
         axis_label_size: float = 10,
-        ytick_label_size=10,
-        xtick_label_size=10,
-        dpi=100,
+        ytick_label_size: float = 10,
+        xtick_label_size: float = 10,
+        dpi: int = 100,
     ):
-        # Time series plot of all motor unit potentials of one motor unit in one channel
-        # Average (mean) overlaid
-        # TODO: documentation, testing
-        # Note using channel index (counting from 0), not numeric label (counting from
-        # 1)
+        """
+
+        Plots the time series of all motor unit potentials of one motor unit in one
+        channel, with the mean time series overlaid.
+
+        If channel is not specified, the channel used for detecting motor unit
+        potentials is plotted.
+
+        Note that the channel is specified using the channel index (counting from 0),
+        not the channel numeric label (counting from 1)
+
+
+        Parameters
+        ----------
+        motor_unit_idx : int
+            DESCRIPTION.
+        chan_idx : int, optional
+            DESCRIPTION. The default is None.
+        n_ms : int, optional
+            DESCRIPTION. The default is 20.
+        ax : TYPE, optional
+            DESCRIPTION. The default is None.
+        lw : float, optional
+            DESCRIPTION. The default is 0.2.
+        lw_mean : float, optional
+            DESCRIPTION. The default is 0.5.
+        figsize : TYPE, optional
+            DESCRIPTION. The default is (7, 7).
+        axis_label_size : float, optional
+            DESCRIPTION. The default is 10.
+        ytick_label_size : float, optional
+            DESCRIPTION. The default is 10.
+        xtick_label_size : float, optional
+            DESCRIPTION. The default is 10.
+        dpi : int, optional
+            DESCRIPTION. The default is 100.
+         : TYPE
+            DESCRIPTION.
+
+        Raises
+        ------
+        ValueError
+            DESCRIPTION.
+
+        Returns
+        -------
+        fig : TYPE
+            DESCRIPTION.
+        ax : TYPE
+            DESCRIPTION.
+        chan_idx : TYPE
+            DESCRIPTION.
+
+        TODO: finish docstring once vis arguments are finalised
+
+        """
 
         if not self.found_motor_units:
             raise ValueError(
@@ -1123,7 +1443,7 @@ class EMGAnalysisReconstruct:
         # Labels
         ax.tick_params(axis="y", which="major", labelsize=ytick_label_size)
         ax.set_ylabel("\u03bcV", fontsize=axis_label_size)
-        # TODO: check label
+        # TODO: check that label should be uV
 
         # x axis labels and font size
         ax.set_xlabel("time (ms)", fontsize=axis_label_size)
