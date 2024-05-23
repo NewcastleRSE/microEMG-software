@@ -516,6 +516,7 @@ class EMGMotorUnits:
                 "mup_fibre_pos": mup_fibre_pos,
                 "fibre_centres_median": fibre_centres_median,
             }
+            motor_unit.analysis_performed["fibres_clustered"] = True
 
 
 class EMGAnalysisReconstructSettings:
