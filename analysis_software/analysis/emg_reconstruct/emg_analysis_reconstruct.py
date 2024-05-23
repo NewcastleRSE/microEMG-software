@@ -361,7 +361,7 @@ class EMGMotorUnits:
 
         return fig, ax
 
-    def cluster_fibre_potentials(self, motor_unit_idx):
+    def cluster_fibre_potentials(self, motor_unit_idx: int, random_state: int = 0):
         """
         Cluster the fibre potentials and compute median fibre locations of the
         specified motor unit.
@@ -398,6 +398,9 @@ class EMGMotorUnits:
         ----------
         motor_unit_idx : int
             Index of motor unit to use to perform fibre clustering.
+        random_state : int
+            Determines random number generation for centroid initialization; passed to
+            k-means algorithm
 
         Raises
         ------
@@ -445,7 +448,9 @@ class EMGMotorUnits:
         mean_n_fps = round(len(motor_unit.onsets) / n_unique_onsets)
 
         if mean_n_fps > 0:
-            fibre_kmeans = KMeans(n_clusters=mean_n_fps).fit(motor_unit.fibre_centres)
+            fibre_kmeans = KMeans(n_clusters=mean_n_fps, random_state=random_state).fit(
+                motor_unit.fibre_centres
+            )
 
             # fibre cluster assignments
             n_fibre_clusters = np.max(fibre_kmeans.labels_) + 1
