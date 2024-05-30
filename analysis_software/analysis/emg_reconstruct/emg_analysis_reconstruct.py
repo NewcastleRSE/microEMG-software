@@ -21,6 +21,8 @@ import scipy.optimize as opt
 from scipy.linalg import toeplitz
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
+from matplotlib import colormaps
+from sklearn.cluster import KMeans
 
 # TODO: add csv and cv2 to poetry dependency management
 # Need to remove try/except block - temporary fix since functions not needed for
@@ -31,6 +33,7 @@ try:
 except Exception as e:
     print(e)
 import os
+
 # import math
 import emg_analyser_python.emg_analyser_functions as tk
 from emg_analyser_python.constants import QUICK_VERSION
@@ -80,13 +83,60 @@ class EMGMotorUnit:
         """
 
         self.motor_unit_number = number
-        self.potentials_t_idx = potentials_t_idx  # Time indices of potentials in EMG
+
         self.n_potentials = len(potentials_t_idx)  # Number of potentials assigned to MU
+        self.potentials_t_idx = potentials_t_idx  # Time indices of potentials in EMG
+
+        # Store information about analysis that has been performed for this MU
+        # Note: even if true, may not be results if data was not suitable for analysis
+        self.analysis_performed = {
+            "fibres_localised": False,  # localisation step
+            "fibres_clustered": False,  # clustering fibres step
+            "fibres_jitter_computed": False,  # jitter analysis step
+        }
+
+        # TODO: check understanding of each attribute
+        # TODO: clean comments and move to docstring for class
+        # TODO: update __str__ method once attributes are finalised
+
+        # Localisation attributes
+
+        # Number of fibre potentials (peaks) found across all MUPs
+        self.n_fibre_potentials = None
+
+        # Estimated fibre x, y coordinate at each time (size n peaks x 2)
+        # TODO: consider renaming something like fibre_xy
         self.fibre_centres = np.array([])
+
+        # average motor unit potential? size n chan x time
+        # TODO: consider replacing functionality with
+        # get_potentials_data_of_one_motor_unit() method of
+        # EMGAnalysisReconstruct if this attribute is only used for plotting (esp.
+        # since the plots are needed before this attribute is added!)
+        # Otherwise, rename to clarify that it is the MUP
         self.mean_spikes = np.array([])
+
+        # Onset of MUP that each peak belongs to? (size n peaks)
+        # TODO: considering renaming to clarify; consider whether MUP label ( = index)
+        # would be easier to work with (clustering currently implemented using this
+        # variable).
         self.onsets = np.array([])
+
+        # each MUP time series? size n potentials x n chan x time
+        # TODO: rename or consider replacing functionality with
+        # get_potentials_data_of_one_motor_unit() method of
+        # EMGAnalysisReconstruct if this attribute is only used for plotting
         self.all_spikes = np.array([])
+
+        # ?? not sure what data or how the size relates to other attributes
         self.gn_potential = np.array([])
+
+        # TODO: currently the exact timing of fibre potentials (peaks) are not saved (?)
+        # Will need this info for jitter analysis
+
+        # Dictionaries for storing results of clustering and jitter analysis
+        self.fibre_clustering_results = {}
+        self.fibre_jitter_results = {}
 
     def __str__(self):
         """
@@ -118,15 +168,63 @@ class EMGMotorUnit:
 
         return ans
 
+    def add_fibre_localisation(
+        self, fibre_centres, mean_spikes, onsets, all_spikes, gn_potential
+    ):
+        """
+        Add results of the fibre localisation step to the motor unit object. Computes
+        additional attributes and stores that analysis has been performed.
+
+        Called during EMGAnalysisReconstruct method, reconstruct_fibres
+
+        Parameters
+        ----------
+        fibre_centres : TYPE
+            DESCRIPTION.
+        mean_spikes : TYPE
+            DESCRIPTION.
+        onsets : TYPE
+            DESCRIPTION.
+        all_spikes : TYPE
+            DESCRIPTION.
+        gn_potential : TYPE
+            DESCRIPTION.
+
+        Returns
+        -------
+        None.
+
+        TODO: finish docstring once attributes are finalised (some attributes may not
+        be needed)
+
+        """
+
+        # Note analysis performed
+        self.analysis_performed["fibres_localised"] = True
+
+        # Store number of fibre potentials (i.e., peaks in the MUPs) found
+        self.n_fibre_potentials = fibre_centres.shape[0]
+
+        # Store provided attributes
+        self.fibre_centres = fibre_centres
+        self.mean_spikes = mean_spikes
+        self.onsets = onsets
+        self.all_spikes = all_spikes
+        self.gn_potential = gn_potential
+
 
 class EMGMotorUnits:
     """
-    Class for storing all motor unit data
-    returned from reconstruction analysis
+    Class for storing and visualising all motor unit data returned from reconstruction
+    analysis.
+
+    Only includes visualisations that do not require the recording time series.
 
     """
 
-    def __init__(self, motor_units: list[EMGMotorUnit]):
+    def __init__(
+        self, motor_units: list[EMGMotorUnit], chan_xy: npt.NDArray[npt.float64]
+    ):
         """
         Initialise EMGMotorUnits object.
 
@@ -134,6 +232,9 @@ class EMGMotorUnits:
         ----------
         motor_units : list[EMGMotorUnit]
             List of motor units (class EMGMotorUnit) to add to the EMGMotorUnits object.
+        chan_xy : npt.NDArray[npt.float64]
+            Channel (electrode) (x,y) coordinates; saved as attribute to facilitate
+            visualisations.
 
         Returns
         -------
@@ -146,6 +247,8 @@ class EMGMotorUnits:
 
         # Get and store number of potentials of each motor unit
         self.n_potentials = [mu.n_potentials for mu in self.motor_units]
+
+        self.chan_xy = chan_xy
 
     def __str__(self):
         """
@@ -176,6 +279,488 @@ class EMGMotorUnits:
 
         """
         return self.n_motor_units
+
+    def plot_electrodes(
+        self,
+        marker="s",
+        clr="silver",
+        ax=None,
+        figsize=(10, 5),
+        axis_label_size=14,
+        tick_label_size=12,
+        dpi=100,
+    ):
+        """
+        Plot electrode locations using their (x,y) coordinates.
+
+        Electrodes are symbolised by grey squares by default.
+
+        Parameters
+        ----------
+        marker : TYPE, optional
+            DESCRIPTION. The default is "s".
+        clr : TYPE, optional
+            DESCRIPTION. The default is "silver".
+        ax : TYPE, optional
+            DESCRIPTION. The default is None.
+        figsize : TYPE, optional
+            DESCRIPTION. The default is (10, 5).
+        axis_label_size : TYPE, optional
+            DESCRIPTION. The default is 14.
+        tick_label_size : TYPE, optional
+            DESCRIPTION. The default is 12.
+        dpi : TYPE, optional
+            DESCRIPTION. The default is 100.
+         : TYPE
+            DESCRIPTION.
+
+        Returns
+        -------
+        None.
+
+        TODO: finish docstring once vis is finalised
+        TODO: consider adding outline for needle
+
+        """
+
+        # Create new figure with specified size if no axis provided
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+            fig.dpi = dpi
+        else:
+            fig = None
+
+        # Plot electrodes
+        ax.scatter(self.chan_xy[:, 0], self.chan_xy[:, 1], marker=marker, color=clr)
+
+        # If new figure, add axis labels
+        if fig:
+            ax.set_xlabel("position (mm)", fontsize=axis_label_size)
+            ax.set_ylabel("position (mm)", fontsize=axis_label_size)
+            ax.tick_params(axis="x", which="major", labelsize=tick_label_size)
+            ax.tick_params(axis="y", which="major", labelsize=tick_label_size)
+
+            # y axis limits
+            max_y = np.abs(np.max(self.chan_xy[:, 1]))
+            ylim_scale = 5
+            ax.set_ylim(max_y * ylim_scale * -1, max_y * ylim_scale)
+
+    def plot_fibre_potential_locations(
+        self,
+        motor_unit_idx=None,  # motor unit index; if None, plot all
+        plot_electrodes=True,
+        pt_size=10,
+        pt_alpha=0.5,
+        pt_facecolor=None,
+        axis_equal=True,
+        ax=None,
+        lw=0.5,
+        figsize=(10, 5),
+        axis_label_size=14,
+        tick_label_size=12,
+        plot_legend=True,
+        legend_pt_size=30,
+        legend_label_size=12,
+        dpi=100,
+        cmap=None,
+    ):
+        """
+        Create scatter plot of fibre localisations estimated from all fibre potentials
+        (i.e., before clustering step). Can either plot fibre locations of all motor
+        unit potentials or one, specified motor unit potential.
+
+        Default point colour depends on the motor unit number.
+
+        Parameters
+        ----------
+        motor_unit_idx : TYPE, optional
+            DESCRIPTION. The default is None.
+        # motor unit index; if None : TYPE
+            DESCRIPTION.
+        plot all        plot_electrodes : TYPE, optional
+            DESCRIPTION. The default is True.
+        pt_size : TYPE, optional
+            DESCRIPTION. The default is 10.
+        pt_alpha : TYPE, optional
+            DESCRIPTION. The default is 0.5.
+        pt_facecolor : TYPE, optional
+            DESCRIPTION. The default is None.
+        axis_equal : TYPE, optional
+            DESCRIPTION. The default is True.
+        ax : TYPE, optional
+            DESCRIPTION. The default is None.
+        lw : TYPE, optional
+            DESCRIPTION. The default is 0.5.
+        figsize : TYPE, optional
+            DESCRIPTION. The default is (10, 5).
+        axis_label_size : TYPE, optional
+            DESCRIPTION. The default is 14.
+        tick_label_size : TYPE, optional
+            DESCRIPTION. The default is 12.
+        plot_legend : TYPE, optional
+            DESCRIPTION. The default is True.
+        legend_pt_size : TYPE, optional
+            DESCRIPTION. The default is 30.
+        legend_label_size : TYPE, optional
+            DESCRIPTION. The default is 12.
+        dpi : TYPE, optional
+            DESCRIPTION. The default is 100.
+        cmap : TYPE, optional
+            DESCRIPTION. The default is None.
+         : TYPE
+            DESCRIPTION.
+
+        Returns
+        -------
+        fig : TYPE
+            DESCRIPTION.
+        ax : TYPE
+            DESCRIPTION.
+
+        TODO: finish docstring
+        TODO: add option for fixing axis limits across different motor units.
+
+        """
+
+        # Default colormap - will use if colors not specified
+        if cmap is None:
+            cmap = colormaps["tab10"].colors
+
+        # Create new figure with specified size if no axis provided
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+            fig.dpi = dpi
+        else:
+            fig = None
+
+        # Add electrodes to plot
+        if plot_electrodes:
+            self.plot_electrodes(ax=ax)
+
+        # Motor unit(s) to plot
+        if motor_unit_idx is not None:
+            motor_units = [self.motor_units[motor_unit_idx]]
+        else:
+            motor_units = self.motor_units
+
+        for mu in motor_units:
+            # Default color for motor unit - differs depending on motor unit
+            if pt_facecolor is None:
+                idx = mu.motor_unit_number % (int(len(cmap)))
+                mu_pt_facecolor = cmap[idx]
+            else:
+                mu_pt_facecolor = pt_facecolor
+
+            if mu.analysis_performed["fibres_localised"]:
+                print(
+                    f"Plotting fibre locations of motor unit {mu.motor_unit_number + 1}"
+                )
+                ax.scatter(
+                    mu.fibre_centres[:, 0],
+                    mu.fibre_centres[:, 1],
+                    pt_size,
+                    alpha=pt_alpha,
+                    linewidth=0,
+                    facecolor=mu_pt_facecolor,
+                    label=f"motor unit {mu.motor_unit_number + 1}",
+                )
+
+        # Legend
+        if plot_legend:
+            lgnd = ax.legend(
+                bbox_to_anchor=(1, 1),
+                loc="upper left",
+                frameon=False,
+                handletextpad=0.25,
+                fontsize=legend_label_size,
+            )
+            for h in lgnd.legend_handles:
+                h._sizes = [legend_pt_size]
+
+        # Axis and tick labels
+        ax.set_xlabel("position (mm)", fontsize=axis_label_size)
+        ax.set_ylabel("position (mm)", fontsize=axis_label_size)
+        ax.tick_params(axis="x", which="major", labelsize=tick_label_size)
+        ax.tick_params(axis="y", which="major", labelsize=tick_label_size)
+
+        # Equal aspect ratio
+        if axis_equal:
+            ax.axis("equal")
+
+        return fig, ax
+
+    def cluster_fibre_potentials(self, motor_unit_idx: int, random_state: int = 0):
+        """
+        Cluster the fibre potentials and compute median fibre locations of the
+        specified motor unit.
+
+        Before this analysis is run, the motor unit's fibres potentials must be
+        identified and localised using the reconstruct_fibres method of the
+        EMGAnalysisReconstruct class.
+
+        Running this method populates the fibre_clustering_results dictionary attribute
+        with the following key/value pairs:
+            mean_n_fps (int): mean number of fibre potentials across all motor unit
+            potentials used in the localisation analysis. Used as input for clustering.
+
+            n_fibre_clusters (int): number of clusters found; may slightly differ from
+            mean_n_fps.
+
+            fibre_clusters (npt.NDArray[np.int32], size (self.fibre_potentials,) ):
+                cluster assignment of each fibre potential
+
+            n_fps_per_mup_and_cluster (npt.NDArray[np.float64],
+                                       size (self.n_potentials, n_fibre_clusters)):
+            Number of fibre potentials (FPs) in each motor unit potential (MUP) that
+            have the same cluster assignment.
+
+            mup_fibre_pos (npt.NDArray[np.float64],
+                           size(self.n_potentials, 2, n_fibre_clusters)):
+            Location estimates ((x,y) coordinates) of each fibre based on each MUP. If
+            the fibre is not found in the MUP, the coordinates are np.nan.
+
+            fibre_centres_median (npt.NDArray[np.float64], size(n_fibre_clusters, 2)):
+            Median coordinates of each fibre.
+
+        Parameters
+        ----------
+        motor_unit_idx : int
+            Index of motor unit to use to perform fibre clustering.
+        random_state : int
+            Determines random number generation for centroid initialization; passed to
+            k-means algorithm
+
+        Raises
+        ------
+        RuntimeError
+            Raised if localisation analysis has not been performed on requested motor
+            unit.
+
+        Returns
+        -------
+        None.
+
+        TODO: test that analysis reproduces original MATLAB code; some variation
+        expected since k-means is not deterministic (unless initialisation is fixed),
+        but results should be qualitatively the same.
+
+        TODO: add additional measures needed for downstream analysis/reports/vis - check
+        with SM before implementing to determine what is needed.
+         - position changes (based on position change between consecutive MUPs) to get a
+         measure of variability in location estimate (will need to remove nan positions
+        in mup_fibre_pos before computing)
+         - distances between fibres (can also add as a separate method)
+
+        TODO: check other k-means parameters; determine if any defaults should be
+        changed. Also evaluate clustering performance and determine if approach needs to
+        be modified (e.g., how number of clusters is determined)
+
+
+        """
+
+        # Get motor unit
+        motor_unit = self.motor_units[motor_unit_idx]
+
+        # Check that localisation has been run
+        if not motor_unit.analysis_performed["fibres_localised"]:
+            raise RuntimeError(
+                "Localisation analysis has not been performed; cannot cluster fibres."
+            )
+
+        # Onset indices of all MUPs that have fibre potentials
+        unique_onsets = np.unique(motor_unit.onsets)
+        n_unique_onsets = len(unique_onsets)
+
+        # Use rounded mean number of fibre potentials (FPs) per motor unit potential as
+        # k for clustering
+        mean_n_fps = round(len(motor_unit.onsets) / n_unique_onsets)
+
+        if mean_n_fps > 0:
+            fibre_kmeans = KMeans(n_clusters=mean_n_fps, random_state=random_state).fit(
+                motor_unit.fibre_centres
+            )
+
+            # fibre cluster assignments
+            n_fibre_clusters = np.max(fibre_kmeans.labels_) + 1
+            fibre_clusters = fibre_kmeans.labels_
+
+            # Initialise arrays for storing results
+
+            # Number of fibre potentials (FPs) in each MUP that belong to the same
+            # cluster
+            n_fps_per_mup_and_cluster = np.zeros(
+                (motor_unit.n_potentials, n_fibre_clusters)
+            )
+
+            # Location estimates of each fibre based on each MUP
+            # Note: unlike original code, data stored so indices match the
+            # self.potentials_t_idx array
+            mup_fibre_pos = np.full(
+                (motor_unit.n_potentials, 2, n_fibre_clusters), np.nan
+            )
+
+            # Find median location of each fibre
+            for cluster_num in np.arange(n_fibre_clusters):
+                # Sometimes multiple fibre potentials in the same MUP are assigned to
+                # the same fibre clusters. Therefore, first compute average (mean)
+                # position in each MUP in which the fibre cluster appears.
+                # If no fibres with that cluster num appear in the MUP, position is
+                # stored as np.nan.
+
+                # Note: unlike original code, iterate through all MUPs (not just ones
+                # present in "onsets") so dimensions align to other MUP features.
+                for mup_num in np.arange(motor_unit.n_potentials):
+                    mup_onset = motor_unit.potentials_t_idx[mup_num]
+
+                    # Fibre potentials that belong to the specified onset and cluster.
+                    idx = np.flatnonzero(
+                        np.all(
+                            (
+                                (motor_unit.onsets == mup_onset),
+                                (fibre_clusters == cluster_num),
+                            ),
+                            axis=0,
+                        )
+                    )
+
+                    # Store number of fibre potentials found
+                    n_idx = len(idx)
+                    n_fps_per_mup_and_cluster[mup_num, cluster_num] = n_idx
+
+                    # Compute average position of the fibre based on the specified MUP
+                    if n_idx > 0:
+                        pos = motor_unit.fibre_centres[idx, :]
+                        mup_fibre_pos[mup_num, :, cluster_num] = np.mean(pos, axis=0)
+
+            # Compute median fibre positions
+            fibre_centres_median = np.transpose(np.nanmedian(mup_fibre_pos, axis=0))
+
+            # Store results as dictionary
+            motor_unit.fibre_clustering_results = {
+                "mean_n_fps": mean_n_fps,
+                "n_fibre_clusters": n_fibre_clusters,
+                "fibre_clusters": fibre_clusters,
+                "n_fps_per_mup_and_cluster": n_fps_per_mup_and_cluster,
+                "mup_fibre_pos": mup_fibre_pos,
+                "fibre_centres_median": fibre_centres_median,
+            }
+            motor_unit.analysis_performed["fibres_clustered"] = True
+
+    def plot_fibre_potential_clustering_one_motor_unit(
+        self,
+        motor_unit_idx,
+        plot_electrodes=True,
+        pt_potentials_size=10,
+        pt_potentials_alpha=0.5,
+        pt_potentials_facecolor=None,
+        pt_medians_size=50,
+        pt_medians_marker="o",
+        pt_medians_facecolor="none",
+        pt_medians_edgecolor=None,
+        pt_medians_lw=2.5,
+        axis_equal=True,
+        ax=None,
+        lw=0.5,
+        figsize=(10, 5),
+        axis_label_size=14,
+        tick_label_size=12,
+        dpi=100,
+        cmap=None,
+    ):
+        """
+        Create scatter plot of fibre localisations estimated from all fibre potentials
+        (i.e., before clustering step), with the location of each fibre (determined
+        after clustering) overlaid. Plots results from one motor unit potential at a
+        time.
+
+        Default point colour depends on the motor unit number.
+
+        Parameters
+        ----------
+        motor_unit_idx : TYPE
+            DESCRIPTION.
+        plot_electrodes : TYPE, optional
+            DESCRIPTION. The default is True.
+        pt_potentials_size : TYPE, optional
+            DESCRIPTION. The default is 10.
+        pt_potentials_alpha : TYPE, optional
+            DESCRIPTION. The default is 0.5.
+        pt_potentials_facecolor : TYPE, optional
+            DESCRIPTION. The default is None.
+        pt_medians_size : TYPE, optional
+            DESCRIPTION. The default is 50.
+        pt_medians_marker : TYPE, optional
+            DESCRIPTION. The default is "o".
+        pt_medians_facecolor : TYPE, optional
+            DESCRIPTION. The default is "none".
+        pt_medians_edgecolor : TYPE, optional
+            DESCRIPTION. The default is None.
+        pt_medians_lw : TYPE, optional
+            DESCRIPTION. The default is 2.5.
+        axis_equal : TYPE, optional
+            DESCRIPTION. The default is True.
+        ax : TYPE, optional
+            DESCRIPTION. The default is None.
+        lw : TYPE, optional
+            DESCRIPTION. The default is 0.5.
+        figsize : TYPE, optional
+            DESCRIPTION. The default is (10, 5).
+        axis_label_size : TYPE, optional
+            DESCRIPTION. The default is 14.
+        tick_label_size : TYPE, optional
+            DESCRIPTION. The default is 12.
+        dpi : TYPE, optional
+            DESCRIPTION. The default is 100.
+        cmap : TYPE, optional
+            DESCRIPTION. The default is None.
+
+        Returns
+        -------
+        None.
+
+        TODO: finish docstring
+        TODO: add option for fixing axis limits across different motor units.
+
+        """
+
+        # Default colors
+        if cmap is None:
+            cmap = colormaps["tab20"].colors
+        idx = motor_unit_idx % (int(len(cmap) / 2))
+        if pt_medians_edgecolor is None:
+            pt_medians_edgecolor = cmap[2 * idx]
+        if pt_medians_facecolor is None:  # note: differs from string 'none' --> no fill
+            pt_medians_edgecolor = cmap[2 * idx]
+        if pt_potentials_facecolor is None:
+            pt_potentials_facecolor = cmap[2 * idx + 1]
+
+        # Plot locations based on all fibre potentials
+        fig, ax = self.plot_fibre_potential_locations(
+            motor_unit_idx=motor_unit_idx,
+            pt_size=pt_potentials_size,
+            pt_alpha=pt_potentials_alpha,
+            pt_facecolor=pt_potentials_facecolor,
+            axis_equal=axis_equal,
+            ax=ax,
+            lw=lw,
+            figsize=figsize,
+            axis_label_size=axis_label_size,
+            tick_label_size=axis_label_size,
+            dpi=dpi,
+            plot_legend=False,
+        )
+
+        # Plot larger markers for median fibre locations
+        mu_clusters = self.motor_units[motor_unit_idx].fibre_clustering_results
+        ax.scatter(
+            mu_clusters["fibre_centres_median"][:, 0],
+            mu_clusters["fibre_centres_median"][:, 1],
+            pt_medians_size,
+            marker=pt_medians_marker,
+            facecolors=pt_medians_facecolor,
+            edgecolors=pt_medians_edgecolor,
+            linewidths=pt_medians_lw,
+        )
 
 
 class EMGAnalysisReconstructSettings:
@@ -469,12 +1054,14 @@ class EMGAnalysisReconstruct:
                 number=i, potentials_t_idx=self.indices[self.locs == i]
             )
             all_motor_units.append(motor_unit)
-        self.found_motor_units = EMGMotorUnits(all_motor_units)
+        self.found_motor_units = EMGMotorUnits(
+            all_motor_units, chan_xy=self.emg_data_preproc.chan.chan_xy
+        )
 
     def plot_motor_units_raster(
         self,
-        linelengths=0.9,
-        linewidths=0.75,
+        linelengths: float = 0.9,
+        linewidths: float = 0.75,
         ax=None,
         figsize=(10, 5),
         dpi: int = 100,
@@ -483,11 +1070,51 @@ class EMGAnalysisReconstruct:
         ytick_label_size: float = 12,
         sort_by: str = "default",
     ):
-        # Create a raster plot of the potentials of each motor unit in the recording.
-        # TODO: full docstring, testing
+        """
+        Create a raster plot of the potentials of each motor unit in the recording.
+        Each motor unit is a row in the visualisation, and vertical lines are drawn at
+        the times of the motor unit's potentials.
 
-        # TODO: if save whether analysis has been run, can provide more specific error
-        # message (analysis has not been run vs has been run and no MUs found)
+        Parameters
+        ----------
+        linelengths : float, optional
+            DESCRIPTION. The default is 0.9.
+        linewidths : float, optional
+            DESCRIPTION. The default is 0.75.
+        ax : TYPE, optional
+            DESCRIPTION. The default is None.
+        figsize : TYPE, optional
+            DESCRIPTION. The default is (10, 5).
+        dpi : int, optional
+            DESCRIPTION. The default is 100.
+        axis_label_size : float, optional
+            DESCRIPTION. The default is 14.
+        xtick_label_size : float, optional
+            DESCRIPTION. The default is 12.
+        ytick_label_size : float, optional
+            DESCRIPTION. The default is 12.
+        sort_by : str, optional
+            DESCRIPTION. The default is "default".
+         : TYPE
+            DESCRIPTION.
+
+        Raises
+        ------
+        ValueError
+            DESCRIPTION.
+
+        Returns
+        -------
+        fig : TYPE
+            DESCRIPTION.
+        ax : TYPE
+            DESCRIPTION.
+
+        TODO: finish docstring once inputs are finalised
+        TODO: update error message to distinguish between cases 1) localisation analysis
+        hasn't been run, and 2) analysis run, but no MUPs found.
+
+        """
         if not self.found_motor_units:
             raise ValueError(
                 "No motor units identified - confirm that analysis has been run."
@@ -544,17 +1171,41 @@ class EMGAnalysisReconstruct:
     def get_potentials_data_of_one_motor_unit(
         self, motor_unit_idx: int, n_ms: int = 20
     ) -> npt.NDArray[np.float64]:
-        # TODO: do the indices always match motor unit numbers? if not, should add as
-        # attribute to EMGMotorUnits class so can easily find and select MUs using
-        # their numeric labels
-        #
-        # TODO: docstring, testing
-        #
-        # n_ms is the approximate length of time to get for each motor unit (number of
-        # samples on each side of onset are rounded up to nearest integer)
+        """
+        Extract the time series of each motor unit potential of the specified motor
+        unit.
+
+        Symmetrical data is extracted around each MUP's onset; total length of each
+        segment is approximately n_ms milliseconds (may be rounded if cannot match time
+        exactly given the recording's sampling rate).
+
+        If requested segment length overlaps with the ends of the EMG recording, NaNs
+        are instead returned for that segment.
+
+        Parameters
+        ----------
+        motor_unit_idx : int
+            Index of motor unit in EMGMotorUnits class for which to extract the
+            potential time series data.
+        n_ms : int, optional
+            Number of milliseconds of data to extract. The data will be centered on the
+            motor unit potential's onset. The default is 20.
+
+        Raises
+        ------
+        RuntimeError
+            Raised if no motor units are stored in the EMGAnalysisReconstruct object.
+
+        Returns
+        -------
+        potentials_data : npt.NDArray[np.float64]
+            Time series of each motor unit potential, size number of EMG channels x
+            time x number of potentials.
+
+        """
 
         if not self.found_motor_units:
-            raise ValueError(
+            raise RuntimeError(
                 "No motor units identified - confirm that analysis has been run."
             )
 
@@ -567,17 +1218,21 @@ class EMGAnalysisReconstruct:
 
         # Get potentials from EMG recording data
         # dimensions are channels x time x MUP
-        potentials_data = np.zeros(
-            (self.emg_data_preproc.n_chan, n_samples * 2, motor_unit.n_potentials)
+        potentials_data = np.full(
+            (self.emg_data_preproc.n_chan, n_samples * 2, motor_unit.n_potentials),
+            np.nan,
         )
 
         for i in np.arange(motor_unit.n_potentials):
             # Note that index excludes stop_t sample, which keeps the length to n_ms
             start_t = motor_unit.potentials_t_idx[i] - n_samples
             stop_t = motor_unit.potentials_t_idx[i] + n_samples
-            potentials_data[:, :, i] = self.emg_data_preproc.emg_ts[
-                :, start_t:stop_t
-            ].copy()
+
+            # Only add potentials within boundaries of the time series
+            if (start_t > 0) and (stop_t < self.emg_data_preproc.emg_ts.shape[1]):
+                potentials_data[:, :, i] = self.emg_data_preproc.emg_ts[
+                    :, start_t:stop_t
+                ].copy()
 
         return potentials_data
 
@@ -585,18 +1240,56 @@ class EMGAnalysisReconstruct:
         self,
         motor_unit_idx: int,
         n_ms: int = 20,
-        offset=500,
+        offset: float = 500,
         ax=None,
-        lw=0.5,
+        lw: float = 0.5,
         figsize=(7, 7),
         axis_label_size: float = 10,
-        ytick_label_size=6,
-        xtick_label_size=8,
-        dpi=100,
+        ytick_label_size: float = 6,
+        xtick_label_size: float = 8,
+        dpi: int = 100,
     ):
-        # Time series plot of average motor unit potential of one motor unit
-        # TODO: documentation, testing
-        # TODO: averaging options? (mean vs median)
+        """
+        Plot the average (mean) time series of the motor unit's potential.
+
+        Parameters
+        ----------
+        motor_unit_idx : int
+            DESCRIPTION.
+        n_ms : int, optional
+            DESCRIPTION. The default is 20.
+        offset : float, optional
+            DESCRIPTION. The default is 500.
+        ax : TYPE, optional
+            DESCRIPTION. The default is None.
+        lw : float, optional
+            DESCRIPTION. The default is 0.5.
+        figsize : TYPE, optional
+            DESCRIPTION. The default is (7, 7).
+        axis_label_size : float, optional
+            DESCRIPTION. The default is 10.
+        ytick_label_size : float, optional
+            DESCRIPTION. The default is 6.
+        xtick_label_size : float, optional
+            DESCRIPTION. The default is 8.
+        dpi : int, optional
+            DESCRIPTION. The default is 100.
+
+        Raises
+        ------
+        ValueError
+            DESCRIPTION.
+
+        Returns
+        -------
+        fig : TYPE
+            DESCRIPTION.
+        ax : TYPE
+            DESCRIPTION.
+
+        TODO: finish docstring once vis arguments are finalised
+
+        """
 
         if not self.found_motor_units:
             raise ValueError(
@@ -618,7 +1311,7 @@ class EMGAnalysisReconstruct:
         potentials_data = self.get_potentials_data_of_one_motor_unit(
             motor_unit_idx, n_ms
         )
-        potentials_avg = np.mean(potentials_data, axis=2)
+        potentials_avg = np.nanmean(potentials_data, axis=2)
         n_samples = potentials_avg.shape[1]
 
         # Time vector for x axis (ms)
@@ -645,22 +1338,73 @@ class EMGAnalysisReconstruct:
     def plot_all_potentials_one_channel(
         self,
         motor_unit_idx: int,
-        chan_idx: int = None,  # if none, uses channel used for finding motor units
+        chan_idx: int = None,
         n_ms: int = 20,
         ax=None,
-        lw=0.2,
-        lw_mean=0.5,
+        lw: float = 0.2,
+        lw_mean: float = 0.5,
         figsize=(7, 7),
         axis_label_size: float = 10,
-        ytick_label_size=10,
-        xtick_label_size=10,
-        dpi=100,
+        ytick_label_size: float = 10,
+        xtick_label_size: float = 10,
+        dpi: int = 100,
     ):
-        # Time series plot of all motor unit potentials of one motor unit in one channel
-        # Average (mean) overlaid
-        # TODO: documentation, testing
-        # Note using channel index (counting from 0), not numeric label (counting from
-        # 1)
+        """
+
+        Plots the time series of all motor unit potentials of one motor unit in one
+        channel, with the mean time series overlaid.
+
+        If channel is not specified, the channel used for detecting motor unit
+        potentials is plotted.
+
+        Note that the channel is specified using the channel index (counting from 0),
+        not the channel numeric label (counting from 1)
+
+
+        Parameters
+        ----------
+        motor_unit_idx : int
+            DESCRIPTION.
+        chan_idx : int, optional
+            DESCRIPTION. The default is None.
+        n_ms : int, optional
+            DESCRIPTION. The default is 20.
+        ax : TYPE, optional
+            DESCRIPTION. The default is None.
+        lw : float, optional
+            DESCRIPTION. The default is 0.2.
+        lw_mean : float, optional
+            DESCRIPTION. The default is 0.5.
+        figsize : TYPE, optional
+            DESCRIPTION. The default is (7, 7).
+        axis_label_size : float, optional
+            DESCRIPTION. The default is 10.
+        ytick_label_size : float, optional
+            DESCRIPTION. The default is 10.
+        xtick_label_size : float, optional
+            DESCRIPTION. The default is 10.
+        dpi : int, optional
+            DESCRIPTION. The default is 100.
+         : TYPE
+            DESCRIPTION.
+
+        Raises
+        ------
+        ValueError
+            DESCRIPTION.
+
+        Returns
+        -------
+        fig : TYPE
+            DESCRIPTION.
+        ax : TYPE
+            DESCRIPTION.
+        chan_idx : TYPE
+            DESCRIPTION.
+
+        TODO: finish docstring once vis arguments are finalised
+
+        """
 
         if not self.found_motor_units:
             raise ValueError(
@@ -681,7 +1425,7 @@ class EMGAnalysisReconstruct:
         potentials_data = self.get_potentials_data_of_one_motor_unit(
             motor_unit_idx, n_ms
         )
-        potentials_avg = np.mean(potentials_data, axis=2)
+        potentials_avg = np.nanmean(potentials_data, axis=2)
         n_samples = potentials_avg.shape[1]
 
         # Time vector for x axis (ms)
@@ -699,7 +1443,7 @@ class EMGAnalysisReconstruct:
         # Labels
         ax.tick_params(axis="y", which="major", labelsize=ytick_label_size)
         ax.set_ylabel("\u03bcV", fontsize=axis_label_size)
-        # TODO: check label
+        # TODO: check that label should be uV
 
         # x axis labels and font size
         ax.set_xlabel("time (ms)", fontsize=axis_label_size)
@@ -887,11 +1631,13 @@ class EMGAnalysisReconstruct:
         # Add the results to the motor unit object
         if pos.shape[0] > 0:
             motor_unit = self.found_motor_units.motor_units[motor_unit_number]
-            motor_unit.fibre_centres = pos
-            motor_unit.mean_spikes = mean_spikes
-            motor_unit.onsets = onsets
-            motor_unit.all_spikes = all_spikes
-            motor_unit.gn_potential = np.array(np.transpose(self.opr))
+            motor_unit.add_fibre_localisation(
+                fibre_centres=pos,
+                mean_spikes=mean_spikes,
+                onsets=onsets,
+                all_spikes=all_spikes,
+                gn_potential=np.array(np.transpose(self.opr)),
+            )
 
     def plot_MUs(self, used_data, indices, locs):
         """
