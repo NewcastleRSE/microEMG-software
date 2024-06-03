@@ -82,9 +82,7 @@ def test_apply_button_enabled_with_valid_initial_preprocessing_settings(
     qtbot, emg_data_raw_model, settings_model_limited, emg_clrs
 ):
     # Set up window
-    window = PreprocWidget(
-        emg_data_raw_model, settings_model_limited, emg_clrs=emg_clrs
-    )
+    window = PreprocWidget(emg_data_raw_model, settings_model_limited, emg_clrs=emg_clrs)
     window.show()
     qtbot.addWidget(window)
 
@@ -99,9 +97,7 @@ def test_apply_button_disabled_if_freq_values_valid_manually_set_to_false(
     qtbot, emg_data_raw_model, settings_model_limited, emg_clrs
 ):
     # Set up window
-    window = PreprocWidget(
-        emg_data_raw_model, settings_model_limited, emg_clrs=emg_clrs
-    )
+    window = PreprocWidget(emg_data_raw_model, settings_model_limited, emg_clrs=emg_clrs)
     window.show()
     qtbot.addWidget(window)
 
@@ -127,9 +123,7 @@ def test_apply_button_changed_to_reapply_and_disabled_after_preprocessing(
     qtbot, emg_data_raw_model, settings_model_limited, emg_clrs
 ):
     # Set up window
-    window = PreprocWidget(
-        emg_data_raw_model, settings_model_limited, emg_clrs=emg_clrs
-    )
+    window = PreprocWidget(emg_data_raw_model, settings_model_limited, emg_clrs=emg_clrs)
     window.show()
     qtbot.addWidget(window)
 
@@ -148,9 +142,7 @@ def test_next_button_becomes_visible_after_preprocessing(
     qtbot, emg_data_raw_model, settings_model_limited, emg_clrs
 ):
     # Set up window
-    window = PreprocWidget(
-        emg_data_raw_model, settings_model_limited, emg_clrs=emg_clrs
-    )
+    window = PreprocWidget(emg_data_raw_model, settings_model_limited, emg_clrs=emg_clrs)
     window.show()
     qtbot.addWidget(window)
 
@@ -173,9 +165,7 @@ def test_emg_data_preprocessed_and_added_to_viewer_when_apply_button_clicked(
     qtbot, emg_data_raw_model, settings_model_limited, emg_clrs
 ):
     # Set up window
-    window = PreprocWidget(
-        emg_data_raw_model, settings_model_limited, emg_clrs=emg_clrs
-    )
+    window = PreprocWidget(emg_data_raw_model, settings_model_limited, emg_clrs=emg_clrs)
     window.show()
     qtbot.addWidget(window)
 
@@ -187,10 +177,7 @@ def test_emg_data_preprocessed_and_added_to_viewer_when_apply_button_clicked(
 
     # Check that preprocessed data is added with settings that match settings_model
     assert window.emg_model.get("preproc")  # Confirm preprocessed data added
-    assert (
-        window.emg_model["preproc"].emg_data.preproc_settings
-        == settings_model_limited.settings
-    )
+    assert window.emg_model["preproc"].emg_data.preproc_settings == settings_model_limited.settings
 
     # Confirm same preprocessed data added to tabbed EMG viewer
     viewer_emg_model_preproc = window.widgets["tabbedviewer"].emg_model["preproc"]

@@ -203,9 +203,7 @@ class PreprocWidget(QWidget):
         }
 
         # Set viewer to expand to fill extra space
-        self.widgets["tabbedviewer"].setSizePolicy(
-            QSizePolicy.Expanding, QSizePolicy.Expanding
-        )
+        self.widgets["tabbedviewer"].setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         # Add to layout
         layout = QGridLayout()

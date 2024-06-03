@@ -81,9 +81,7 @@ def settings_model_with_bandpass_filter(request):
     if request.param[0]:
         settings.add_remove_mains()
     cutoff_freq = [100.0, 400]  # Test initial value as both float and int
-    settings.add_butterworth_filter(
-        filter_type=request.param[1], cutoff_freq=cutoff_freq, order=4
-    )
+    settings.add_butterworth_filter(filter_type=request.param[1], cutoff_freq=cutoff_freq, order=4)
     settings_model = EMGPreprocSettingsModel(settings)
 
     return settings_model
@@ -232,9 +230,7 @@ def test_preproc_widget_modifying_filter_cutoff1_fails_when_input_invalid(
 
 
 @pytest.mark.parametrize("freq", [550, 550.01, 550.1])  # keep above fixture's cutoff1
-def test_preproc_widget_modifying_filter_cutoff2(
-    qtbot, settings_model_with_bandpass_filter, freq
-):
+def test_preproc_widget_modifying_filter_cutoff2(qtbot, settings_model_with_bandpass_filter, freq):
     # Set up window
     window = preproc_set.PreprocSettingsWidget(settings_model_with_bandpass_filter)
     window.show()
@@ -285,9 +281,7 @@ def test_preproc_widget_modifying_filter_cutoff2_fails_when_input_invalid(
     "setting",
     [("filter_checkbox", "butterworth_filter"), ("mains_checkbox", "remove_mains")],
 )
-def test_toggle_checkbox_changes_settings_bool_and_checkbox_state(
-    qtbot, settings_model, setting
-):
+def test_toggle_checkbox_changes_settings_bool_and_checkbox_state(qtbot, settings_model, setting):
     # Set up window
     window = preproc_set.PreprocSettingsWidget(settings_model)
     window.show()
@@ -306,9 +300,7 @@ def test_toggle_checkbox_changes_settings_bool_and_checkbox_state(
     # Check that state and bool have changed
     # use "x== (not y)" to confirm swap, not just inequality
     assert original_checkbox_state == (not w.isChecked())
-    assert original_filter_bool == (
-        not getattr(window.settings_model.settings, setting[1])
-    )
+    assert original_filter_bool == (not getattr(window.settings_model.settings, setting[1]))
 
     # Check all settings match
     assert_settings_match(window, window.settings_model.settings)

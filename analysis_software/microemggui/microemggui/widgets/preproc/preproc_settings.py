@@ -69,9 +69,7 @@ class FilterTypeWidget(QWidget):
         # Changes filter type and also sets cutoff2 frequency to none if filter type
         # only requires one frequency
 
-        self.type_combobox.currentTextChanged.connect(
-            settings_model.filter_type_text_changed
-        )
+        self.type_combobox.currentTextChanged.connect(settings_model.filter_type_text_changed)
 
 
 class FilterOrderWidget(QWidget):
@@ -107,9 +105,7 @@ class FilterOrderWidget(QWidget):
     def match_input_to_settings(self, settings_model):
         # Set spinbox value to corresponding value in preprocessing settings
 
-        self.order_spinbox.setValue(
-            settings_model.settings.butterworth_filter_settings["order"]
-        )
+        self.order_spinbox.setValue(settings_model.settings.butterworth_filter_settings["order"])
 
     def connect_to_settings(self, settings_model):
         # Connect spinbox value to corresponding value in preprocessing settings
@@ -127,9 +123,7 @@ class FilterFreqWidget(QWidget):
 
         # Settings
         self.settings_model = settings_model
-        self.filter_type = settings_model.settings.butterworth_filter_settings[
-            "filter_type"
-        ]
+        self.filter_type = settings_model.settings.butterworth_filter_settings["filter_type"]
 
         # Bool indicating if relative values of frequencies are valid
         # (e.g., cutoff 1 < cutoff 2 if bandpower filter)
@@ -237,10 +231,7 @@ class FilterFreqWidget(QWidget):
             # Change labels to singular
             self.freq_label.setText("Cutoff frequency")
             self.warning_labels["cutoff1"].setText(
-                (
-                    f"Frequency must be between {self.freq_val_low} and "
-                    f"{self.freq_val_high} Hz"
-                )
+                (f"Frequency must be between {self.freq_val_low} and " f"{self.freq_val_high} Hz")
             )
 
         elif n_freq == 2:
@@ -274,9 +265,7 @@ class FilterFreqWidget(QWidget):
             w.setText(str(freq))
 
         # Match widgets to filter type
-        self.set_n_freq(
-            self.settings_model.settings.butterworth_filter_settings["filter_type"]
-        )
+        self.set_n_freq(self.settings_model.settings.butterworth_filter_settings["filter_type"])
 
     def connect_to_settings(self):
         # Connect line edit values to corresponding values in preprocessing settings
@@ -292,9 +281,7 @@ class FilterFreqWidget(QWidget):
                 )
             )
 
-    def change_validator_warning_visibility(
-        self, has_acceptable_input: bool, cutoff: str
-    ):
+    def change_validator_warning_visibility(self, has_acceptable_input: bool, cutoff: str):
         # Slot for changing warning message visibility for whether frequency is within
         # valid range
         # Validator warnings have keys that match the line edit widget keys
@@ -504,9 +491,7 @@ class PreprocSettingsWidget(QWidget):
         # (Note filter settings are not changed when checkbox is checked/unchecked, so
         # do not need to re-check if checkbox state changes,)
         if self.widgets["filter_checkbox"].isChecked():
-            settings_valid = (
-                self.widgets["filter_spec"].widgets["filter_freq"].freq_values_valid
-            )
+            settings_valid = self.widgets["filter_spec"].widgets["filter_freq"].freq_values_valid
 
         # Otherwise, input is restricted to valid settings, so settings will be valid
         else:

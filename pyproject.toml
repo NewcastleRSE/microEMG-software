@@ -44,3 +44,4 @@ disallow_untyped_decorators = true
 
 [tool.black]
 extend-exclude = "analysis_software/intanutil/"
+line-length = 99

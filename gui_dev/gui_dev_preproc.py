@@ -63,9 +63,7 @@ class MainWindow(QMainWindow):
         )
 
         # signal for verifying settings update
-        self.widget.widgets["settings"].settings_valid.connect(
-            self.main_window_settings
-        )
+        self.widget.widgets["settings"].settings_valid.connect(self.main_window_settings)
 
         self.setCentralWidget(self.widget)
 

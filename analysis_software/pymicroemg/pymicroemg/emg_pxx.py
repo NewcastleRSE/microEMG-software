@@ -53,9 +53,7 @@ class EMGPxx:
         self.window_size = window_size
         self.n_chan = len(self.chan.chan_names)
 
-    def plot_pxx(
-        self, start_freq, stop_freq, ax=None, plot_chan=None, figsize=(5, 5), lw=0.5
-    ):
+    def plot_pxx(self, start_freq, stop_freq, ax=None, plot_chan=None, figsize=(5, 5), lw=0.5):
         """
         Plot the power spectral density (PSD) of one or all channels. If all
         channels' PSDs are plotted, plots will be overlaid in one figure.
