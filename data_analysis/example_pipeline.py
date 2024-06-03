@@ -88,9 +88,7 @@ emg_data.trim_emg_ts(start_t=trim_start, stop_t=trim_stop)
 # Create and specify preprocessing settings using EMGPreprocSettings object
 # TODO: determine filter settings with Stu
 preproc_settings = EMGPreprocSettings()
-preproc_settings.add_butterworth_filter(
-    cutoff_freq=[100, 2000], order=6, filter_type="bandpass"
-)
+preproc_settings.add_butterworth_filter(cutoff_freq=[100, 2000], order=6, filter_type="bandpass")
 preproc_settings.add_remove_mains()
 
 # Apply preprocessing settings to raw EMG data to generate preprocessed EMG data
@@ -161,9 +159,7 @@ for i in np.arange(reconstruct.found_motor_units.n_motor_units):
 
     # avg MUP time series
     fig, ax = reconstruct.plot_average_motor_unit_potential(i, offset=plot_offset_mu)
-    ax.set_title(
-        f"{recording_id}: Average motor unit potential of motor unit {mu_num + 1}"
-    )
+    ax.set_title(f"{recording_id}: Average motor unit potential of motor unit {mu_num + 1}")
 
     # all traces in one channel (best SNR by default) with average highlighted
     fig, ax, chan_idx = reconstruct.plot_all_potentials_one_channel(motor_unit_idx=i)
@@ -199,8 +195,7 @@ for mu_num in motor_units_for_fibre_localisation:
         motor_unit_idx=mu_num, plot_legend=False
     )
     ax.set_title(
-        f"{recording_id}: motor unit {mu_num + 1}"
-        + " fibre localisations (all fibre potentials)"
+        f"{recording_id}: motor unit {mu_num + 1}" + " fibre localisations (all fibre potentials)"
     )
 
 # %% Cluster fibre potentials and plot median locations

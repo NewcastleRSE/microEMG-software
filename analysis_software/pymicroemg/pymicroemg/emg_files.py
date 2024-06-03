@@ -192,14 +192,10 @@ class EMGFiles:
                 sort_idx = np.zeros(self.n_chan).astype(int)
 
                 # even indices are descending from 15 to 0
-                sort_idx[np.arange(0, self.n_chan, 2)] = np.arange(
-                    (self.n_chan / 2) - 1, -1, -1
-                )
+                sort_idx[np.arange(0, self.n_chan, 2)] = np.arange((self.n_chan / 2) - 1, -1, -1)
 
                 # odd indices are ascending from 16 to 31
-                sort_idx[np.arange(1, self.n_chan, 2)] = np.arange(
-                    (self.n_chan / 2), self.n_chan
-                )
+                sort_idx[np.arange(1, self.n_chan, 2)] = np.arange((self.n_chan / 2), self.n_chan)
             case 64:
                 # first quarter is descending from 15 to 0
                 idx1 = np.arange(self.n_chan // 4 - 1, -1, -1)

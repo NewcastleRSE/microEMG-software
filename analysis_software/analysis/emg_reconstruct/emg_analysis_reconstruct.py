@@ -168,9 +168,7 @@ class EMGMotorUnit:
 
         return ans
 
-    def add_fibre_localisation(
-        self, fibre_centres, mean_spikes, onsets, all_spikes, gn_potential
-    ):
+    def add_fibre_localisation(self, fibre_centres, mean_spikes, onsets, all_spikes, gn_potential):
         """
         Add results of the fibre localisation step to the motor unit object. Computes
         additional attributes and stores that analysis has been performed.
@@ -222,9 +220,7 @@ class EMGMotorUnits:
 
     """
 
-    def __init__(
-        self, motor_units: list[EMGMotorUnit], chan_xy: npt.NDArray[npt.float64]
-    ):
+    def __init__(self, motor_units: list[EMGMotorUnit], chan_xy: npt.NDArray[npt.float64]):
         """
         Initialise EMGMotorUnits object.
 
@@ -452,9 +448,7 @@ class EMGMotorUnits:
                 mu_pt_facecolor = pt_facecolor
 
             if mu.analysis_performed["fibres_localised"]:
-                print(
-                    f"Plotting fibre locations of motor unit {mu.motor_unit_number + 1}"
-                )
+                print(f"Plotting fibre locations of motor unit {mu.motor_unit_number + 1}")
                 ax.scatter(
                     mu.fibre_centres[:, 0],
                     mu.fibre_centres[:, 1],
@@ -588,16 +582,12 @@ class EMGMotorUnits:
 
             # Number of fibre potentials (FPs) in each MUP that belong to the same
             # cluster
-            n_fps_per_mup_and_cluster = np.zeros(
-                (motor_unit.n_potentials, n_fibre_clusters)
-            )
+            n_fps_per_mup_and_cluster = np.zeros((motor_unit.n_potentials, n_fibre_clusters))
 
             # Location estimates of each fibre based on each MUP
             # Note: unlike original code, data stored so indices match the
             # self.potentials_t_idx array
-            mup_fibre_pos = np.full(
-                (motor_unit.n_potentials, 2, n_fibre_clusters), np.nan
-            )
+            mup_fibre_pos = np.full((motor_unit.n_potentials, 2, n_fibre_clusters), np.nan)
 
             # Find median location of each fibre
             for cluster_num in np.arange(n_fibre_clusters):
@@ -849,9 +839,7 @@ class EMGAnalysisReconstruct:
 
     """
 
-    def __init__(
-        self, emg_data_preproc: EMGDataPreproc, settings: EMGAnalysisReconstructSettings
-    ):
+    def __init__(self, emg_data_preproc: EMGDataPreproc, settings: EMGAnalysisReconstructSettings):
         """
         Initialise EMGAnalysisReconstruct object.
 
@@ -913,9 +901,7 @@ class EMGAnalysisReconstruct:
 
         self.emg_data_preproc.emg_ts = np.array(self.emg_data_preproc.emg_ts)
 
-    def load_motor_unit_data_from_matlab(
-        self, filename_indices, filename_locs, set_unbroken=True
-    ):
+    def load_motor_unit_data_from_matlab(self, filename_indices, filename_locs, set_unbroken=True):
         """
         Load data for motor units from MATLAB, so take 1 away from index locations
         - most likely to be used just for testing.
@@ -942,9 +928,7 @@ class EMGAnalysisReconstruct:
 
         # Importing csv module
         with open(filename_indices, "r") as x:
-            self.indices = list(
-                csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC)
-            )
+            self.indices = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
 
         with open(filename_locs, "r") as x:
             self.locs = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
@@ -1012,9 +996,7 @@ class EMGAnalysisReconstruct:
             if self.signal_noise_ratios[self.signal_noise_ratios_ranks[0]] > 0:
                 sig_ind = self.signal_noise_ratios_ranks[0]
             else:
-                raise Exception(
-                    "Sorry, no channels with a calculable signal to noise ratio!"
-                )
+                raise Exception("Sorry, no channels with a calculable signal to noise ratio!")
         self.chan_for_find_motor_units = sig_ind  # store channel for plots
 
         # Apply Multi-dimensional TK operator (Teager-Kaiser)
@@ -1025,9 +1007,7 @@ class EMGAnalysisReconstruct:
 
         self.indices, self.locs = tk.TK_filter(used_data, sampling_freq)
 
-        print(
-            "MUs found: " + str(np.max(self.locs) + 1) + " via channel: " + str(sig_ind)
-        )
+        print("MUs found: " + str(np.max(self.locs) + 1) + " via channel: " + str(sig_ind))
 
         # Add motor unit objects
         self.add_motor_units(np.max(self.locs))
@@ -1050,9 +1030,7 @@ class EMGAnalysisReconstruct:
         # Create motor unit objects for each motor unit
         all_motor_units = []
         for i in range(np.max(self.locs)):
-            motor_unit = EMGMotorUnit(
-                number=i, potentials_t_idx=self.indices[self.locs == i]
-            )
+            motor_unit = EMGMotorUnit(number=i, potentials_t_idx=self.indices[self.locs == i])
             all_motor_units.append(motor_unit)
         self.found_motor_units = EMGMotorUnits(
             all_motor_units, chan_xy=self.emg_data_preproc.chan.chan_xy
@@ -1116,9 +1094,7 @@ class EMGAnalysisReconstruct:
 
         """
         if not self.found_motor_units:
-            raise ValueError(
-                "No motor units identified - confirm that analysis has been run."
-            )
+            raise ValueError("No motor units identified - confirm that analysis has been run.")
 
         # Get motor units and sort if requested
         motor_units = self.found_motor_units.motor_units
@@ -1205,9 +1181,7 @@ class EMGAnalysisReconstruct:
         """
 
         if not self.found_motor_units:
-            raise RuntimeError(
-                "No motor units identified - confirm that analysis has been run."
-            )
+            raise RuntimeError("No motor units identified - confirm that analysis has been run.")
 
         # Calculate number of samples to get before and after MUP onset
         n_samples = int(np.ceil(self.emg_data_preproc.fs / 1000 * n_ms) / 2)
@@ -1230,9 +1204,7 @@ class EMGAnalysisReconstruct:
 
             # Only add potentials within boundaries of the time series
             if (start_t > 0) and (stop_t < self.emg_data_preproc.emg_ts.shape[1]):
-                potentials_data[:, :, i] = self.emg_data_preproc.emg_ts[
-                    :, start_t:stop_t
-                ].copy()
+                potentials_data[:, :, i] = self.emg_data_preproc.emg_ts[:, start_t:stop_t].copy()
 
         return potentials_data
 
@@ -1292,9 +1264,7 @@ class EMGAnalysisReconstruct:
         """
 
         if not self.found_motor_units:
-            raise ValueError(
-                "No motor units identified - confirm that analysis has been run."
-            )
+            raise ValueError("No motor units identified - confirm that analysis has been run.")
 
         # Offset must be positive to ensure that channels are correctly labelled.
         if offset < 0:
@@ -1308,9 +1278,7 @@ class EMGAnalysisReconstruct:
             fig = None
 
         # Get motor unit potentials and average (mean)
-        potentials_data = self.get_potentials_data_of_one_motor_unit(
-            motor_unit_idx, n_ms
-        )
+        potentials_data = self.get_potentials_data_of_one_motor_unit(motor_unit_idx, n_ms)
         potentials_avg = np.nanmean(potentials_data, axis=2)
         n_samples = potentials_avg.shape[1]
 
@@ -1407,9 +1375,7 @@ class EMGAnalysisReconstruct:
         """
 
         if not self.found_motor_units:
-            raise ValueError(
-                "No motor units identified - confirm that analysis has been run."
-            )
+            raise ValueError("No motor units identified - confirm that analysis has been run.")
 
         if not chan_idx:
             chan_idx = self.chan_for_find_motor_units
@@ -1422,9 +1388,7 @@ class EMGAnalysisReconstruct:
             fig = None
 
         # Get motor unit potentials and average (mean)
-        potentials_data = self.get_potentials_data_of_one_motor_unit(
-            motor_unit_idx, n_ms
-        )
+        potentials_data = self.get_potentials_data_of_one_motor_unit(motor_unit_idx, n_ms)
         potentials_avg = np.nanmean(potentials_data, axis=2)
         n_samples = potentials_avg.shape[1]
 
@@ -1486,9 +1450,9 @@ class EMGAnalysisReconstruct:
         for sample in range(len(self.indices)):
             if self.locs[sample] == motor_unit_number:
                 # exclude spikes right at the edge of the recording
-                if self.indices[sample] < (
-                    self.settings.half_subsample_size + 1
-                ) or self.indices[sample] > (
+                if self.indices[sample] < (self.settings.half_subsample_size + 1) or self.indices[
+                    sample
+                ] > (
                     self.emg_data_preproc.emg_ts.shape[1]
                     - self.settings.half_subsample_size
                     - 1
@@ -1503,9 +1467,7 @@ class EMGAnalysisReconstruct:
 
                     all_spikes[t, channel, :] = self.emg_data_preproc.emg_ts[
                         channel,
-                        int(
-                            self.indices[sample] - self.settings.half_subsample_size
-                        ) : int(
+                        int(self.indices[sample] - self.settings.half_subsample_size) : int(
                             self.indices[sample] + self.settings.half_subsample_size + 1
                         ),
                     ]
@@ -1533,9 +1495,7 @@ class EMGAnalysisReconstruct:
         for signal_id in range(max_signal_id):
             if self.settings.localise_first:
                 sig = np.squeeze(
-                    all_spikes[
-                        signal_id : (signal_id + self.settings.mavg_length + 1), :, :
-                    ]
+                    all_spikes[signal_id : (signal_id + self.settings.mavg_length + 1), :, :]
                 )
             else:
                 sig = np.squeeze(
@@ -1569,8 +1529,7 @@ class EMGAnalysisReconstruct:
                     np.hstack(
                         (
                             time_peak,
-                            self.settings.half_subsample_size * 2
-                            - self.settings.spike_dur,
+                            self.settings.half_subsample_size * 2 - self.settings.spike_dur,
                         )
                     )
                 )

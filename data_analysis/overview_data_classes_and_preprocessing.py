@@ -94,9 +94,7 @@ preproc_settings = EMGPreprocSettings()
 # Add filter
 # This is also the current default setting, but best to specify explicitly in case we
 # decide to modify the default.
-preproc_settings.add_butterworth_filter(
-    cutoff_freq=[500, 2000], order=6, filter_type="bandpass"
-)
+preproc_settings.add_butterworth_filter(cutoff_freq=[500, 2000], order=6, filter_type="bandpass")
 
 # Add mains noise removal.
 # There are some optional paramaters that can be changed, but that option will not be
@@ -171,6 +169,4 @@ emg_pxx = emg_data.compute_pxx(window_size=pxx_win_size)
 emg_pxx.plot_pxx(start_freq=start_freq, stop_freq=stop_freq, plot_chan=plot_chan)
 emg_pxx.plot_pxx()
 emg_pxx_preproc = emg_data_preproc.compute_pxx(window_size=pxx_win_size)
-emg_pxx_preproc.plot_pxx(
-    start_freq=start_freq, stop_freq=stop_freq, plot_chan=plot_chan
-)
+emg_pxx_preproc.plot_pxx(start_freq=start_freq, stop_freq=stop_freq, plot_chan=plot_chan)

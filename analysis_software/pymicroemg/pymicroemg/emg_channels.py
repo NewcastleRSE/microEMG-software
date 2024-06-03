@@ -69,8 +69,7 @@ class EMGChannels:
 
         # Set x - evenly spaced, and shifted by CHAN_SHIFT_X
         self.chan_xy[:, 0] = (
-            np.arange(CHAN_SPACING_X, CHAN_SPACING_X * (n_chan + 1), CHAN_SPACING_X)
-            + CHAN_SHIFT_X
+            np.arange(CHAN_SPACING_X, CHAN_SPACING_X * (n_chan + 1), CHAN_SPACING_X) + CHAN_SHIFT_X
         )
 
         # Set y - alternating positive and negative to form zig-zag

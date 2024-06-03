@@ -149,9 +149,9 @@ def running_TEO(raw_signal, k=1):
     """
 
     # Final result
-    return raw_signal**2 - np.concatenate(
-        (raw_signal[k:], np.zeros(k))
-    ) * np.concatenate((np.zeros(k), raw_signal[:-k]))
+    return raw_signal**2 - np.concatenate((raw_signal[k:], np.zeros(k))) * np.concatenate(
+        (np.zeros(k), raw_signal[:-k])
+    )
 
 
 def multi_teager_energy_operator(raw_signal, ks, filter=True):
@@ -313,7 +313,6 @@ def find_spikes(templates, sigs, locs, sampling_freq, threshold):
     lag = round_int(0.0002 * sampling_freq)
 
     for i in range(len(locs)):
-
         psuedo_correlation_score = psuedo_correlation(templates, sigs[i, :], lag)
 
         if psuedo_correlation_score >= threshold:
@@ -418,7 +417,6 @@ def multi_scale_thresholding(MTEO, ks, L, sampling_freq):
             decision_thres = np.abs(decision_thres) * (decision_thres >= 0)
             TE = resolve_peaks(MTEO[i, :], decision_thres, sampling_freq)
         else:
-
             Mj = Thj
             # assume at least one spike
             PS = 1 / M
@@ -485,10 +483,7 @@ def spike_separator(S_block, template, S_neighbor, window, threshold):
         if len(maxima_1) > 0:
             # closest to peak
             maxima_1 = maxima_1[0]
-            inverted = (
-                1.01 * np.max((S_block[maxima_1:S_neighbor]))
-                - S_block[maxima_1:S_neighbor]
-            )
+            inverted = 1.01 * np.max((S_block[maxima_1:S_neighbor])) - S_block[maxima_1:S_neighbor]
             minima_1 = find_peaks(inverted)
 
             if len(minima_1) > 0:
@@ -795,7 +790,6 @@ def generate_titles(features):
         titles[idx] = title_counter
 
         for i in in_set[1:]:
-
             for k in range(features_to_check_count):
                 j = features_to_check[k]
 
@@ -898,9 +892,7 @@ def merge_clusters(template, titles, threshold, sampling_freq, sig_len):
             semi_final[c, :] = np.median(tmp_t2, axis=0)
 
             for j in range(tmp_t2.shape[0]):
-                psuedo_correlation_score = psuedo_correlation(
-                    semi_final[c, :], tmp_t2[j, :], 4
-                )
+                psuedo_correlation_score = psuedo_correlation(semi_final[c, :], tmp_t2[j, :], 4)
 
                 if psuedo_correlation_score < threshold:
                     tmp_t2[j, :] = np.NaN
@@ -1041,16 +1033,11 @@ def TK_filter(sig, sampling_freq, C=0.1, threshold_PsC=0.1, init=True, wind=0.00
     # This loop removes the interference in the selected spikes
     # and assigns a label to them
     for i in range(len(locs)):
-
         # Case 1
         if ((locs[i] - S_neighbor) >= 0) and ((locs[i] + S_neighbor) < len(sig_TEO)):
             # Find the Neighborhoods
-            S_block[i, :] = sig_TEO[
-                (locs[i] - S_neighbor + 1) : (locs[i] + S_neighbor + 1)
-            ]
-            d = find_peaks(
-                np.abs(sig[(locs[i] - S_neighbor + 1) : (locs[i] + S_neighbor + 1)])
-            )
+            S_block[i, :] = sig_TEO[(locs[i] - S_neighbor + 1) : (locs[i] + S_neighbor + 1)]
+            d = find_peaks(np.abs(sig[(locs[i] - S_neighbor + 1) : (locs[i] + S_neighbor + 1)]))
 
             if d.size:
                 d_i = np.nanargmin(np.abs(d + 1 - S_neighbor))
@@ -1067,9 +1054,7 @@ def TK_filter(sig, sampling_freq, C=0.1, threshold_PsC=0.1, init=True, wind=0.00
             S_block[i, :], template[i, :] = spike_separator(
                 S_block[i, :], template[i, :], S_neighbor, window, threshold
             )
-            features[i, :] = border_detector(
-                S_block[i, :], template[i, :], threshold, threshold1
-            )
+            features[i, :] = border_detector(S_block[i, :], template[i, :], threshold, threshold1)
 
         # Case 2
         elif (locs[i] - S_neighbor) < 0:
@@ -1090,9 +1075,7 @@ def TK_filter(sig, sampling_freq, C=0.1, threshold_PsC=0.1, init=True, wind=0.00
             S_block[i, :], template[i, :] = spike_separator(
                 S_block[i, :], template[i, :], S_neighbor, window, threshold
             )
-            features[i, :] = border_detector(
-                S_block[i, :], template[i, :], threshold, threshold1
-            )
+            features[i, :] = border_detector(S_block[i, :], template[i, :], threshold, threshold1)
 
         # Case 3
         # Bounderies
@@ -1101,9 +1084,7 @@ def TK_filter(sig, sampling_freq, C=0.1, threshold_PsC=0.1, init=True, wind=0.00
             complete = len(sig_TEO[(locs[i] - S_neighbor) :])
 
             # locate the max in center
-            S_block[i, (S_neighbor - first_half) : complete] = sig_TEO[
-                (locs[i] - S_neighbor) :
-            ]
+            S_block[i, (S_neighbor - first_half) : complete] = sig_TEO[(locs[i] - S_neighbor) :]
 
             d = find_peaks(np.fabs(sig[(locs[i] - S_neighbor) :]))
             d_i = np.nanargmin(np.abs(d + 1 - S_neighbor))
@@ -1119,15 +1100,11 @@ def TK_filter(sig, sampling_freq, C=0.1, threshold_PsC=0.1, init=True, wind=0.00
 
             first_half = len(sig[(locs_s[i] - S_neighbor + 1) : locs_s[i]])
             complete = len(sig_TEO[(locs_s[i] - S_neighbor + 1) :])
-            template[i, (S_neighbor - first_half + 1) : complete] = sig[
-                (locs_s[i] - S_neighbor) :
-            ]
+            template[i, (S_neighbor - first_half + 1) : complete] = sig[(locs_s[i] - S_neighbor) :]
             S_block[i, :], template[i, :] = spike_separator(
                 S_block[i, :], template[i, :], S_neighbor, window, threshold
             )
-            features[i, :] = border_detector(
-                S_block[i, :], template[i, :], threshold, threshold1
-            )
+            features[i, :] = border_detector(S_block[i, :], template[i, :], threshold, threshold1)
 
     Index = locs
 
@@ -1136,7 +1113,6 @@ def TK_filter(sig, sampling_freq, C=0.1, threshold_PsC=0.1, init=True, wind=0.00
 
     # start from feature 6 which is period of each exterema
     for i in range(5, features.shape[1]):
-
         original_range[0] = np.nanmin(features[:, i])
         original_range[1] = np.nanmax(features[:, i])
         if QUICK_VERSION:
@@ -1159,9 +1135,7 @@ def TK_filter(sig, sampling_freq, C=0.1, threshold_PsC=0.1, init=True, wind=0.00
     threshold = threshold_PsC
 
     for i in range(uniq_c.shape[0]):
-        tmp, template = find_spikes(
-            uniq_c[i, :], template, locs_s, sampling_freq, threshold
-        )
+        tmp, template = find_spikes(uniq_c[i, :], template, locs_s, sampling_freq, threshold)
         # removing too close MUAPs based on their firing pattern
         # to remove too close spikes
         B = locs_s[tmp]
@@ -1185,9 +1159,7 @@ def TK_filter(sig, sampling_freq, C=0.1, threshold_PsC=0.1, init=True, wind=0.00
         threshold = threshold_PsC
 
         for i in range(uniq_c.shape[0]):
-            tmp, new_sig = find_spikes(
-                uniq_c[i, :], new_sig, noise, sampling_freq, threshold
-            )
+            tmp, new_sig = find_spikes(uniq_c[i, :], new_sig, noise, sampling_freq, threshold)
             loc[noise_ind[tmp]] = i
 
     # Double check the similarity of templates
@@ -1198,9 +1170,7 @@ def TK_filter(sig, sampling_freq, C=0.1, threshold_PsC=0.1, init=True, wind=0.00
         if not np.isnan(uniq_c[i, :]).any():
             for j in range(uniq_c.shape[0]):
                 if i != j and not np.isnan(uniq_c[j, :]).any():
-                    psuedo_correlation_score = psuedo_correlation(
-                        uniq_c[i, :], uniq_c[j, :], lag
-                    )
+                    psuedo_correlation_score = psuedo_correlation(uniq_c[i, :], uniq_c[j, :], lag)
 
                     if psuedo_correlation_score > threshold:
                         # i and j similar so give the same value

@@ -144,9 +144,7 @@ def detect_peaks(
     if ind.size and indnan.size:
         # NaN's and values close to NaN's cannot be peaks
         ind = ind[
-            np.in1d(
-                ind, np.unique(np.hstack((indnan, indnan - 1, indnan + 1))), invert=True
-            )
+            np.in1d(ind, np.unique(np.hstack((indnan, indnan - 1, indnan + 1))), invert=True)
         ]
     # first and last values of x cannot be peaks
     if ind.size and ind[0] == 0:
