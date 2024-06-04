@@ -95,6 +95,12 @@ class SectionTitle(QLabel):
 # --- Buttons ---
 
 
+class SmallPushButton(QPushButton):
+    # Small push buttons
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
 class LargePushButton(QPushButton):
     # Large push buttons
     def __init__(self, *args, **kwargs):

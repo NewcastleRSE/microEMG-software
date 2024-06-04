@@ -14,6 +14,21 @@ SubsectionTitle{
 
 /* Buttons */
 
+SmallPushButton {
+    font-size: 12pt;
+    background-color: 'white';
+    border-style: solid;
+    border-width: 1px;
+    border-color: #D9D9D9;
+    padding: 4;
+    width: 100px;
+    border-radius: 2;
+}
+
+SmallPushButton:pressed {
+    background-color: 'grey';
+}
+
 LargePushButton {
     font-size: 16pt;
     background-color: 'white';
