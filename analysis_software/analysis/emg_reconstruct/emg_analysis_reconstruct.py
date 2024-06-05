@@ -128,7 +128,7 @@ class EMGMotorUnit:
         # EMGAnalysisReconstruct if this attribute is only used for plotting
         self.all_spikes = np.array([])
 
-        # ?? not sure what data or how the size relates to other attributes
+        # Generator potential, represents true underlying potential
         self.gn_potential = np.array([])
 
         # TODO: currently the exact timing of fibre potentials (peaks) are not saved (?)
@@ -161,7 +161,7 @@ class EMGMotorUnit:
         ans += str(self.onsets.shape)
         ans += "\nAll spikes dimensions: "
         ans += str(self.all_spikes.shape)
-        ans += "\nGN potential dimensions: "
+        ans += "\nGenerator potential dimensions: "
         ans += str(self.gn_potential.shape)
 
         ans += "\n"
@@ -248,6 +248,7 @@ class EMGMotorUnits:
         # Get and store number of potentials of each motor unit
         self.n_potentials = [mu.n_potentials for mu in self.motor_units]
 
+        # Channel/electrode coordinates of the needle 
         self.chan_xy = chan_xy
 
     def __str__(self):
@@ -575,6 +576,11 @@ class EMGMotorUnits:
         # k for clustering
         mean_n_fps = round(len(motor_unit.onsets) / n_unique_onsets)
 
+        print(len(motor_unit.onsets))
+        print(n_unique_onsets)
+        print("mean_n_fps")
+        print(mean_n_fps)
+        
         if mean_n_fps > 0:
             fibre_kmeans = KMeans(n_clusters=mean_n_fps, random_state=random_state).fit(
                 motor_unit.fibre_centres
@@ -598,7 +604,8 @@ class EMGMotorUnits:
             mup_fibre_pos = np.full(
                 (motor_unit.n_potentials, 2, n_fibre_clusters), np.nan
             )
-
+            print("shape")
+            print(motor_unit.onsets.shape)
             # Find median location of each fibre
             for cluster_num in np.arange(n_fibre_clusters):
                 # Sometimes multiple fibre potentials in the same MUP are assigned to
@@ -606,12 +613,16 @@ class EMGMotorUnits:
                 # position in each MUP in which the fibre cluster appears.
                 # If no fibres with that cluster num appear in the MUP, position is
                 # stored as np.nan.
-
+                #print("cluster_num")
+                #print(cluster_num)
                 # Note: unlike original code, iterate through all MUPs (not just ones
                 # present in "onsets") so dimensions align to other MUP features.
                 for mup_num in np.arange(motor_unit.n_potentials):
                     mup_onset = motor_unit.potentials_t_idx[mup_num]
-
+                    #print("mup_onset")
+                    #print(mup_onset)
+                    #print(np.sum(motor_unit.onsets == mup_onset))
+                    #print(np.sum(fibre_clusters == cluster_num))
                     # Fibre potentials that belong to the specified onset and cluster.
                     idx = np.flatnonzero(
                         np.all(
@@ -951,13 +962,108 @@ class EMGAnalysisReconstruct:
 
         self.locs = (np.array(self.locs)).flatten()
         self.indices = (np.array(self.indices)).flatten()
-        self.indices = np.round(self.indices - 1)
-        self.locs = np.round(self.locs - 1)
+        self.indices = (np.round(self.indices - 1)).astype(int)
+        self.locs = (np.round(self.locs - 1)).astype(int)
 
         if set_unbroken:
             # Set all to non broken like MATLAB analysis for this data
             self.emg_data_preproc.chan.analyse_chan = np.full(self.n_chan, True)
 
+
+    def load_mup_data_from_matlab(
+        self, motor_unit_number, filename_fibre_centres, filename_onsets
+    ):
+        """
+        Load fibre centre and onset data for one motor unit from MATLAB,
+        - so take 1 away from index locations
+        - most likely to be used just for testing, esp clustering of MUPs
+
+        Parameters
+        ----------
+        motor_unit_number: int
+            number of the motor unit (starting from 0)
+            
+        filename_fibre_centres: string
+            file name and path of csv file of fibre centres
+            Indices refer to positions in self.emg_data_preproc.emg_ts
+
+        filename_onsets: string
+            file name and path of csv file of motor unit labels,
+            which are positive integers
+            
+       
+        Returns
+        -------
+        None
+
+        """
+        
+        # Importing csv module
+        with open(filename_fibre_centres, "r") as x:
+            fibre_centres = list(
+                csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC)
+            )
+            
+        with open(filename_onsets, "r") as x:
+            onsets = list(
+                csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC)
+            )
+        
+        motor_unit = self.found_motor_units.motor_units[motor_unit_number]
+        
+        motor_unit.fibre_centres = np.array(fibre_centres, dtype=float)
+        motor_unit.onsets = np.array(onsets).astype(int)
+        motor_unit.onsets = (motor_unit.onsets[0,:] - 1).flatten()
+        motor_unit.analysis_performed["fibres_localised"] = True        
+    
+    def load_mup_data(
+        self, motor_unit_number, filename_fibre_centres, filename_onsets
+    ):
+        """
+        Load fibre centre and onset data for one motor unit from MATLAB,
+        - so take 1 away from index locations
+        - most likely to be used just for testing, esp clustering of MUPs
+
+        Parameters
+        ----------
+        motor_unit_number: int
+            number of the motor unit (starting from 0)
+            
+        filename_fibre_centres: string
+            file name and path of csv file of fibre centres
+            Indices refer to positions in self.emg_data_preproc.emg_ts
+
+        filename_onsets: string
+            file name and path of csv file of motor unit labels,
+            which are positive integers
+            
+       
+        Returns
+        -------
+        None
+
+        """
+        
+        # Importing csv module
+        with open(filename_fibre_centres, "r") as x:
+            fibre_centres = list(
+                csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC)
+            )
+            
+        with open(filename_onsets, "r") as x:
+            onsets = list(
+                csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC)
+            )
+        
+        motor_unit = self.found_motor_units.motor_units[motor_unit_number]
+        
+        motor_unit.fibre_centres = np.array(fibre_centres, dtype=float)
+        motor_unit.onsets = np.array(onsets).astype(int).flatten()   
+        
+        print(motor_unit.fibre_centres)
+        print(motor_unit.onsets)
+        motor_unit.analysis_performed["fibres_localised"] = True   
+        
     def calculate_SNR_ranks(self):
         """
         Calculate the signal to noise ratios and rank them
@@ -1030,9 +1136,9 @@ class EMGAnalysisReconstruct:
         )
 
         # Add motor unit objects
-        self.add_motor_units(np.max(self.locs))
+        self.add_motor_units()
 
-    def add_motor_units(self, no_motor_units):
+    def add_motor_units(self):
         """
         Adds the motor units
 
@@ -1054,10 +1160,11 @@ class EMGAnalysisReconstruct:
                 number=i, potentials_t_idx=self.indices[self.locs == i]
             )
             all_motor_units.append(motor_unit)
+            
         self.found_motor_units = EMGMotorUnits(
             all_motor_units, chan_xy=self.emg_data_preproc.chan.chan_xy
         )
-
+        
     def plot_motor_units_raster(
         self,
         linelengths: float = 0.9,
