@@ -4,7 +4,9 @@
 Widget for loading recording and analysis settings, then starting the analysis.
 """
 
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
+import re
+
+from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QFileDialog
 from PySide6.QtCore import Signal
 
 from pymicroemg.emg_files import EMGFiles
@@ -31,10 +33,10 @@ from microemggui.widgets.base import (
 
 class SelectRecordingWidget(QWidget):
     # Widget for selecting recording to load
-    # TODO: implement specifying recording by choosing directory (or Intan header file)
 
-    # Signal for when recording file path is changed
+    # Signals for when recording file path and label are changed
     recording_path_changed = Signal(str)
+    recording_label_changed = Signal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -65,12 +67,16 @@ class SelectRecordingWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
-        self.widgets["combobox"].currentIndexChanged.connect(self.demo_recording_changed)
+        # Connections
+        self.widgets["combobox"].currentIndexChanged.connect(
+            self.demo_recording_changed
+        )
+        self.widgets["button"].clicked.connect(self.browse_for_recording_file)
 
     def demo_recording_changed(self, idx: int):
         # Slot for when combobox option is changed; receives index of current selection.
-        # Uses index to determine demo recording number, then emits signal with file
-        # path.
+        # Uses index to determine demo recording number, then emits signal with
+        # recording file path and label.
 
         recording_num = self.demo_recording_num[idx]
 
@@ -79,8 +85,35 @@ class SelectRecordingWidget(QWidget):
         else:  # Otherwise, use recording number to retrieve path to recording
             recording_path, _ = emg_cfg.get_recording_path_and_id(recording_num)
 
-        # Emit signal with new recording path
+        # Emit signals with new recording path and label
+        # Label could also be passed to other widgets using combobox signal, but we use
+        # recording_label_changed signal to be consistent with the
+        # "browse_for_recording_file" approach.
         self.recording_path_changed.emit(recording_path)
+        self.recording_label_changed.emit(self.widgets["combobox"].currentText())
+
+    def browse_for_recording_file(self):
+        # Slot for button for choosing recording files; gets path to files
+        # TODO: default location to open file browser?
+        # TODO: select folder or header file?
+
+        recording_path = QFileDialog.getExistingDirectory(
+            self, "Select Intan recording files", ""
+        )
+
+        # Change combobox to empty (need to do first so does not disable load button)
+        self.widgets["combobox"].setCurrentIndex(0)
+
+        # Emit new recording path
+        self.recording_path_changed.emit(recording_path)
+
+        # Get label based on file name and emit
+        recording_label_match = re.search(r"/[^/]*$", recording_path)
+        recording_label = recording_path[recording_label_match.start() + 1 :]
+        self.recording_label_changed.emit(recording_label)
+
+        # Code for getting header file instead
+        # file_name = QFileDialog.getOpenFileName(self, "Select Intan recording files", "", "Intan header file (info.rhd)")
 
 
 class RecordingLabel(QWidget):
@@ -126,8 +159,9 @@ class LoadRecordingSection(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        # Attribute for storing EMG model to load
+        # Attribute for storing EMG model to load and label for recording
         self.emg_model = None
+        self.emg_label = ""
 
         # Create widgets
         self.widgets = {
@@ -147,16 +181,26 @@ class LoadRecordingSection(QWidget):
         self.setLayout(layout)
 
         # Connections
-        self.widgets["recording"].widgets["combobox"].currentTextChanged.connect(
-            self.widgets["label"].update_recording
+        # self.widgets["recording"].widgets["combobox"].currentTextChanged.connect(
+        #    self.update_recording_label
+        # )
+        self.widgets["recording"].recording_label_changed.connect(
+            self.update_recording_label
         )
-        self.widgets["recording"].recording_path_changed.connect(self.update_recording_path)
+        self.widgets["recording"].recording_path_changed.connect(
+            self.update_recording_path
+        )
         self.widgets["load"].clicked.connect(self.load_data)
-        # TODO: change combobox to empty if recording chosen by selecting files instead
 
         # Creates attribute "recording_path" for path to files to load
         # Will be set by other widgets
         self.update_recording_path("")
+
+    def update_recording_label(self, recording_label: str):
+        # Slot for updating recording label (attribute and label widget)
+
+        self.emg_label = recording_label
+        self.widgets["label"].update_recording(recording_label)
 
     def update_recording_path(self, recording_path: str):
         # Slot for updating recording path
@@ -180,10 +224,9 @@ class LoadRecordingSection(QWidget):
 
     def load_data(self):
         # Load EMG data (slot for load button)
-        # TODO: continue adding to specific errors that can be caught
+        # TODO: continue adding to specific errors that can be caught (e.g., no header file)
         # TODO: loading spinner or pop up window during loading
         # TODO: send emg data to main window
-        # TODO: show/hide downstream steps based on whether recording has been loaded
 
         try:
             emg_files = EMGFiles(self.recording_path)
@@ -276,7 +319,9 @@ class LoadWidget(QWidget):
         self.setLayout(layout)
 
         # Connections
-        self.widgets["recording"].recording_loaded.connect(self.show_and_hide_steps_after_loading)
+        self.widgets["recording"].recording_loaded.connect(
+            self.show_and_hide_steps_after_loading
+        )
 
         # Signal that recording has not been loaded
         self.widgets["recording"].recording_loaded.emit(False)
