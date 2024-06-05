@@ -7,7 +7,10 @@ Widget for loading recording and analysis settings, then starting the analysis.
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
 from PySide6.QtCore import Signal
 
+from pymicroemg.emg_files import EMGFiles
 import pymicroemg.helper_config as emg_cfg
+
+from microemggui.models.emg import EMGDataRawModel
 
 from microemggui.widgets.base import (
     SmallPushButton,
@@ -15,7 +18,9 @@ from microemggui.widgets.base import (
     InputInlineText,
     InputInlineLabel,
     InputInlineHighlightedText,
+    InputWarningLabel,
     InputComboBox,
+    SectionTitle,
     SubsectionTitle,
     ExpandingHSpacer,
 )
@@ -48,7 +53,7 @@ class SelectRecordingWidget(QWidget):
         # Demo options
         # TODO: move to config file?
         self.demo_names = ["", "Demo Recording 1 (healthy)"]
-        self.demo_recording_num = [-1, 0]  # < 0 = not a recording
+        self.demo_recording_num = [-1, 0]  # < 0 means it is not a recording
         self.widgets["combobox"].addItems(self.demo_names)
 
         # Add to layout
@@ -58,7 +63,9 @@ class SelectRecordingWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
-        self.widgets["combobox"].currentIndexChanged.connect(self.demo_recording_changed)
+        self.widgets["combobox"].currentIndexChanged.connect(
+            self.demo_recording_changed
+        )
 
     def demo_recording_changed(self, idx: int):
         # Slot for when combobox option is changed; receives index of current selection.
@@ -84,7 +91,7 @@ class RecordingLabel(QWidget):
 
         # Create widgets
         self.widgets = {
-            "data": InputInlineLabel("Data: ", self),
+            "label": InputInlineLabel("Recording: ", self),
             "recording": InputInlineHighlightedText("", self),
         }
 
@@ -116,12 +123,17 @@ class LoadRecordingSection(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
+        # Attribute for storing EMG model to load
+        self.emg_model = None
+
         # Create widgets
         self.widgets = {
             "title": SubsectionTitle("Load recording", self),
             "recording": SelectRecordingWidget(parent=self),
             "label": RecordingLabel(parent=self),
             "load": LoadRecordingButton(parent=self),
+            "message": InputInlineHighlightedText("", self),
+            "errormessage": InputWarningLabel("", self),
         }
 
         # Add to layout
@@ -135,8 +147,11 @@ class LoadRecordingSection(QWidget):
         self.widgets["recording"].widgets["combobox"].currentTextChanged.connect(
             self.widgets["label"].update_recording
         )
-
-        self.widgets["recording"].recording_path_changed.connect(self.update_recording_path)
+        self.widgets["recording"].recording_path_changed.connect(
+            self.update_recording_path
+        )
+        self.widgets["load"].clicked.connect(self.load_data)
+        # TODO: change combobox to empty if recording chosen by selecting files instead
 
         # Creates attribute "recording_path" for path to files to load
         # Will be set by other widgets
@@ -148,11 +163,44 @@ class LoadRecordingSection(QWidget):
         self.recording_path = recording_path
         print(self.recording_path)
 
-        # only allow loading if path is not empty
+        # Only allow loading if path is not empty (disables/enables load button)
         if recording_path:
             self.widgets["load"].setEnabled(True)
         else:
             self.widgets["load"].setEnabled(False)
+
+        # Remove any previously loaded data and messages
+        self.emg_model = None
+        self.widgets["message"].setText("")
+        self.widgets["message"].show()
+        self.widgets["errormessage"].setText("")
+        self.widgets["errormessage"].hide()
+
+    def load_data(self):
+        # Load EMG data (slot for load button)
+        # TODO: continue adding to specific errors that can be caught
+        # TODO: loading spinner or pop up window during loading
+        # TODO: send emg data to main window
+        # TODO: show/hide downstream steps based on whether recording has been loaded
+
+        try:
+            emg_files = EMGFiles(self.recording_path)
+            emg_data = emg_files.load_emg_data()
+        except FileNotFoundError as e:
+            self.widgets["errormessage"].show()
+            self.widgets["errormessage"].setText(f"Recording file not found.\n{e}")
+        except Exception as e:
+            self.widgets["errormessage"].show()
+            self.widgets["errormessage"].setText(f"Could not load recording.\n{e}")
+        else:
+            self.emg_model = EMGDataRawModel(emg_data)
+
+            # Message about data
+            n_chan = self.emg_model.emg_data.n_chan
+            emg_dur = self.emg_model.emg_data.emg_dur
+            self.widgets["message"].setText(
+                f"Recording loaded! {n_chan} channels, {round(emg_dur/60, 2)} minutes."
+            )
 
 
 # --- Widgets for selecting preprocessing settings ---
@@ -205,6 +253,7 @@ class LoadWidget(QWidget):
 
         # Create widgets
         self.widgets = {
+            "title": SectionTitle("MicroEMG analysis set-up", self),
             "recording": LoadRecordingSection(parent=self),
             "preprocessing": ChooseSettingsSection(parent=self),
             "run": RunAnalysisSection(parent=self),
@@ -214,5 +263,5 @@ class LoadWidget(QWidget):
         layout = QVBoxLayout()
         for _, w in self.widgets.items():
             layout.addWidget(w)
-        layout.setContentsMargins(0, 0, 0, 0)
+        # layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)

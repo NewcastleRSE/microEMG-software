@@ -24,6 +24,7 @@ class CheckBoxMain(QCheckBox):
 
 
 # --- Settings input ---
+# TODO: consider changing text labels to more generic names (usable for more than input)
 
 
 class InputLabel(QLabel):
