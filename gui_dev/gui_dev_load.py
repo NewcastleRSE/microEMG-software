@@ -27,7 +27,7 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(self.widget)
 
-        self.resize(300, 300)
+        self.resize(400, 600)
 
 
 app = QApplication(sys.argv)

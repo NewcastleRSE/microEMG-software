@@ -23,6 +23,7 @@ from microemggui.widgets.base import (
     SectionTitle,
     SubsectionTitle,
     ExpandingHSpacer,
+    ExpandingVSpacer,
 )
 
 # --- Widgets for selecting a recording ---
@@ -60,12 +61,11 @@ class SelectRecordingWidget(QWidget):
         layout = QHBoxLayout()
         for _, w in self.widgets.items():
             layout.addWidget(w)
+        layout.addItem(ExpandingHSpacer())  # spacer
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
-        self.widgets["combobox"].currentIndexChanged.connect(
-            self.demo_recording_changed
-        )
+        self.widgets["combobox"].currentIndexChanged.connect(self.demo_recording_changed)
 
     def demo_recording_changed(self, idx: int):
         # Slot for when combobox option is changed; receives index of current selection.
@@ -120,6 +120,9 @@ class LoadRecordingButton(LargePushButton):
 class LoadRecordingSection(QWidget):
     # Widget for selecting a recording to analyse, with section headers and recording label
 
+    # Signal for whether recording is loaded
+    recording_loaded = Signal(bool)
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -147,9 +150,7 @@ class LoadRecordingSection(QWidget):
         self.widgets["recording"].widgets["combobox"].currentTextChanged.connect(
             self.widgets["label"].update_recording
         )
-        self.widgets["recording"].recording_path_changed.connect(
-            self.update_recording_path
-        )
+        self.widgets["recording"].recording_path_changed.connect(self.update_recording_path)
         self.widgets["load"].clicked.connect(self.load_data)
         # TODO: change combobox to empty if recording chosen by selecting files instead
 
@@ -171,6 +172,7 @@ class LoadRecordingSection(QWidget):
 
         # Remove any previously loaded data and messages
         self.emg_model = None
+        self.recording_loaded.emit(False)
         self.widgets["message"].setText("")
         self.widgets["message"].show()
         self.widgets["errormessage"].setText("")
@@ -194,6 +196,7 @@ class LoadRecordingSection(QWidget):
             self.widgets["errormessage"].setText(f"Could not load recording.\n{e}")
         else:
             self.emg_model = EMGDataRawModel(emg_data)
+            self.recording_loaded.emit(True)
 
             # Message about data
             n_chan = self.emg_model.emg_data.n_chan
@@ -255,13 +258,36 @@ class LoadWidget(QWidget):
         self.widgets = {
             "title": SectionTitle("MicroEMG analysis set-up", self),
             "recording": LoadRecordingSection(parent=self),
-            "preprocessing": ChooseSettingsSection(parent=self),
+            "settings": ChooseSettingsSection(parent=self),
             "run": RunAnalysisSection(parent=self),
         }
+
+        # Keep size when hidden
+        for _, w in self.widgets.items():
+            size_policy = w.sizePolicy()
+            size_policy.setRetainSizeWhenHidden(True)
+            w.setSizePolicy(size_policy)
 
         # Add to layout
         layout = QVBoxLayout()
         for _, w in self.widgets.items():
             layout.addWidget(w)
-        # layout.setContentsMargins(0, 0, 0, 0)
+        layout.addItem(ExpandingVSpacer())
         self.setLayout(layout)
+
+        # Connections
+        self.widgets["recording"].recording_loaded.connect(self.show_and_hide_steps_after_loading)
+
+        # Signal that recording has not been loaded
+        self.widgets["recording"].recording_loaded.emit(False)
+
+    def show_and_hide_steps_after_loading(self, recording_loaded):
+        # Show/hide steps after loading depend on if data has been loaded
+        # Slot for recording_loaded signal
+
+        if recording_loaded:
+            self.widgets["settings"].show()
+            self.widgets["run"].show()
+        else:
+            self.widgets["settings"].hide()
+            self.widgets["run"].hide()
