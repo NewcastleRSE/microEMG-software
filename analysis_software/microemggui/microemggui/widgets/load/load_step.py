@@ -94,8 +94,8 @@ class SelectRecordingWidget(QWidget):
 
     def browse_for_recording_file(self):
         # Slot for button for choosing recording files; gets path to files
-        # TODO: default location to open file browser?
-        # TODO: select folder or header file?
+        # TODO: best default location to open file browser?
+        # TODO: select folder or header file? currently select folder
 
         recording_path = QFileDialog.getExistingDirectory(
             self, "Select Intan recording files", ""
@@ -111,9 +111,6 @@ class SelectRecordingWidget(QWidget):
         recording_label_match = re.search(r"/[^/]*$", recording_path)
         recording_label = recording_path[recording_label_match.start() + 1 :]
         self.recording_label_changed.emit(recording_label)
-
-        # Code for getting header file instead
-        # file_name = QFileDialog.getOpenFileName(self, "Select Intan recording files", "", "Intan header file (info.rhd)")
 
 
 class RecordingLabel(QWidget):
@@ -316,6 +313,7 @@ class LoadWidget(QWidget):
         for _, w in self.widgets.items():
             layout.addWidget(w)
         layout.addItem(ExpandingVSpacer())
+        layout.setSpacing(25)
         self.setLayout(layout)
 
         # Connections
