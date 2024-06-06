@@ -52,11 +52,38 @@ class EMGFiles:
         self.emg_dir = emg_dir
         self.header_fname = "info.rhd"
 
+        # Check that director exists before proceeding; if not, throw error
+        if not os.path.isdir(self.emg_dir):
+            print(self.emg_dir)
+            raise FileNotFoundError("Specified recording directory does not exist.")
+
+        # Check that header file exists before proceeding; if not, throw error
+        is_header_file = self.check_if_header_file()
+        if not is_header_file:
+            raise FileNotFoundError(
+                "Intan header file (info.rhd) not found in specified directory."
+            )
+
         # Get names of files from amplifier channels, which contain the EMG data
         self.chan_fnames = self._get_chan_fnames()
 
+        # If no amplifier channels in directory (self.chan_fnames is empty list), throw an error
+        if not self.chan_fnames:
+            raise FileNotFoundError(
+                "No Intan amplifier channels found in the specified directory."
+            )
+
         # Determine number of channels from number of files
         self.n_chan = len(self.chan_fnames)
+
+    def check_if_header_file(self) -> bool:
+        # Full path to header file
+        header_path = os.path.join(self.emg_dir, self.header_fname)
+
+        # Check that header file exists
+        is_header_file = os.path.isfile(header_path)
+
+        return is_header_file
 
     def _get_chan_fnames(self) -> list[str]:
         """
