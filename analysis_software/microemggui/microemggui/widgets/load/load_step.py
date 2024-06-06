@@ -273,6 +273,9 @@ class ChooseSettingsSection(QWidget):
 
 
 class RunAnalysisSection(QWidget):
+    # Section in loading widget for running the analysis
+    # TODO: add buttons for running analysis either step-by-step or all steps
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -291,6 +294,8 @@ class RunAnalysisSection(QWidget):
 
 
 class LoadWidget(QWidget):
+    # Widget for loading recording and setting up analysis
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
