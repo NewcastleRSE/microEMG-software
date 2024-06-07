@@ -178,9 +178,6 @@ class LoadRecordingSection(QWidget):
         self.setLayout(layout)
 
         # Connections
-        # self.widgets["recording"].widgets["combobox"].currentTextChanged.connect(
-        #    self.update_recording_label
-        # )
         self.widgets["selectrecording"].recording_label_changed.connect(
             self.update_recording_label
         )
