@@ -328,7 +328,7 @@ class EMGData:
         # x axis labels and font size
         ax.set_xlabel("time (seconds)")
         ax.tick_params(axis="x", which="major", labelsize=xticklabel_size)
-        ax.set_xlim(min(emg_t) - 1 / self.fs, max(emg_t))
+        ax.set_xlim(min(emg_t[plot_idx]) - 1 / self.fs, max(emg_t[plot_idx]))
         return fig, ax
 
     def compute_pxx(self, window_size: float) -> EMGPxx:

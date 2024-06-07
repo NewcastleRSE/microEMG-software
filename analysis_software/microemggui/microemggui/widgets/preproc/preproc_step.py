@@ -177,7 +177,6 @@ class PreprocProgressDialog(QDialog):
 
 class PreprocWidget(QWidget):
     # Widget for preprocessing step
-    # TODO: add signal for overall validity of settings (to pass to apply button)
 
     def __init__(
         self,

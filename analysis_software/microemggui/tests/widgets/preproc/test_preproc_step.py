@@ -62,6 +62,7 @@ def emg_data_raw_model(request):
     emg_dir, _ = cfg.get_recording_path_and_id(recording_num)
     emg_files = EMGFiles(emg_dir)
     emg_data = emg_files.load_emg_data()
+    emg_data.trim_emg_ts(0, 110)  # shorten so tests run faster
     emg_data_raw_model = EMGDataRawModel(emg_data)
 
     return emg_data_raw_model
