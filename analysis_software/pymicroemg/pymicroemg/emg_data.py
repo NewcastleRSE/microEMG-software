@@ -236,9 +236,7 @@ class EMGData:
             self.emg_dur = self.n_samples / self.fs
 
         else:
-            raise Exception(
-                "The EMG time series has already been trimmed - " "cannot trim again."
-            )
+            raise Exception("The EMG time series has already been trimmed - " "cannot trim again.")
 
     def plot_emg_ts(
         self,

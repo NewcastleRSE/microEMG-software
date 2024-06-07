@@ -48,9 +48,7 @@ def test_load_button_enabled_when_select_demo_recording(qtbot, recording_num):
 
 
 @pytest.mark.parametrize("recording_num", [0])
-def test_load_button_disabled_when_remove_demo_recording_selection(
-    qtbot, recording_num
-):
+def test_load_button_disabled_when_remove_demo_recording_selection(qtbot, recording_num):
     # Set up window
     window = LoadWidget()
     window.show()
@@ -103,9 +101,7 @@ def test_can_load_demo_recording(qtbot, recording_num):
 
 
 @pytest.mark.parametrize("recording_num", [0])
-def test_that_changing_recording_selection_deletes_loaded_recording(
-    qtbot, recording_num
-):
+def test_that_changing_recording_selection_deletes_loaded_recording(qtbot, recording_num):
     # Set up window
     window = LoadWidget()
     window.show()
@@ -131,9 +127,7 @@ def test_that_changing_recording_selection_deletes_loaded_recording(
 
 
 @pytest.mark.parametrize("recording_num", [0])
-def test_that_changing_recording_path_to_empty_disables_load_button(
-    qtbot, recording_num
-):
+def test_that_changing_recording_path_to_empty_disables_load_button(qtbot, recording_num):
     # Set up window
     window = LoadWidget()
     window.show()
@@ -157,12 +151,8 @@ def test_that_changing_recording_path_to_empty_disables_load_button(
     assert not w_load.widgets["load"].isEnabled()
 
 
-@pytest.mark.parametrize(
-    "recording_label", ["testlabel", "test label", "Test_Label", ""]
-)
-def test_that_changing_recording_label_updates_attribute_and_label_text(
-    qtbot, recording_label
-):
+@pytest.mark.parametrize("recording_label", ["testlabel", "test label", "Test_Label", ""])
+def test_that_changing_recording_label_updates_attribute_and_label_text(qtbot, recording_label):
     # Set up window
     window = LoadWidget()
     window.show()

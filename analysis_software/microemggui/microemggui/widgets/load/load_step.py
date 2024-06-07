@@ -68,9 +68,7 @@ class SelectRecordingWidget(QWidget):
         self.setLayout(layout)
 
         # Connections
-        self.widgets["combobox"].currentIndexChanged.connect(
-            self.demo_recording_changed
-        )
+        self.widgets["combobox"].currentIndexChanged.connect(self.demo_recording_changed)
         self.widgets["button"].clicked.connect(self.browse_for_recording_file)
 
     def demo_recording_changed(self, idx: int):
@@ -97,9 +95,7 @@ class SelectRecordingWidget(QWidget):
         # TODO: best default location to open file browser?
         # TODO: select folder or header file? currently select folder
 
-        recording_path = QFileDialog.getExistingDirectory(
-            self, "Select Intan recording files", ""
-        )
+        recording_path = QFileDialog.getExistingDirectory(self, "Select Intan recording files", "")
 
         # Change combobox to empty (need to do first so does not disable load button)
         self.widgets["combobox"].setCurrentIndex(0)
@@ -181,9 +177,7 @@ class LoadRecordingSection(QWidget):
         self.widgets["selectrecording"].recording_label_changed.connect(
             self.update_recording_label
         )
-        self.widgets["selectrecording"].recording_path_changed.connect(
-            self.update_recording_path
-        )
+        self.widgets["selectrecording"].recording_path_changed.connect(self.update_recording_path)
         self.widgets["load"].clicked.connect(self.load_data)
 
         # Creates attribute "recording_path" for path to files to load
@@ -321,9 +315,7 @@ class LoadWidget(QWidget):
         self.setLayout(layout)
 
         # Connections
-        self.widgets["recording"].recording_loaded.connect(
-            self.show_and_hide_steps_after_loading
-        )
+        self.widgets["recording"].recording_loaded.connect(self.show_and_hide_steps_after_loading)
 
         # Signal that recording has not been loaded
         self.widgets["recording"].recording_loaded.emit(False)
