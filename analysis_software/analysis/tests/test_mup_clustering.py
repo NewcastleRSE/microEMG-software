@@ -21,9 +21,10 @@ from pymicroemg.emg_files import EMGFiles
 from pymicroemg.emg_preproc_settings import EMGPreprocSettings
 from pymicroemg.emg_data import EMGData
 
-from emg_reconstruct.emg_analysis_reconstruct import EMGAnalysisReconstructSettings
-from emg_reconstruct.emg_analysis_reconstruct import EMGAnalysisReconstruct
-from emg_reconstruct.emg_analysis_reconstruct import EMGMotorUnit
+from pymicroemg.emg_reconstruct_settings import EMGAnalysisReconstructSettings
+from pymicroemg.emg_reconstruct_settings import EMGAnalysisMotorUnitSettings
+from pymicroemg.emg_reconstruct import EMGAnalysisReconstruct
+from pymicroemg.emg_motor_unit import EMGMotorUnit
 
 name = "richa" #"nrajh" #"nrajh" #
         
@@ -140,6 +141,8 @@ print(preproc_settings)
 
 analysis_settings = EMGAnalysisReconstructSettings()
 
+mu_settings = EMGAnalysisMotorUnitSettings()
+
 # Set the number of electrodes, same as the number of channels?
 analysis_settings.n_electrodes = emg_data_preproc.emg_ts.shape[0]
 
@@ -152,7 +155,7 @@ import time
 
 t0 = time.time()
 
-reconstruct = EMGAnalysisReconstruct(emg_data_preproc, analysis_settings)
+reconstruct = EMGAnalysisReconstruct(emg_data_preproc, mu_settings, analysis_settings)
 
 t0 = time.time()
 #print("Loading test data...\n")
@@ -165,8 +168,9 @@ total = t1-t0
 print("Time = ")
 print(total)
 
-#print("Finding motor units...\n")
-#reconstruct.find_motor_units()
+print("Finding motor units...\n")
+print(mu_settings)
+reconstruct.find_motor_units()
 
 
 t2 = time.time()
@@ -176,29 +180,29 @@ print(total)
 
 #input("Stop...")
 
-filename_locs = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\loc_test_data.csv'
-filename_indices = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\index_test_data.csv'
-reconstruct.load_motor_unit_data_from_matlab(filename_indices, filename_locs)
-reconstruct.add_motor_units()
+#filename_locs = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\loc_test_data.csv'
+#filename_indices = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\index_test_data.csv'
+#reconstruct.load_motor_unit_data_from_matlab(filename_indices, filename_locs)
+
 
 motor_unit_number = 0
-#print("Reconstructing fibres for MU " + str(motor_unit_number) + "...\n")
+print("Reconstructing fibres for MU " + str(motor_unit_number) + "...\n")
 
-#reconstruct.reconstruct_fibres(motor_unit_number)
+reconstruct.reconstruct_fibres(motor_unit_number)
 
 # output onsets and fibre centres
-#filename_onsets = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\py_onsets_X1.csv'
-#filename_fibre_centres = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\py_fib_centres_X1.csv'
-#motor_unit = reconstruct.found_motor_units.motor_units[motor_unit_number]
+filename_onsets = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\py_onsets_'+ str(motor_unit_number) +'.csv'
+filename_fibre_centres = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\py_fib_centres_'+ str(motor_unit_number) +'.csv'
+motor_unit = reconstruct.found_motor_units.motor_units[motor_unit_number]
 
-#df = pd.DataFrame(motor_unit.onsets) 
+df = pd.DataFrame(motor_unit.onsets) 
 # save the dataframe as a csv file 
-#df.to_csv(filename_onsets, header= False, index=False, na_rep='nan')
+df.to_csv(filename_onsets, header= False, index=False, na_rep='nan')
 
 # convert array into dataframe
-#df = pd.DataFrame(motor_unit.fibre_centres) 
+df = pd.DataFrame(motor_unit.fibre_centres) 
 # save the dataframe as a csv file 
-#df.to_csv(filename_fibre_centres, header = False, index=False, na_rep='nan')
+df.to_csv(filename_fibre_centres, header = False, index=False, na_rep='nan')
 
 
 t3 = time.time()
@@ -206,12 +210,11 @@ total = t3-t2
 print("Time = ")
 print(total)
 
-#motor_units = reconstruct.found_motor_units
 
-print("Loading MUP MATLAB data")
-filename_fibre_centres = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\fibre_centres' + str(motor_unit_number+1) + '.csv'
-filename_onsets = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\onsets' + str(motor_unit_number+1) + '.csv'
-reconstruct.load_mup_data_from_matlab(motor_unit_number, filename_fibre_centres, filename_onsets)
+#print("Loading MUP MATLAB data")
+#filename_fibre_centres = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\fibre_centres' + str(motor_unit_number+1) + '.csv'
+#filename_onsets = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\onsets' + str(motor_unit_number+1) + '.csv'
+#reconstruct.load_mup_data_from_matlab(motor_unit_number, filename_fibre_centres, filename_onsets)
 
 
 #print("Loading MUP py data")
@@ -256,7 +259,9 @@ df.to_csv(filename_centres, header = False, index=False, na_rep='nan')
 # save the dataframe as a csv file 
 #df.to_csv(filename_centres)
 
-
+#Plot clustering results
+all_motor_units.plot_fibre_potential_clustering_one_motor_unit(motor_unit_number)
+plt.show()
 
 t4 = time.time()
 total = t4-t3

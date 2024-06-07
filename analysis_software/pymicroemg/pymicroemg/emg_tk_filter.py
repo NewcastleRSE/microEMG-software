@@ -20,11 +20,10 @@ Please cite the paper if any of the methods were helpful
 
 import numpy as np
 import scipy.signal as sg
-from emg_analyser_python.detect_peaks import detect_peaks
-from emg_analyser_python.constants import QUICK_VERSION
+from pymicroemg.detect_peaks import detect_peaks
+from pymicroemg.emg_constants import QUICK_VERSION
 
 MAP_RANGE = [1, 9]
-
 
 def round_int(val):
     """
@@ -41,7 +40,7 @@ def round_int(val):
 
     """
 
-    return round_int_banker(val)
+    return round_int_nonbanker(val)
     # return int(np.round(val))
 
 
@@ -60,11 +59,11 @@ def round_ints(vals):
 
     """
 
-    return round_ints_banker(vals)
+    return round_ints_nonbanker(vals)
     # return np.round(vals)
 
 
-def round_int_banker(val):
+def round_int_nonbanker(val):
     """
     Rounds the given float to the nearest integer.
     In the case of a value half way the number
@@ -97,7 +96,7 @@ def round_int_banker(val):
     return int(np.round(val))
 
 
-def round_ints_banker(vals):
+def round_ints_nonbanker(vals):
     """
     Rounds the given array of floats to the nearest integers.
     In the case of a values half way the numbers
@@ -367,7 +366,7 @@ def multi_scale_thresholding(MTEO, ks, L, sampling_freq):
         MTEO signal outputs from MTEO function
     ks : int
         level of MTEO
-    L : int
+    L : float
         is the factor that multiplies [cost of comission]/[cost of omission].
         For most practical purposes -0.2 <= L <= 0.2. Larger L --> omissions
         likely, smaller L --> false positives likely. For unsupervised

@@ -6,8 +6,8 @@
 import numpy as np
 
 # Need to add analysis folder to search path
-import emg_analyser_python.emg_analyser_functions as emg
-from emg_analyser_python.detect_peaks import detect_peaks
+import pymicroemg.emg_tk_filter as emg
+from pymicroemg.detect_peaks import detect_peaks
 
 
 S_neighbor = 4
