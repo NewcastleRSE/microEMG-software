@@ -1029,7 +1029,7 @@ class EMGAnalysisReconstruct:
 
         # Create motor unit objects for each motor unit
         all_motor_units = []
-        for i in range(np.max(self.locs)):
+        for i in range(np.max(self.locs) + 1):
             motor_unit = EMGMotorUnit(number=i, potentials_t_idx=self.indices[self.locs == i])
             all_motor_units.append(motor_unit)
         self.found_motor_units = EMGMotorUnits(
