@@ -23,9 +23,6 @@ import scipy.signal as sg
 from pymicroemg.detect_peaks import detect_peaks
 from pymicroemg.emg_constants import QUICK_VERSION
 
-MAP_RANGE = [1, 9]
-
-
 def round_int(val):
     """
     Rounds the given float to the nearest integer.
@@ -743,7 +740,7 @@ def linear_map2(X, original_range, map_range1, map_range2):
     return round_ints(Y)
 
 
-def generate_titles(features):
+def generate_titles(features, map_range):
     """
     Title Generation:
     Generates the titles and also initial set of clusters based on label matching
@@ -768,7 +765,7 @@ def generate_titles(features):
     # Replace NaNs with this number, other numbers should be below
     # this number so will not conflict
     # We need NaNs to be considered equal when comparing features
-    features[np.isnan(features)] = MAP_RANGE[1] + 1
+    features[np.isnan(features)] = map_range[1] + 1
 
     # Label first list of features as "1"
     titles = np.zeros(no_features)
@@ -817,7 +814,7 @@ def generate_titles(features):
     return titles
 
 
-def generate_titles2(features):
+def generate_titles2(features, map_range):
     """
     Title Generation:
     Generates the titles and also initial set of clusters based on label matching
@@ -842,7 +839,7 @@ def generate_titles2(features):
     # Replace NaNs with this number, other numbers should be below
     # this number so will not conflict
     # We need NaNs to be considered equal when comparing features
-    features[np.isnan(features)] = MAP_RANGE[1] + 1
+    features[np.isnan(features)] = map_range[1] + 1
 
     # All elements must be equal. Create groups where these are equal firstly
     _, uni_inv_ind = np.unique(features, return_inverse=True, axis=0)
@@ -975,8 +972,10 @@ def TK_filter(sig, sampling_freq, C=0.1, threshold_PsC=0.1, init=True, wind=0.00
     if init:
         sig = initialize(sig, sampling_freq)
 
+    # Range used to group motor units on various criteria
+    map_range = [1, 9]
+    
     # upsampling for better accuracy in Classification
-
     upsample_flag = 0
 
     if sampling_freq < 10000 and sampling_freq > 4000:
@@ -1015,8 +1014,7 @@ def TK_filter(sig, sampling_freq, C=0.1, threshold_PsC=0.1, init=True, wind=0.00
     B = locs < (len(sig) - round_int((wind) * sampling_freq) - 1)
     locs = locs[B]
 
-    # if less than 1 spike persecond
-    # len(locs) < 100/(len(sig)/sampling_freq)
+    # if less than 1 spike persecond    
     if not locs.size:
         return Index, loc
 
@@ -1141,16 +1139,16 @@ def TK_filter(sig, sampling_freq, C=0.1, threshold_PsC=0.1, init=True, wind=0.00
         original_range[1] = np.nanmax(features[:, i])
         if QUICK_VERSION:
             features[:, i] = linear_map2(
-                features[:, i], original_range, MAP_RANGE, [1, 4]
+                features[:, i], original_range, map_range, [1, 4]
             )  # idea for speed up for clustering, change below also.
             # Does work a bit, but more MUs
         else:
-            features[:, i] = linear_map(features[:, i], original_range, MAP_RANGE)
+            features[:, i] = linear_map(features[:, i], original_range, map_range)
 
     if QUICK_VERSION:
-        titles = generate_titles2(features)
+        titles = generate_titles2(features, map_range)
     else:
-        titles = generate_titles(features)
+        titles = generate_titles(features, map_range)
 
     uniq_c = merge_clusters(template, titles, threshold_PsC, sampling_freq, len(sig))
 

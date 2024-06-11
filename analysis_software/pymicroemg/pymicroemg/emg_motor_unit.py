@@ -9,8 +9,6 @@ For use with preprocessed EMG data.
 
 from __future__ import annotations  # for type hints - must be at beginning of file
 
-# from xml.etree.ElementInclude import include
-# from re import A
 import numpy as np
 import numpy.typing as npt  # for type hints
 
@@ -73,8 +71,7 @@ class EMGMotorUnit:
         # Number of fibre potentials (peaks) found across all MUPs
         self.n_fibre_potentials = None
 
-        # Estimated fibre x, y coordinate at each time (size n peaks x 2)
-        # TODO: consider renaming something like fibre_xy
+        # Estimated fibre x, y coordinate at each time (size n peaks x 2)       
         self.fibre_centres = np.array([])
 
         # Onset of MUP that each peak belongs to? (size n peaks)
@@ -115,9 +112,7 @@ class EMGMotorUnit:
         ans += "\nNumber of potentials: "
         ans += str(self.n_potentials)
         ans += "\nFibre centres dimensions: "
-        ans += str(self.fibre_centres.shape)
-        ans += "\nMean spikes dimensions: "
-        ans += str(self.mean_spikes.shape)
+        ans += str(self.fibre_centres.shape)       
         ans += "\nOnsets dimensions: "
         ans += str(self.onsets.shape)
         ans += "\nAll spikes dimensions: "

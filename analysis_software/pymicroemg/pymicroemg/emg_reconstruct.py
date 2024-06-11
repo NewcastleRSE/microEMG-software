@@ -9,13 +9,9 @@ For use with preprocessed EMG data.
 
 from __future__ import annotations  # for type hints - must be at beginning of file
 
-# from xml.etree.ElementInclude import include
-# from re import A
 import numpy as np
 import numpy.typing as npt  # for type hints
 
-
-# import numpy.typing as npt
 import scipy.signal as sg
 import scipy.optimize as opt
 from scipy.linalg import toeplitz
@@ -32,7 +28,6 @@ except Exception as e:
     print(e)
 import os
 
-# import math
 import pymicroemg.emg_tk_filter as tk
 from pymicroemg.emg_constants import QUICK_VERSION
 
@@ -48,8 +43,6 @@ except Exception as e:
 import scipy.ndimage as ndimage
 import scipy.ndimage.filters as filters
 from pymicroemg.emg_data_preproc import EMGDataPreproc
-
-# from pymicroemg.emg_channels import EMGChannels
 
 from pymicroemg.emg_reconstruct_settings import EMGAnalysisReconstructSettings
 from pymicroemg.emg_reconstruct_settings import EMGAnalysisMotorUnitSettings
@@ -870,7 +863,6 @@ class EMGAnalysisReconstruct:
                     )
                 )
 
-            # sub_clusters = self.find_peaks_2d_highest(sig)
             sub_clusters = self.find_peaks_2d(sig)
 
             if sub_clusters.shape[0] == 0:
@@ -946,6 +938,8 @@ class EMGAnalysisReconstruct:
 
         # End of signal_id loop
 
+        # TODO remove this line and self.needle scaling above
+        # (pending SM's final decision about the scaling) 
         # pos[:, 0] = pos[:, 0] / 4
 
         # Add the results to the motor unit object
@@ -1054,11 +1048,9 @@ class EMGAnalysisReconstruct:
     def find_peaks_2d_filters(self, image, threshold):
         neighborhood_size = 5
 
-        data = image  # scipy.misc.imread(fname)
-
-        data_max = filters.maximum_filter(data, neighborhood_size)
-        maxima = data == data_max
-        data_min = filters.minimum_filter(data, neighborhood_size)
+        data_max = filters.maximum_filter(image, neighborhood_size)
+        maxima = image == data_max
+        data_min = filters.minimum_filter(image, neighborhood_size)
         diff = (data_max - data_min) > threshold
         maxima[diff == 0] = 0
 
@@ -1075,38 +1067,6 @@ class EMGAnalysisReconstruct:
         ans = np.vstack((x, y)).T
 
         return ans
-
-    def find_peaks_2d_package(self, image, threshold):
-        """
-        Finds local maxima of a 2-dimensional image area
-        Dependent on findpeaks algorithm from findpeaks package
-        See https://erdogant.github.io/findpeaks/pages/html/Topology.html
-        Parameters
-        ----------
-        signal: 2D numpy NDArray[float, float]
-                n*m array of signal data
-        threshold: float
-                cutoff for defining a peak
-        Returns
-        -------
-        locs: 2D numpy NDArray[int, int]
-            2D array of location of peaks
-        """
-
-        # Initialize
-        fp = findpeaks(
-            whitelist=["peak"],
-            togray=False,
-            limit=threshold,
-            denoise=None,
-            scale=False,
-            lookahead=50,
-        )
-
-        ans = fp.fit(image)
-        ans = ans["persistence"]
-
-        return np.array(ans.loc[ans["peak"], ["x", "y"]])
 
     def find_peaks_2d(self, sig):
         """
@@ -1130,22 +1090,10 @@ class EMGAnalysisReconstruct:
         # from negative initial deflection of SFAP
         base[base < 0] = 0
 
-        # Interpolate between the electrodes in order to make gaussian filter
-        # have roughly equal effect on distance as time
-        # interp_n = 4
-
-        # print(b.shape)
         sigma = 2
         im2 = np.abs(
             gaussian_filter(base, sigma, truncate=np.ceil(2 * sigma) / sigma)
-        )  # imgaussfilt(b, 3))
-
-        # tophat transform
-        # Applying the Top-Hat operation
-        # kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (6, 6))
-        # im2 = cv2.morphologyEx(im, cv2.MORPH_TOPHAT, kernel)
-
-        # im2 = im
+        )
 
         # Extract each blob
         locs = np.array([])
@@ -1155,8 +1103,7 @@ class EMGAnalysisReconstruct:
         max_number_of_peaks = 22
 
         while not found:
-            parse_limit = parse_limit + 1
-            # locs = self.find_peaks_2d_package(im2, im2_max * threshold)
+            parse_limit = parse_limit + 1            
             locs = self.find_peaks_2d_filters(im2, im2_max * threshold)
 
             if locs.shape[0] < 1:
@@ -1176,64 +1123,6 @@ class EMGAnalysisReconstruct:
             locs[locs[:, 1] < 0, 1] = 0
 
         return locs
-
-    def find_peaks_2d_highest(self, sig):
-        """
-        Finds only the highest maxima of a 2-dimensional image area
-        after applying a filter
-
-        Parameters
-        ----------
-        signal: 2D numpy NDArray[float, float]
-                n*m array of signal data
-        threshold: float
-                cutoff for defining a peak as a prop
-        Returns
-        -------
-        locs: 2D numpy NDArray[int, int]
-            2D array of location of peaks
-        """
-
-        base = sig
-        # remove negative deflection to discount 'doubling peaks'
-        # from negative initial deflection of SFAP
-        base[base < 0] = 0
-
-        sigma = 2
-        im = np.abs(
-            gaussian_filter(base, sigma, truncate=np.ceil(2 * sigma) / sigma)
-        )  # imgaussfilt(b, 3))
-
-        # Get coords of maximum in image
-        loc = np.unravel_index(np.argmax(im), im.shape)
-
-        # Reverse coords so that they are in the order needed later
-        loc = loc[::-1]
-
-        return np.array(loc).reshape(1, 2)
-
-    def plot_2d_peaks(self, im, peak_locs):
-        """
-        Method to plot 2D image and found peaks from the find_peaks_2d method
-        for testing purposes
-
-        Parameters
-        ----------
-        im: 2D numpy NDArray[float, float]
-            2D array of image
-        locs: 2D numpy NDArray[int, int]
-            2D array of location of peaks
-
-        Returns
-        -------
-        None
-        """
-
-        _, ax = plt.subplots()
-        im = ax.imshow(im)
-        ax.plot(peak_locs[:, 0], peak_locs[:, 1], "bX")
-
-        plt.show()
 
     def deconv_wrapper(self, loc):
         """

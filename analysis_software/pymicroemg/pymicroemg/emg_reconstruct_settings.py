@@ -7,10 +7,6 @@ For use with EMGAnalysisReconstruct.
 
 """
 
-# from __future__ import annotations  # for type hints - must be at beginning of file
-# import numpy.typing as npt  # for type hints
-
-
 class EMGAnalysisReconstructSettings:
     """
     Class for storing EMG analysis reconstruct settings.
