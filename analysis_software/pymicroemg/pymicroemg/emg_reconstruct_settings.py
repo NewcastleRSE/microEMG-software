@@ -7,6 +7,7 @@ For use with EMGAnalysisReconstruct.
 
 """
 
+
 class EMGAnalysisReconstructSettings:
     """
     Class for storing EMG analysis reconstruct settings.

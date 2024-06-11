@@ -71,7 +71,7 @@ class EMGMotorUnit:
         # Number of fibre potentials (peaks) found across all MUPs
         self.n_fibre_potentials = None
 
-        # Estimated fibre x, y coordinate at each time (size n peaks x 2)       
+        # Estimated fibre x, y coordinate at each time (size n peaks x 2)
         self.fibre_centres = np.array([])
 
         # Onset of MUP that each peak belongs to? (size n peaks)
@@ -112,7 +112,7 @@ class EMGMotorUnit:
         ans += "\nNumber of potentials: "
         ans += str(self.n_potentials)
         ans += "\nFibre centres dimensions: "
-        ans += str(self.fibre_centres.shape)       
+        ans += str(self.fibre_centres.shape)
         ans += "\nOnsets dimensions: "
         ans += str(self.onsets.shape)
         ans += "\nAll spikes dimensions: "
@@ -124,9 +124,7 @@ class EMGMotorUnit:
 
         return ans
 
-    def add_fibre_localisation(
-        self, fibre_centres, onsets, all_spikes, generator_potential
-    ):
+    def add_fibre_localisation(self, fibre_centres, onsets, all_spikes, generator_potential):
         """
         Add results of the fibre localisation step to the motor unit object. Computes
         additional attributes and stores that analysis has been performed.
@@ -172,9 +170,7 @@ class EMGMotorUnits:
 
     """
 
-    def __init__(
-        self, motor_units: list[EMGMotorUnit], chan_xy: npt.NDArray[npt.float64]
-    ):
+    def __init__(self, motor_units: list[EMGMotorUnit], chan_xy: npt.NDArray[npt.float64]):
         """
         Initialise EMGMotorUnits object.
 
@@ -403,9 +399,7 @@ class EMGMotorUnits:
                 mu_pt_facecolor = pt_facecolor
 
             if mu.analysis_performed["fibres_localised"]:
-                print(
-                    f"Plotting fibre locations of motor unit {mu.motor_unit_number + 1}"
-                )
+                print(f"Plotting fibre locations of motor unit {mu.motor_unit_number + 1}")
                 ax.scatter(
                     mu.fibre_centres[:, 0],
                     mu.fibre_centres[:, 1],
@@ -540,16 +534,12 @@ class EMGMotorUnits:
 
             # Number of fibre potentials (FPs) in each MUP that belong to the same
             # cluster
-            n_fps_per_mup_and_cluster = np.zeros(
-                (motor_unit.n_potentials, n_fibre_clusters)
-            )
+            n_fps_per_mup_and_cluster = np.zeros((motor_unit.n_potentials, n_fibre_clusters))
 
             # Location estimates of each fibre based on each MUP
             # Note: unlike original code, data stored so indices match the
             # self.potentials_t_idx array
-            mup_fibre_pos = np.full(
-                (motor_unit.n_potentials, 2, n_fibre_clusters), np.nan
-            )
+            mup_fibre_pos = np.full((motor_unit.n_potentials, 2, n_fibre_clusters), np.nan)
             print("shape")
             print(motor_unit.onsets.shape)
             # Find median location of each fibre
