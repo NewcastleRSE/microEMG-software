@@ -97,6 +97,4 @@ emg_data_preproc.set_bad_chan(bad_chan)
 hfile = emg_files.read_header()
 # %% Demonstrate that parent class EMGData cannot be instatiated (will throw error)
 
-my_data = EMGData(
-    emg_data.emg_ts, emg_data.fs, emg_data.chan, emg_data.segment_of_recording
-)
+my_data = EMGData(emg_data.emg_ts, emg_data.fs, emg_data.chan, emg_data.segment_of_recording)

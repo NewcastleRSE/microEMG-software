@@ -237,9 +237,7 @@ class EMGPlotWidget(QWidget):
 
         # Set y axis range
         y_buff = self.offset * 2  # Extra space at top and bottom
-        self.plot_w.setYRange(
-            y_ticks[0] + y_buff, y_ticks[len(y_ticks) - 1] - y_buff, padding=0
-        )
+        self.plot_w.setYRange(y_ticks[0] + y_buff, y_ticks[len(y_ticks) - 1] - y_buff, padding=0)
 
     def set_x_ticks_and_range(self):
         # Set x-axis ticks and range of pyqtgraph plot based on the plotted time segment
@@ -404,9 +402,7 @@ class EMGDivSizeWidget(QWidget):
 
         # Set units to seconds if 1+ seconds (1000 ms); otherwise, keep as ms
         ms_cutoff = 1000
-        options["units"] = [
-            "ms" if v < ms_cutoff else "s" for v in options["values_ms"]
-        ]
+        options["units"] = ["ms" if v < ms_cutoff else "s" for v in options["values_ms"]]
 
         # Value for combobox as a string, converted to match units in options["units"]
         options["values_text"] = []
@@ -514,9 +510,7 @@ class EMGArrowsWidget(QWidget):
         # Will increment start time by the number of divisions moved by the button
 
         for w, n in zip(self.widgets.values(), self.button_n_div):
-            w.clicked.connect(
-                lambda checked=None, n=n: self.plot_widget.increment_start_time(n)
-            )
+            w.clicked.connect(lambda checked=None, n=n: self.plot_widget.increment_start_time(n))
 
     def toggle_next_buttons(self, can_move_forward):
         # Enable/disable buttons for progressing time series.
@@ -638,9 +632,7 @@ class EMGStartTimeWidget(QWidget):
 
         # Multiply by 1/div_size rather than divide by div_size to reduce (prevent?)
         # floating point precision errors; also round as a back-up
-        self.widgets["slider"].setValue(
-            int(round(start_time * (1 / self.plot_widget.div_size)))
-        )
+        self.widgets["slider"].setValue(int(round(start_time * (1 / self.plot_widget.div_size))))
 
 
 class EMGTimeControlsWidget(QWidget):
