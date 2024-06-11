@@ -4,8 +4,6 @@
 Example pipeline for EMG analysis, including motor unit and muscle fibre localisation.
 
 """
-import sys
-import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,20 +12,9 @@ from pymicroemg.emg_files import EMGFiles
 from pymicroemg.emg_preproc_settings import EMGPreprocSettings
 import pymicroemg.helper_config as cfg
 
-try:
-    from emg_reconstruct.emg_analysis_reconstruct import EMGAnalysisReconstructSettings
-    from emg_reconstruct.emg_analysis_reconstruct import EMGAnalysisReconstruct
-except Exception as e:
-    print(e)
-    print("Adding module to path...")
-    # if import fails, add analysis module to path so can use existing import statements
-    # TODO: remove once these modules are incorporated into pymicroemg
-    path_current = os.getcwd()
-    path_reconstruct = os.path.join(path_current, "analysis_software", "analysis")
-    sys.path.append(path_reconstruct)
 
-    from emg_reconstruct.emg_analysis_reconstruct import EMGAnalysisReconstructSettings
-    from emg_reconstruct.emg_analysis_reconstruct import EMGAnalysisReconstruct
+from pymicroemg.emg_reconstruct import EMGAnalysisReconstructSettings
+from pymicroemg.emg_reconstruct import EMGAnalysisReconstruct
 
 # increase figure resolution (needed for Spyder IDE)
 plt.rcParams["figure.dpi"] = 600
