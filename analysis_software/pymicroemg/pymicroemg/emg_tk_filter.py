@@ -25,6 +25,7 @@ from pymicroemg.emg_constants import QUICK_VERSION
 
 MAP_RANGE = [1, 9]
 
+
 def round_int(val):
     """
     Rounds the given float to the nearest integer.

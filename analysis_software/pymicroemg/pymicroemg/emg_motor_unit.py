@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 from matplotlib import colormaps
 from sklearn.cluster import KMeans
 
+
 class EMGMotorUnit:
     """
     Class for storing data for one motor unit
@@ -32,8 +33,12 @@ class EMGMotorUnit:
         Parameters
         ----------
         number: int
-                number labelling this motor unit
-                matches number returned from TK_filter
+                This is the motor unit index (0, 1, 2, ...), returned from TK_filter,
+                which corresponds to the index position of
+                "motor_units" in the EMGMotorUnits class. When displayed to the user
+                the motor unit label
+                is displayed which is +1 this number, e.g. motor_unit_number 0 is the
+                motor unit labelled as "1"
 
         potentials_t_idx: npt.NDArray[np.int64]
             Time indices of the motor unit's potentials in the EMG recording
@@ -46,8 +51,10 @@ class EMGMotorUnit:
 
         self.motor_unit_number = number
 
-        self.n_potentials = len(potentials_t_idx)  # Number of potentials assigned to MU
-        self.potentials_t_idx = potentials_t_idx  # Time indices of potentials in EMG
+        # Number of potentials assigned to MU
+        self.n_potentials = len(potentials_t_idx)
+        # Time indices of potentials in EMG
+        self.potentials_t_idx = potentials_t_idx
 
         # Store information about analysis that has been performed for this MU
         # Note: even if true, may not be results if data was not suitable for analysis
@@ -70,14 +77,6 @@ class EMGMotorUnit:
         # TODO: consider renaming something like fibre_xy
         self.fibre_centres = np.array([])
 
-        # average motor unit potential? size n chan x time
-        # TODO: consider replacing functionality with
-        # get_potentials_data_of_one_motor_unit() method of
-        # EMGAnalysisReconstruct if this attribute is only used for plotting (esp.
-        # since the plots are needed before this attribute is added!)
-        # Otherwise, rename to clarify that it is the MUP
-        self.mean_spikes = np.array([])
-
         # Onset of MUP that each peak belongs to? (size n peaks)
         # TODO: considering renaming to clarify; consider whether MUP label ( = index)
         # would be easier to work with (clustering currently implemented using this
@@ -91,7 +90,7 @@ class EMGMotorUnit:
         self.all_spikes = np.array([])
 
         # Generator potential, represents true underlying potential
-        self.gn_potential = np.array([])
+        self.generator_potential = np.array([])
 
         # TODO: currently the exact timing of fibre potentials (peaks) are not saved (?)
         # Will need this info for jitter analysis
@@ -112,7 +111,7 @@ class EMGMotorUnit:
 
         ans = "EMG Motor Unit"
         ans += "\nMotor unit number: "
-        ans += str(self.motor_unit_number)
+        ans += str(self.motor_unit_number + 1)
         ans += "\nNumber of potentials: "
         ans += str(self.n_potentials)
         ans += "\nFibre centres dimensions: "
@@ -124,14 +123,14 @@ class EMGMotorUnit:
         ans += "\nAll spikes dimensions: "
         ans += str(self.all_spikes.shape)
         ans += "\nGenerator potential dimensions: "
-        ans += str(self.gn_potential.shape)
+        ans += str(self.generator_potential.shape)
 
         ans += "\n"
 
         return ans
 
     def add_fibre_localisation(
-        self, fibre_centres, mean_spikes, onsets, all_spikes, gn_potential
+        self, fibre_centres, onsets, all_spikes, generator_potential
     ):
         """
         Add results of the fibre localisation step to the motor unit object. Computes
@@ -143,21 +142,16 @@ class EMGMotorUnit:
         ----------
         fibre_centres : TYPE
             DESCRIPTION.
-        mean_spikes : TYPE
-            DESCRIPTION.
         onsets : TYPE
             DESCRIPTION.
         all_spikes : TYPE
             DESCRIPTION.
-        gn_potential : TYPE
+        generator_potential : TYPE
             DESCRIPTION.
 
         Returns
         -------
         None.
-
-        TODO: finish docstring once attributes are finalised (some attributes may not
-        be needed)
 
         """
 
@@ -169,10 +163,9 @@ class EMGMotorUnit:
 
         # Store provided attributes
         self.fibre_centres = fibre_centres
-        self.mean_spikes = mean_spikes
         self.onsets = onsets
         self.all_spikes = all_spikes
-        self.gn_potential = gn_potential
+        self.generator_potential = generator_potential
 
 
 class EMGMotorUnits:
@@ -210,7 +203,7 @@ class EMGMotorUnits:
         # Get and store number of potentials of each motor unit
         self.n_potentials = [mu.n_potentials for mu in self.motor_units]
 
-        # Channel/electrode coordinates of the needle 
+        # Channel/electrode coordinates of the needle
         self.chan_xy = chan_xy
 
     def __str__(self):
@@ -503,9 +496,6 @@ class EMGMotorUnits:
         -------
         None.
 
-        TODO: test that analysis reproduces original MATLAB code; some variation
-        expected since k-means is not deterministic (unless initialisation is fixed),
-        but results should be qualitatively the same.
 
         TODO: add additional measures needed for downstream analysis/reports/vis - check
         with SM before implementing to determine what is needed.
@@ -517,7 +507,6 @@ class EMGMotorUnits:
         TODO: check other k-means parameters; determine if any defaults should be
         changed. Also evaluate clustering performance and determine if approach needs to
         be modified (e.g., how number of clusters is determined)
-
 
         """
 
@@ -542,7 +531,7 @@ class EMGMotorUnits:
         print(n_unique_onsets)
         print("mean_n_fps")
         print(mean_n_fps)
-        
+
         if mean_n_fps > 0:
             fibre_kmeans = KMeans(n_clusters=mean_n_fps, random_state=random_state).fit(
                 motor_unit.fibre_centres
@@ -575,16 +564,12 @@ class EMGMotorUnits:
                 # position in each MUP in which the fibre cluster appears.
                 # If no fibres with that cluster num appear in the MUP, position is
                 # stored as np.nan.
-                #print("cluster_num")
-                #print(cluster_num)
+
                 # Note: unlike original code, iterate through all MUPs (not just ones
                 # present in "onsets") so dimensions align to other MUP features.
                 for mup_num in np.arange(motor_unit.n_potentials):
                     mup_onset = motor_unit.potentials_t_idx[mup_num]
-                    #print("mup_onset")
-                    #print(mup_onset)
-                    #print(np.sum(motor_unit.onsets == mup_onset))
-                    #print(np.sum(fibre_clusters == cluster_num))
+
                     # Fibre potentials that belong to the specified onset and cluster.
                     idx = np.flatnonzero(
                         np.all(
@@ -734,4 +719,3 @@ class EMGMotorUnits:
             edgecolors=pt_medians_edgecolor,
             linewidths=pt_medians_lw,
         )
-

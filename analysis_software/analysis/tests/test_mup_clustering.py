@@ -26,7 +26,7 @@ from pymicroemg.emg_reconstruct_settings import EMGAnalysisMotorUnitSettings
 from pymicroemg.emg_reconstruct import EMGAnalysisReconstruct
 from pymicroemg.emg_motor_unit import EMGMotorUnit
 
-name = "richa" #"nrajh" #"nrajh" #
+name = "nrajh" #"nrajh" #
         
 # increase figure resolution (needed for Spyder IDE)
 plt.rcParams["figure.dpi"] = 600
@@ -238,7 +238,7 @@ filename_clusters = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\R
 filename_centres = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\py_kmean_centres' + str(motor_unit_number) + '.csv' 
 filename_locs = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\py_kmean_locs' + str(motor_unit_number) + '.csv' 
   
-print(motor_unit.fibre_clustering_results.keys())
+#print(motor_unit.fibre_clustering_results.keys())
 # convert array into dataframe 
 df = pd.DataFrame(motor_unit.fibre_clustering_results["fibre_clusters"]) 
 # save the dataframe as a csv file 

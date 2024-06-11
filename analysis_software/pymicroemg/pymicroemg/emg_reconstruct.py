@@ -48,12 +48,14 @@ except Exception as e:
 import scipy.ndimage as ndimage
 import scipy.ndimage.filters as filters
 from pymicroemg.emg_data_preproc import EMGDataPreproc
-from pymicroemg.emg_channels import EMGChannels
+
+# from pymicroemg.emg_channels import EMGChannels
 
 from pymicroemg.emg_reconstruct_settings import EMGAnalysisReconstructSettings
 from pymicroemg.emg_reconstruct_settings import EMGAnalysisMotorUnitSettings
 from pymicroemg.emg_motor_unit import EMGMotorUnit
 from pymicroemg.emg_motor_unit import EMGMotorUnits
+
 
 class EMGAnalysisReconstruct:
     """
@@ -62,7 +64,10 @@ class EMGAnalysisReconstruct:
     """
 
     def __init__(
-        self, emg_data_preproc: EMGDataPreproc, mu_settings : EMGAnalysisMotorUnitSettings, recon_settings: EMGAnalysisReconstructSettings
+        self,
+        emg_data_preproc: EMGDataPreproc,
+        mu_settings: EMGAnalysisMotorUnitSettings,
+        recon_settings: EMGAnalysisReconstructSettings,
     ):
         """
         Initialise EMGAnalysisReconstruct object.
@@ -82,9 +87,9 @@ class EMGAnalysisReconstruct:
         self.mu_settings = mu_settings
         self.recon_settings = recon_settings
         self.n_chan = self.emg_data_preproc.n_chan
-        
+
         # Needle model pos in mm
-        self.full_needle_model = EMGChannels(n_chan = self.n_chan)
+        self.needle = self.emg_data_preproc.chan.chan_xy
 
         # SNRs: The SNR values for each channel
         self.signal_noise_ratios = np.array([])
@@ -158,12 +163,12 @@ class EMGAnalysisReconstruct:
 
         # Importing csv module
         with open(filename_indices, "r") as x:
-            self.indices = list(
-                csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC)
-            )
+            mup_t_idx = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
 
         with open(filename_locs, "r") as x:
-            mu_numbers = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
+            mu_numbers = list(
+                csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC)
+            )
 
         mu_numbers = (np.array(mu_numbers)).flatten()
         mup_t_idx = (np.array(mup_t_idx)).flatten()
@@ -172,11 +177,10 @@ class EMGAnalysisReconstruct:
 
         # Add motor unit objects
         self.add_motor_units(mup_t_idx, mu_numbers)
-        
+
         if set_unbroken:
             # Set all to non broken like MATLAB analysis for this data
             self.emg_data_preproc.chan.analyse_chan = np.full(self.n_chan, True)
-
 
     def load_mup_data_from_matlab(
         self, motor_unit_number, filename_fibre_centres, filename_onsets
@@ -190,7 +194,7 @@ class EMGAnalysisReconstruct:
         ----------
         motor_unit_number: int
             number of the motor unit (starting from 0)
-            
+
         filename_fibre_centres: string
             file name and path of csv file of fibre centres
             Indices refer to positions in self.emg_data_preproc.emg_ts
@@ -198,35 +202,31 @@ class EMGAnalysisReconstruct:
         filename_onsets: string
             file name and path of csv file of motor unit labels,
             which are positive integers
-            
-       
+
+
         Returns
         -------
         None
 
         """
-        
+
         # Importing csv module
         with open(filename_fibre_centres, "r") as x:
             fibre_centres = list(
                 csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC)
             )
-            
+
         with open(filename_onsets, "r") as x:
-            onsets = list(
-                csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC)
-            )
-        
+            onsets = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
+
         motor_unit = self.found_motor_units.motor_units[motor_unit_number]
-        
+
         motor_unit.fibre_centres = np.array(fibre_centres, dtype=float)
         motor_unit.onsets = np.array(onsets).astype(int)
-        motor_unit.onsets = (motor_unit.onsets[0,:] - 1).flatten()
-        motor_unit.analysis_performed["fibres_localised"] = True        
-    
-    def load_mup_data(
-        self, motor_unit_number, filename_fibre_centres, filename_onsets
-    ):
+        motor_unit.onsets = (motor_unit.onsets[0, :] - 1).flatten()
+        motor_unit.analysis_performed["fibres_localised"] = True
+
+    def load_mup_data(self, motor_unit_number, filename_fibre_centres, filename_onsets):
         """
         Load fibre centre and onset data for one motor unit from MATLAB,
         - so take 1 away from index locations
@@ -236,7 +236,7 @@ class EMGAnalysisReconstruct:
         ----------
         motor_unit_number: int
             number of the motor unit (starting from 0)
-            
+
         filename_fibre_centres: string
             file name and path of csv file of fibre centres
             Indices refer to positions in self.emg_data_preproc.emg_ts
@@ -244,34 +244,32 @@ class EMGAnalysisReconstruct:
         filename_onsets: string
             file name and path of csv file of motor unit labels,
             which are positive integers
-            
-       
+
+
         Returns
         -------
         None
 
         """
-        
+
         # Importing csv module
         with open(filename_fibre_centres, "r") as x:
             fibre_centres = list(
                 csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC)
             )
-            
+
         with open(filename_onsets, "r") as x:
-            onsets = list(
-                csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC)
-            )
-        
+            onsets = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
+
         motor_unit = self.found_motor_units.motor_units[motor_unit_number]
-        
+
         motor_unit.fibre_centres = np.array(fibre_centres, dtype=float)
-        motor_unit.onsets = np.array(onsets).astype(int).flatten()   
-        
+        motor_unit.onsets = np.array(onsets).astype(int).flatten()
+
         print(motor_unit.fibre_centres)
         print(motor_unit.onsets)
-        motor_unit.analysis_performed["fibres_localised"] = True   
-        
+        motor_unit.analysis_performed["fibres_localised"] = True
+
     def calculate_SNR_ranks(self):
         """
         Calculate the signal to noise ratios and rank them
@@ -322,14 +320,14 @@ class EMGAnalysisReconstruct:
 
         sampling_freq = self.emg_data_preproc.fs
 
-        # Find all MUAPs in channel with best signal        
+        # Find all MUAPs in channel with best signal
         if self.signal_noise_ratios[self.signal_noise_ratios_ranks[0]] > 0:
             sig_ind = self.signal_noise_ratios_ranks[0]
         else:
             raise Exception(
                 "Sorry, no channels with a calculable signal to noise ratio!"
             )
-        
+
         self.chan_for_find_motor_units = sig_ind  # store channel for plots
 
         # Apply Multi-dimensional TK operator (Teager-Kaiser)
@@ -338,10 +336,18 @@ class EMGAnalysisReconstruct:
         # Deep copy to ensure processing in TK_filter is not stored
         used_data = self.emg_data_preproc.emg_ts[sig_ind, :].copy()
 
-        mup_t_idx, mu_numbers = tk.TK_filter(used_data, sampling_freq, self.mu_settings.tk_filt_thres_spike, self.mu_settings.tk_filt_thres_PsC)
+        mup_t_idx, mu_numbers = tk.TK_filter(
+            used_data,
+            sampling_freq,
+            self.mu_settings.tk_filt_thres_spike,
+            self.mu_settings.tk_filt_thres_PsC,
+        )
 
         print(
-            "Motor Units found: " + str(np.max(mu_numbers) + 1) + " via channel: " + str(sig_ind)
+            "Motor Units found: "
+            + str(np.max(mu_numbers) + 1)
+            + " via channel: "
+            + str(sig_ind)
         )
 
         # Add motor unit objects
@@ -369,11 +375,11 @@ class EMGAnalysisReconstruct:
                 number=i, potentials_t_idx=mup_t_idx[mu_numbers == i]
             )
             all_motor_units.append(motor_unit)
-            
+
         self.found_motor_units = EMGMotorUnits(
             all_motor_units, chan_xy=self.emg_data_preproc.chan.chan_xy
         )
-        
+
     def plot_motor_units_raster(
         self,
         linelengths: float = 0.9,
@@ -786,7 +792,7 @@ class EMGAnalysisReconstruct:
 
         # Motor unit for this number
         motor_unit = self.found_motor_units.motor_units[motor_unit_number]
-        
+
         # Save the concurrent signal from all other channels for each spike
         all_spikes = np.zeros(
             (
@@ -800,11 +806,9 @@ class EMGAnalysisReconstruct:
         t = 0
         # self.opr = []
 
-        for t_idx in motor_unit.potentials_t_idx:           
+        for t_idx in motor_unit.potentials_t_idx:
             # exclude spikes right at the edge of the recording
-            if t_idx < (
-                self.recon_settings.half_subsample_size + 1
-            ) or t_idx > (
+            if t_idx < (self.recon_settings.half_subsample_size + 1) or t_idx > (
                 self.emg_data_preproc.emg_ts.shape[1]
                 - self.recon_settings.half_subsample_size
                 - 1
@@ -819,9 +823,7 @@ class EMGAnalysisReconstruct:
 
                 all_spikes[t, channel, :] = self.emg_data_preproc.emg_ts[
                     channel,
-                    int(
-                        t_idx - self.recon_settings.half_subsample_size
-                    ) : int(
+                    int(t_idx - self.recon_settings.half_subsample_size) : int(
                         t_idx + self.recon_settings.half_subsample_size + 1
                     ),
                 ]
@@ -837,7 +839,6 @@ class EMGAnalysisReconstruct:
             print("Too few firings found to model this motor unit")
             return
 
-        mean_spikes = np.squeeze(np.mean(all_spikes, axis=0))
         pos = np.zeros((0, 2))
         onsets = np.array([])
 
@@ -850,14 +851,18 @@ class EMGAnalysisReconstruct:
             if self.recon_settings.localise_first:
                 sig = np.squeeze(
                     all_spikes[
-                        signal_id : (signal_id + self.recon_settings.mavg_length + 1), :, :
+                        signal_id : (signal_id + self.recon_settings.mavg_length + 1),
+                        :,
+                        :,
                     ]
                 )
             else:
                 sig = np.squeeze(
                     np.mean(
                         all_spikes[
-                            signal_id : (signal_id + self.recon_settings.mavg_length + 1),
+                            signal_id : (
+                                signal_id + self.recon_settings.mavg_length + 1
+                            ),
                             :,
                             :,
                         ],
@@ -917,10 +922,10 @@ class EMGAnalysisReconstruct:
                     ]
                 ).T
 
-                self.needle = self.full_needle_model.chan_xy
-                
+                self.needle = self.emg_data_preproc.chan.chan_xy
+
                 # Scaling factor from mm to scaled AU
-                #self.needle = self.needle * 4
+                # self.needle = self.needle * 4
                 x0 = self.needle[int(peak_electrode), :]
                 self.needle = self.needle[included_electrodes, :]
 
@@ -941,17 +946,19 @@ class EMGAnalysisReconstruct:
 
         # End of signal_id loop
 
-        #pos[:, 0] = pos[:, 0] / 4
+        # pos[:, 0] = pos[:, 0] / 4
 
         # Add the results to the motor unit object
-        if pos.shape[0] > 0:            
+        if pos.shape[0] > 0:
             motor_unit.add_fibre_localisation(
                 fibre_centres=pos,
-                mean_spikes=mean_spikes,
                 onsets=onsets,
                 all_spikes=all_spikes,
-                gn_potential=np.array(np.transpose(self.opr)),
+                generator_potential=np.array(np.transpose(self.opr)),
             )
+
+        # Restore needle to full needle, rather than subset of the needle
+        self.needle = self.emg_data_preproc.chan.chan_xy
 
     def plot_MUs(self, used_data, indices, locs):
         """
@@ -1227,7 +1234,6 @@ class EMGAnalysisReconstruct:
         ax.plot(peak_locs[:, 0], peak_locs[:, 1], "bX")
 
         plt.show()
-
 
     def deconv_wrapper(self, loc):
         """

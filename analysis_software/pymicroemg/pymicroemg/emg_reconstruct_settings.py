@@ -7,8 +7,9 @@ For use with EMGAnalysisReconstruct.
 
 """
 
-#from __future__ import annotations  # for type hints - must be at beginning of file
-#import numpy.typing as npt  # for type hints
+# from __future__ import annotations  # for type hints - must be at beginning of file
+# import numpy.typing as npt  # for type hints
+
 
 class EMGAnalysisReconstructSettings:
     """
@@ -26,7 +27,7 @@ class EMGAnalysisReconstructSettings:
 
         """
 
-        # Default settings             
+        # Default settings
         self.mavg_length = 1
         self.mavg_all = False
         self.localise_first = False
@@ -35,8 +36,6 @@ class EMGAnalysisReconstructSettings:
         self.max_opt_iterations = 200
         self.xtol = 0.01
         self.ftol = 1
-        self.tk_filt_thres_spike = 0.1
-        self.tk_filt_thres_PsC = 0.1
 
     def __str__(self):
         """
@@ -48,7 +47,7 @@ class EMGAnalysisReconstructSettings:
 
         """
 
-        ans = "EMG Analysis Reconstruct Settings"      
+        ans = "EMG Analysis Reconstruct Settings"
         ans += "\nMoving average length: "
         ans += str(self.mavg_length)
         ans += "\nMoving average all: "
@@ -64,10 +63,11 @@ class EMGAnalysisReconstructSettings:
         ans += "\nOptimisation parameter tolerance: "
         ans += str(self.xtol)
         ans += "\nOptimisation function value tolerance: "
-        ans += str(self.ftol)           
+        ans += str(self.ftol)
         ans += "\n"
 
         return ans
+
 
 class EMGAnalysisMotorUnitSettings:
     """
@@ -85,7 +85,7 @@ class EMGAnalysisMotorUnitSettings:
 
         """
 
-        # Default settings              
+        # Default settings
         self.tk_filt_thres_spike = 0.1
         self.tk_filt_thres_PsC = 0.1
 
@@ -99,11 +99,11 @@ class EMGAnalysisMotorUnitSettings:
 
         """
 
-        ans = "Find Motor Units EMG Analysis Settings"      
+        ans = "Find Motor Units EMG Analysis Settings"
         ans += "\nTeager-Kaiser filter spike detection threshold: "
         ans += str(self.tk_filt_thres_spike)
         ans += "\nTeager-Kaiser filter pseudo-correlation threshold: "
-        ans += str(self.tk_filt_thres_PsC)     
+        ans += str(self.tk_filt_thres_PsC)
         ans += "\n"
 
         return ans
