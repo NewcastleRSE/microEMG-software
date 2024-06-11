@@ -14,7 +14,7 @@ recordings/**/*.txt
 recordings/**/board-*.dat
 recordings/**/aux-*.dat
 recordings/**/vdd-*.dat
-analysis_software/analysis/tests/*.csv
+analysis_software/analysis/
 
 # Images
 *.png
