@@ -797,31 +797,20 @@ class EMGAnalysisReconstruct:
         pos = np.zeros((0, 2))
         onsets = np.array([])
 
-        if self.recon_settings.localise_first:
-            max_signal_id = 0
-        else:
-            max_signal_id = all_spikes.shape[0] - self.recon_settings.mavg_length
+        max_signal_id = all_spikes.shape[0] - self.recon_settings.mavg_length
 
         for signal_id in range(max_signal_id):
-            if self.recon_settings.localise_first:
-                sig = np.squeeze(
+
+            sig = np.squeeze(
+                np.mean(
                     all_spikes[
                         signal_id : (signal_id + self.recon_settings.mavg_length + 1),
                         :,
                         :,
-                    ]
+                    ],
+                    axis=0,
                 )
-            else:
-                sig = np.squeeze(
-                    np.mean(
-                        all_spikes[
-                            signal_id : (signal_id + self.recon_settings.mavg_length + 1),
-                            :,
-                            :,
-                        ],
-                        axis=0,
-                    )
-                )
+            )
 
             sub_clusters = self.find_peaks_2d(sig)
 

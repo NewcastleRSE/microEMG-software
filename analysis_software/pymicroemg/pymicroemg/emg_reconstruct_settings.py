@@ -27,7 +27,6 @@ class EMGAnalysisReconstructSettings:
         # Default settings
         self.mavg_length = 1
         self.mavg_all = False
-        self.localise_first = False
         self.spike_dur = 20
         self.half_subsample_size = 200
         self.max_opt_iterations = 200
@@ -49,8 +48,6 @@ class EMGAnalysisReconstructSettings:
         ans += str(self.mavg_length)
         ans += "\nMoving average all: "
         ans += str(self.mavg_all)
-        ans += "\nLocalise first: "
-        ans += str(self.localise_first)
         ans += "\nSpike duration: "
         ans += str(self.spike_dur)
         ans += "\nHalf subsample size: "
