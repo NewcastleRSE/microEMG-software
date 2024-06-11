@@ -24,6 +24,7 @@ class CheckBoxMain(QCheckBox):
 
 
 # --- Settings input ---
+# TODO: consider changing text labels to more generic names (usable for more than input)
 
 
 class InputLabel(QLabel):
@@ -93,6 +94,12 @@ class SectionTitle(QLabel):
 
 
 # --- Buttons ---
+
+
+class SmallPushButton(QPushButton):
+    # Small push buttons
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
 
 class LargePushButton(QPushButton):

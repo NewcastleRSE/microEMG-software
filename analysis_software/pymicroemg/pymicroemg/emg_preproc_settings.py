@@ -149,8 +149,7 @@ class EMGPreprocSettings:
         filter_types_allowed = self._get_filter_types_allowed()
         if filter_type not in filter_types_allowed:
             raise ValueError(
-                "The filter type must be one of the following: "
-                f"{filter_types_allowed}"
+                "The filter type must be one of the following: " f"{filter_types_allowed}"
             )
 
         # Default cutoff frequencies - only for bandpass filter

@@ -206,9 +206,7 @@ class EMGDataRaw(EMGData):
         for i in range(self.n_chan):
             # Log progress
             record_context = RecordContext(analysis_step=analysis_step, loop_i=i)
-            adapter = EMGDataRawLoggerAdapter(
-                logger, {"record_context": record_context}
-            )
+            adapter = EMGDataRawLoggerAdapter(logger, {"record_context": record_context})
             adapter.info(f"Filtering channel {i}")
 
             emg_ts[i, :] = scipy.signal.sosfiltfilt(sos, emg_ts[i, :])
@@ -315,9 +313,7 @@ class EMGDataRaw(EMGData):
         for i in range(self.n_chan):
             # Log progress
             record_context = RecordContext(analysis_step=analysis_step, loop_i=i)
-            adapter = EMGDataRawLoggerAdapter(
-                logger, {"record_context": record_context}
-            )
+            adapter = EMGDataRawLoggerAdapter(logger, {"record_context": record_context})
             adapter.info(f"Removing noise from channel {i}")
 
             # Extract channel signal and reshape to form windows (one window per row)
@@ -329,9 +325,7 @@ class EMGDataRaw(EMGData):
             # For each window, estimate noise from surrounding windows; remove noise
             # from signal.
             for w in range(n_win):
-                noise_signal = np.mean(
-                    chan_ts_original[start_win[w] : (stop_win[w] + 1)], axis=0
-                )
+                noise_signal = np.mean(chan_ts_original[start_win[w] : (stop_win[w] + 1)], axis=0)
                 chan_ts[w, :] -= noise_signal
 
             emg_ts[i, :] = np.reshape(chan_ts, (1, n_win * n_samples_per_win))

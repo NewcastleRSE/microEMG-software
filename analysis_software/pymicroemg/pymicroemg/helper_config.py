@@ -100,15 +100,11 @@ def get_control_recording_path_and_id(recording_num: int) -> (str, str):
         recording_id = f"Control Recording {recording_num}"
 
     elif recording_num == 4:
-        recording_path = os.path.join(
-            data_dir, chan64_dir, "EE_TA_2", "EE_TA_2_150320_102808"
-        )
+        recording_path = os.path.join(data_dir, chan64_dir, "EE_TA_2", "EE_TA_2_150320_102808")
         recording_id = f"Control Recording {recording_num}"
 
     elif recording_num == 5:
-        recording_path = os.path.join(
-            data_dir, chan64_dir, "EE_TA_3", "EE_TA_3_150320_105822"
-        )
+        recording_path = os.path.join(data_dir, chan64_dir, "EE_TA_3", "EE_TA_3_150320_105822")
         recording_id = f"Control Recording {recording_num}"
 
     else:

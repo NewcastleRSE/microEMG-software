@@ -28,9 +28,7 @@ class EMGDataRawModel:
     def __init__(self, emg_data: EMGDataRaw):
         self.emg_data = emg_data
 
-    def apply_preproc(
-        self, preproc_settings: EMGPreprocSettings
-    ) -> EMGDataPreprocModel:
+    def apply_preproc(self, preproc_settings: EMGPreprocSettings) -> EMGDataPreprocModel:
         # Apply preprocessing settings to EMG data and return model for preprocessed
         # EMG data.
 

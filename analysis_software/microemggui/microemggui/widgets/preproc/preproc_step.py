@@ -177,7 +177,6 @@ class PreprocProgressDialog(QDialog):
 
 class PreprocWidget(QWidget):
     # Widget for preprocessing step
-    # TODO: add signal for overall validity of settings (to pass to apply button)
 
     def __init__(
         self,
@@ -203,9 +202,7 @@ class PreprocWidget(QWidget):
         }
 
         # Set viewer to expand to fill extra space
-        self.widgets["tabbedviewer"].setSizePolicy(
-            QSizePolicy.Expanding, QSizePolicy.Expanding
-        )
+        self.widgets["tabbedviewer"].setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         # Add to layout
         layout = QGridLayout()
