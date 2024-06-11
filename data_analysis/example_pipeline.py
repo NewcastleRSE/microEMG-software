@@ -4,8 +4,6 @@
 Example pipeline for EMG analysis, including motor unit and muscle fibre localisation.
 
 """
-import sys
-import os
 
 import matplotlib.pyplot as plt
 import numpy as np
