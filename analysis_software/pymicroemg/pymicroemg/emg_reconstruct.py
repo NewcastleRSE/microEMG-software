@@ -163,7 +163,7 @@ class EMGAnalysisReconstruct:
             self.emg_data_preproc.chan.analyse_chan = np.full(self.n_chan, True)
 
     def load_mup_data_from_matlab(
-        self, motor_unit_number, filename_fibre_centres, filename_onsets
+        self, motor_unit_number, filename_fibre_centres, filename_mup_onsets
     ):
         """
         Load fibre centre and onset data for one motor unit from MATLAB,
@@ -179,7 +179,7 @@ class EMGAnalysisReconstruct:
             file name and path of csv file of fibre centres
             Indices refer to positions in self.emg_data_preproc.emg_ts
 
-        filename_onsets: string
+        filename_mup_onsets: string
             file name and path of csv file of motor unit labels,
             which are positive integers
 
@@ -194,17 +194,17 @@ class EMGAnalysisReconstruct:
         with open(filename_fibre_centres, "r") as x:
             fibre_centres = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
 
-        with open(filename_onsets, "r") as x:
-            onsets = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
+        with open(filename_mup_onsets, "r") as x:
+            mup_onsets = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
 
         motor_unit = self.found_motor_units.motor_units[motor_unit_number]
 
         motor_unit.fibre_centres = np.array(fibre_centres, dtype=float)
-        motor_unit.onsets = np.array(onsets).astype(int)
-        motor_unit.onsets = (motor_unit.onsets[0, :] - 1).flatten()
+        motor_unit.mup_onsets = np.array(mup_onsets).astype(int)
+        motor_unit.mup_onsets = (motor_unit.mup_onsets[0, :] - 1).flatten()
         motor_unit.analysis_performed["fibres_localised"] = True
 
-    def load_mup_data(self, motor_unit_number, filename_fibre_centres, filename_onsets):
+    def load_mup_data(self, motor_unit_number, filename_fibre_centres, filename_mup_onsets):
         """
         Load fibre centre and onset data for one motor unit from MATLAB,
         - so take 1 away from index locations
@@ -219,7 +219,7 @@ class EMGAnalysisReconstruct:
             file name and path of csv file of fibre centres
             Indices refer to positions in self.emg_data_preproc.emg_ts
 
-        filename_onsets: string
+        filename_mup_onsets: string
             file name and path of csv file of motor unit labels,
             which are positive integers
 
@@ -234,16 +234,16 @@ class EMGAnalysisReconstruct:
         with open(filename_fibre_centres, "r") as x:
             fibre_centres = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
 
-        with open(filename_onsets, "r") as x:
-            onsets = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
+        with open(filename_mup_onsets, "r") as x:
+            mup_onsets = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
 
         motor_unit = self.found_motor_units.motor_units[motor_unit_number]
 
         motor_unit.fibre_centres = np.array(fibre_centres, dtype=float)
-        motor_unit.onsets = np.array(onsets).astype(int).flatten()
+        motor_unit.mup_onsets = np.array(mup_onsets).astype(int).flatten()
 
         print(motor_unit.fibre_centres)
-        print(motor_unit.onsets)
+        print(motor_unit.mup_onsets)
         motor_unit.analysis_performed["fibres_localised"] = True
 
     def calculate_SNR_ranks(self):
@@ -794,9 +794,14 @@ class EMGAnalysisReconstruct:
             print("Too few firings found to model this motor unit")
             return
 
+        # The x, y coordinates of the fibre potential 
         pos = np.zeros((0, 2))
-        onsets = np.array([])
-
+        # Onset indices of the MUPs (firings) relative to the overall time
+        mup_onsets = np.array([])
+        # Fibre potential peak times relative to the onset time
+        # of the corresponding MUP (in indices units)  
+        fibre_potential_times = np.array([])
+        
         max_signal_id = all_spikes.shape[0] - self.recon_settings.mavg_length
 
         for signal_id in range(max_signal_id):
@@ -883,8 +888,11 @@ class EMGAnalysisReconstruct:
 
                 pos = np.vstack((pos, opt_paras))
 
-                onsets = np.append(onsets, motor_unit.potentials_t_idx[signal_id])
-
+                mup_onsets = np.append(mup_onsets, motor_unit.potentials_t_idx[signal_id])
+                time_interval = (time_peak - motor_unit.potentials_t_idx[signal_id])
+                    
+                fibre_potential_times = np.append(fibre_potential_times, time_interval)
+                
         # End of signal_id loop
 
         # TODO remove this line and self.needle scaling above
@@ -895,7 +903,8 @@ class EMGAnalysisReconstruct:
         if pos.shape[0] > 0:
             motor_unit.add_fibre_localisation(
                 fibre_centres=pos,
-                onsets=onsets,
+                mup_onsets=mup_onsets,
+                fibre_potential_times=fibre_potential_times,
                 all_spikes=all_spikes,
                 generator_potential=np.array(np.transpose(self.opr)),
             )

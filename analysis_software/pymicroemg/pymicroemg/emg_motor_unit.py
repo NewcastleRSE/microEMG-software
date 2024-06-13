@@ -39,7 +39,7 @@ class EMGMotorUnit:
                 motor unit labelled as "1"
 
         potentials_t_idx: npt.NDArray[np.int64]
-            Time indices of the motor unit's potentials in the EMG recording
+                Time indices of the motor unit's potentials in the EMG recording
 
         Returns
         -------
@@ -49,7 +49,7 @@ class EMGMotorUnit:
 
         self.motor_unit_number = number
 
-        # Number of potentials assigned to MU
+        # Number of potentials (firings) assigned to MU
         self.n_potentials = len(potentials_t_idx)
         # Time indices of potentials in EMG
         self.potentials_t_idx = potentials_t_idx
@@ -74,23 +74,20 @@ class EMGMotorUnit:
         # Estimated fibre x, y coordinate at each time (size n peaks x 2)
         self.fibre_centres = np.array([])
 
-        # Onset of MUP that each peak belongs to? (size n peaks)
-        # TODO: considering renaming to clarify; consider whether MUP label ( = index)
-        # would be easier to work with (clustering currently implemented using this
-        # variable).
-        self.onsets = np.array([])
+        # Onset indices of MUPs that each fibre potential (peak) belongs to
+        # One for each fibre potential     
+        self.mup_onsets = np.array([])
 
-        # each MUP time series? size n potentials x n chan x time
-        # TODO: rename or consider replacing functionality with
-        # get_potentials_data_of_one_motor_unit() method of
-        # EMGAnalysisReconstruct if this attribute is only used for plotting
+        # Fibre potential peak times relative to the onset time
+        # of the corresponding MUP that it belongs to (in indices units, not seconds) 
+        self.fibre_potential_times = np.array([])
+        
+        # Time series for each MUP and channel
+        # (size: n MU potentials x n chan x time)       
         self.all_spikes = np.array([])
 
         # Generator potential, represents true underlying potential
         self.generator_potential = np.array([])
-
-        # TODO: currently the exact timing of fibre potentials (peaks) are not saved (?)
-        # Will need this info for jitter analysis
 
         # Dictionaries for storing results of clustering and jitter analysis
         self.fibre_clustering_results = {}
@@ -113,8 +110,10 @@ class EMGMotorUnit:
         ans += str(self.n_potentials)
         ans += "\nFibre centres dimensions: "
         ans += str(self.fibre_centres.shape)
-        ans += "\nOnsets dimensions: "
-        ans += str(self.onsets.shape)
+        ans += "\nmup_onsets dimensions: "
+        ans += str(self.mup_onsets.shape)
+        ans += "\nFibre potential times dimensions: "
+        ans += str(self.fibre_potential_times.shape)
         ans += "\nAll spikes dimensions: "
         ans += str(self.all_spikes.shape)
         ans += "\nGenerator potential dimensions: "
@@ -124,7 +123,7 @@ class EMGMotorUnit:
 
         return ans
 
-    def add_fibre_localisation(self, fibre_centres, onsets, all_spikes, generator_potential):
+    def add_fibre_localisation(self, fibre_centres, mup_onsets, fibre_potential_times, all_spikes, generator_potential):
         """
         Add results of the fibre localisation step to the motor unit object. Computes
         additional attributes and stores that analysis has been performed.
@@ -135,8 +134,11 @@ class EMGMotorUnit:
         ----------
         fibre_centres : TYPE
             DESCRIPTION.
-        onsets : TYPE
-            DESCRIPTION.
+        mup_onsets : npt.NDArray[np.int64]
+            Onset indices of the MUPs (firings) relative to the overall time
+        fibre_potential_times : npt.NDArray[np.int64]
+            Fibre potential peak times relative to the onset (overall) time
+            of the corresponding MUP (listed above in mup_onsets) 
         all_spikes : TYPE
             DESCRIPTION.
         generator_potential : TYPE
@@ -156,10 +158,161 @@ class EMGMotorUnit:
 
         # Store provided attributes
         self.fibre_centres = fibre_centres
-        self.onsets = onsets
+        self.mup_onsets = mup_onsets
+        self.fibre_potential_times = fibre_potential_times
         self.all_spikes = all_spikes
         self.generator_potential = generator_potential
 
+    def _calculate_fibre_potentials_time_diff(self, fib_pot_pos1, fib_pot_pos2):
+        """      
+        Parameters
+        ----------
+        fib_pot_pos1: int
+            index of the first fibre potential in fibre_potential_times
+        fib_pot_pos2: int
+            index of the second fibre potential in fibre_potential_times
+            
+        Returns
+        -------
+        int
+            length of time interval between the two fibre potentials
+            return as a multiple of the number of time steps i.e. indices
+            
+        """
+             
+        return np.abs(self.fibre_potential_times[fib_pot_pos2] - self.fibre_potential_times[fib_pot_pos1])
+        
+    def jitter_analysis_between_two_fibres(self, fibre1_num = 0, fibre2_num = 1):
+        """
+        Performs jitter analysis for this motor unit (MU). For the identified
+        fibres computes the mean consecutive difference (MCD) between each pair
+        of fibre. Firstly one fibre potential is chosen for each fibre and
+        then the time difference is taken between them for the first MUP.
+        This time interval is compared with the time interval for the next MUP
+        by taking the absolute difference - and so on until the second last MUP.
+        The mean of these differences is the MCD.
+        
+        MCD = (1/(N-1)) * sum(|D_k - D_{k+1}|) for k = 1 to N-1, where D_k is the kth
+        MUP time difference between the fibre potentials for the 2 fibres in question.
+       
+        self.fibre_clustering_results = {
+                "mean_n_fps": mean_n_fps,
+                "n_fibre_clusters": n_fibre_clusters,
+                "fibre_clusters": fibre_clusters,
+                "n_fps_per_mup_and_cluster": n_fps_per_mup_and_cluster,
+                "mup_fibre_pos": mup_fibre_pos,
+                "fibre_centres_median": fibre_centres_median,
+            }
+            
+        Parameters
+        ----------
+        fibre1_num : int
+            Fibre number for the first fibre, given previously from cluster analysis (0,1,2,...)
+        fibre2_num : int
+            Fibre number for the second fibre
+            
+        Returns
+        -------
+        None.
+
+        """
+        
+        # TODO add analysis to pick which fibre potentails to use   
+        # Which fibre potentials to use for each MUP and fibre
+        # Just use first one for now
+        fibre1_potential_to_use = 0
+        fibre2_potential_to_use = 0
+        
+        # Length of time intervals between fibre potentials in the two different fibres
+        fibre_potential_time_diffs = np.full(len(self.mup_onsets), np.nan)
+                          
+        # Compute length of time intervals between fibre potentials
+        for mup_num in range(self.n_potentials):
+            mup_onset_idx = self.potentials_t_idx[mup_num]
+            
+            # Fibre potentials that belong to the specified MUP and fibre (cluster).
+            fibre1_potentials_idx = np.flatnonzero(
+                np.all(
+                    (
+                        (self.mup_onsets == mup_onset_idx),
+                        (self.fibre_clustering_results["fibre_clusters"] == fibre1_num),
+                    ),
+                    axis=0,
+                )
+            )
+            
+            fibre2_potentials_idx = np.flatnonzero(
+                np.all(
+                    (
+                        (self.mup_onsets == mup_onset_idx),
+                        (self.fibre_clustering_results["fibre_clusters"] == fibre2_num),
+                    ),
+                    axis=0,
+                )
+            )
+            
+            if len(fibre1_potentials_idx) > 0 and len(fibre2_potentials_idx) > 0:
+                  
+                #Get time difference for this MUP between fibre potentials
+                fib_pot_pos1 = fibre1_potentials_idx[fibre1_potential_to_use]
+                fib_pot_pos2 = fibre2_potentials_idx[fibre2_potential_to_use]
+                fibre_potential_time_diffs[mup_num] = self._calculate_fibre_potentials_time_diff(fib_pot_pos1, fib_pot_pos2)
+            
+        # Compute consecutive differences
+        consecutive_diffs = np.full((len(self.mup_onsets) - 1), np.nan)
+        
+        for mup_num in range(self.n_potentials - 1):
+            if not np.isnan(fibre_potential_time_diffs[mup_num]) and not np.isnan(fibre_potential_time_diffs[mup_num + 1]):
+                consecutive_diffs[mup_num] = np.abs(fibre_potential_time_diffs[mup_num] - fibre_potential_time_diffs[mup_num + 1])
+            
+        # Compute mean consecutive difference and convert to seconds
+        mean_consecutive_diff = np.nanmean(consecutive_diffs) / self.emg_data_preproc.fs
+
+        return mean_consecutive_diff
+
+    def jitter_analysis(self):
+        """
+        Do jitter analysis betwwen all pairs
+        """
+        
+        # Check that localisation and fibre clustering has been run
+        if not self.analysis_performed["fibres_localised"] or not self.analysis_performed["fibres_clustered"]:
+            raise RuntimeError(
+                "Localisation analysis and fibre cluster analysis must be performed before jitter analysis!"
+            )
+          
+        if self.n_potentials < 2:
+            raise RuntimeError(
+                "Not enough MUPs to perform jitter analysis!"
+            )
+        
+        #if self.n_fibre_clusters < 2:
+        #    raise RuntimeError(
+        #        "Not enough fibres to perform jitter analysis!"
+        #    )
+        
+        fibre1_numbers = np.array([])
+        fibre2_numbers = np.array([])
+        mean_consecutive_diffs = np.array([])
+        
+        n_fibre_clusters = self.fibre_clustering_results["n_fibre_clusters"]
+        count = 0
+        
+        for fibre1_num in range(n_fibre_clusters - 1):
+            for fibre2_num in np.arange(fibre1_num + 1, fibre1_num + 2):               
+                mean_consecutive_diffs[count] = self.jitter_analysis_between_two_fibres(fibre1_num, fibre2_num)
+                fibre1_numbers[count] = fibre1_num
+                fibre2_numbers[count] = fibre2_num
+                count += 1
+        
+        self.fibre_jitter_results = {
+                "fibre1_numbers": fibre1_numbers,
+                "fibre2_numbers": fibre2_numbers,
+                "mean_consecutive_diffs": mean_consecutive_diffs,
+            }
+        
+        self.analysis_performed["fibres_jitter_computed"] = True
+        
 
 class EMGMotorUnits:
     """
@@ -497,6 +650,7 @@ class EMGMotorUnits:
         changed. Also evaluate clustering performance and determine if approach needs to
         be modified (e.g., how number of clusters is determined)
 
+        TODO: why is this method not in the motor unit class? - RH
         """
 
         # Get motor unit
@@ -509,15 +663,15 @@ class EMGMotorUnits:
             )
 
         # Onset indices of all MUPs that have fibre potentials
-        unique_onsets = np.unique(motor_unit.onsets)
-        n_unique_onsets = len(unique_onsets)
+        unique_mup_onsets = np.unique(motor_unit.mup_onsets)
+        n_unique_mup_onsets = len(unique_mup_onsets)
 
         # Use rounded mean number of fibre potentials (FPs) per motor unit potential as
         # k for clustering
-        mean_n_fps = round(len(motor_unit.onsets) / n_unique_onsets)
+        mean_n_fps = round(len(motor_unit.mup_onsets) / n_unique_mup_onsets)
 
-        print(len(motor_unit.onsets))
-        print(n_unique_onsets)
+        print(len(motor_unit.mup_onsets))
+        print(n_unique_mup_onsets)
         print("mean_n_fps")
         print(mean_n_fps)
 
@@ -541,7 +695,7 @@ class EMGMotorUnits:
             # self.potentials_t_idx array
             mup_fibre_pos = np.full((motor_unit.n_potentials, 2, n_fibre_clusters), np.nan)
             print("shape")
-            print(motor_unit.onsets.shape)
+            print(motor_unit.mup_onsets.shape)
             # Find median location of each fibre
             for cluster_num in np.arange(n_fibre_clusters):
                 # Sometimes multiple fibre potentials in the same MUP are assigned to
@@ -551,7 +705,7 @@ class EMGMotorUnits:
                 # stored as np.nan.
 
                 # Note: unlike original code, iterate through all MUPs (not just ones
-                # present in "onsets") so dimensions align to other MUP features.
+                # present in "mup_onsets") so dimensions align to other MUP features.
                 for mup_num in np.arange(motor_unit.n_potentials):
                     mup_onset = motor_unit.potentials_t_idx[mup_num]
 
@@ -559,7 +713,7 @@ class EMGMotorUnits:
                     idx = np.flatnonzero(
                         np.all(
                             (
-                                (motor_unit.onsets == mup_onset),
+                                (motor_unit.mup_onsets == mup_onset),
                                 (fibre_clusters == cluster_num),
                             ),
                             axis=0,
