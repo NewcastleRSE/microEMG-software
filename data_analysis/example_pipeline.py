@@ -116,7 +116,6 @@ emg_pxx_preproc.plot_pxx(start_f, stop_f, plot_chan=plot_chan)
 # analysis
 
 # Mark any bad channels
-# TODO: check that incorporated into all downstream analysis
 emg_data_preproc.set_bad_chan(bad_chan)
 
 # Find motor units
