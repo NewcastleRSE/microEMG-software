@@ -122,8 +122,6 @@ emg_data_preproc.set_bad_chan(bad_chan)
 # Find motor units
 
 # Create settings for this part of the analysis
-# TODO: update this step when n_electrodes is removed as attribute
-
 mu_settings = EMGAnalysisMotorUnitSettings()
 recon_settings = EMGAnalysisReconstructSettings()
 
