@@ -236,7 +236,9 @@ class EMGData:
             self.emg_dur = self.n_samples / self.fs
 
         else:
-            raise Exception("The EMG time series has already been trimmed - " "cannot trim again.")
+            raise Exception(
+                "The EMG time series has already been trimmed - " "cannot trim again."
+            )
 
     def plot_emg_ts(
         self,
@@ -287,7 +289,6 @@ class EMGData:
             Axis handle.
 
         """
-        # TODO: put offset in terms of gain (at least for GUI)
         # TODO: design alterations (e.g., default colors and color options)
 
         # Default end (stop) time is the segment's duration
