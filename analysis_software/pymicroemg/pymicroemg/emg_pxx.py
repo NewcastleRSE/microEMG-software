@@ -53,7 +53,9 @@ class EMGPxx:
         self.window_size = window_size
         self.n_chan = len(self.chan.chan_names)
 
-    def plot_pxx(self, start_freq, stop_freq, ax=None, plot_chan=None, figsize=(5, 5), lw=0.5):
+    def plot_pxx(
+        self, start_freq, stop_freq, ax=None, plot_chan=None, figsize=(5, 5), lw=0.5
+    ):
         """
         Plot the power spectral density (PSD) of one or all channels. If all
         channels' PSDs are plotted, plots will be overlaid in one figure.
@@ -69,13 +71,19 @@ class EMGPxx:
             Axes in which to plot the figure. If none provided, a new figure is
             generated.
         plot_chan : int, optional
-            Channel to plot (counting from 1). The default is None, in which
-            case all channels' PSDs are plotted.
+            Index of the channel to plot (counting from 0). The default is None, in
+            which case all channels' PSDs are plotted.
         figsize : tuple, optional
             Figure size in inches (only used if a new figure is created). The
             default is (5,5).
         lw : float, optional
             Linewidth of each PSD's line plot. The default is 0.5.
+
+        Raises
+        ------
+        ValueError
+            Raised if plot_chan (channel index) is less than zero or exceeds max
+            possible index (number of channels minus one).
 
         Returns
         -------
@@ -93,11 +101,13 @@ class EMGPxx:
         )
 
         # Check validity of channel to plot
-        if plot_chan:
-            assert plot_chan <= self.n_chan, (
-                f"Cannot plot channel {plot_chan}: the EMG data only contains "
-                f"{self.n_chan} channels"
+        if plot_chan > self.n_chan - 1:
+            raise ValueError(
+                f"Cannot plot channel index {plot_chan}: the EMG data only contains "
+                f"{self.n_chan} channels (max index is {self.n_chan-1})"
             )
+        if plot_chan < 0:
+            raise ValueError("The index of the channel to plot must be positive")
 
         # create new figure with specified size if no axis provided
         if ax is None:
@@ -114,8 +124,8 @@ class EMGPxx:
                 ax.plot(self.freq[plot_bool], self.pxx[i, plot_bool], lw=lw)
                 ax.set_title("Channel PSDs")
         else:
-            ax.plot(self.freq[plot_bool], self.pxx[plot_chan - 1, plot_bool], lw=lw)
-            ax.set_title(f"Channel {self.chan.chan_names[plot_chan - 1]} PSD")
+            ax.plot(self.freq[plot_bool], self.pxx[plot_chan, plot_bool], lw=lw)
+            ax.set_title(f"Channel {self.chan.chan_names[plot_chan]} PSD")
 
         # Axis labels
         ax.set_xlabel("Frequency (Hz)")
