@@ -8,6 +8,7 @@ For use with preprocessed EMG data.
 """
 
 from __future__ import annotations  # for type hints - must be at beginning of file
+from typing import TYPE_CHECKING
 
 import numpy as np
 import numpy.typing as npt  # for type hints
@@ -33,12 +34,16 @@ from pymicroemg.emg_constants import QUICK_VERSION
 
 import scipy.ndimage as ndimage
 import scipy.ndimage.filters as filters
-from pymicroemg.emg_data_preproc import EMGDataPreproc
 
-from pymicroemg.emg_reconstruct_settings import EMGAnalysisReconstructSettings
-from pymicroemg.emg_reconstruct_settings import EMGAnalysisMotorUnitSettings
-from pymicroemg.emg_motor_unit import EMGMotorUnit
-from pymicroemg.emg_motor_unit import EMGMotorUnits
+from pymicroemg.emg_motor_unit import EMGMotorUnit, EMGMotorUnits
+
+# Imports only needed for type hints
+if TYPE_CHECKING:
+    from pymicroemg.emg_data_preproc import EMGDataPreproc
+    from pymicroemg.emg_reconstruct_settings import (
+        EMGAnalysisMotorUnitSettings,
+        EMGAnalysisReconstructSettings,
+    )
 
 
 class EMGAnalysisReconstruct:
@@ -118,7 +123,9 @@ class EMGAnalysisReconstruct:
 
         self.emg_data_preproc.emg_ts = np.array(self.emg_data_preproc.emg_ts)
 
-    def load_motor_unit_data_from_matlab(self, filename_indices, filename_locs, set_unbroken=True):
+    def load_motor_unit_data_from_matlab(
+        self, filename_indices, filename_locs, set_unbroken=True
+    ):
         """
         Load data for motor units from MATLAB, so take 1 away from index locations
         - most likely to be used just for testing.
@@ -148,7 +155,9 @@ class EMGAnalysisReconstruct:
             mup_t_idx = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
 
         with open(filename_locs, "r") as x:
-            mu_numbers = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
+            mu_numbers = list(
+                csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC)
+            )
 
         mu_numbers = (np.array(mu_numbers)).flatten()
         mup_t_idx = (np.array(mup_t_idx)).flatten()
@@ -192,7 +201,9 @@ class EMGAnalysisReconstruct:
 
         # Importing csv module
         with open(filename_fibre_centres, "r") as x:
-            fibre_centres = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
+            fibre_centres = list(
+                csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC)
+            )
 
         with open(filename_onsets, "r") as x:
             onsets = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
@@ -232,7 +243,9 @@ class EMGAnalysisReconstruct:
 
         # Importing csv module
         with open(filename_fibre_centres, "r") as x:
-            fibre_centres = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
+            fibre_centres = list(
+                csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC)
+            )
 
         with open(filename_onsets, "r") as x:
             onsets = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
@@ -300,7 +313,9 @@ class EMGAnalysisReconstruct:
         if self.signal_noise_ratios[self.signal_noise_ratios_ranks[0]] > 0:
             sig_ind = self.signal_noise_ratios_ranks[0]
         else:
-            raise Exception("Sorry, no channels with a calculable signal to noise ratio!")
+            raise Exception(
+                "Sorry, no channels with a calculable signal to noise ratio!"
+            )
 
         self.chan_for_find_motor_units = sig_ind  # store channel for plots
 
@@ -318,7 +333,10 @@ class EMGAnalysisReconstruct:
         )
 
         print(
-            "Motor Units found: " + str(np.max(mu_numbers) + 1) + " via channel: " + str(sig_ind)
+            "Motor Units found: "
+            + str(np.max(mu_numbers) + 1)
+            + " via channel: "
+            + str(sig_ind)
         )
 
         # Add motor unit objects
@@ -342,7 +360,9 @@ class EMGAnalysisReconstruct:
         # Create motor unit objects for each motor unit
         all_motor_units = []
         for i in range(np.max(mu_numbers) + 1):
-            motor_unit = EMGMotorUnit(number=i, potentials_t_idx=mup_t_idx[mu_numbers == i])
+            motor_unit = EMGMotorUnit(
+                number=i, potentials_t_idx=mup_t_idx[mu_numbers == i]
+            )
             all_motor_units.append(motor_unit)
 
         self.found_motor_units = EMGMotorUnits(
@@ -407,7 +427,9 @@ class EMGAnalysisReconstruct:
 
         """
         if not self.found_motor_units:
-            raise ValueError("No motor units identified - confirm that analysis has been run.")
+            raise ValueError(
+                "No motor units identified - confirm that analysis has been run."
+            )
 
         # Get motor units and sort if requested
         motor_units = self.found_motor_units.motor_units
@@ -494,7 +516,9 @@ class EMGAnalysisReconstruct:
         """
 
         if not self.found_motor_units:
-            raise RuntimeError("No motor units identified - confirm that analysis has been run.")
+            raise RuntimeError(
+                "No motor units identified - confirm that analysis has been run."
+            )
 
         # Calculate number of samples to get before and after MUP onset
         n_samples = int(np.ceil(self.emg_data_preproc.fs / 1000 * n_ms) / 2)
@@ -517,7 +541,9 @@ class EMGAnalysisReconstruct:
 
             # Only add potentials within boundaries of the time series
             if (start_t > 0) and (stop_t < self.emg_data_preproc.emg_ts.shape[1]):
-                potentials_data[:, :, i] = self.emg_data_preproc.emg_ts[:, start_t:stop_t].copy()
+                potentials_data[:, :, i] = self.emg_data_preproc.emg_ts[
+                    :, start_t:stop_t
+                ].copy()
 
         return potentials_data
 
@@ -577,7 +603,9 @@ class EMGAnalysisReconstruct:
         """
 
         if not self.found_motor_units:
-            raise ValueError("No motor units identified - confirm that analysis has been run.")
+            raise ValueError(
+                "No motor units identified - confirm that analysis has been run."
+            )
 
         # Offset must be positive to ensure that channels are correctly labelled.
         if offset < 0:
@@ -591,7 +619,9 @@ class EMGAnalysisReconstruct:
             fig = None
 
         # Get motor unit potentials and average (mean)
-        potentials_data = self.get_potentials_data_of_one_motor_unit(motor_unit_idx, n_ms)
+        potentials_data = self.get_potentials_data_of_one_motor_unit(
+            motor_unit_idx, n_ms
+        )
         potentials_avg = np.nanmean(potentials_data, axis=2)
         n_samples = potentials_avg.shape[1]
 
@@ -688,7 +718,9 @@ class EMGAnalysisReconstruct:
         """
 
         if not self.found_motor_units:
-            raise ValueError("No motor units identified - confirm that analysis has been run.")
+            raise ValueError(
+                "No motor units identified - confirm that analysis has been run."
+            )
 
         if not chan_idx:
             chan_idx = self.chan_for_find_motor_units
@@ -701,7 +733,9 @@ class EMGAnalysisReconstruct:
             fig = None
 
         # Get motor unit potentials and average (mean)
-        potentials_data = self.get_potentials_data_of_one_motor_unit(motor_unit_idx, n_ms)
+        potentials_data = self.get_potentials_data_of_one_motor_unit(
+            motor_unit_idx, n_ms
+        )
         potentials_avg = np.nanmean(potentials_data, axis=2)
         n_samples = potentials_avg.shape[1]
 
@@ -800,7 +834,6 @@ class EMGAnalysisReconstruct:
         max_signal_id = all_spikes.shape[0] - self.recon_settings.mavg_length
 
         for signal_id in range(max_signal_id):
-
             sig = np.squeeze(
                 np.mean(
                     all_spikes[
