@@ -12,12 +12,10 @@ from pymicroemg.emg_files import EMGFiles
 from pymicroemg.emg_preproc_settings import EMGPreprocSettings
 import pymicroemg.helper_config as cfg
 
-
 from pymicroemg.emg_reconstruct_settings import (
     EMGAnalysisReconstructSettings,
     EMGAnalysisMotorUnitSettings,
 )
-from pymicroemg.emg_reconstruct import EMGAnalysisReconstruct
 
 # increase figure resolution (needed for Spyder IDE)
 plt.rcParams["figure.dpi"] = 600
@@ -125,7 +123,7 @@ mu_settings = EMGAnalysisMotorUnitSettings()
 recon_settings = EMGAnalysisReconstructSettings()
 
 # Find motor units
-reconstruct = EMGAnalysisReconstruct(emg_data_preproc, mu_settings, recon_settings)
+reconstruct = emg_data_preproc.set_up_reconstruct_analysis(mu_settings, recon_settings)
 reconstruct.find_motor_units()
 
 # %% Visualise/analyse the motor units

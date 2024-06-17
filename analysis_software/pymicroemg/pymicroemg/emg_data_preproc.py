@@ -8,12 +8,22 @@ Inherits from the class EMGData.
 Use for downstream analysis of the preprocessed EMG data.
 
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 import numpy as np
 import numpy.typing as npt
 
 from pymicroemg.emg_data import EMGData
-from pymicroemg.emg_channels import EMGChannels
-from pymicroemg.emg_preproc_settings import EMGPreprocSettings
+from pymicroemg.emg_reconstruct import EMGAnalysisReconstruct
+
+if TYPE_CHECKING:
+    from pymicroemg.emg_channels import EMGChannels
+    from pymicroemg.emg_preproc_settings import EMGPreprocSettings
+    from pymicroemg.emg_reconstruct_settings import (
+        EMGAnalysisReconstructSettings,
+        EMGAnalysisMotorUnitSettings,
+    )
 
 
 class EMGDataPreproc(EMGData):
@@ -129,3 +139,32 @@ class EMGDataPreproc(EMGData):
         # method is called).
         self.chan.analyse_chan = np.full(self.n_chan, True)
         self.chan.analyse_chan[bad_chan] = False
+
+    def set_up_reconstruct_analysis(
+        self,
+        mu_settings: EMGAnalysisMotorUnitSettings,
+        recon_settings: EMGAnalysisReconstructSettings,
+    ) -> EMGAnalysisReconstruct:
+        """
+        Set up fibre reconstruction (i.e., localisation) analysis. The preprocessed EMG
+        data object will be an attribute of the created EMGAnalysisReconstruct object.
+
+        Parameters
+        ----------
+        mu_settings : EMGAnalysisMotorUnitSettings
+            Settings to use for motor unit identification.
+        recon_settings : EMGAnalysisReconstructSettings
+            Settings to use for fibre reconstruction.
+
+        Returns
+        -------
+        reconstruct : EMGAnalysisReconstruct
+            Object with methods for motor unit identification and fibre reconstruction.
+
+        """
+
+        reconstruct = EMGAnalysisReconstruct(
+            emg_data_preproc=self, mu_settings=mu_settings, recon_settings=recon_settings
+        )
+
+        return reconstruct
