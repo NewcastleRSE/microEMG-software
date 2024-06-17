@@ -108,6 +108,12 @@ class LargePushButton(QPushButton):
         super().__init__(*args, **kwargs)
 
 
+class MainToolbarButton(QPushButton):
+    # Push buttons for main window toolbar for different analysis steps
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
 class WidgetControlButton(QToolButton):
     # Button for controlling widget (e.g., EMG viewer plot settings)
 
