@@ -90,7 +90,10 @@ WidgetControlButton:disabled {
 TopToolbar {
     padding: 5px;
     background: 'white';
-    border: none;
+    border-left: none;
+    border-top: none;
+    border-bottom: 1px solid #D9D9D9;
+    border-right: none;
 }
 
 AnalysisToolbar {
@@ -120,6 +123,17 @@ AnalysisToolbarButton:hover {
 
 AnalysisToolbarButton:pressed {
     background-color: 'grey';
+}
+
+AnalysisToolbarButton:disabled {
+    color: #D9D9D9;
+}
+
+AnalysisToolbarLabel {
+    color: 'grey';
+    font-size: 12pt;
+    padding-left: 5px;
+    padding-top: 15px;
 }
 
 /* Settings input widgets - main section */

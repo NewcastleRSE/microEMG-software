@@ -20,6 +20,7 @@ from PySide6.QtGui import QAction, QIcon
 
 from microemggui.widgets.base import (
     AnalysisToolbarButton,
+    AnalysisToolbarLabel,
     SectionTitle,
     ExpandingVSpacer,
 )
@@ -47,16 +48,16 @@ class AnalysisToolbar(QToolBar):
 
         toolbar_w_is_button = [False, True, True, True, False, True, True, True]
 
-        # Add widgets
+        # Create and add widgets
         self.widgets = {}
-
         for (w, text), button in zip(toolbar_w_text.items(), toolbar_w_is_button):
             if button:
                 self.widgets[w] = AnalysisToolbarButton(text, parent=self)
+                self.widgets[w].setEnabled(False)  # Disable at start
             else:
-                self.widgets[w] = QLabel(text, parent=self)
-
+                self.widgets[w] = AnalysisToolbarLabel(text, parent=self)
             self.addWidget(self.widgets[w])
+        self.widgets["loadbutton"].setEnabled(True)  # Enable first step (loading)
 
         # Toolbar properties
         self.setMovable(False)
@@ -79,7 +80,7 @@ class WelcomeWidget(QWidget):
         for w in self.widgets.values():
             layout.addWidget(w)
         layout.addItem(ExpandingVSpacer())  # spacer
-        layout.setContentsMargins(10, 0, 0, 0)
+        layout.setContentsMargins(20, 0, 0, 0)
         self.setLayout(layout)
 
 
