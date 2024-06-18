@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QButtonGroup,
     QVBoxLayout,
+    QStackedLayout,
     QSizePolicy,
 )
 from PySide6.QtCore import Qt, QSize
@@ -26,6 +27,9 @@ from microemggui.widgets.base import (
     SectionTitle,
     ExpandingVSpacer,
 )
+from microemggui.widgets.load.load_step import LoadWidget
+
+# from microemggui.widgets.preproc.preproc_step import PreprocWidget
 
 # --- Widgets for main window ---
 
@@ -59,15 +63,15 @@ class AnalysisToolbar(QToolBar):
         # Info about widgets to add to toolbar
         toolbar_w_text = {
             "preptext": "Prepare EMG",
-            "loadbutton": "1. Load",
-            "preprocbutton": "2. Preprocess",
-            "selectbutton": "3. Select data",
+            "load": "1. Load",
+            "preprocess": "2. Preprocess",
+            "select": "3. Select data",
             "analysetext": "Analyse EMG",
-            "mubutton": "4. Find motor units",
-            "fibresbutton": "5. Localise fibres",
-            "jitterbutton": "6. Compute jitter",
+            "motorunits": "4. Find motor units",
+            "fibres": "5. Localise fibres",
+            "jitter": "6. Compute jitter",
             "exporttext": "Export results",
-            "exportbutton": "Export",
+            "export": "Export",
         }
 
         toolbar_w_is_button = [
@@ -85,14 +89,12 @@ class AnalysisToolbar(QToolBar):
 
         # Create and add widgets
         self.widgets = {}
-        button_group = QButtonGroup(
-            self
-        )  # exclusive group so can only click one at a time
+        button_group = QButtonGroup(self)  # group so can only click one at a time
 
-        # First add logo button
-        self.widgets["logo"] = MicroEMGLogo(parent=self)
-        self.addWidget(self.widgets["logo"])
-        button_group.addButton(self.widgets["logo"])
+        # First add logo button for home page
+        self.widgets["home"] = MicroEMGLogo(parent=self)
+        self.addWidget(self.widgets["home"])
+        button_group.addButton(self.widgets["home"])
 
         # Add analysis step buttons and section labels
         for (w_name, text), button in zip(toolbar_w_text.items(), toolbar_w_is_button):
@@ -106,8 +108,8 @@ class AnalysisToolbar(QToolBar):
             self.addWidget(self.widgets[w_name])  # Add widget to toolbar
 
         # Initial button states
-        self.widgets["loadbutton"].setEnabled(True)  # Enable first step (loading)
-        self.widgets["logo"].toggle()
+        self.widgets["load"].setEnabled(True)  # Enable first step (loading)
+        self.widgets["home"].toggle()
 
         # Toolbar properties
         self.setMovable(False)
@@ -174,6 +176,41 @@ class TopToolbar(QToolBar):
         self.setIconSize(QSize(16, 16))
 
 
+class AnalysisStepsWidget(QWidget):
+    # Stacked widgets for the different steps of the analysis
+    # Also includes Welcome page
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Make iniital widgets
+        # Will use same names as AnalysisToolbar so easy to link buttons to corresponding pages:
+        # "home", "load", "preprocess", "select", "motorunits", "fibres", "jitter","export"
+        self.widgets = {
+            "home": WelcomeWidget(parent=self),
+            "load": LoadWidget(parent=self),
+        }
+
+        # Add to layout
+        self.layout = QStackedLayout()
+        for w in self.widgets.values():
+            self.layout.addWidget(w)
+        self.setLayout(self.layout)
+
+    def show_widget(self, widget_name):
+        # Slot for signals for changing displayed widget in stacked layout
+        self.layout.setCurrentWidget(self.widgets[widget_name])
+
+    def add_preprocess_widget(self):
+        # Add preprocessing widget
+        # maybe should be method on main window?
+        # TODO: check if widget exists before adding?
+
+        print("add preprocessing widget")
+        # "preprocess": PreprocWidget(raw_emg_model, settings_model, emg_clrs)
+        # connect to toolbar button
+
+
 # --- Main window ---
 
 
@@ -183,20 +220,33 @@ class MicroEMGMain(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        toolbar = AnalysisToolbar("Analysis toolbar")
+        # Make widgets and toolbars
+        self.widgets = {
+            "analysistoolbar": AnalysisToolbar("Analysis toolbar"),
+            "toptoolbar": TopToolbar(parent=self),
+            "analysis": AnalysisStepsWidget(parent=self),
+        }
 
-        # Add toolbar to window
-        self.addToolBar(Qt.LeftToolBarArea, toolbar)
+        # Add analysis toolbar to window
+        self.addToolBar(Qt.LeftToolBarArea, self.widgets["analysistoolbar"])
 
+        # Add top toolbar and widgets
         widget = QWidget()
         layout = QVBoxLayout()
-        layout.addWidget(TopToolbar(parent=self))
-        layout.addWidget(WelcomeWidget(parent=self))
+        layout.addWidget(self.widgets["toptoolbar"])  # Add top toolbar
+        layout.addWidget(self.widgets["analysis"])  # Add stacked widgets for analysis
         layout.setContentsMargins(0, 0, 0, 0)
         widget.setLayout(layout)
 
+        # Connections between analysis toolbar buttons and stacked analysis widgets
+        for w_name, w in self.widgets["analysis"].widgets.items():
+            self.widgets["analysistoolbar"].widgets[w_name].clicked.connect(
+                lambda checked=None, w_name=w_name: self.widgets[
+                    "analysis"
+                ].show_widget(w_name)
+            )
+
         # Add widget to center
-        # widget = WelcomeWidget(parent=self)
         self.setCentralWidget(widget)
 
         # Window properties
