@@ -6,10 +6,10 @@ Widget for main window with toolbars and other navigation elements.
 """
 
 
-from PySide6.QtWidgets import QMainWindow, QWidget, QToolBar, QLabel
+from PySide6.QtWidgets import QMainWindow, QWidget, QToolBar, QLabel, QVBoxLayout
 from PySide6.QtCore import Qt
 
-from microemggui.widgets.base import MainToolbarButton
+from microemggui.widgets.base import MainToolbarButton, SectionTitle, ExpandingVSpacer
 
 # --- Widgets for main window ---
 
@@ -48,6 +48,24 @@ class AnalysisToolbar(QToolBar):
         self.setOrientation(Qt.Vertical)
 
 
+class WelcomeWidget(QWidget):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Create widgets
+        self.widgets = {
+            "title": SectionTitle("Welcome to the microEMG analysis GUI", parent=self)
+        }
+
+        # Add to layout
+        layout = QVBoxLayout()
+        for w in self.widgets.values():
+            layout.addWidget(w)
+        layout.addItem(ExpandingVSpacer())  # spacer
+        layout.setContentsMargins(10, 0, 0, 0)
+        self.setLayout(layout)
+
+
 # --- Main window ---
 
 
@@ -61,8 +79,8 @@ class MicroEMGMain(QMainWindow):
         self.addToolBar(Qt.LeftToolBarArea, toolbar)
 
         # Add widget to center
-        widget = QWidget(parent=self)
+        widget = WelcomeWidget(parent=self)
         self.setCentralWidget(widget)
 
         # Window properties
-        self.resize(800, 800)
+        self.resize(1200, 800)
