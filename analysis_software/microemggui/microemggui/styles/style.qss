@@ -29,20 +29,6 @@ SmallPushButton:pressed {
     background-color: 'grey';
 }
 
-MainToolbarButton {
-    font-size: 14pt;
-    text-align: left;
-    background-color: 'white';
-    border-style: none;
-    padding: 4;
-    width: 125px;
-    border-radius: 2;
-}
-
-MainToolbarButton:pressed {
-    background-color: 'grey';
-}
-
 LargePushButton {
     font-size: 16pt;
     background-color: 'light blue';
@@ -98,6 +84,43 @@ WidgetControlButton:disabled {
     background-color: #D9D9D9;
 }
 
+
+/* Toolbars and toolbar widgets */
+
+TopToolbar {
+    padding: 5px;
+    background: 'white';
+    border: none;
+}
+
+AnalysisToolbar {
+    background: 'white';
+    border-left: none;
+    border-top: none;
+    border-bottom: none;
+    border-right: 1px solid grey;
+}
+
+AnalysisToolbarButton {
+    font-size: 14pt;
+    text-align: left;
+    background-color: 'white';
+    border-left: none;
+    border-top: none;
+    border-bottom: none;
+    border-right: 1px solid grey;
+    padding: 4;
+    width: 125px;
+    border-radius: 0;
+}
+
+AnalysisToolbarButton:hover {
+    background-color: #D9D9D9;
+}
+
+AnalysisToolbarButton:pressed {
+    background-color: 'grey';
+}
 
 /* Settings input widgets - main section */
 

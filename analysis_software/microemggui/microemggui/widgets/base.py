@@ -108,8 +108,8 @@ class LargePushButton(QPushButton):
         super().__init__(*args, **kwargs)
 
 
-class MainToolbarButton(QPushButton):
-    # Push buttons for main window toolbar for different analysis steps
+class AnalysisToolbarButton(QPushButton):
+    # Push buttons for analysis toolbar
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
