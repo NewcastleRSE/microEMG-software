@@ -66,9 +66,22 @@ class AnalysisToolbar(QToolBar):
             "mubutton": "4. Find motor units",
             "fibresbutton": "5. Localise fibres",
             "jitterbutton": "6. Compute jitter",
+            "exporttext": "Export results",
+            "exportbutton": "Export",
         }
 
-        toolbar_w_is_button = [False, True, True, True, False, True, True, True]
+        toolbar_w_is_button = [
+            False,
+            True,
+            True,
+            True,
+            False,
+            True,
+            True,
+            True,
+            False,
+            True,
+        ]
 
         # Create and add widgets
         self.widgets = {}
