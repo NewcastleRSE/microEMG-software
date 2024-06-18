@@ -34,6 +34,20 @@ class AnalysisToolbar(QToolBar):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # Add home icon with linked QAction
+        # TODO: set resource path or otherwise define path for icons
+        icon_dir = os.path.join(
+            "analysis_software",
+            "microemggui",
+            "microemggui",
+            "icons",
+            "bootstrap-icons-1.11.3",
+        )
+        icon = "activity.svg"
+        action = QAction(QIcon(os.path.join(icon_dir, icon)), "Home", self)
+        action.setStatusTip("Home")
+        self.addAction(action)
+
         # Info about widgets to add to toolbar
         toolbar_w_text = {
             "preptext": "Prepare EMG",
@@ -62,6 +76,7 @@ class AnalysisToolbar(QToolBar):
         # Toolbar properties
         self.setMovable(False)
         self.setOrientation(Qt.Vertical)
+        self.setIconSize(QSize(75, 75))
 
 
 class WelcomeWidget(QWidget):

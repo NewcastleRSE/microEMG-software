@@ -102,6 +102,7 @@ AnalysisToolbar {
     border-top: none;
     border-bottom: none;
     border-right: 1px solid grey;
+    spacing: 0px;
 }
 
 AnalysisToolbarButton {
@@ -112,7 +113,7 @@ AnalysisToolbarButton {
     border-top: none;
     border-bottom: none;
     border-right: 1px solid grey;
-    padding: 4;
+    padding: 10;
     width: 125px;
     border-radius: 0;
 }
@@ -131,9 +132,11 @@ AnalysisToolbarButton:disabled {
 
 AnalysisToolbarLabel {
     color: 'grey';
+    font-weight: bold;
     font-size: 12pt;
     padding-left: 5px;
-    padding-top: 15px;
+    padding-top: 20px;
+    padding-bottom: 5px;
 }
 
 /* Settings input widgets - main section */
