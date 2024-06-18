@@ -11,10 +11,12 @@ from PySide6.QtCore import Qt
 
 from microemggui.widgets.base import MainToolbarButton
 
+# --- Widgets for main window ---
 
-class MicroEMGMain(QMainWindow):
-    def __init__(self):
-        super().__init__()
+
+class AnalysisToolbar(QToolBar):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         # Info about widgets to add to toolbar
         toolbar_w_text = {
@@ -30,25 +32,36 @@ class MicroEMGMain(QMainWindow):
 
         toolbar_w_is_button = [False, True, True, True, False, True, True, True]
 
-        # Create toolbar and add widgets
-        toolbar_widgets = {}
-        toolbar = QToolBar("Analysis toolbar")
+        # Add widgets
+        self.widgets = {}
+
         for (w, text), button in zip(toolbar_w_text.items(), toolbar_w_is_button):
             if button:
-                toolbar_widgets[w] = MainToolbarButton(text, parent=self)
+                self.widgets[w] = MainToolbarButton(text, parent=self)
             else:
-                toolbar_widgets[w] = QLabel(text, parent=self)
+                self.widgets[w] = QLabel(text, parent=self)
 
-            toolbar.addWidget(toolbar_widgets[w])
+            self.addWidget(self.widgets[w])
 
         # Toolbar properties
-        # toolbar.setMovable(False)
+        self.setMovable(False)
+        self.setOrientation(Qt.Vertical)
 
-        widget = QWidget(parent=self)
+
+# --- Main window ---
+
+
+class MicroEMGMain(QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        toolbar = AnalysisToolbar("Analysis toolbar")
 
         # Add toolbar to window
-        self.addToolBar(toolbar)
-        toolbar.setOrientation(Qt.Vertical)
+        self.addToolBar(Qt.LeftToolBarArea, toolbar)
+
+        # Add widget to center
+        widget = QWidget(parent=self)
         self.setCentralWidget(widget)
 
         # Window properties

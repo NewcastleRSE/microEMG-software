@@ -33,9 +33,7 @@ MainToolbarButton {
     font-size: 14pt;
     text-align: left;
     background-color: 'white';
-    border-style: solid;
-    border-width: 1px;
-    border-color: #D9D9D9;
+    border-style: none;
     padding: 4;
     width: 125px;
     border-radius: 2;
