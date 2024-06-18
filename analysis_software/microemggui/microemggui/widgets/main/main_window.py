@@ -12,6 +12,8 @@ from PySide6.QtWidgets import (
     QWidget,
     QToolBar,
     QLabel,
+    QPushButton,
+    QButtonGroup,
     QVBoxLayout,
     QSizePolicy,
 )
@@ -28,13 +30,11 @@ from microemggui.widgets.base import (
 # --- Widgets for main window ---
 
 
-class AnalysisToolbar(QToolBar):
-    # Toolbar on left of window for navigating analysis steps
-
+class MicroEMGLogo(QPushButton):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Add home icon with linked QAction
+        # Button icon
         # TODO: set resource path or otherwise define path for icons
         icon_dir = os.path.join(
             "analysis_software",
@@ -43,10 +43,18 @@ class AnalysisToolbar(QToolBar):
             "icons",
             "bootstrap-icons-1.11.3",
         )
-        icon = "activity.svg"
-        action = QAction(QIcon(os.path.join(icon_dir, icon)), "Home", self)
-        action.setStatusTip("Home")
-        self.addAction(action)
+        logo_icon = "activity.svg"
+
+        self.setIcon(QIcon(os.path.join(icon_dir, logo_icon)))
+        self.setStatusTip("Home")
+        self.setCheckable(True)
+
+
+class AnalysisToolbar(QToolBar):
+    # Toolbar on left of window for navigating analysis steps
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         # Info about widgets to add to toolbar
         toolbar_w_text = {
@@ -64,19 +72,33 @@ class AnalysisToolbar(QToolBar):
 
         # Create and add widgets
         self.widgets = {}
-        for (w, text), button in zip(toolbar_w_text.items(), toolbar_w_is_button):
-            if button:
-                self.widgets[w] = AnalysisToolbarButton(text, parent=self)
-                self.widgets[w].setEnabled(False)  # Disable at start
-            else:
-                self.widgets[w] = AnalysisToolbarLabel(text, parent=self)
-            self.addWidget(self.widgets[w])
+        button_group = QButtonGroup(
+            self
+        )  # exclusive group so can only click one at a time
+
+        # First add logo button
+        self.widgets["logo"] = MicroEMGLogo(parent=self)
+        self.addWidget(self.widgets["logo"])
+        button_group.addButton(self.widgets["logo"])
+
+        # Add analysis step buttons and section labels
+        for (w_name, text), button in zip(toolbar_w_text.items(), toolbar_w_is_button):
+            if button:  # Create buttons
+                self.widgets[w_name] = AnalysisToolbarButton(text, parent=self)
+                self.widgets[w_name].setEnabled(False)  # Disable buttons at start
+                self.widgets[w_name].setCheckable(True)  # Add checked state
+                button_group.addButton(self.widgets[w_name])  # Add to button group
+            else:  # Create section labels
+                self.widgets[w_name] = AnalysisToolbarLabel(text, parent=self)
+            self.addWidget(self.widgets[w_name])  # Add widget to toolbar
+
+        # Initial button states
         self.widgets["loadbutton"].setEnabled(True)  # Enable first step (loading)
+        self.widgets["logo"].toggle()
 
         # Toolbar properties
         self.setMovable(False)
         self.setOrientation(Qt.Vertical)
-        self.setIconSize(QSize(75, 75))
 
 
 class WelcomeWidget(QWidget):
@@ -143,6 +165,8 @@ class TopToolbar(QToolBar):
 
 
 class MicroEMGMain(QMainWindow):
+    # Main window for microEMG GUI
+
     def __init__(self):
         super().__init__()
 
