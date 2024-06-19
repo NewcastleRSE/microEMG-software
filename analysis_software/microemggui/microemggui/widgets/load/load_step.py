@@ -155,6 +155,9 @@ class LoadRecordingSection(QWidget):
     # Signal for whether recording is loaded
     recording_loaded = Signal(bool)
 
+    # Signal for sending new recording
+    recording_changed = Signal(EMGDataRawModel)
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -236,6 +239,7 @@ class LoadRecordingSection(QWidget):
             self.widgets["errormessage"].setText(f"Could not load recording.\n{e}")
         else:
             self.emg_model = EMGDataRawModel(emg_data)
+            self.recording_changed.emit(self.emg_model)  # Must emit first
             self.recording_loaded.emit(True)
 
             # Message about data
@@ -286,6 +290,9 @@ class LoadSettingsSection(QWidget):
     # Signal for whether settings have been loaded
     settings_loaded = Signal(bool)
 
+    # Signal for sending updated settings
+    settings_changed = Signal(EMGSettingsModel)
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -316,7 +323,7 @@ class LoadSettingsSection(QWidget):
         # TODO: Update to get from config file and use all settings (not just preproc)
 
         if not settings_name:  # No settings selected
-            self.settings = None
+            self.settings_model = None
             self.settings_loaded.emit(False)
         else:  # Settings selected
             match settings_name:
@@ -331,10 +338,15 @@ class LoadSettingsSection(QWidget):
             self.settings_model = EMGSettingsModel(
                 preprocess_settings=preprocess_settings
             )
+            self.settings_changed.emit(self.settings_model)  # Must emit first
             self.settings_loaded.emit(True)
+
         self.display_settings()
 
     def display_settings(self):
+        # Update settingstext widget to display summary of EMG settings that have been
+        # selected
+
         if not self.settings_model:
             self.widgets["settingstext"].setText("")
         else:
@@ -342,7 +354,7 @@ class LoadSettingsSection(QWidget):
             self.widgets["settingstext"].setText(settings_text)
 
 
-# --- Widgets running the analysis ---
+# --- Widgets for running the analysis ---
 
 
 class NextButton(LargePushButton):
@@ -386,8 +398,15 @@ class LoadWidget(QWidget):
     # Signal for whether all loading steps are finished
     load_finished = Signal(bool)
 
+    # Signal for sending data from load step to main window
+    load_data_changed = Signal(EMGDataRawModel, EMGSettingsModel)
+
     def __init__(self, parent=None):
         super().__init__(parent)
+
+        # Attributes for storing EMG recording and settings
+        self.emg_model = None
+        self.settings_model = None
 
         # Create widgets
         self.title = SectionTitle("MicroEMG analysis set-up", self)
@@ -397,12 +416,6 @@ class LoadWidget(QWidget):
             "settings": LoadSettingsSection(parent=self),
             "run": RunAnalysisSection(parent=self),
         }
-
-        # # Keep size when hidden
-        # for _, w in self.widgets.items():
-        #     size_policy = w.sizePolicy()
-        #     size_policy.setRetainSizeWhenHidden(True)
-        #     w.setSizePolicy(size_policy)
 
         # Add to section widgets layout
         # Separate layout for sections so easier to control spacing
@@ -426,37 +439,67 @@ class LoadWidget(QWidget):
 
         # Connections
         self.widgets["recording"].recording_loaded.connect(
-            self.show_and_hide_steps_after_loading_emg
+            self.updates_after_loading_emg
         )
+        self.widgets["recording"].recording_changed.connect(self.update_emg_model)
         self.widgets["settings"].settings_loaded.connect(
-            self.show_and_hide_steps_after_loading_settings
+            self.updates_after_loading_settings
         )
+        self.widgets["settings"].settings_changed.connect(self.update_settings_model)
 
-        # Signal that recording has not been loaded
+        # Send signal that recording has not yet been loaded to set correct states
         self.widgets["recording"].recording_loaded.emit(False)
 
-    def show_and_hide_steps_after_loading_emg(self, recording_loaded: bool):
+    def updates_after_loading_emg(self, recording_loaded: bool):
         # Show/hide steps after loading depend on if data has been loaded
+        # Remove emg_model saved if recording not loaded
         # Slot for recording_loaded signal
 
         if recording_loaded:
             self.widgets["settings"].show()
         else:
             self.widgets["settings"].hide()
-            # Remove any previously selected settings
+            self.widgets["run"].hide()
+
+            # Remove any previously saved EMG data and settings
+            self.emg_model = None
+            self.settings_model = None
+
+            # Remove any previously selected settings in combobox
             self.widgets["settings"].widgets["load"].widgets[
                 "combobox"
             ].setCurrentIndex(0)
-            self.widgets["run"].hide()
-            self.load_finished.emit(False)  # Prevent next analysis steps
 
-    def show_and_hide_steps_after_loading_settings(self, settings_loaded: bool):
+            # Signal to prevent next analysis steps
+            self.load_finished.emit(False)
+
+    def updates_after_loading_settings(self, settings_loaded: bool):
         # Show/hide steps after loading depend on if data has been loaded
         # Slot for settings_loaded signal
 
         if settings_loaded:
             self.widgets["run"].show()
-            self.load_finished.emit(True)  # last load step - trigger next steps
+
+            # Since this is the last load step, send data to main window and allow
+            # next steps
+            self.load_data_changed.emit(self.emg_model, self.settings_model)
+            self.load_finished.emit(True)
+
         else:
             self.widgets["run"].hide()
-            self.load_finished.emit(False)  # Prevent next analysis steps
+
+            # Remove any previously saved EMG data and settings
+            self.settings_model = None
+
+            # Prevent next analysis steps
+            self.load_finished.emit(False)
+
+    def update_emg_model(self, emg_model: EMGDataRawModel):
+        # Update EMG data model (raw data)
+        # Slot for recording_changed signal
+        self.emg_model = emg_model
+
+    def update_settings_model(self, settings_model: EMGSettingsModel):
+        # Update EMG settings model
+        # Slot for settings_changed signal
+        self.settings_model = settings_model

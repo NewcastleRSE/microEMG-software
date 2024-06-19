@@ -7,6 +7,8 @@ Widget for main window with toolbars and other navigation elements.
 
 import os
 
+from palettable.cartocolors.qualitative import Prism_10
+
 from PySide6.QtWidgets import (
     QMainWindow,
     QWidget,
@@ -28,8 +30,8 @@ from microemggui.widgets.base import (
     ExpandingVSpacer,
 )
 from microemggui.widgets.load.load_step import LoadWidget
-
-# from microemggui.widgets.preproc.preproc_step import PreprocWidget
+from microemggui.widgets.preproc.preproc_step import PreprocWidget
+from microemggui.models.settings import EMGPreprocSettingsModel
 
 # --- Widgets for main window ---
 
@@ -201,21 +203,10 @@ class AnalysisStepsWidget(QWidget):
         # Slot for signals for changing displayed widget in stacked layout
         self.layout.setCurrentWidget(self.widgets[widget_name])
 
-    def add_preprocess_widget(self):
-        # Add preprocessing widget
-        # maybe should be method on main window?
-        # TODO: check if widget exists before adding?
-
-        print("add preprocessing widget")
-        # "preprocess": PreprocWidget(raw_emg_model, settings_model, emg_clrs)
-        # connect to toolbar button
-
 
 # --- Main window ---
 
 # Next steps:
-# Button should send loaded data to main window and create preprocessing widget
-# Add preprocessing widget to stacked widget layout and connect to preprocessing button
 # Add recording to label
 # text field for recording label?
 
@@ -225,6 +216,14 @@ class MicroEMGMain(QMainWindow):
 
     def __init__(self):
         super().__init__()
+
+        # Initialise attributes for storing data needed for analysis
+        self.emg_model = {}
+        self.settings_model = None
+
+        # Colours for EMG recordings
+        # TODO: make configurable?
+        self.emg_clrs = Prism_10.hex_colors
 
         # Make widgets and toolbars
         self.widgets = {
@@ -248,14 +247,15 @@ class MicroEMGMain(QMainWindow):
 
         # Connections between analysis toolbar buttons and stacked analysis widgets
         # Only home and load widgets are connected here
-        for w_name, w in self.widgets["analysis"].widgets.items():
-            self.widgets["analysistoolbar"].widgets[w_name].clicked.connect(
-                lambda checked=None, w_name=w_name: self.widgets[
-                    "analysis"
-                ].show_widget(w_name)
-            )
+        self.update_toolbar_connections()
 
-        self.widgets["analysis"].widgets["load"].load_finished.connect(self.add_preproc)
+        # Connections to signals from loading data
+        self.widgets["analysis"].widgets["load"].load_finished.connect(
+            self.enable_preprocess
+        )
+        self.widgets["analysis"].widgets["load"].load_data_changed.connect(
+            self.update_raw_emg_model_and_settings_model
+        )
 
         # Add widget to center
         self.setCentralWidget(widget)
@@ -263,5 +263,66 @@ class MicroEMGMain(QMainWindow):
         # Window properties
         self.resize(1200, 800)
 
-    def add_preproc(self, load_finished: bool):
-        print(f"load finished: {load_finished}")
+    def update_toolbar_connections(self):
+        # Connects toolbar buttons to analysis widgets
+        # Will need to call repeatedly as add more analysis widgets
+
+        print("Updating toolbar connections")
+        for w_name, w in self.widgets["analysis"].widgets.items():
+            self.widgets["analysistoolbar"].widgets[w_name].clicked.connect(
+                lambda checked=None, w_name=w_name: self.widgets[
+                    "analysis"
+                ].show_widget(w_name)
+            )
+            print(w_name)
+
+    def update_raw_emg_model_and_settings_model(self, raw_emg_model, settings_model):
+        # Slot for updating raw EMG model and settings model
+
+        self.emg_model["raw"] = raw_emg_model
+        self.settings_model = settings_model
+
+        # Use data to make preprocessing widget
+        preprocess_settings_model = EMGPreprocSettingsModel(
+            self.settings_model.preprocess_settings
+        )
+        self.add_preprocess_widget(
+            self.emg_model["raw"], preprocess_settings_model, self.emg_clrs
+        )
+
+    def add_preprocess_widget(self, raw_emg_model, preprocess_settings_model, emg_clrs):
+        # Add preprocessing widget
+        # TODO: check if widget exists before adding? or always fine to overwrite? would
+        # delete existing preprocessed data, but should only add widget if loaded new
+        # recording
+
+        # Create widget and add to stack of analysis step widgets
+        w_name = "preprocess"
+        analysis_w = self.widgets["analysis"]
+        analysis_w.widgets[w_name] = PreprocWidget(
+            raw_emg_model, preprocess_settings_model, emg_clrs
+        )
+        analysis_w.layout.addWidget(analysis_w.widgets[w_name])
+
+        # Update toolbar connections
+        self.update_toolbar_connections()
+
+        # Add connection to next button
+        self.widgets["analysis"].widgets["load"].widgets["run"].widgets[
+            "next"
+        ].clicked.connect(
+            lambda checked=None, w_name=w_name: self.widgets["analysis"].show_widget(
+                w_name
+            )
+        )
+
+    #    def go_to_next_step(self, w_name):
+    # TODO: connect next button to toolbar button state AND widget (can probably
+    # generalise to all next buttons)
+    # TODO: progress bar doesn't work correctly if manually change filter settings
+
+    def enable_preprocess(self, load_finished: bool):
+        # Enable/disable preprocess button in toolbar based on whether load step is
+        # finished
+        # TODO: can this function be generalised to the other analysis widgets?
+        self.widgets["analysistoolbar"].widgets["preprocess"].setEnabled(load_finished)
