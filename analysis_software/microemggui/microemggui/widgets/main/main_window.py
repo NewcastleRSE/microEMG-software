@@ -214,7 +214,6 @@ class AnalysisStepsWidget(QWidget):
 # --- Main window ---
 
 # Next steps:
-# Add button for starting analysis
 # Button should send loaded data to main window and create preprocessing widget
 # Add preprocessing widget to stacked widget layout and connect to preprocessing button
 # Add recording to label
@@ -245,7 +244,10 @@ class MicroEMGMain(QMainWindow):
         layout.setContentsMargins(0, 0, 0, 0)
         widget.setLayout(layout)
 
+        # Connections
+
         # Connections between analysis toolbar buttons and stacked analysis widgets
+        # Only home and load widgets are connected here
         for w_name, w in self.widgets["analysis"].widgets.items():
             self.widgets["analysistoolbar"].widgets[w_name].clicked.connect(
                 lambda checked=None, w_name=w_name: self.widgets[
@@ -253,8 +255,13 @@ class MicroEMGMain(QMainWindow):
                 ].show_widget(w_name)
             )
 
+        self.widgets["analysis"].widgets["load"].load_finished.connect(self.add_preproc)
+
         # Add widget to center
         self.setCentralWidget(widget)
 
         # Window properties
         self.resize(1200, 800)
+
+    def add_preproc(self, load_finished: bool):
+        print(f"load finished: {load_finished}")

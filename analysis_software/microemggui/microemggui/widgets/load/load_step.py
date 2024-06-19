@@ -379,35 +379,49 @@ class RunAnalysisSection(QWidget):
 # --- Widgets with all initial steps ---
 
 
-class LoadSteps(QWidget):
-    # Widget containing all load steps (loading recording, loading settings, running
+class LoadWidget(QWidget):
+    # Full widget for all load steps (loading recording, loading settings, running
     # analysis)
-    # Separate from full widget with title to make it easier to set spacing between
-    # sections.
+
+    # Signal for whether all loading steps are finished
+    load_finished = Signal(bool)
 
     def __init__(self, parent=None):
         super().__init__(parent)
 
         # Create widgets
+        self.title = SectionTitle("MicroEMG analysis set-up", self)
+
         self.widgets = {
             "recording": LoadRecordingSection(parent=self),
             "settings": LoadSettingsSection(parent=self),
             "run": RunAnalysisSection(parent=self),
         }
 
-        # Keep size when hidden
-        for _, w in self.widgets.items():
-            size_policy = w.sizePolicy()
-            size_policy.setRetainSizeWhenHidden(True)
-            w.setSizePolicy(size_policy)
+        # # Keep size when hidden
+        # for _, w in self.widgets.items():
+        #     size_policy = w.sizePolicy()
+        #     size_policy.setRetainSizeWhenHidden(True)
+        #     w.setSizePolicy(size_policy)
 
-        # Add to layout
-        layout = QVBoxLayout()
+        # Add to section widgets layout
+        # Separate layout for sections so easier to control spacing
+        sections_layout = QVBoxLayout()
         for _, w in self.widgets.items():
-            layout.addWidget(w)
+            sections_layout.addWidget(w)
+        sections_layout.addItem(ExpandingVSpacer())
+        sections_layout.setSpacing(50)
+        sections_layout.setContentsMargins(0, 0, 0, 0)
+
+        sections_widget = QWidget(parent=self)
+        sections_widget.setLayout(sections_layout)
+
+        # Full layout
+        layout = QVBoxLayout()
+        layout.addWidget(self.title)
+        layout.addWidget(sections_widget)
         layout.addItem(ExpandingVSpacer())
-        layout.setSpacing(50)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(20, 0, 0, 0)
         self.setLayout(layout)
 
         # Connections
@@ -434,6 +448,7 @@ class LoadSteps(QWidget):
                 "combobox"
             ].setCurrentIndex(0)
             self.widgets["run"].hide()
+            self.load_finished.emit(False)  # Prevent next analysis steps
 
     def show_and_hide_steps_after_loading_settings(self, settings_loaded: bool):
         # Show/hide steps after loading depend on if data has been loaded
@@ -441,26 +456,7 @@ class LoadSteps(QWidget):
 
         if settings_loaded:
             self.widgets["run"].show()
+            self.load_finished.emit(True)  # last load step - trigger next steps
         else:
             self.widgets["run"].hide()
-
-
-class LoadWidget(QWidget):
-    # Full widget for loading recording and setting up analysis
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-        # Create widgets
-        self.widgets = {
-            "title": SectionTitle("MicroEMG analysis set-up", self),
-            "steps": LoadSteps(parent=self),
-        }
-
-        # Add to layout
-        layout = QVBoxLayout()
-        for _, w in self.widgets.items():
-            layout.addWidget(w)
-        layout.addItem(ExpandingVSpacer())
-        layout.setContentsMargins(20, 0, 0, 0)
-        self.setLayout(layout)
+            self.load_finished.emit(False)  # Prevent next analysis steps
