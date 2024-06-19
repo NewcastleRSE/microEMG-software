@@ -221,9 +221,7 @@ def psuedo_correlation(template, sig, lag=None):
     Returns
     -------
     psuedo_correlation_score : float
-        maximum score at best lag
-    best_lag : int
-        best lag
+        maximum score at best lag    
     """
 
     if lag is None:

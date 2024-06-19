@@ -15,7 +15,17 @@ import numpy.typing as npt  # for type hints
 import matplotlib.pyplot as plt
 from matplotlib import colormaps
 from sklearn.cluster import KMeans
+from sklearn.preprocessing import normalize
 
+# TODO: add csv and cv2 to poetry dependency management
+# Need to remove try/except block - temporary fix since functions not needed for
+# example pipeline
+try:
+    import csv
+#    import cv2
+except Exception as e:
+    print(e)
+import os
 
 class EMGMotorUnit:
     """
@@ -163,6 +173,37 @@ class EMGMotorUnit:
         self.all_spikes = all_spikes
         self.generator_potential = generator_potential
 
+    def load_test_data(self, filename):
+        # Importing csv module
+        with open(filename, "r") as x:
+            some_data = list(
+                csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC)
+            )
+
+        return np.array(some_data)
+        
+    def load_data_for_jitter_testing(self, path_str):
+        filename_clusters = path_str + 'py_kmean_clusters' + str(self.motor_unit_number) + '.csv'
+        fibre_clusters = self.load_test_data(filename_clusters)
+        n_fibre_clusters = len(fibre_clusters)
+        mean_n_fps = None
+        n_fps_per_mup_and_cluster = None
+        mup_fibre_pos = None
+        filename_centres = path_str + 'py_kmean_centres' + str(self.motor_unit_number) + '.csv'
+        fibre_centres_median = self.load_test_data(filename_clusters)
+        
+        # Store results as dictionary
+        self.fibre_clustering_results = {
+                "mean_n_fps": mean_n_fps,
+                "n_fibre_clusters": n_fibre_clusters,
+                "fibre_clusters": fibre_clusters,
+                "n_fps_per_mup_and_cluster": n_fps_per_mup_and_cluster,
+                "mup_fibre_pos": mup_fibre_pos,
+                "fibre_centres_median": fibre_centres_median,
+            }
+       
+        
+    
     def _calculate_fibre_potentials_time_diff(self, fib_pot_pos1, fib_pot_pos2):
         """      
         Parameters
@@ -182,7 +223,7 @@ class EMGMotorUnit:
              
         return np.abs(self.fibre_potential_times[fib_pot_pos2] - self.fibre_potential_times[fib_pot_pos1])
         
-    def jitter_analysis_between_two_fibres(self, fibre1_num = 0, fibre2_num = 1):
+    def jitter_analysis_between_two_fibres(self, fibre1_num, fibre2_num):
         """
         Performs jitter analysis for this motor unit (MU). For the identified
         fibres computes the mean consecutive difference (MCD) between each pair
@@ -194,16 +235,7 @@ class EMGMotorUnit:
         
         MCD = (1/(N-1)) * sum(|D_k - D_{k+1}|) for k = 1 to N-1, where D_k is the kth
         MUP time difference between the fibre potentials for the 2 fibres in question.
-       
-        self.fibre_clustering_results = {
-                "mean_n_fps": mean_n_fps,
-                "n_fibre_clusters": n_fibre_clusters,
-                "fibre_clusters": fibre_clusters,
-                "n_fps_per_mup_and_cluster": n_fps_per_mup_and_cluster,
-                "mup_fibre_pos": mup_fibre_pos,
-                "fibre_centres_median": fibre_centres_median,
-            }
-            
+             
         Parameters
         ----------
         fibre1_num : int
@@ -225,7 +257,9 @@ class EMGMotorUnit:
         
         # Length of time intervals between fibre potentials in the two different fibres
         fibre_potential_time_diffs = np.full(len(self.mup_onsets), np.nan)
-                          
+        
+        print("Jitter between 2")
+        #print()
         # Compute length of time intervals between fibre potentials
         for mup_num in range(self.n_potentials):
             mup_onset_idx = self.potentials_t_idx[mup_num]
@@ -258,17 +292,17 @@ class EMGMotorUnit:
                 fib_pot_pos2 = fibre2_potentials_idx[fibre2_potential_to_use]
                 fibre_potential_time_diffs[mup_num] = self._calculate_fibre_potentials_time_diff(fib_pot_pos1, fib_pot_pos2)
             
-        # Compute consecutive differences
+        # Compute consecutive differences       
         consecutive_diffs = np.full((len(self.mup_onsets) - 1), np.nan)
-        
-        for mup_num in range(self.n_potentials - 1):
+           
+        for mup_num in range(self.n_potentials - 1):            
             if not np.isnan(fibre_potential_time_diffs[mup_num]) and not np.isnan(fibre_potential_time_diffs[mup_num + 1]):
                 consecutive_diffs[mup_num] = np.abs(fibre_potential_time_diffs[mup_num] - fibre_potential_time_diffs[mup_num + 1])
             
-        # Compute mean consecutive difference and convert to seconds
-        mean_consecutive_diff = np.nanmean(consecutive_diffs) / self.emg_data_preproc.fs
+        # Compute mean consecutive difference
+        mean_consecutive_diff = np.nanmean(consecutive_diffs)
 
-        return mean_consecutive_diff
+        return mean_consecutive_diff, fibre_potential_time_diffs, consecutive_diffs
 
     def jitter_analysis(self):
         """
@@ -290,30 +324,167 @@ class EMGMotorUnit:
         #    raise RuntimeError(
         #        "Not enough fibres to perform jitter analysis!"
         #    )
-        
-        fibre1_numbers = np.array([])
-        fibre2_numbers = np.array([])
-        mean_consecutive_diffs = np.array([])
-        
         n_fibre_clusters = self.fibre_clustering_results["n_fibre_clusters"]
-        count = 0
         
+        number_of_jitter_calcs = int(n_fibre_clusters * (n_fibre_clusters - 1) / 2)
+        fibre1_numbers = np.zeros(number_of_jitter_calcs)
+        fibre2_numbers = np.zeros(number_of_jitter_calcs)
+        mean_consecutive_diffs = np.zeros(number_of_jitter_calcs)
+        fibre_potential_time_diffs = np.zeros((number_of_jitter_calcs, len(self.mup_onsets)))
+        consecutive_diffs = np.zeros((number_of_jitter_calcs, len(self.mup_onsets) - 1))
+        
+        count = 0
+        print("Num fibre clusters")
+        print(n_fibre_clusters)
         for fibre1_num in range(n_fibre_clusters - 1):
-            for fibre2_num in np.arange(fibre1_num + 1, fibre1_num + 2):               
-                mean_consecutive_diffs[count] = self.jitter_analysis_between_two_fibres(fibre1_num, fibre2_num)
+            for fibre2_num in np.arange(fibre1_num + 1, n_fibre_clusters):               
+                mean_consecutive_diffs[count], fibre_potential_time_diffs[count,:], consecutive_diffs[count,:] = self.jitter_analysis_between_two_fibres(fibre1_num, fibre2_num)
                 fibre1_numbers[count] = fibre1_num
                 fibre2_numbers[count] = fibre2_num
                 count += 1
+                print(f"MCD between fibres {fibre1_num} and {fibre2_num} is {mean_consecutive_diffs[count-1]}")
         
         self.fibre_jitter_results = {
                 "fibre1_numbers": fibre1_numbers,
                 "fibre2_numbers": fibre2_numbers,
                 "mean_consecutive_diffs": mean_consecutive_diffs,
+                "differences": fibre_potential_time_diffs,
+                "consecutive_diffs": consecutive_diffs
             }
         
         self.analysis_performed["fibres_jitter_computed"] = True
-        
+ 
+    def plot_fibre_potential_time_diffs(self, fibre1_num, fibre2_num, sampling_freq, show = False):
+        """
+        Plot a histogram for time differences between fibre potentials
+            
+        Parameters
+        ----------
+        fibre1_num : int
+            Fibre number for the first fibre, given previously from cluster analysis (0,1,2,...)
+        fibre2_num : int
+            Fibre number for the second fibre
+        sampling_freq: float
+            Sampling frequency
+            
+        Returns
+        -------
+        None.
 
+        """
+        
+        # Get index for this pair of fibres so that the results can be retreived
+        res_idx = np.where( 
+         np.all(
+                            (
+                                (self.fibre_jitter_results["fibre1_numbers"] == fibre1_num),
+                                (self.fibre_jitter_results["fibre2_numbers"] == fibre2_num),
+                            ),
+                    axis=0,
+         ))
+                
+        if len(res_idx) > 0:
+            res_idx = res_idx[0]
+        else:
+            print(f"Jitter results not found for fibres {fibre1_num + 1} and {fibre2_num + 1}!")
+            return
+        
+        # Get fibre differences and convert to time in seconds
+        fibre_pot_diffs = self.fibre_jitter_results["differences"][res_idx, :] / sampling_freq
+        fibre_pot_diffs = fibre_pot_diffs.flatten()
+        
+        print(fibre_pot_diffs.shape)
+        _, ax = plt.subplots()
+        
+        ax.hist(fibre_pot_diffs, bins=30, density=True, color = "lightgrey", edgecolor='k', linewidth=0.5)
+
+        plt.title(f"Fibre potentials intervals (motor unit {self.motor_unit_number+1}, fibres {fibre1_num+1} and {fibre2_num+1})")        
+        #mean_consecutive_diff = self.fibre_jitter_results["mean_consecutive_diffs"][res_idx]
+
+        mean = np.nanmean(fibre_pot_diffs)
+        st_dev = np.nanstd(fibre_pot_diffs, ddof=1)
+        textstr = '\n'.join((
+        r'Mean $= %.4g$' % (mean, ),     
+        r'St. dev. $=%.4g$' % (st_dev, )))
+
+        # these are matplotlib.patch.Patch properties
+        props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+
+        # place a text box in upper left in axes coords
+        ax.text(0.05, 0.95, textstr, transform=ax.transAxes, fontsize=14,
+                verticalalignment='top', bbox=props)
+
+        # Show plot on screen now if requested
+        if show:
+            plt.show() 
+
+    def plot_fibre_consecutive_diffs(self, fibre1_num, fibre2_num, sampling_freq, show = False):
+        """
+        Plot a histogram for the consecutive differences (from one MUP to the next)
+        between the length of time intervals of timings between fibre potentials
+            
+        Parameters
+        ----------
+        fibre1_num : int
+            Fibre number for the first fibre, given previously from cluster analysis (0,1,2,...)
+        fibre2_num : int
+            Fibre number for the second fibre
+        sampling_freq: float
+            Sampling frequency
+            
+        Returns
+        -------
+        None.
+
+        """
+        
+        # Get index for this pair of fibres so that the results can be retreived
+        res_idx = np.where( 
+         np.all(
+                            (
+                                (self.fibre_jitter_results["fibre1_numbers"] == fibre1_num),
+                                (self.fibre_jitter_results["fibre2_numbers"] == fibre2_num),
+                            ),
+                    axis=0,
+         ))
+        
+        if len(res_idx) > 0:
+            res_idx = res_idx[0]
+        else:
+            print(f"Jitter results not found for fibres {fibre1_num + 1} and {fibre2_num + 1}!")
+            return
+        
+        # Get consecutive_diffs and convert to time in seconds
+        consecutive_diffs = self.fibre_jitter_results["consecutive_diffs"][res_idx, :] / sampling_freq
+        consecutive_diffs = consecutive_diffs.flatten()
+        
+        print(consecutive_diffs.shape)
+        _, ax = plt.subplots()
+        
+        ax.hist(consecutive_diffs, bins=30, density=True, color = "lightgrey", edgecolor='k', linewidth=0.5)
+
+        plt.title(f"Consecutive differences (motor unit {self.motor_unit_number+1}, fibres {fibre1_num+1} and {fibre2_num+1})")        
+        mean_consecutive_diff = self.fibre_jitter_results["mean_consecutive_diffs"][res_idx] / sampling_freq
+        
+        mean = np.nanmean(consecutive_diffs)
+        st_dev = np.nanstd(consecutive_diffs, ddof=1)
+        textstr = '\n'.join((
+        r'Mean $= %.4g$' % (mean, ),     
+        r'St. dev. $=%.4g$' % (st_dev, )))
+
+        print(mean_consecutive_diff)
+        print(mean)
+        # these are matplotlib.patch.Patch properties
+        props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+
+        # place a text box in upper left in axes coords
+        ax.text(0.05, 0.95, textstr, transform=ax.transAxes, fontsize=14,
+                verticalalignment='top', bbox=props)
+
+        # Show plot on screen now if requested
+        if show:
+            plt.show() 
+            
 class EMGMotorUnits:
     """
     Class for storing and visualising all motor unit data returned from reconstruction
@@ -587,7 +758,7 @@ class EMGMotorUnits:
 
         return fig, ax
 
-    def cluster_fibre_potentials(self, motor_unit_idx: int, random_state: int = 0):
+    def cluster_fibre_potentials(self, motor_unit_idx: int, random_state: int = 0, k : int = 0):
         """
         Cluster the fibre potentials and compute median fibre locations of the
         specified motor unit.
@@ -627,7 +798,9 @@ class EMGMotorUnits:
         random_state : int
             Determines random number generation for centroid initialization; passed to
             k-means algorithm
-
+        k : int
+            the of clusters to fit, if set to 0 uses default of (rounded) mean number of fibre
+            potentials (FPs) per motor unit potential
         Raises
         ------
         RuntimeError
@@ -669,15 +842,20 @@ class EMGMotorUnits:
         # Use rounded mean number of fibre potentials (FPs) per motor unit potential as
         # k for clustering
         mean_n_fps = round(len(motor_unit.mup_onsets) / n_unique_mup_onsets)
+        if k == 0:
+            k = mean_n_fps
 
-        print(len(motor_unit.mup_onsets))
-        print(n_unique_mup_onsets)
-        print("mean_n_fps")
-        print(mean_n_fps)
-
+        # Set up data to use to fit
+        data_for_k_means = np.hstack((motor_unit.fibre_centres, np.atleast_2d(motor_unit.fibre_potential_times).T))
+        
+        # scale columns by maximum in each column to give unit intervals for each dimension
+        normalize(data_for_k_means, axis=0, norm='max', copy=False)
+        
+        print(data_for_k_means)
+        
         if mean_n_fps > 0:
-            fibre_kmeans = KMeans(n_clusters=mean_n_fps, random_state=random_state).fit(
-                motor_unit.fibre_centres
+            fibre_kmeans = KMeans(n_clusters=k, random_state=random_state).fit(
+                data_for_k_means
             )
 
             # fibre cluster assignments
@@ -694,8 +872,7 @@ class EMGMotorUnits:
             # Note: unlike original code, data stored so indices match the
             # self.potentials_t_idx array
             mup_fibre_pos = np.full((motor_unit.n_potentials, 2, n_fibre_clusters), np.nan)
-            print("shape")
-            print(motor_unit.mup_onsets.shape)
+         
             # Find median location of each fibre
             for cluster_num in np.arange(n_fibre_clusters):
                 # Sometimes multiple fibre potentials in the same MUP are assigned to

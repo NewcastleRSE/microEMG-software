@@ -80,11 +80,6 @@ class EMGAnalysisReconstruct:
         # ranks: The rank of each channel on highest SNR
         self.signal_noise_ratios_ranks = np.array([])
 
-        # Found by running find_motor_units
-        # TODO: rename these attributes and/or remove (store in MU class instead)
-        self.indices = np.array([])
-        self.locs = np.array([])
-
         # Space for motor unit results
         # Initialise in find_motor_units
         # Fill in additional motor unit data by running fibre_reconstruction
@@ -206,8 +201,7 @@ class EMGAnalysisReconstruct:
 
     def load_mup_data(self, motor_unit_number, filename_fibre_centres, filename_mup_onsets):
         """
-        Load fibre centre and onset data for one motor unit from MATLAB,
-        - so take 1 away from index locations
+        Load fibre centre and onset data for one motor unit
         - most likely to be used just for testing, esp clustering of MUPs
 
         Parameters
@@ -240,8 +234,9 @@ class EMGAnalysisReconstruct:
         motor_unit = self.found_motor_units.motor_units[motor_unit_number]
 
         motor_unit.fibre_centres = np.array(fibre_centres, dtype=float)
-        motor_unit.mup_onsets = np.array(mup_onsets).astype(int).flatten()
-
+        motor_unit.mup_onsets = np.array(mup_onsets).astype(int).flatten()   
+        motor_unit.n_fibre_potentials = len(motor_unit.fibre_centres)
+        
         print(motor_unit.fibre_centres)
         print(motor_unit.mup_onsets)
         motor_unit.analysis_performed["fibres_localised"] = True
@@ -911,53 +906,6 @@ class EMGAnalysisReconstruct:
 
         # Restore needle to full needle, rather than subset of the needle
         self.needle = self.emg_data_preproc.chan.chan_xy
-
-    def plot_MUs(self, used_data, indices, locs):
-        """
-        Plot MUs for testing purposes
-
-        Parameters
-        ----------
-        Index : 1D numpy NDArray[int]
-                Index of MUAPs clustered
-        loc : 1D numpy NDArray[int]
-                location of the MUAPs in the signal
-
-        Returns
-        -------
-        None
-
-        """
-
-        no_MUs = np.max(locs) + 1
-        xmax = len(used_data)
-        ymin = np.min(used_data)
-        ymax = np.max(used_data)
-
-        plt.subplots(no_MUs, 1)
-
-        # Loop thro' MUs
-        for one_MU in range(no_MUs):
-            # Plot subplot
-            plt.subplot(no_MUs, 1, one_MU + 1)
-            # Get subset for this MU
-            subset_MU = one_MU == locs
-            # Get index positions for this MU
-            positions = indices[subset_MU]
-            plt.plot(indices[subset_MU], used_data[positions], "k-", linewidth=1)
-            plt.xlim(0, xmax)
-            plt.ylim(ymin, ymax)
-
-        # Save the plot
-        # Firstly ensure the execution path is the same as the file path
-        abspath = os.path.abspath(__file__)
-        dname = os.path.dirname(abspath)
-
-        # Save all images in the Images folder
-        plt.savefig(os.path.join(dname, "MUs.png"), format="png")
-
-        # Close the plot
-        plt.close()
 
     def find_peaks(self, data, distance=1, min_peak_height=None):
         """
