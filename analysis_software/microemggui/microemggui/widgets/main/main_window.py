@@ -213,6 +213,13 @@ class AnalysisStepsWidget(QWidget):
 
 # --- Main window ---
 
+# Next steps:
+# Add button for starting analysis
+# Button should send loaded data to main window and create preprocessing widget
+# Add preprocessing widget to stacked widget layout and connect to preprocessing button
+# Add recording to label
+# text field for recording label?
+
 
 class MicroEMGMain(QMainWindow):
     # Main window for microEMG GUI

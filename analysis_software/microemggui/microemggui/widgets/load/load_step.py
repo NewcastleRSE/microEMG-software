@@ -10,9 +10,11 @@ from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QFileDialog
 from PySide6.QtCore import Signal
 
 from pymicroemg.emg_files import EMGFiles
+from pymicroemg.emg_preproc_settings import EMGPreprocSettings
 import pymicroemg.helper_config as emg_cfg
 
 from microemggui.models.emg import EMGDataRawModel
+from microemggui.models.settings import EMGSettingsModel
 
 from microemggui.widgets.base import (
     SmallPushButton,
@@ -44,8 +46,7 @@ class SelectRecordingWidget(QWidget):
         # Create widgets
         self.widgets = {
             "button": SmallPushButton(self),
-            "or": InputInlineText("or", self),
-            "label": InputInlineLabel("select demo recording:"),
+            "label": InputInlineLabel("or select demo recording:"),
             "combobox": InputComboBox(parent=self),
         }
 
@@ -123,7 +124,7 @@ class RecordingLabel(QWidget):
         # Create widgets
         self.widgets = {
             "label": InputInlineLabel("Recording: ", self),
-            "recording": InputInlineHighlightedText("", self),
+            "recording": InputInlineText("", self),
         }
 
         # Add to layout
@@ -201,7 +202,6 @@ class LoadRecordingSection(QWidget):
         # Slot for updating recording path
 
         self.recording_path = recording_path
-        print(self.recording_path)
 
         # Only allow loading if path is not empty (disables/enables load button)
         if recording_path:
@@ -242,24 +242,62 @@ class LoadRecordingSection(QWidget):
             n_chan = self.emg_model.emg_data.n_chan
             emg_dur = self.emg_model.emg_data.emg_dur
             self.widgets["message"].setText(
-                f"Recording loaded! {n_chan} channels, {round(emg_dur/60, 2)} minutes."
+                f"Recording loaded! The recording has {n_chan} channels and is {round(emg_dur/60, 2)} minutes."
             )
 
 
 # --- Widgets for selecting preprocessing settings ---
 
 
-class ChooseSettingsSection(QWidget):
-    # Widget for selecting analysis settings
-    # TODO: consider adding option to add new settings
-    # TODO: add settings
-    # TODO: display settings when selected?
+class LoadSettingsWidget(QWidget):
+    # Labelled dropdown box for choosing settings for analysis
+    # Currently only implemented preprocessing settings
+    # TODO: change to overall settings, not just preprocessing
+    # TODO: pull setting options from config file instead of defining here
+    # TODO: add saved settings? need to figure out how to load
 
     def __init__(self, parent=None):
         super().__init__(parent)
 
         # Create widgets
-        self.widgets = {"title": SubsectionTitle("Choose analysis settings", self)}
+        self.widgets = {
+            "label": InputInlineLabel("Settings: ", parent=self),
+            "combobox": InputComboBox(parent=self),
+        }
+
+        # List of settings options
+        self.settings_options = ["", "Default"]
+        self.widgets["combobox"].addItems(self.settings_options)
+
+        # Add to layout
+        layout = QHBoxLayout()
+        for _, w in self.widgets.items():
+            layout.addWidget(w)
+        layout.addItem(ExpandingHSpacer())
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(layout)
+
+
+class LoadSettingsSection(QWidget):
+    # Widget for selecting analysis settings
+    # TODO: consider adding option to add new settings
+    # TODO: display settings when selected?
+
+    # Signal for whether settings have been loaded
+    settings_loaded = Signal(bool)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        # Initialise attribute for storing settings
+        self.settings_model = None
+
+        # Create widgets
+        self.widgets = {
+            "title": SubsectionTitle("Choose initial analysis settings", self),
+            "load": LoadSettingsWidget(parent=self),
+            "settingstext": InputInlineText("", parent=self),
+        }
 
         # Add to layout
         layout = QVBoxLayout()
@@ -268,8 +306,53 @@ class ChooseSettingsSection(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
+        # Connections
+        self.widgets["load"].widgets["combobox"].currentTextChanged.connect(
+            self.load_settings
+        )
+
+    def load_settings(self, settings_name: str):
+        # Add correct settings as attribute when settings combobox is changed
+        # TODO: Update to get from config file and use all settings (not just preproc)
+
+        if not settings_name:  # No settings selected
+            self.settings = None
+            self.settings_loaded.emit(False)
+        else:  # Settings selected
+            match settings_name:
+                case "Default":
+                    preprocess_settings = EMGPreprocSettings()
+                    preprocess_settings.add_butterworth_filter(
+                        cutoff_freq=[100, 2000], order=6, filter_type="bandpass"
+                    )
+                    preprocess_settings.add_remove_mains()
+
+            # TODO: update to all settings
+            self.settings_model = EMGSettingsModel(
+                preprocess_settings=preprocess_settings
+            )
+            self.settings_loaded.emit(True)
+        self.display_settings()
+
+    def display_settings(self):
+        if not self.settings_model:
+            self.widgets["settingstext"].setText("")
+        else:
+            settings_text = self.settings_model.get_formatted_settings_text()
+            self.widgets["settingstext"].setText(settings_text)
+
 
 # --- Widgets running the analysis ---
+
+
+class NextButton(LargePushButton):
+    # Button for going to next analysis step
+    # Also triggers data to be sent to main window
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.setText("Next")
 
 
 class RunAnalysisSection(QWidget):
@@ -280,7 +363,10 @@ class RunAnalysisSection(QWidget):
         super().__init__(parent)
 
         # Create widgets
-        self.widgets = {"title": SubsectionTitle("Run microEMG analysis", self)}
+        self.widgets = {
+            "title": SubsectionTitle("Run microEMG analysis", self),
+            "next": NextButton(parent=self),
+        }
 
         # Add to layout
         layout = QVBoxLayout()
@@ -290,20 +376,22 @@ class RunAnalysisSection(QWidget):
         self.setLayout(layout)
 
 
-# --- Widget with all initial steps ---
+# --- Widgets with all initial steps ---
 
 
-class LoadWidget(QWidget):
-    # Widget for loading recording and setting up analysis
+class LoadSteps(QWidget):
+    # Widget containing all load steps (loading recording, loading settings, running
+    # analysis)
+    # Separate from full widget with title to make it easier to set spacing between
+    # sections.
 
     def __init__(self, parent=None):
         super().__init__(parent)
 
         # Create widgets
         self.widgets = {
-            "title": SectionTitle("MicroEMG analysis set-up", self),
             "recording": LoadRecordingSection(parent=self),
-            "settings": ChooseSettingsSection(parent=self),
+            "settings": LoadSettingsSection(parent=self),
             "run": RunAnalysisSection(parent=self),
         }
 
@@ -318,25 +406,61 @@ class LoadWidget(QWidget):
         for _, w in self.widgets.items():
             layout.addWidget(w)
         layout.addItem(ExpandingVSpacer())
-        layout.setSpacing(25)
-        layout.setContentsMargins(20, 0, 0, 0)
+        layout.setSpacing(50)
+        layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
         # Connections
         self.widgets["recording"].recording_loaded.connect(
-            self.show_and_hide_steps_after_loading
+            self.show_and_hide_steps_after_loading_emg
+        )
+        self.widgets["settings"].settings_loaded.connect(
+            self.show_and_hide_steps_after_loading_settings
         )
 
         # Signal that recording has not been loaded
         self.widgets["recording"].recording_loaded.emit(False)
 
-    def show_and_hide_steps_after_loading(self, recording_loaded):
+    def show_and_hide_steps_after_loading_emg(self, recording_loaded: bool):
         # Show/hide steps after loading depend on if data has been loaded
         # Slot for recording_loaded signal
 
         if recording_loaded:
             self.widgets["settings"].show()
-            self.widgets["run"].show()
         else:
             self.widgets["settings"].hide()
+            # Remove any previously selected settings
+            self.widgets["settings"].widgets["load"].widgets[
+                "combobox"
+            ].setCurrentIndex(0)
             self.widgets["run"].hide()
+
+    def show_and_hide_steps_after_loading_settings(self, settings_loaded: bool):
+        # Show/hide steps after loading depend on if data has been loaded
+        # Slot for settings_loaded signal
+
+        if settings_loaded:
+            self.widgets["run"].show()
+        else:
+            self.widgets["run"].hide()
+
+
+class LoadWidget(QWidget):
+    # Full widget for loading recording and setting up analysis
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        # Create widgets
+        self.widgets = {
+            "title": SectionTitle("MicroEMG analysis set-up", self),
+            "steps": LoadSteps(parent=self),
+        }
+
+        # Add to layout
+        layout = QVBoxLayout()
+        for _, w in self.widgets.items():
+            layout.addWidget(w)
+        layout.addItem(ExpandingVSpacer())
+        layout.setContentsMargins(20, 0, 0, 0)
+        self.setLayout(layout)
