@@ -202,10 +202,7 @@ class MicroEMGMain(QMainWindow):
         self.widgets["analysistoolbar"].widgets[w_name].setEnabled(previous_step_finished)
 
     def add_preprocess_widget(self, raw_emg_model, preprocess_settings_model, emg_clrs):
-        # Add preprocessing widget
-        # TODO: check if widget exists before adding? or always fine to overwrite? would
-        # delete existing preprocessed data, but should only add widget if loaded new
-        # recording
+        # Add preprocessing widget using data stored in main window
 
         # Create widget and add to stack of analysis step widgets
         w_name = "preprocess"
