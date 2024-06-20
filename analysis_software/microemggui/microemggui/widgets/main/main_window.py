@@ -67,7 +67,7 @@ class AnalysisToolbar(QToolBar):
             "preptext": "Prepare EMG",
             "load": "1. Load",
             "preprocess": "2. Preprocess",
-            "select": "3. Select data",
+            "remove": "3. Remove channels",
             "analysetext": "Analyse EMG",
             "motorunits": "4. Find motor units",
             "fibres": "5. Localise fibres",
@@ -187,7 +187,7 @@ class AnalysisStepsWidget(QWidget):
 
         # Make iniital widgets
         # Will use same names as AnalysisToolbar so easy to link buttons to corresponding pages:
-        # "home", "load", "preprocess", "select", "motorunits", "fibres", "jitter","export"
+        # "home", "load", "preprocess", "remove", "motorunits", "fibres", "jitter","export"
         self.widgets = {
             "home": WelcomeWidget(parent=self),
             "load": LoadWidget(parent=self),
@@ -209,6 +209,7 @@ class AnalysisStepsWidget(QWidget):
 # Next steps:
 # Add recording to label
 # text field for recording label?
+# TODO: progress bar doesn't work correctly if manually change filter settings
 
 
 class MicroEMGMain(QMainWindow):
@@ -251,7 +252,9 @@ class MicroEMGMain(QMainWindow):
 
         # Connections to signals from loading data
         self.widgets["analysis"].widgets["load"].load_finished.connect(
-            self.enable_preprocess
+            lambda load_finished, w_name="preprocess": self.enable_analysis_toolbar_button(
+                load_finished, w_name
+            )
         )
         self.widgets["analysis"].widgets["load"].load_data_changed.connect(
             self.update_raw_emg_model_and_settings_model
@@ -290,6 +293,37 @@ class MicroEMGMain(QMainWindow):
             self.emg_model["raw"], preprocess_settings_model, self.emg_clrs
         )
 
+    def connect_next_button_to_analysis_widget(self, next_button, w_name: str):
+        # Connect the next button on an analysis step to the corresponding widget for
+        # the next analysis step.
+        # Also creates connection to update the active button on the analysis toolbar.
+
+        next_button.clicked.connect(
+            lambda checked=None, w_name=w_name: self.widgets["analysis"].show_widget(
+                w_name
+            )
+        )
+        next_button.clicked.connect(
+            lambda checked=None, w_name=w_name: self.click_analysis_toolbar_button(
+                w_name
+            )
+        )
+
+    def click_analysis_toolbar_button(self, w_name: str):
+        # Clicks on the w_name button in the analysis toolbar to make it the active
+        # button.
+        # Used as a slot for clicking the next buttons on the analysis step widgets (
+        # as an alternative to using the toolbar to navigate)
+
+        self.widgets["analysistoolbar"].widgets[w_name].toggle()
+
+    def enable_analysis_toolbar_button(self, previous_step_finished: bool, w_name: str):
+        # Enable/disable button in analysis toolbar based on whether previous step is
+        # finished
+        self.widgets["analysistoolbar"].widgets[w_name].setEnabled(
+            previous_step_finished
+        )
+
     def add_preprocess_widget(self, raw_emg_model, preprocess_settings_model, emg_clrs):
         # Add preprocessing widget
         # TODO: check if widget exists before adding? or always fine to overwrite? would
@@ -308,21 +342,7 @@ class MicroEMGMain(QMainWindow):
         self.update_toolbar_connections()
 
         # Add connection to next button
-        self.widgets["analysis"].widgets["load"].widgets["run"].widgets[
-            "next"
-        ].clicked.connect(
-            lambda checked=None, w_name=w_name: self.widgets["analysis"].show_widget(
-                w_name
-            )
+        next_button = (
+            self.widgets["analysis"].widgets["load"].widgets["run"].widgets["next"]
         )
-
-    #    def go_to_next_step(self, w_name):
-    # TODO: connect next button to toolbar button state AND widget (can probably
-    # generalise to all next buttons)
-    # TODO: progress bar doesn't work correctly if manually change filter settings
-
-    def enable_preprocess(self, load_finished: bool):
-        # Enable/disable preprocess button in toolbar based on whether load step is
-        # finished
-        # TODO: can this function be generalised to the other analysis widgets?
-        self.widgets["analysistoolbar"].widgets["preprocess"].setEnabled(load_finished)
+        self.connect_next_button_to_analysis_widget(next_button, w_name)
