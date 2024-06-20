@@ -257,6 +257,7 @@ class PreprocWidget(QWidget):
 
         # Set progress bar to max value to close dialog window
         self.progress.setValue(n_chan)
+        self.progress.hide()  # Forces to bar to disappear regardless of value
         print("Set progress bar value to n_chan")
 
         # Add preprocessed data to viewer
