@@ -125,9 +125,7 @@ class WelcomeWidget(QWidget):
         super().__init__(*args, **kwargs)
 
         # Create widgets
-        self.widgets = {
-            "title": SectionTitle("Welcome to the microEMG analysis GUI", parent=self)
-        }
+        self.widgets = {"title": SectionTitle("Welcome to the microEMG analysis GUI", parent=self)}
 
         # Add to layout
         layout = QVBoxLayout()
@@ -273,9 +271,7 @@ class MicroEMGMain(QMainWindow):
         print("Updating toolbar connections")
         for w_name, w in self.widgets["analysis"].widgets.items():
             self.widgets["analysistoolbar"].widgets[w_name].clicked.connect(
-                lambda checked=None, w_name=w_name: self.widgets[
-                    "analysis"
-                ].show_widget(w_name)
+                lambda checked=None, w_name=w_name: self.widgets["analysis"].show_widget(w_name)
             )
             print(w_name)
 
@@ -289,9 +285,7 @@ class MicroEMGMain(QMainWindow):
         preprocess_settings_model = EMGPreprocSettingsModel(
             self.settings_model.preprocess_settings
         )
-        self.add_preprocess_widget(
-            self.emg_model["raw"], preprocess_settings_model, self.emg_clrs
-        )
+        self.add_preprocess_widget(self.emg_model["raw"], preprocess_settings_model, self.emg_clrs)
 
     def connect_next_button_to_analysis_widget(self, next_button, w_name: str):
         # Connect the next button on an analysis step to the corresponding widget for
@@ -299,14 +293,10 @@ class MicroEMGMain(QMainWindow):
         # Also creates connection to update the active button on the analysis toolbar.
 
         next_button.clicked.connect(
-            lambda checked=None, w_name=w_name: self.widgets["analysis"].show_widget(
-                w_name
-            )
+            lambda checked=None, w_name=w_name: self.widgets["analysis"].show_widget(w_name)
         )
         next_button.clicked.connect(
-            lambda checked=None, w_name=w_name: self.click_analysis_toolbar_button(
-                w_name
-            )
+            lambda checked=None, w_name=w_name: self.click_analysis_toolbar_button(w_name)
         )
 
     def click_analysis_toolbar_button(self, w_name: str):
@@ -320,9 +310,7 @@ class MicroEMGMain(QMainWindow):
     def enable_analysis_toolbar_button(self, previous_step_finished: bool, w_name: str):
         # Enable/disable button in analysis toolbar based on whether previous step is
         # finished
-        self.widgets["analysistoolbar"].widgets[w_name].setEnabled(
-            previous_step_finished
-        )
+        self.widgets["analysistoolbar"].widgets[w_name].setEnabled(previous_step_finished)
 
     def add_preprocess_widget(self, raw_emg_model, preprocess_settings_model, emg_clrs):
         # Add preprocessing widget
@@ -342,7 +330,5 @@ class MicroEMGMain(QMainWindow):
         self.update_toolbar_connections()
 
         # Add connection to next button
-        next_button = (
-            self.widgets["analysis"].widgets["load"].widgets["run"].widgets["next"]
-        )
+        next_button = self.widgets["analysis"].widgets["load"].widgets["run"].widgets["next"]
         self.connect_next_button_to_analysis_widget(next_button, w_name)

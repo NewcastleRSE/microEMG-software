@@ -69,9 +69,7 @@ class SelectRecordingWidget(QWidget):
         self.setLayout(layout)
 
         # Connections
-        self.widgets["combobox"].currentIndexChanged.connect(
-            self.demo_recording_changed
-        )
+        self.widgets["combobox"].currentIndexChanged.connect(self.demo_recording_changed)
         self.widgets["button"].clicked.connect(self.browse_for_recording_file)
 
     def demo_recording_changed(self, idx: int):
@@ -99,9 +97,7 @@ class SelectRecordingWidget(QWidget):
         # TODO: select folder or header file? currently select folder
         # TODO: handle if file dialog is cancelled (instead of selecting folder)
 
-        recording_path = QFileDialog.getExistingDirectory(
-            self, "Select Intan recording files", ""
-        )
+        recording_path = QFileDialog.getExistingDirectory(self, "Select Intan recording files", "")
 
         # Change combobox to empty (need to do first so does not disable load button)
         self.widgets["combobox"].setCurrentIndex(0)
@@ -186,9 +182,7 @@ class LoadRecordingSection(QWidget):
         self.widgets["selectrecording"].recording_label_changed.connect(
             self.update_recording_label
         )
-        self.widgets["selectrecording"].recording_path_changed.connect(
-            self.update_recording_path
-        )
+        self.widgets["selectrecording"].recording_path_changed.connect(self.update_recording_path)
         self.widgets["load"].clicked.connect(self.load_data)
 
         # Creates attribute "recording_path" for path to files to load
@@ -314,9 +308,7 @@ class LoadSettingsSection(QWidget):
         self.setLayout(layout)
 
         # Connections
-        self.widgets["load"].widgets["combobox"].currentTextChanged.connect(
-            self.load_settings
-        )
+        self.widgets["load"].widgets["combobox"].currentTextChanged.connect(self.load_settings)
 
     def load_settings(self, settings_name: str):
         # Add correct settings as attribute when settings combobox is changed
@@ -335,9 +327,7 @@ class LoadSettingsSection(QWidget):
                     preprocess_settings.add_remove_mains()
 
             # TODO: update to all settings
-            self.settings_model = EMGSettingsModel(
-                preprocess_settings=preprocess_settings
-            )
+            self.settings_model = EMGSettingsModel(preprocess_settings=preprocess_settings)
             self.settings_changed.emit(self.settings_model)  # Must emit first
             self.settings_loaded.emit(True)
 
@@ -438,13 +428,9 @@ class LoadWidget(QWidget):
         self.setLayout(layout)
 
         # Connections
-        self.widgets["recording"].recording_loaded.connect(
-            self.updates_after_loading_emg
-        )
+        self.widgets["recording"].recording_loaded.connect(self.updates_after_loading_emg)
         self.widgets["recording"].recording_changed.connect(self.update_emg_model)
-        self.widgets["settings"].settings_loaded.connect(
-            self.updates_after_loading_settings
-        )
+        self.widgets["settings"].settings_loaded.connect(self.updates_after_loading_settings)
         self.widgets["settings"].settings_changed.connect(self.update_settings_model)
 
         # Send signal that recording has not yet been loaded to set correct states
@@ -466,9 +452,7 @@ class LoadWidget(QWidget):
             self.settings_model = None
 
             # Remove any previously selected settings in combobox
-            self.widgets["settings"].widgets["load"].widgets[
-                "combobox"
-            ].setCurrentIndex(0)
+            self.widgets["settings"].widgets["load"].widgets["combobox"].setCurrentIndex(0)
 
             # Signal to prevent next analysis steps
             self.load_finished.emit(False)

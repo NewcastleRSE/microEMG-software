@@ -5,6 +5,7 @@ Note: does not use Qt classes for model/view framework. Purpose is to provide an
 interface to pymicroemg data classes for settings:
     - EMGPreprocSettings
 """
+
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
@@ -31,26 +32,19 @@ class EMGSettingsModel:
         remove_mains_str = f"Remove mains: {self.preprocess_settings.remove_mains}"
         filter_str = f"Filter: {self.preprocess_settings.butterworth_filter}"
         if self.preprocess_settings.butterworth_filter:
-            filter_type = self.preprocess_settings.butterworth_filter_settings[
-                "filter_type"
-            ]
+            filter_type = self.preprocess_settings.butterworth_filter_settings["filter_type"]
             order = self.preprocess_settings.butterworth_filter_settings["order"]
             cutoff1 = self.preprocess_settings.butterworth_filter_settings["cutoff1"]
             if filter_type == "bandpass":
-                cutoff2 = self.preprocess_settings.butterworth_filter_settings[
-                    "cutoff2"
-                ]
+                cutoff2 = self.preprocess_settings.butterworth_filter_settings["cutoff2"]
                 cutoff_str = f"cutoff frequencies: {cutoff1} to {cutoff2} Hz"
             else:
                 cutoff_str = f"cutoff frequency: {cutoff1} Hz"
             filter_str = (
-                filter_str
-                + f" ({filter_type} Butterworth filter, {cutoff_str}, order: {order})"
+                filter_str + f" ({filter_type} Butterworth filter, {cutoff_str}, order: {order})"
             )
 
-        preprocess_str = (
-            f"<b>Preprocessing settings</b><br>{remove_mains_str}<br>{filter_str}"
-        )
+        preprocess_str = f"<b>Preprocessing settings</b><br>{remove_mains_str}<br>{filter_str}"
 
         # TODO: add remaining settings
         settings_text = preprocess_str
