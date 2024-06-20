@@ -55,7 +55,6 @@ class LoadSettingsWidget(QWidget):
 class LoadSettingsSection(QWidget):
     # Widget for selecting analysis settings
     # TODO: consider adding option to add new settings
-    # TODO: display settings when selected?
 
     # Signal for whether settings have been loaded
     settings_loaded = Signal(bool)

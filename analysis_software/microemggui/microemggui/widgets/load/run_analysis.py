@@ -26,7 +26,7 @@ class NextButton(LargePushButton):
 
 class RunAnalysisSection(QWidget):
     # Section in loading widget for running the analysis
-    # TODO: add buttons for running analysis either step-by-step or all steps
+    # TODO: add button for running multiple/all steps of analysis without user input
 
     def __init__(self, parent=None):
         super().__init__(parent)
