@@ -256,9 +256,10 @@ class PreprocWidget(QWidget):
         )
 
         # Set progress bar to max value to close dialog window
+        print(f"progress bar value at end of preprocessing: {self.progress.value()}")
         self.progress.setValue(n_chan)
+        print(f"progress bar value after setting to {n_chan} (n_chan): {self.progress.value()}")
         self.progress.hide()  # Forces to bar to disappear regardless of value
-        print("Set progress bar value to n_chan")
 
         # Add preprocessed data to viewer
         self.widgets["tabbedviewer"].add_preproc_emg_model(self.emg_model["preproc"])
@@ -286,5 +287,7 @@ class PreprocWidget(QWidget):
         # bar to be reset for different analysis steps
         elif record.record_context.loop_i:
             print(record.record_context.analysis_step)
-            print(record.record_context.loop_i)
+            print(f"loop i: {record.record_context.loop_i}")
+            print(f"progress bar original value: {self.progress.value()}")
             self.progress.setValue(record.record_context.loop_i)
+            print(f"progress bar updated value: {self.progress.value()}")
