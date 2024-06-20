@@ -245,6 +245,7 @@ class PreprocWidget(QWidget):
 
         # Create progress bar
         n_chan = self.emg_model["raw"].emg_data.n_chan
+        print(f"{n_chan} channels")
         self.progress = QProgressDialog("Preprocessing", None, 0, n_chan, parent=self)
         self.progress.setWindowModality(Qt.WindowModal)
         self.progress.setMinimumDuration(0)
@@ -256,6 +257,7 @@ class PreprocWidget(QWidget):
 
         # Set progress bar to max value to close dialog window
         self.progress.setValue(n_chan)
+        print("Set progress bar value to n_chan")
 
         # Add preprocessed data to viewer
         self.widgets["tabbedviewer"].add_preproc_emg_model(self.emg_model["preproc"])
@@ -282,4 +284,6 @@ class PreprocWidget(QWidget):
         # Note i will never reach the max value of the progress bar - this allows the
         # bar to be reset for different analysis steps
         elif record.record_context.loop_i:
+            print(record.record_context.analysis_step)
+            print(record.record_context.loop_i)
             self.progress.setValue(record.record_context.loop_i)
