@@ -3,6 +3,7 @@ Tests for widget that loads microEMG recording and performs other analysis set u
 """
 
 import pytest
+from pytest_check import check
 
 from microemggui.models.emg import EMGDataRawModel
 from microemggui.models.settings import EMGSettingsModel
@@ -80,13 +81,15 @@ def test_load_button_disabled_when_remove_demo_recording_selection(qtbot, record
     w_select.widgets["combobox"].setCurrentIndex(idx)
 
     # Check that load button is enabled
-    assert w_recording.widgets["load"].isEnabled()
+    with check:
+        assert w_recording.widgets["load"].isEnabled()
 
     # Change combobox back to empty (first index)
     w_select.widgets["combobox"].setCurrentIndex(0)
 
     # Check that load button is disabled
-    assert not w_recording.widgets["load"].isEnabled()
+    with check:
+        w_recording.widgets["load"].isEnabled()
 
 
 @pytest.mark.parametrize("recording_num", [0])
@@ -100,16 +103,21 @@ def test_can_load_demo_recording(qtbot, recording_num):
     w_recording = window.widgets["recording"]
 
     # Check that no EMG files present initially
-    assert not w_recording.emg_model  # EMG model is None
-    assert not w_recording.emg_label  # No label
+    with check:
+        assert not w_recording.emg_model  # EMG model is None
+    with check:
+        assert not w_recording.emg_label  # No label
 
     # Load demo recording
     load_demo_recording(window, recording_num)
 
     # Check that EMG files are added
-    assert w_recording.emg_model  # EMG model is not None
-    assert isinstance(w_recording.emg_model, EMGDataRawModel)  # Check type
-    assert w_recording.emg_label  # Check that label exists
+    with check:
+        assert w_recording.emg_model  # EMG model is not None
+    with check:
+        assert isinstance(w_recording.emg_model, EMGDataRawModel)  # Check type
+    with check:
+        assert w_recording.emg_label  # Check that label exists
 
 
 @pytest.mark.parametrize("recording_num", [0])
@@ -123,15 +131,19 @@ def test_that_loading_demo_recording_sends_emg_data_to_load_widget(qtbot, record
     w_recording = window.widgets["recording"]
 
     # Check that no EMG data present initially in load widget
-    assert not window.emg_model  # EMG model is None
+    with check:
+        assert not window.emg_model  # EMG model is None
 
     # Load demo recording
     load_demo_recording(window, recording_num)
 
     # Check that EMG files are added to load widget and matches data in recording widget
-    assert window.emg_model  # EMG model is not None
-    assert isinstance(window.emg_model, EMGDataRawModel)  # Check type
-    assert window.emg_model == w_recording.emg_model  # Data matches in different widgets
+    with check:
+        assert window.emg_model  # EMG model is not None
+    with check:
+        assert isinstance(window.emg_model, EMGDataRawModel)  # Check type
+    with check:
+        assert window.emg_model == w_recording.emg_model  # Data matches in different widgets
 
 
 @pytest.mark.parametrize("recording_num", [0])
@@ -154,8 +166,10 @@ def test_that_changing_recording_selection_deletes_loaded_recording_in_recording
     w_select.widgets["combobox"].setCurrentIndex(0)
 
     # Check that no EMG files are present
-    assert not w_recording.emg_model  # EMG model is None
-    assert not w_recording.emg_label  # Check that no label
+    with check:
+        assert not w_recording.emg_model  # EMG model is None
+    with check:
+        assert not w_recording.emg_label  # Check that no label
 
 
 @pytest.mark.parametrize("recording_num", [0])
@@ -197,13 +211,15 @@ def test_that_changing_recording_path_to_empty_disables_load_button(qtbot, recor
     w_select.widgets["combobox"].setCurrentIndex(idx)
 
     # Check that load button is enabled
-    assert w_recording.widgets["load"].isEnabled()
+    with check:
+        assert w_recording.widgets["load"].isEnabled()
 
     # Change recording path to empty
     w_select.recording_path_changed.emit("")
 
     # Check that load button is disabled
-    assert not w_recording.widgets["load"].isEnabled()
+    with check:
+        assert not w_recording.widgets["load"].isEnabled()
 
 
 @pytest.mark.parametrize("recording_label", ["testlabel", "test label", "Test_Label", ""])
@@ -224,8 +240,10 @@ def test_that_changing_recording_label_updates_attribute_and_label_text_in_recor
     w_select.recording_label_changed.emit(recording_label)
 
     # Check that label is updated (attribute and label text)
-    assert w_recording.emg_label == recording_label
-    assert w_label.widgets["recording"].text() == recording_label
+    with check:
+        assert w_recording.emg_label == recording_label
+    with check:
+        assert w_label.widgets["recording"].text() == recording_label
 
 
 # --- Tests for loading EMG settings ---
@@ -245,8 +263,10 @@ def test_that_settings_model_is_initially_none_in_settings_and_load_widgets(qtbo
     w_settings = window.widgets["settings"]
 
     # Check that no settings are stored in widgets
-    assert w_settings.settings_model is None
-    assert window.settings_model is None
+    with check:
+        assert w_settings.settings_model is None
+    with check:
+        assert window.settings_model is None
 
 
 @pytest.mark.parametrize("recording_num", [0])
@@ -268,11 +288,16 @@ def test_that_selecting_default_settings_changes_settings_model_in_settings_and_
     w_settings.widgets["load"].widgets["combobox"].setCurrentText("Default")
 
     # Check that settings are stored in widgets
-    assert w_settings.settings_model
-    assert window.settings_model
-    assert isinstance(w_settings.settings_model, EMGSettingsModel)  # Check type
-    assert isinstance(window.settings_model, EMGSettingsModel)  # Check type
-    assert w_settings.settings_model == window.settings_model  # Check settings are the same
+    with check:
+        assert w_settings.settings_model
+    with check:
+        assert window.settings_model
+    with check:
+        assert isinstance(w_settings.settings_model, EMGSettingsModel)  # Check type
+    with check:
+        assert isinstance(window.settings_model, EMGSettingsModel)  # Check type
+    with check:
+        assert w_settings.settings_model == window.settings_model  # Check settings are the same
 
 
 @pytest.mark.parametrize("recording_num", [0])
@@ -297,5 +322,7 @@ def test_that_removing_settings_selection_removes_settings_model_in_settings_and
     w_settings.widgets["load"].widgets["combobox"].setCurrentIndex(0)
 
     # Check that no settings are stored in widgets
-    assert w_settings.settings_model is None
-    assert window.settings_model is None
+    with check:
+        assert w_settings.settings_model is None
+    with check:
+        assert window.settings_model is None
