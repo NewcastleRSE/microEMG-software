@@ -91,7 +91,6 @@ class SelectRecordingWidget(QWidget):
         # Slot for button for choosing recording files; gets path to files
         # TODO: best default location to open file browser?
         # TODO: select folder or header file? currently select folder
-        # TODO: handle if file dialog is cancelled (instead of selecting folder)
 
         recording_path = QFileDialog.getExistingDirectory(self, "Select Intan recording files", "")
 
@@ -102,8 +101,11 @@ class SelectRecordingWidget(QWidget):
         self.recording_path_changed.emit(recording_path)
 
         # Get label based on file name and emit
-        recording_label_match = re.search(r"/[^/]*$", recording_path)
-        recording_label = recording_path[recording_label_match.start() + 1 :]
+        if recording_path:
+            recording_label_match = re.search(r"/[^/]*$", recording_path)
+            recording_label = recording_path[recording_label_match.start() + 1 :]
+        else:  # If no file name (empty path), send empty string for label
+            recording_label = ""
         self.recording_label_changed.emit(recording_label)
 
 
@@ -214,7 +216,6 @@ class LoadRecordingSection(QWidget):
         # Load EMG data (slot for load button)
         # TODO: continue adding to specific errors that can be caught (e.g., no header file)
         # TODO: loading spinner or pop up window during loading
-        # TODO: send emg data to main window
 
         try:
             emg_files = EMGFiles(self.recording_path)
