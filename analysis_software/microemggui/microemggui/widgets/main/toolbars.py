@@ -44,6 +44,14 @@ class MicroEMGLogo(QPushButton):
         self.setCheckable(True)
 
 
+class RecordingLabel(QLabel):
+    # Widget for recording label in top toolbar
+    # Separate class so easy to style
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
 # --- Toolbars ---
 
 
@@ -117,8 +125,7 @@ class TopToolbar(QToolBar):
         super().__init__(*args, **kwargs)
 
         # Add placehold label for recording
-        # TODO: replace with custom label class
-        self.widgets = {"recording": QLabel("Recording:", parent=self)}
+        self.widgets = {"recording": RecordingLabel("", parent=self)}
         size_policy = self.widgets["recording"].sizePolicy()
         size_policy.setHorizontalPolicy(QSizePolicy.Expanding)
         self.widgets["recording"].setSizePolicy(size_policy)
@@ -147,3 +154,11 @@ class TopToolbar(QToolBar):
 
         # Properties
         self.setIconSize(QSize(16, 16))
+
+    def change_recording_label(self, recording: str):
+        # Slot for updating recording label
+
+        if recording:
+            self.widgets["recording"].setText(f"<b>Recording:</b> {recording}")
+        else:  # if label is empty, remove all text from label
+            self.widgets["recording"].setText("")

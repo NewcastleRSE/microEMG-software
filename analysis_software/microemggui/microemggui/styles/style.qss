@@ -139,6 +139,11 @@ AnalysisToolbarLabel {
     padding-bottom: 5px;
 }
 
+RecordingLabel {
+    color: 'grey';
+    font-size: 12pt;
+}
+
 MicroEMGLogo {
     text-align: center;
     background-color: 'white';

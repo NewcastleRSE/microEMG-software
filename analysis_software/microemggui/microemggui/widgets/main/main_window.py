@@ -78,7 +78,6 @@ class AnalysisStepsWidget(QWidget):
 # Next steps:
 # Add recording to label
 # text field for recording label?
-# TODO: progress bar doesn't work correctly if manually change filter settings
 
 
 class MicroEMGMain(QMainWindow):
@@ -113,6 +112,12 @@ class MicroEMGMain(QMainWindow):
         layout.setContentsMargins(0, 0, 0, 0)
         widget.setLayout(layout)
 
+        # Add widget to center
+        self.setCentralWidget(widget)
+
+        # Window properties
+        self.resize(1200, 800)
+
         # Connections
 
         # Connections between analysis toolbar buttons and stacked analysis widgets
@@ -120,20 +125,32 @@ class MicroEMGMain(QMainWindow):
         self.update_toolbar_connections()
 
         # Connections to signals from loading data
-        self.widgets["analysis"].widgets["load"].load_finished.connect(
+        self.add_load_connections()
+
+    def add_load_connections(self):
+        # Connections to add from load step widget
+        # Connections enable/disable preprocess toolbar button and updates data stored
+        # in main window
+
+        # Load widget
+        load_w = self.widgets["analysis"].widgets["load"]
+
+        # Connection for enabling/disabling next step (preprocessing)
+        load_w.load_finished.connect(
             lambda load_finished, w_name="preprocess": self.enable_analysis_toolbar_button(
                 load_finished, w_name
             )
         )
-        self.widgets["analysis"].widgets["load"].load_data_changed.connect(
-            self.update_raw_emg_model_and_settings_model
+
+        # Connection for updating raw EMG and settings data in main window
+        load_w.load_data_changed.connect(self.update_raw_emg_model_and_settings_model)
+
+        # Link recording label to top toolbar
+        # TODO: consider storing in main window (e.g., for saving/exports)
+        select_recording_w = load_w.widgets["recording"].widgets["selectrecording"]
+        select_recording_w.recording_label_changed.connect(
+            self.widgets["toptoolbar"].change_recording_label
         )
-
-        # Add widget to center
-        self.setCentralWidget(widget)
-
-        # Window properties
-        self.resize(1200, 800)
 
     def update_toolbar_connections(self):
         # Connects toolbar buttons to analysis widgets
@@ -148,6 +165,7 @@ class MicroEMGMain(QMainWindow):
 
     def update_raw_emg_model_and_settings_model(self, raw_emg_model, settings_model):
         # Slot for updating raw EMG model and settings model
+        # Also updates preprocessing widget with this data
 
         self.emg_model["raw"] = raw_emg_model
         self.settings_model = settings_model
