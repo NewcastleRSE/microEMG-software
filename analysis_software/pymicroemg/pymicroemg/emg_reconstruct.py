@@ -199,7 +199,7 @@ class EMGAnalysisReconstruct:
         motor_unit.mup_onsets = (motor_unit.mup_onsets[0, :] - 1).flatten()
         motor_unit.analysis_performed["fibres_localised"] = True
 
-    def load_mup_data(self, motor_unit_number, filename_fibre_centres, filename_mup_onsets):
+    def load_mup_data(self, motor_unit_number, filename_fibre_centres, filename_mup_onsets, filename_fibre_pot_times):
         """
         Load fibre centre and onset data for one motor unit
         - most likely to be used just for testing, esp clustering of MUPs
@@ -230,12 +230,16 @@ class EMGAnalysisReconstruct:
 
         with open(filename_mup_onsets, "r") as x:
             mup_onsets = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
+            
+        with open(filename_fibre_pot_times, "r") as x:
+            fibre_pot_times = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
 
         motor_unit = self.found_motor_units.motor_units[motor_unit_number]
 
         motor_unit.fibre_centres = np.array(fibre_centres, dtype=float)
         motor_unit.mup_onsets = np.array(mup_onsets).astype(int).flatten()   
         motor_unit.n_fibre_potentials = len(motor_unit.fibre_centres)
+        motor_unit.fibre_potential_times = np.array(fibre_pot_times).astype(int).flatten()
         
         print(motor_unit.fibre_centres)
         print(motor_unit.mup_onsets)
