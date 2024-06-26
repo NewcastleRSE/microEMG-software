@@ -8,6 +8,7 @@ TODO: cache fixtures for faster testing
 """
 
 import pytest
+from pytest_check import check
 
 from pymicroemg.emg_preproc_settings import EMGPreprocSettings
 from pymicroemg.emg_files import EMGFiles
@@ -106,7 +107,8 @@ def test_apply_button_disabled_if_freq_values_valid_manually_set_to_false(
     w_apply = window.widgets["buttons"].widgets["apply"]
 
     # Confirm that button is enabled with provided settings
-    assert w_apply.isEnabled()
+    with check:
+        assert w_apply.isEnabled()
 
     # Frequency widget - has freq_values_valid attribute
     w_freq = window.widgets["settings"].widgets["filter_spec"].widgets["filter_freq"]
@@ -117,7 +119,8 @@ def test_apply_button_disabled_if_freq_values_valid_manually_set_to_false(
     window.widgets["settings"].settings_changed()
 
     # Confirm that apply button is disabled
-    assert w_apply.isEnabled() is False
+    with check:
+        assert w_apply.isEnabled() is False
 
 
 def test_apply_button_changed_to_reapply_and_disabled_after_preprocessing(
@@ -135,8 +138,10 @@ def test_apply_button_changed_to_reapply_and_disabled_after_preprocessing(
     w_apply.clicked.emit()
 
     # Check text of apply button changed and button disabled
-    assert w_apply.text() == "Re-apply"
-    assert w_apply.isEnabled() is False
+    with check:
+        assert w_apply.text() == "Re-apply"
+    with check:
+        assert w_apply.isEnabled() is False
 
 
 def test_next_button_becomes_visible_after_preprocessing(
@@ -152,14 +157,17 @@ def test_next_button_becomes_visible_after_preprocessing(
     w_next = window.widgets["buttons"].widgets["next"]
 
     # Confirm next button is hidden
-    assert w_next.isVisible() is False
+    with check:
+        assert w_next.isVisible() is False
 
     # Click apply button to trigger preprocessing
     w_apply.clicked.emit()
 
     # Check next button becomes visible and enabled
-    assert w_next.isVisible()
-    assert w_next.isEnabled()
+    with check:
+        assert w_next.isVisible()
+    with check:
+        assert w_next.isEnabled()
 
 
 def test_emg_data_preprocessed_and_added_to_viewer_when_apply_button_clicked(
@@ -177,15 +185,22 @@ def test_emg_data_preprocessed_and_added_to_viewer_when_apply_button_clicked(
     w_apply.clicked.emit()
 
     # Check that preprocessed data is added with settings that match settings_model
-    assert window.emg_model.get("preproc")  # Confirm preprocessed data added
-    assert window.emg_model["preproc"].emg_data.preproc_settings == settings_model_limited.settings
+    with check:
+        assert window.emg_model.get("preproc")  # Confirm preprocessed data added
+    with check:
+        assert (
+            window.emg_model["preproc"].emg_data.preproc_settings
+            == settings_model_limited.settings
+        )
 
     # Confirm same preprocessed data added to tabbed EMG viewer
     viewer_emg_model_preproc = window.widgets["tabbedviewer"].emg_model["preproc"]
-    assert viewer_emg_model_preproc == window.emg_model["preproc"]
+    with check:
+        assert viewer_emg_model_preproc == window.emg_model["preproc"]
 
     # Confirm that preprocessed data is data shown in viewer
-    assert (
-        viewer_emg_model_preproc
-        == window.widgets["tabbedviewer"].widgets["viewer"].widgets["plot"].emg_model
-    )
+    with check:
+        assert (
+            viewer_emg_model_preproc
+            == window.widgets["tabbedviewer"].widgets["viewer"].widgets["plot"].emg_model
+        )

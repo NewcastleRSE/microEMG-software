@@ -306,6 +306,7 @@ class EMGPlotWidget(QWidget):
         # divisions
 
         max_start = self.emg_model.emg_data.emg_dur - (self.div_size * (self.n_div - 1))
+        max_start = max(max_start, 0)  # Ensures min possible value is zero
         return max_start
 
     def increment_start_time(self, n_div: int):
@@ -578,9 +579,9 @@ class EMGStartTimeWidget(QWidget):
         start_t = self.plot_widget.start_t
 
         # Set max start division and set slider to correct corresponding start time
-        self.widgets["slider"].setMaximum(
-            int(self.emg_dur / self.plot_widget.div_size) - (self.plot_widget.n_div - 1)
-        )  # Set maximum
+        max_start = int(self.emg_dur / self.plot_widget.div_size) - (self.plot_widget.n_div - 1)
+        max_start = max(max_start, 0)  # Ensures min possible value is zero
+        self.widgets["slider"].setMaximum(max_start)  # Set maximum
         self.update_slider(start_t)
         self.update_max_time_label()
 

@@ -24,7 +24,28 @@ class CheckBoxMain(QCheckBox):
 
 
 # --- Settings input ---
-# TODO: consider changing text labels to more generic names (usable for more than input)
+
+
+class InputComboBox(QComboBox):
+    # Combobox for settings input
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class InputSpinBox(QSpinBox):
+    # Spinbox for settings input
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class InputLineEdit(QLineEdit):
+    # LineEdit for settings input
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+# --- Labels ---
+# TODO: consider changing input text labels to more generic names (usable for more than input)
 
 
 class InputLabel(QLabel):
@@ -60,27 +81,6 @@ class InputWarningLabel(QLabel):
         self.setWordWrap(True)
 
 
-class InputComboBox(QComboBox):
-    # Combobox for settings input
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-
-class InputSpinBox(QSpinBox):
-    # Spinbox for settings input
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-
-class InputLineEdit(QLineEdit):
-    # LineEdit for settings input
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-
-# --- Titles ---
-
-
 class SubsectionTitle(QLabel):
     # Label for subsection of a larger widget (e.g., settings)
     def __init__(self, *args, **kwargs):
@@ -89,6 +89,12 @@ class SubsectionTitle(QLabel):
 
 class SectionTitle(QLabel):
     # Label for a larger widget (e.g., preprocessing step)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class AnalysisToolbarLabel(QLabel):
+    # Labels for sections in analysis toolbar
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -104,6 +110,12 @@ class SmallPushButton(QPushButton):
 
 class LargePushButton(QPushButton):
     # Large push buttons
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class AnalysisToolbarButton(QPushButton):
+    # Push buttons for analysis toolbar
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
