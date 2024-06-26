@@ -157,7 +157,7 @@ class MicroEMGMain(QMainWindow):
         # Will need to call repeatedly as add more analysis widgets
 
         print("Updating toolbar connections")
-        for w_name, w in self.widgets["analysis"].widgets.items():
+        for w_name, _ in self.widgets["analysis"].widgets.items():
             self.widgets["analysistoolbar"].widgets[w_name].clicked.connect(
                 lambda checked=None, w_name=w_name: self.widgets["analysis"].show_widget(w_name)
             )

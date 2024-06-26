@@ -237,5 +237,6 @@ class LoadRecordingSection(QWidget):
             n_chan = self.emg_model.emg_data.n_chan
             emg_dur = self.emg_model.emg_data.emg_dur
             self.widgets["message"].setText(
-                f"Recording loaded! The recording has {n_chan} channels and is {round(emg_dur/60, 2)} minutes."
+                "Recording loaded!"
+                + f"The recording has {n_chan} channels and is {round(emg_dur/60, 2)} minutes."
             )
