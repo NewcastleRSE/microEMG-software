@@ -212,7 +212,7 @@ class EMGMotorUnit:
         
         param_grid = {
             "n_components": range(min_n_clusters, max_n_clusters+1),
-            "covariance_type": ["spherical", "tied", "diag", "full"],
+            "covariance_type": ["tied"] #["diag"] #["spherical"] #["full"] #["spherical", "tied", "diag", "full"], #returns different variance format if not full
         }
         
         grid_search = GridSearchCV(
@@ -295,6 +295,9 @@ class EMGMotorUnit:
                 "Localisation analysis has not been performed; cannot cluster fibres."
             )
 
+        fibre_centres_gmm_mean = []
+        fibre_centres_gmm_covariance = []
+        
         # Onset indices of all MUPs that have fibre potentials
         unique_mup_onsets = np.unique(self.mup_onsets)
         n_unique_mup_onsets = len(unique_mup_onsets)
@@ -332,7 +335,7 @@ class EMGMotorUnit:
         else:
             # Use Gaussian Mixture Model Selection
             min_n_clusters = np.min([2, mean_n_fps - 2])
-            max_n_clusters = 20#mean_n_fps + 2
+            max_n_clusters = mean_n_fps + 4
             grid_search = self.GMM_selection(self.fibre_centres, min_n_clusters, max_n_clusters)
             
             df = pd.DataFrame(grid_search.cv_results_)[
@@ -364,7 +367,11 @@ class EMGMotorUnit:
             
             fibre_clusters = grid_search.predict(self.fibre_centres)
             n_fibre_clusters = np.max(fibre_clusters) + 1
-        
+                  
+            fibre_centres_gmm_mean = grid_search.best_estimator_.means_
+            #print("grid_search.best_estimator_._estimator_type")
+            #print(grid_search.best_estimator_)
+            fibre_centres_gmm_covariance = grid_search.best_estimator_.covariances_
        
 
         print("mean_n_fps")
@@ -415,8 +422,8 @@ class EMGMotorUnit:
                     mup_fibre_pos[mup_num, :, cluster_num] = np.mean(pos, axis=0)
 
             # Compute covariance of fibre positions               
-            covariance = np.cov(mup_fibre_pos[~np.isnan(mup_fibre_pos[:, 0, cluster_num]), :, cluster_num].T)
-            fibre_centres_covariance.append(covariance)
+            #covariance = np.cov(mup_fibre_pos[~np.isnan(mup_fibre_pos[:, 0, cluster_num]), :, cluster_num].T)
+            #fibre_centres_covariance.append(covariance)
 
             # Compute median fibre positions
             fibre_centres_median = np.transpose(np.nanmedian(mup_fibre_pos, axis=0))
@@ -429,7 +436,8 @@ class EMGMotorUnit:
             "n_fps_per_mup_and_cluster": n_fps_per_mup_and_cluster,
             "mup_fibre_pos": mup_fibre_pos,
             "fibre_centres_median": fibre_centres_median,
-            "fibre_centres_covariance": fibre_centres_covariance,
+            "fibre_centres_gmm_mean": fibre_centres_gmm_mean,
+            "fibre_centres_gmm_covariance": fibre_centres_gmm_covariance
         }
         self.analysis_performed["fibres_clustered"] = True
     
@@ -542,7 +550,7 @@ class EMGMotorUnit:
         pt_potentials_size=10,
         pt_potentials_alpha=0.4,        
         pt_mean_size = 50,
-        nsigma = 1,        
+        n_sigma = 1,        
         axis_equal=True,
         ax=None,
         lw=0.5,
@@ -634,8 +642,10 @@ class EMGMotorUnit:
        
         # Plot centres and covariance regions
         for cluster_no in range(n_clusters):
-            self._plot_covariance_region(cluster_no, n_clusters, ax, pt_mean_size, nsigma)
-            
+            self._plot_covariance_region(cluster_no, n_clusters, ax, pt_mean_size, n_sigma)
+         
+        self._plot_fitted_gmms(ax, n_sigma)
+        
         # Plot larger markers for median fibre locations, Not much difference to medians
         #ax.scatter(
         #    self.fibre_clustering_results["fibre_centres_median"][:, 0],
@@ -709,7 +719,45 @@ class EMGMotorUnit:
                    facecolors=pt_facecolor,                               
                    linewidth=lw
                    )
+            
+    def _plot_fitted_gmms(self, ax, n_sigma):
+        #color_iter = sns.color_palette("tab10", 2)[::-1]
+        #Y_ = grid_search.predict(X)
+
+        #n_clusters = len(self.fibre_clustering_results["fibre_centres_gmm_mean"])
+        #if tied, define and save earlier in results - find out which cov model and adapt earlier...
+        cov = self.fibre_clustering_results["fibre_centres_gmm_covariance"] 
+        cov = np.array( [[cov[0,0], cov[0,1]], [cov[1,0], cov[1,1]]] )
         
+        #print(i)
+        #print("cov")
+        #print(cov)
+        #if cov.ndim < 2:
+        #    cov = np.array([[cov[0], 0], [0, cov[1]]]) # diag
+        print("cov-end")
+        print(cov)
+        print("\n")
+        
+        #for i, (mean, covX) in enumerate(
+        #for i, (mean) in enumerate(
+        #    zip(
+        #        self.fibre_clustering_results["fibre_centres_gmm_mean"],
+        #        #self.fibre_clustering_results["fibre_centres_gmm_covariance"]                
+        #    )
+        #):
+        for i, mean in enumerate(self.fibre_clustering_results["fibre_centres_gmm_mean"]):    
+            print(i)
+            v, w = np.linalg.eigh(cov)           
+
+            angle = np.arctan2(w[0][1], w[0][0])
+            angle = 180.0 * angle / np.pi  # convert to degrees
+            # Radius so times by 2 for diameter
+            v = n_sigma * 2 * np.sqrt(v)
+            ellipse = Ellipse(mean, v[0], v[1], angle=180.0 + angle, edgecolor="black", facecolor='none') #color=self.get_cluster_colour(i, n_clusters))
+            #ellipse.set_clip_box(fig.bbox)
+            #ellipse.set_alpha(0.5)
+            ax.add_artist(ellipse)
+
     def confidence_ellipse(self, x, y, ax, n_std=3.0, facecolor='none', **kwargs):
         """
         Taken from matplotlib documentation
@@ -765,20 +813,23 @@ class EMGMotorUnit:
         ellipse.set_transform(transf + ax.transData)
         return ax.add_patch(ellipse)   
 
-    def _plot_covariance_region(self, cluster_no, n_clusters, ax, pt_mean_size = 10, nsigma = 1, pt_facecolor = None):
+    def _plot_covariance_region(self, cluster_no, n_clusters, ax, pt_mean_size = 10, n_sigma = 1, pt_facecolor = None):
                       
-        x = np.array(self.fibre_centres[(self.fibre_clustering_results["fibre_clusters"] == cluster_no), 0])
-        y = np.array(self.fibre_centres[(self.fibre_clustering_results["fibre_clusters"] == cluster_no), 1])
+        #x = np.array(self.fibre_centres[(self.fibre_clustering_results["fibre_clusters"] == cluster_no), 0])
+        #y = np.array(self.fibre_centres[(self.fibre_clustering_results["fibre_clusters"] == cluster_no), 1])
       
-        center = np.array([[np.mean(x)], [np.mean(y)]])
-       
+        #center = np.array([[np.mean(x)], [np.mean(y)]])
+        center = self.fibre_clustering_results["fibre_centres_gmm_mean"][cluster_no]
+        print("center")
+        print(center)
+        
         if pt_facecolor is None:
             pt_facecolor = self.get_cluster_colour(cluster_no, n_clusters)
                 
         ax.scatter(center[0], center[1], pt_mean_size, color=pt_facecolor, edgecolors='black',
                    label=f"fibre {cluster_no + 1}")
         
-        self.confidence_ellipse(x, y, ax, nsigma, edgecolor="black")
+        #self.confidence_ellipse(x, y, ax, nsigma, edgecolor="black")
     
     def plot_3D_fibre_potential_clustering(
         self,
