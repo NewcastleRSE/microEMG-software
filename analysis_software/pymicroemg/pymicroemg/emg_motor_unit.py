@@ -22,6 +22,11 @@ import seaborn as sns
 from matplotlib.patches import Ellipse
 import matplotlib.transforms as transforms
 
+from sklearn.mixture import GaussianMixture
+from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import silhouette_score
+import pandas as pd
+
 # TODO: add csv and cv2 to poetry dependency management
 # Need to remove try/except block - temporary fix since functions not needed for
 # example pipeline
@@ -186,29 +191,39 @@ class EMGMotorUnit:
             )
 
         return np.array(some_data)
-        
-    def load_data_for_jitter_testing(self, path_str):
-        filename_clusters = path_str + 'py_kmean_clusters' + str(self.motor_unit_number) + '.csv'
-        fibre_clusters = self.load_test_data(filename_clusters)
-        n_fibre_clusters = len(fibre_clusters)
-        mean_n_fps = None
-        n_fps_per_mup_and_cluster = None
-        mup_fibre_pos = None
-        filename_centres = path_str + 'py_kmean_centres' + str(self.motor_unit_number) + '.csv'
-        fibre_centres_median = self.load_test_data(filename_clusters)
-        
-        # Store results as dictionary
-        self.fibre_clustering_results = {
-                "mean_n_fps": mean_n_fps,
-                "n_fibre_clusters": n_fibre_clusters,
-                "fibre_clusters": fibre_clusters,
-                "n_fps_per_mup_and_cluster": n_fps_per_mup_and_cluster,
-                "mup_fibre_pos": mup_fibre_pos,
-                "fibre_centres_median": fibre_centres_median,
-            }
-       
     
-    def cluster_fibre_potentials(self, random_state: int = 0, k : int = 0):
+    def gmm_bic_score(self, estimator, X):
+        """Callable to pass to GridSearchCV that will use the BIC score."""
+        #
+        # Make it negative since GridSearchCV expects a score to maximize
+        return -estimator.bic(X)
+       
+
+    def gmm_silhouette_score(self, estimator, X):
+        """Callable to pass to GridSearchCV that will use the BIC score."""
+        #       
+        return silhouette_score(X, estimator.predict(X))
+    
+    def GMM_selection(self, X, min_n_clusters, max_n_clusters):
+        """
+        Gaussian Mixture Model Selection
+        https://scikit-learn.org/stable/auto_examples/mixture/plot_gmm_selection.html#sphx-glr-auto-examples-mixture-plot-gmm-selection-py      
+        """
+        
+        param_grid = {
+            "n_components": range(min_n_clusters, max_n_clusters+1),
+            "covariance_type": ["spherical", "tied", "diag", "full"],
+        }
+        
+        grid_search = GridSearchCV(
+            GaussianMixture(), param_grid=param_grid, scoring=self.gmm_silhouette_score
+        )
+        
+        grid_search.fit(X)
+        
+        return grid_search
+
+    def cluster_fibre_potentials(self, random_state: int = 0, k : int = 0, use_time = False, use_gmm = False):
         """
         Cluster the fibre potentials and compute median fibre locations of the
         specified motor unit.
@@ -283,93 +298,140 @@ class EMGMotorUnit:
         # Onset indices of all MUPs that have fibre potentials
         unique_mup_onsets = np.unique(self.mup_onsets)
         n_unique_mup_onsets = len(unique_mup_onsets)
-
-        # Use rounded mean number of fibre potentials (FPs) per motor unit potential as
-        # k for clustering
         mean_n_fps = round(len(self.mup_onsets) / n_unique_mup_onsets)
-        if k == 0:
-            k = mean_n_fps
+        if not use_gmm:
+            # Use rounded mean number of fibre potentials (FPs) per motor unit potential as
+            # k for clustering
+            
+            if k == 0:
+                k = mean_n_fps
 
-        # Set up data to use to fit
-        data_for_k_means = np.hstack((self.fibre_centres, np.atleast_2d(self.fibre_potential_times).T))
-        
-        # scale columns by maximum in each column to give unit intervals for each dimension
-        normalize(data_for_k_means, axis=0, norm='max', copy=False)
-        
-        print(data_for_k_means)
-        
-        if mean_n_fps > 0:
-            fibre_kmeans = KMeans(n_clusters=k, random_state=random_state).fit(
-                data_for_k_means
-            )
-
+            if k == 0:
+                return
+            
+            # Set up data to use to fit
+            if use_time:
+                # scale time column
+                # do not scale fibre locations as they are in the same units (mm)
+                time_min = np.min(self.fibre_potential_times)
+                time_max = np.max(self.fibre_potential_times)
+                # Choose a value that is about half the length of the needle
+                max_time_scaled = 5
+            
+                data_for_k_means = np.hstack((self.fibre_centres, ((np.atleast_2d(self.fibre_potential_times).T - time_min)/(time_max - time_min))*max_time_scaled ))
+            
+                #normalize(data_for_k_means, axis=0, norm='max', copy=False)
+            else:
+                data_for_k_means = self.fibre_centres
+                
+            fibre_kmeans = KMeans(n_clusters=k, random_state=random_state).fit(data_for_k_means)
+            
             # fibre cluster assignments
             n_fibre_clusters = np.max(fibre_kmeans.labels_) + 1
             fibre_clusters = fibre_kmeans.labels_
-
-            # Initialise arrays for storing results
-
-            # Number of fibre potentials (FPs) in each MUP that belong to the same
-            # cluster
-            n_fps_per_mup_and_cluster = np.zeros((self.n_potentials, n_fibre_clusters))
-
-            # Location estimates of each fibre based on each MUP
-            # Note: unlike original code, data stored so indices match the
-            # self.potentials_t_idx array
-            mup_fibre_pos = np.full((self.n_potentials, 2, n_fibre_clusters), np.nan)
-            fibre_centres_covariance = []
+        else:
+            # Use Gaussian Mixture Model Selection
+            min_n_clusters = np.min([2, mean_n_fps - 2])
+            max_n_clusters = 20#mean_n_fps + 2
+            grid_search = self.GMM_selection(self.fibre_centres, min_n_clusters, max_n_clusters)
             
-            # Find median location of each fibre
-            for cluster_num in np.arange(n_fibre_clusters):
-                # Sometimes multiple fibre potentials in the same MUP are assigned to
-                # the same fibre clusters. Therefore, first compute average (mean)
-                # position in each MUP in which the fibre cluster appears.
-                # If no fibres with that cluster num appear in the MUP, position is
-                # stored as np.nan.
+            df = pd.DataFrame(grid_search.cv_results_)[
+                ["param_n_components", "param_covariance_type", "mean_test_score"]
+            ]
+            #df["mean_test_score"] = -df["mean_test_score"]
+            df = df.rename(
+                columns={
+                    "param_n_components": "Number of components",
+                    "param_covariance_type": "Type of covariance",
+                    #"mean_test_score": "BIC score",
+                    "mean_test_score": "silhouette score",
+                }
+            )
+            #df.sort_values(by="BIC score")
+            print(df)
 
-                # Note: unlike original code, iterate through all MUPs (not just ones
-                # present in "mup_onsets") so dimensions align to other MUP features.
-                for mup_num in np.arange(self.n_potentials):
-                    mup_onset = self.potentials_t_idx[mup_num]
+            sns.catplot(
+            data=df,
+            kind="bar",
+            x="Number of components",
+            y="silhouette score",
+            hue="Type of covariance")
+            
+            plt.show()
 
-                    # Fibre potentials that belong to the specified onset and cluster.
-                    idx = np.flatnonzero(
-                        np.all(
-                            (
-                                (self.mup_onsets == mup_onset),
-                                (fibre_clusters == cluster_num),
-                            ),
-                            axis=0,
-                        )
+            # fibre cluster assignments
+            #n_fibre_clusters = np.max(fibre_kmeans.labels_) + 1
+            
+            fibre_clusters = grid_search.predict(self.fibre_centres)
+            n_fibre_clusters = np.max(fibre_clusters) + 1
+        
+       
+
+        print("mean_n_fps")
+        print(mean_n_fps)
+        # Initialise arrays for storing results
+
+        # Number of fibre potentials (FPs) in each MUP that belong to the same
+        # cluster
+        n_fps_per_mup_and_cluster = np.zeros((self.n_potentials, n_fibre_clusters))
+
+        # Location estimates of each fibre based on each MUP
+        # Note: unlike original code, data stored so indices match the
+        # self.potentials_t_idx array
+        mup_fibre_pos = np.full((self.n_potentials, 2, n_fibre_clusters), np.nan)
+        fibre_centres_covariance = []
+            
+        # Find median location of each fibre
+        for cluster_num in np.arange(n_fibre_clusters):
+            # Sometimes multiple fibre potentials in the same MUP are assigned to
+            # the same fibre clusters. Therefore, first compute average (mean)
+            # position in each MUP in which the fibre cluster appears.
+            # If no fibres with that cluster num appear in the MUP, position is
+            # stored as np.nan.
+
+            # Note: unlike original code, iterate through all MUPs (not just ones
+            # present in "mup_onsets") so dimensions align to other MUP features.
+            for mup_num in np.arange(self.n_potentials):
+                mup_onset = self.potentials_t_idx[mup_num]
+
+                # Fibre potentials that belong to the specified onset and cluster.
+                idx = np.flatnonzero(
+                    np.all(
+                        (
+                            (self.mup_onsets == mup_onset),
+                            (fibre_clusters == cluster_num),
+                        ),
+                        axis=0,
                     )
+                )
 
-                    # Store number of fibre potentials found
-                    n_idx = len(idx)
-                    n_fps_per_mup_and_cluster[mup_num, cluster_num] = n_idx
+                # Store number of fibre potentials found
+                n_idx = len(idx)
+                n_fps_per_mup_and_cluster[mup_num, cluster_num] = n_idx
 
-                    # Compute average position of the fibre based on the specified MUP
-                    if n_idx > 0:
-                        pos = self.fibre_centres[idx, :]
-                        mup_fibre_pos[mup_num, :, cluster_num] = np.mean(pos, axis=0)
+                # Compute average position of the fibre based on the specified MUP
+                if n_idx > 0:
+                    pos = self.fibre_centres[idx, :]
+                    mup_fibre_pos[mup_num, :, cluster_num] = np.mean(pos, axis=0)
 
-                # Compute covariance of fibre positions               
-                covariance = np.cov(mup_fibre_pos[~np.isnan(mup_fibre_pos[:, 0, cluster_num]), :, cluster_num].T)
-                fibre_centres_covariance.append(covariance)
+            # Compute covariance of fibre positions               
+            covariance = np.cov(mup_fibre_pos[~np.isnan(mup_fibre_pos[:, 0, cluster_num]), :, cluster_num].T)
+            fibre_centres_covariance.append(covariance)
 
-                # Compute median fibre positions
-                fibre_centres_median = np.transpose(np.nanmedian(mup_fibre_pos, axis=0))
+            # Compute median fibre positions
+            fibre_centres_median = np.transpose(np.nanmedian(mup_fibre_pos, axis=0))
            
-            # Store results as dictionary
-            self.fibre_clustering_results = {
-                "mean_n_fps": mean_n_fps,
-                "n_fibre_clusters": n_fibre_clusters,
-                "fibre_clusters": fibre_clusters,
-                "n_fps_per_mup_and_cluster": n_fps_per_mup_and_cluster,
-                "mup_fibre_pos": mup_fibre_pos,
-                "fibre_centres_median": fibre_centres_median,
-                "fibre_centres_covariance": fibre_centres_covariance,
-            }
-            self.analysis_performed["fibres_clustered"] = True
+        # Store results as dictionary
+        self.fibre_clustering_results = {
+            "mean_n_fps": mean_n_fps,
+            "n_fibre_clusters": n_fibre_clusters,
+            "fibre_clusters": fibre_clusters,
+            "n_fps_per_mup_and_cluster": n_fps_per_mup_and_cluster,
+            "mup_fibre_pos": mup_fibre_pos,
+            "fibre_centres_median": fibre_centres_median,
+            "fibre_centres_covariance": fibre_centres_covariance,
+        }
+        self.analysis_performed["fibres_clustered"] = True
     
     def plot_fibre_locations_setup(
         self,        
@@ -1158,8 +1220,12 @@ class EMGMotorUnit:
         for i in range(n_fibre_pairs):
             fib1 = int(self.fibre_jitter_results["fibre1_numbers"][i])
             fib2 = int(self.fibre_jitter_results["fibre2_numbers"][i])
-            data[fib1, fib2] = int((self.fibre_jitter_results["mean_consecutive_diffs"][i] / sampling_freq) * 1e6 + 0.5)
-            data[fib2, fib1] = int((self.fibre_jitter_results["mean_consecutive_diffs"][i] / sampling_freq) * 1e6 + 0.5)
+            val = self.fibre_jitter_results["mean_consecutive_diffs"][i]
+            if not np.isnan(val):
+                val = int((val / sampling_freq) * 1e6 + 0.5)
+                
+            data[fib1, fib2] = val
+            data[fib2, fib1] = val
                       
         # plotting the heatmap
         str_fibres = [str(x) for x in np.arange(1, n_fibres + 1)]
