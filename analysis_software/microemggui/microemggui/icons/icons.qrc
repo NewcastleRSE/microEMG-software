@@ -1,0 +1,16 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource prefix="bootstrap">
+        <file alias="check">bootstrap-icons-1.11.3/check.svg</file>
+        <file alias="rewind">bootstrap-icons-1.11.3/rewind.svg</file>
+        <file alias="caret-left">bootstrap-icons-1.11.3/caret-left.svg</file>
+        <file alias="caret-right">bootstrap-icons-1.11.3/caret-right.svg</file>
+        <file alias="fast-forward">bootstrap-icons-1.11.3/fast-forward.svg</file>
+        <file alias="caret-up">bootstrap-icons-1.11.3/caret-up.svg</file>
+        <file alias="caret-down">bootstrap-icons-1.11.3/caret-down.svg</file>
+        <file alias="activity">bootstrap-icons-1.11.3/activity.svg</file>
+        <file alias="gear">bootstrap-icons-1.11.3/gear.svg</file>
+        <file alias="question-circle">bootstrap-icons-1.11.3/question-circle.svg</file>
+        <file alias="info-circle">bootstrap-icons-1.11.3/info-circle.svg</file>
+    </qresource>
+</RCC>

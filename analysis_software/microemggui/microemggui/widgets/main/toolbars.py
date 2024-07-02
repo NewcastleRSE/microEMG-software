@@ -4,8 +4,6 @@
 Main window toolbars and widgets placed in toolbars (e.g., logo button)
 """
 
-import os
-
 from PySide6.QtWidgets import (
     QToolBar,
     QLabel,
@@ -20,6 +18,8 @@ from microemggui.widgets.base import (
     AnalysisToolbarButton,
     AnalysisToolbarLabel,
 )
+from microemggui.icons import icons  # noqa - import allows icon references
+
 
 # --- Widgets in toolbars ---
 
@@ -29,17 +29,9 @@ class MicroEMGLogo(QPushButton):
         super().__init__(*args, **kwargs)
 
         # Button icon
-        # TODO: set resource path or otherwise define path for icons
-        icon_dir = os.path.join(
-            "analysis_software",
-            "microemggui",
-            "microemggui",
-            "icons",
-            "bootstrap-icons-1.11.3",
-        )
-        logo_icon = "activity.svg"
+        logo_icon = "activity"
 
-        self.setIcon(QIcon(os.path.join(icon_dir, logo_icon)))
+        self.setIcon(QIcon(":/bootstrap/" + logo_icon))
         self.setStatusTip("Home")
         self.setCheckable(True)
 
@@ -134,20 +126,12 @@ class TopToolbar(QToolBar):
             self.addWidget(w)
 
         # Icons for actions
-        # TODO: set resource path or otherwise define path for icons
-        icon_dir = os.path.join(
-            "analysis_software",
-            "microemggui",
-            "microemggui",
-            "icons",
-            "bootstrap-icons-1.11.3",
-        )
-        icons = ["gear.svg", "question-circle.svg", "info-circle.svg"]
+        my_icons = ["gear", "question-circle", "info-circle"]
 
         tips = ["Settings", "Help", "About"]
 
-        for icon, tip in zip(icons, tips):
-            action = QAction(QIcon(os.path.join(icon_dir, icon)), tip, self)
+        for ic, tip in zip(my_icons, tips):
+            action = QAction(QIcon(":/bootstrap/" + ic), tip, self)
             action.setStatusTip(tip)
             # TODO: create and connect to pop-up windows
             self.addAction(action)
