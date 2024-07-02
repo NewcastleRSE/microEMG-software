@@ -16,14 +16,25 @@ from PySide6.QtWidgets import (
     QSizePolicy,
 )
 
+# --- Settings input ---
+
 
 class CheckBoxMain(QCheckBox):
-    # Radio button, main text (start of settings section)
+    # Checkbox, main text (start of settings section)
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
 
-# --- Settings input ---
+class CheckBoxChannel(QCheckBox):
+    # Checkbox for channel
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class CheckBoxRegular(QCheckBox):
+    # Radio button, regular text
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
 
 class InputComboBox(QComboBox):
@@ -95,6 +106,21 @@ class SectionTitle(QLabel):
 
 class AnalysisToolbarLabel(QLabel):
     # Labels for sections in analysis toolbar
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class CheckBoxChannelLabel(QLabel):
+    # Label for channel checkbox
+    # (separate so can set colour)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class HighlightedLabel(QLabel):
+    # Label highlighted in a different colour to make more prominent
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

@@ -63,8 +63,6 @@ class ApplyPreprocButton(LargePushButton):
 class NextButton(LargePushButton):
     # Button for proceeding to the next step
 
-    # TODO: Connections when "next" button is clicked
-
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -129,11 +127,17 @@ class EMGViewerTabbedWidget(QWidget):
             "tabs": QWidget(parent=self),
             "viewer": EMGViewerWidget(self.emg_model["raw"], self.emg_clrs),
         }
-        self.widgets["tabs"].setLayout(layout_tabs)  # add tabs to tabs widget
+        # Update colours with repeated version - makes easily accessible for text
+        # colours in channel selection widget
+        self.emg_clrs = self.widgets["viewer"].widgets["plot"].emg_clrs
+
+        # Add tabs to tabs widget
+        self.widgets["tabs"].setLayout(layout_tabs)
 
         layout = QVBoxLayout()
         for _, w in self.widgets.items():
             layout.addWidget(w)
+        layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
         self.widgets_tabs["preproc"].hide()  # Hide preproc tab until preprocessing
