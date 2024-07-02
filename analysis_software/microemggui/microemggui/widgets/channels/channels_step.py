@@ -7,6 +7,7 @@ Widget for selecting channels to use for analysis.
 from pymicroemg.emg_channels import EMGChannels
 
 from PySide6.QtWidgets import QWidget, QCheckBox, QGridLayout, QHBoxLayout, QVBoxLayout
+from PySide6.QtCore import Signal
 
 from microemggui.widgets.preproc.preproc_step import EMGViewerTabbedWidget
 from microemggui.models.emg import EMGDataRawModel, EMGDataPreprocModel
@@ -44,6 +45,10 @@ class ColourfulChannelCheckBox(QWidget):
 class ChannelsCheckBoxes(QWidget):
     # Checkboxes for each channel
 
+    # Signal to emit indicating if each channel is checked
+    # Sends bool for check state (bool) and channel index, counting from 0 (int)
+    chan_toggled = Signal(bool, int)
+
     def __init__(self, chan: EMGChannels, chan_clrs: list[str], max_chan: int = 32, parent=None):
         # max_chan = maximum number of channels to put in one column
         # chan_clrs should be the same length as the number of channels
@@ -52,24 +57,24 @@ class ChannelsCheckBoxes(QWidget):
 
         # All channel names (+ "channel")
         chan_names = chan.chan_names
-        # chan_names = ["channel " + i for i in chan_names]
+        n_chan = len(chan_names)
 
         # Make checkbox for each channel
-        self.widgets = {"checkboxes": list()}
-        for chan, clr in zip(chan_names, chan_clrs):
-            # w = ColourfulChannelCheckBox(chan, clr, parent=self)
-            w = CheckBoxChannel(chan, parent=self)
-            w.setStyleSheet("color: " + clr)
+        self.widgets = {"checkboxes": dict()}
+        for i in range(n_chan):
+            w = CheckBoxChannel(chan_names[i], parent=self)
+            w.setStyleSheet("color: " + chan_clrs[i])
 
-            self.widgets["checkboxes"].append(w)
-            print(chan)
+            # Use channel index i as the label so easy to determine which channels are
+            # checked/unchecked
+            self.widgets["checkboxes"][i] = w
 
         # Add checkboxes to layout
         # Max number of channels per column is max_chan
         row = 0
         col = 0
         layout = QGridLayout()
-        for w in self.widgets["checkboxes"]:
+        for w in self.widgets["checkboxes"].values():
             layout.addWidget(w, row, col)  # layout
             row += 1
             if row == max_chan:  # reset row number
@@ -79,6 +84,12 @@ class ChannelsCheckBoxes(QWidget):
         layout.setVerticalSpacing(0)
         layout.setHorizontalSpacing(75)
         self.setLayout(layout)
+
+        # Connections
+
+        # Send index of channel with check state when channel is toggled
+        for idx, w in self.widgets["checkboxes"].items():
+            w.toggled.connect(lambda checked, idx=idx: self.chan_toggled.emit(checked, idx))
 
 
 class SelectChannels(QWidget):
@@ -95,10 +106,7 @@ class SelectChannels(QWidget):
         self.widgets = {
             "all": QCheckBox("Select all", parent=self),
             "checkboxes": ChannelsCheckBoxes(chan, chan_clrs, parent=self),
-            "exclude": HighlightedLabel("Excluded channels:", parent=self),
         }
-        self.widgets["exclude"].setFixedWidth(150)
-        self.widgets["exclude"].setWordWrap(True)
 
         # Add to layout
         layout = QVBoxLayout()
@@ -125,7 +133,7 @@ class SelectChannels(QWidget):
         # Check or uncheck all channel checkboxes
         # Slot for self.widgets["all"] checkbox (select all/none)
 
-        for w in self.widgets["checkboxes"].widgets["checkboxes"]:
+        for w in self.widgets["checkboxes"].widgets["checkboxes"].values():
             w.setChecked(checked)
 
 
@@ -145,6 +153,10 @@ class NextButton(LargePushButton):
 class ChannelsWidget(QWidget):
     # Widgets for channels to include in the analysis
 
+    # Signal for sending updated indices of bad channels
+    # TODO: remove if not needed
+    bad_chan_updated = Signal(list[int])
+
     def __init__(
         self,
         raw_emg_model: EMGDataRawModel,
@@ -153,6 +165,10 @@ class ChannelsWidget(QWidget):
         parent=None,
     ):
         super().__init__(parent)
+
+        # Boolean list to store whether each channel is checked (all initially selected)
+        self.chan_checked = [True for i in range(raw_emg_model.emg_data.n_chan)]
+        self.bad_chan_idx = []  # Indices of bad channels
 
         # Create widgets
         # Make viewer first so its full colour array (with repeated colours) can be
@@ -164,17 +180,75 @@ class ChannelsWidget(QWidget):
                 chan=raw_emg_model.emg_data.chan, chan_clrs=viewer.emg_clrs, parent=self
             ),
             "viewer": viewer,
+            "exclude": HighlightedLabel("", parent=self),
             "next": NextButton(parent=self),
         }
+        self.widgets["exclude"].setWordWrap(True)
+        self.update_exclude_message()
 
         # Add preprocessed data to EMG viewer
         self.widgets["viewer"].add_preproc_emg_model(preproc_emg_model)
 
         # Add widgets to layout
+        # TODO: remove if keep current layout
+        # layout = QGridLayout()
+        # layout.addWidget(self.widgets["title"], 0, 0, 1, 2)  # span 2 columns
+        # layout.addWidget(self.widgets["channels"], 1, 0)
+        # layout.addWidget(self.widgets["viewer"], 1, 1, 2, 1)  # span 2 rows
+        # layout.addWidget(self.widgets["next"], 2, 0)
+
         layout = QGridLayout()
         layout.addWidget(self.widgets["title"], 0, 0, 1, 2)  # span 2 columns
         layout.addWidget(self.widgets["channels"], 1, 0)
-        layout.addWidget(self.widgets["viewer"], 1, 1, 2, 1)  # span 2 rows
-        layout.addWidget(self.widgets["next"], 2, 0)
+        layout.addWidget(self.widgets["viewer"], 1, 1)  # span 2 rows
+        layout.addWidget(self.widgets["exclude"], 2, 0, 1, 2)
+        layout.addWidget(self.widgets["next"], 3, 0)
 
         self.setLayout(layout)
+
+        # Connections
+
+        # For updating chan_checked based on checkbox state
+        self.widgets["channels"].widgets["checkboxes"].chan_toggled.connect(
+            self.update_chan_checked
+        )
+
+    def update_chan_checked(self, checked: bool, idx: int):
+        # Update check status of a channel; slot for chan_toggled
+
+        self.chan_checked[idx] = checked
+        print(self.chan_checked)
+
+        # Update bad channels
+        self.update_bad_chan_idx()
+
+    def update_bad_chan_idx(self):
+        # Updates indices of channels that are unchecked (i.e., "bad" channels)
+        # Also updates corresponding message for channels that will be excluded
+
+        self.bad_chan_idx = [i for i in range(len(self.chan_checked)) if not self.chan_checked[i]]
+        print(self.bad_chan_idx)
+        self.update_exclude_message()
+
+    def update_exclude_message(self):
+        # Update exclude message to list bad channels that will be excluded from the
+        # analysis
+
+        # Channel  names - need to add one to go from indices to labels
+        bad_chan_names = [str(i + 1) for i in self.bad_chan_idx]
+
+        # Text depends on the number of bad channels
+        if len(self.bad_chan_idx) == 1:
+            text = "Will exclude channel " + bad_chan_names[0]
+        elif len(self.bad_chan_idx) > 1:
+            text = "Will exclude channels " + ", ".join(bad_chan_names)
+        else:
+            text = "All channels will be included in the analysis"
+
+        # Set text
+        self.widgets["exclude"].setText(text)
+
+
+# TODO:
+# get list of bad channels from chan_checked
+# add list of bad channels to preprocessed data (probably in main window)

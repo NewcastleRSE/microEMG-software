@@ -237,8 +237,6 @@ InputInlineHighlightedText {
 
 HighlightedLabel {
     color: 'blue';
-    min-height: 20;
-    max-height: 50;
 }
 
 InputWarningLabel {
