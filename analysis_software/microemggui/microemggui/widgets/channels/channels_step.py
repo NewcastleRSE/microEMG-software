@@ -121,13 +121,16 @@ class SelectChannels(QWidget):
     def connect_channel_checkboxes_to_select_all_checkbox(self):
         # Connect select all checkbox to all channel checkboxes
         # Select all checkbox can check/uncheck all channel checkboxes
-        # TODO: Check state of select all also determined by state of channel checkboxes
 
         # Connect select all checkbox to all channel checkboxes
-        self.widgets["all"].toggled.connect(self.check_or_uncheck_all)
-        self.widgets["all"].setChecked(True)  # initial state: all checked
+        # Use "clicked" signal so not emitted if change checkbox state programmatically
+        self.widgets["all"].clicked.connect(self.check_or_uncheck_all)
+        self.widgets["all"].click()  # click so initial state is all checked
 
-        # TODO: If any one checkbox unchecked, uncheck select all; otherwise, checked
+        # Note: in ChannelsWidget, the check state of the select all checkbox is also
+        # updated if all channels are checked/unchecked by checking individual checkboxes.
+        # This update is performed in ChannelsWidget so that the bad_chan_idx
+        # attribute can be used to determine the check state of the select all checkbox.
 
     def check_or_uncheck_all(self, checked: bool):
         # Check or uncheck all channel checkboxes
@@ -222,6 +225,9 @@ class ChannelsWidget(QWidget):
         # Update bad channels
         self.update_bad_chan_idx()
 
+        # Uncheck select all checkbox if any bad channels
+        self.update_select_all_checkbox()
+
     def update_bad_chan_idx(self):
         # Updates indices of channels that are unchecked (i.e., "bad" channels)
         # Also updates corresponding message for channels that will be excluded
@@ -229,6 +235,17 @@ class ChannelsWidget(QWidget):
         self.bad_chan_idx = [i for i in range(len(self.chan_checked)) if not self.chan_checked[i]]
         print(self.bad_chan_idx)
         self.update_exclude_message()
+
+    def update_select_all_checkbox(self):
+        # Unchecks select all checkbox if any channels unchecked
+        # Checks select all checkbox if all channels checked
+
+        # Use self.bad_chan_idx as a quick way to see if any channels unchecked
+        # (if not empty, channels are unchecked)
+        if self.bad_chan_idx:
+            self.widgets["channels"].widgets["all"].setChecked(False)
+        else:
+            self.widgets["channels"].widgets["all"].setChecked(True)
 
     def update_exclude_message(self):
         # Update exclude message to list bad channels that will be excluded from the
