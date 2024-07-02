@@ -64,7 +64,7 @@ class ChannelsCheckBoxes(QWidget):
             self.widgets["checkboxes"].append(w)
             print(chan)
 
-        # Add checkboxes to layout and set to checked
+        # Add checkboxes to layout
         # Max number of channels per column is max_chan
         row = 0
         col = 0
@@ -75,7 +75,6 @@ class ChannelsCheckBoxes(QWidget):
             if row == max_chan:  # reset row number
                 row = 0
                 col += 1
-            w.setChecked(True)  # check
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setVerticalSpacing(0)
         layout.setHorizontalSpacing(75)
@@ -94,7 +93,7 @@ class SelectChannels(QWidget):
 
         # Create widgets
         self.widgets = {
-            "all": QCheckBox("Select all/none", parent=self),
+            "all": QCheckBox("Select all", parent=self),
             "checkboxes": ChannelsCheckBoxes(chan, chan_clrs, parent=self),
             "exclude": HighlightedLabel("Excluded channels:", parent=self),
         }
@@ -105,9 +104,29 @@ class SelectChannels(QWidget):
         layout = QVBoxLayout()
         for w in self.widgets.values():
             layout.addWidget(w)
-        # layout.addItem(ExpandingVSpacer())
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
+
+        # Connections
+        self.connect_channel_checkboxes_to_select_all_checkbox()
+
+    def connect_channel_checkboxes_to_select_all_checkbox(self):
+        # Connect select all checkbox to all channel checkboxes
+        # Select all checkbox can check/uncheck all channel checkboxes
+        # TODO: Check state of select all also determined by state of channel checkboxes
+
+        # Connect select all checkbox to all channel checkboxes
+        self.widgets["all"].toggled.connect(self.check_or_uncheck_all)
+        self.widgets["all"].setChecked(True)  # initial state: all checked
+
+        # TODO: If any one checkbox unchecked, uncheck select all; otherwise, checked
+
+    def check_or_uncheck_all(self, checked: bool):
+        # Check or uncheck all channel checkboxes
+        # Slot for self.widgets["all"] checkbox (select all/none)
+
+        for w in self.widgets["checkboxes"].widgets["checkboxes"]:
+            w.setChecked(checked)
 
 
 class NextButton(LargePushButton):
