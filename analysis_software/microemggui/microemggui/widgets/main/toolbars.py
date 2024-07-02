@@ -66,7 +66,7 @@ class AnalysisToolbar(QToolBar):
             "preptext": "Prepare EMG",
             "load": "1. Load",
             "preprocess": "2. Preprocess",
-            "remove": "3. Remove channels",
+            "channels": "3. Select channels",
             "analysetext": "Analyse EMG",
             "motorunits": "4. Find motor units",
             "fibres": "5. Localise fibres",

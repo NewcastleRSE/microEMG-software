@@ -56,7 +56,7 @@ class AnalysisStepsWidget(QWidget):
 
         # Make iniital widgets
         # Will use same names as AnalysisToolbar so easy to link buttons to corresponding pages:
-        # "home", "load", "preprocess", "remove", "motorunits", "fibres", "jitter","export"
+        # "home", "load", "preprocess", "channels", "motorunits", "fibres", "jitter","export"
         self.widgets = {
             "home": WelcomeWidget(parent=self),
             "load": LoadWidget(parent=self),
