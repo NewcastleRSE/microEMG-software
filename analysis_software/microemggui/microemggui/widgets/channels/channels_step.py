@@ -152,6 +152,12 @@ class NextButton(LargePushButton):
         self.setText("Next")
         self.setToolTip("Proceed to next step")
 
+    def change_enabled(self, enabled: bool):
+        # Method for enable/disabling button based on whether sufficient channels are
+        # selected
+
+        self.setEnabled(enabled)
+
 
 # --- Channels selection widget ----
 
@@ -226,6 +232,12 @@ class ChannelsWidget(QWidget):
             self.update_chan_checked
         )
 
+    def selected_min_channels(self) -> bool:
+        # Compute whether min number of channels are selected
+
+        min_selected = self.n_chan - len(self.bad_chan_idx) >= self.min_chan
+        return min_selected
+
     def update_chan_checked(self, checked: bool, idx: int):
         # Update check status of a channel; slot for chan_toggled
 
@@ -239,10 +251,13 @@ class ChannelsWidget(QWidget):
 
     def update_bad_chan_idx(self):
         # Updates indices of channels that are unchecked (i.e., "bad" channels)
-        # Also updates corresponding message for channels that will be excluded
+        # Also triggers downstream changes:
+        #   1) Updates corresponding message for channels that will be excluded
+        #   2) Enables/disables Next button based on whether enough channels selected
 
         self.bad_chan_idx = [i for i in range(len(self.chan_checked)) if not self.chan_checked[i]]
         self.update_exclude_message()
+        self.widgets["next"].change_enabled(self.selected_min_channels())
 
     def update_select_all_checkbox(self):
         # Unchecks select all checkbox if any channels unchecked
@@ -263,27 +278,25 @@ class ChannelsWidget(QWidget):
         bad_chan_names = [str(i + 1) for i in self.bad_chan_idx]
 
         # Text depends on the number of bad channels
-        # First check if number of channels selected is less than min_chan
-        if self.n_chan - len(self.bad_chan_idx) < self.min_chan:
-            if self.min_chan == 1:
-                text = f"Select at least {self.min_chan} channel."
-            else:
-                text = f"Select at least {self.min_chan} channels."
+        # First check if sufficient number of channels are selected
+        min_selected = self.selected_min_channels()
 
-        # Otherwise, display info about excluded channels
-        else:
+        if min_selected:  # Display info about excluded channels
             if len(self.bad_chan_idx) == 1:
                 text = "Will exclude channel " + bad_chan_names[0] + "."
             elif len(self.bad_chan_idx) > 1:
                 text = "Will exclude channels " + ", ".join(bad_chan_names) + "."
             else:
                 text = "All channels will be included in the analysis."
+        else:  # Indicate that more channels need to be selected
+            if self.min_chan == 1:
+                text = f"Select at least {self.min_chan} channel."
+            else:
+                text = f"Select at least {self.min_chan} channels."
 
         # Set text
         self.widgets["exclude"].setText(text)
 
 
 # TODO:
-# stop analysis from proceeding if less than min number of channels
-# if less than min number, make a warning label instead?
 # add list of bad channels to preprocessed data (probably in main window)
