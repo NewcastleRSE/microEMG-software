@@ -127,11 +127,16 @@ class EMGViewerTabbedWidget(QWidget):
         for txt in self.tab_text:
             self.widgets["tabs"].addTab(txt)
 
+        # Tab properties
+        self.widgets["tabs"].setExpanding(False)
+        self.widgets["tabs"].setDrawBase(False)  # removes bar beneath tabs (difficult to style)
+
         # Layout
         layout = QVBoxLayout()
         for _, w in self.widgets.items():
             layout.addWidget(w)
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
         self.setLayout(layout)
 
         # Hide preproc tab until preprocessing and set current tab to raw tab

@@ -264,3 +264,10 @@ QPushButton {
     max-width: 50;
 }
 
+/* EMG viewer */
+
+EMGViewerWidget {
+    background: white;
+    border: 1px solid grey;
+    border-radius: 4px;
+}

@@ -729,3 +729,6 @@ class EMGViewerWidget(QWidget):
         layout.addWidget(self.widgets["timecontrols"], 1, 1)
         self.setLayout(layout)
         self.setContentsMargins(0, 0, 0, 0)
+
+        # Change widget properties so will be drawn using styled background
+        self.setAttribute(Qt.WA_StyledBackground, True)
