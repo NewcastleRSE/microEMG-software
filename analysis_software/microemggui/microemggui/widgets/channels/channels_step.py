@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QSizePolicy,
 )
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Qt, Signal
 
 from microemggui.widgets.preproc.preproc_step import EMGViewerTabbedWidget
 from microemggui.models.emg import EMGDataRawModel, EMGDataPreprocModel
@@ -115,14 +115,12 @@ class SelectChannels(QWidget):
             "checkboxes": ChannelsCheckBoxes(chan, chan_clrs, parent=self),
         }
 
-        # Set name for "all" widget so can reference in style sheet
-        self.widgets["all"].setObjectName("select_channels_all")
-
         # Add to layout
         layout = QVBoxLayout()
         for w in self.widgets.values():
             layout.addWidget(w)
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setAlignment(Qt.AlignLeft)
         self.setLayout(layout)
 
         # Connections
@@ -213,26 +211,20 @@ class ChannelsWidget(QWidget):
         # Properties of exclude message - word wrap, fixed height
         self.widgets["exclude"].setWordWrap(True)
         self.widgets["exclude"].setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.widgets["exclude"].setObjectName("channels_widget_exclude")
         self.update_exclude_message()
 
         # Add preprocessed data to EMG viewer
         self.widgets["viewer"].add_preproc_emg_model(preproc_emg_model)
 
-        # Add widgets to layout
-        # TODO: remove if keep current layout
-        # layout = QGridLayout()
-        # layout.addWidget(self.widgets["title"], 0, 0, 1, 2)  # span 2 columns
-        # layout.addWidget(self.widgets["channels"], 1, 0)
-        # layout.addWidget(self.widgets["viewer"], 1, 1, 2, 1)  # span 2 rows
-        # layout.addWidget(self.widgets["next"], 2, 0)
-
+        # Layout
         layout = QGridLayout()
         layout.addWidget(self.widgets["title"], 0, 0)
         layout.addWidget(self.widgets["channels"], 1, 0)
-        layout.addWidget(self.widgets["viewer"], 0, 1, 2, 1)  # span 2 rows
-        layout.addWidget(self.widgets["exclude"], 2, 0, 1, 2)  # span 2 columns
+        layout.addWidget(self.widgets["viewer"], 0, 1, 4, 1)  # span 2 rows
+        layout.addWidget(self.widgets["exclude"], 2, 0)  # span 2 columns
         layout.addWidget(self.widgets["next"], 3, 0)
-
+        layout.setContentsMargins(20, 20, 20, 20)
         self.setLayout(layout)
 
         # Connections

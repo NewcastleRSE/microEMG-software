@@ -3,8 +3,9 @@
 SectionTitle{
     font-weight: bold;
     font-size: 20pt;
-    min-height: 50;
-    max-height: 50;
+    min-height: 40;
+    max-height: 40;
+    qproperty-alignment: 'AlignTop | AlignLeft';
 }
 
 SubsectionTitle{
@@ -242,8 +243,11 @@ HighlightedLabel {
 }
 
 HighlightedLabel#channels_widget_exclude {
-    min-height: 50;
-    max-height: 50;
+    qproperty-alignment: 'AlignBottom | AlignLeft';
+    min-height: 100;
+    max-height: 100;
+    min-width: 250;
+    max-width: 250;
 }
 
 InputWarningLabel {
@@ -269,11 +273,6 @@ InputLineEdit {
 QPushButton {
     min-width: 50;
     max-width: 50;
-}
-
-QCheckBox#select_channels_all {
-    margin-top: 10%;
-    margin-bottom: 0%;
 }
 
 /* EMG viewer */

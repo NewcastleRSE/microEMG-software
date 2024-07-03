@@ -65,7 +65,7 @@ class LoadWidget(QWidget):
         layout.addWidget(self.title)
         layout.addWidget(sections_widget)
         layout.addItem(ExpandingVSpacer())
-        layout.setContentsMargins(20, 0, 0, 0)
+        layout.setContentsMargins(20, 20, 20, 20)
         self.setLayout(layout)
 
         # Connections
