@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QProgressDialog,
     QDialog,
+    QTabBar,
 )
 from PySide6.QtCore import Qt
 
@@ -24,8 +25,6 @@ from microemggui.models.settings import EMGPreprocSettingsModel
 from microemggui.widgets.base import (
     SectionTitle,
     LargePushButton,
-    TabButton,
-    ExpandingHSpacer,
 )
 from microemggui.gui_logger import QtHandler
 
@@ -94,10 +93,10 @@ class MainButtons(QWidget):
 
 
 class EMGViewerTabbedWidget(QWidget):
-    # EMG viewer with "tabs" for switching between raw and preprocessed time series.
+    # EMG viewer with tabs for switching between raw and preprocessed time series.
     # Initialised without preprocessed data; added later via a method.
     # The tab functionality is mimicked by swapping the data in the EMG viewer - the
-    # EMG viewer widget remains the same.
+    # EMG viewer widget remains the same in all tabs.
 
     def __init__(
         self,
@@ -111,20 +110,13 @@ class EMGViewerTabbedWidget(QWidget):
 
         self.emg_clrs = emg_clrs
 
-        # Tab widgets
-        self.widgets_tabs = {
-            "raw": TabButton("Raw EMG", parent=self),
-            "preproc": TabButton("Preprocessed EMG", parent=self),
-        }
-        layout_tabs = QHBoxLayout()
-        for _, w in self.widgets_tabs.items():
-            layout_tabs.addWidget(w, alignment=Qt.AlignLeft)
-        layout_tabs.addItem(ExpandingHSpacer())  # Spacer to push tabs to left
-        layout_tabs.setContentsMargins(0, 0, 0, 0)
+        # Tabs
+        self.tab_text = ["Raw EMG", "Preprocessed EMG"]  # text
+        self.tab_data = ["raw", "preproc"]  # so can convert between tab indices and data
 
         # All widgets - start viewer with raw EMG data
         self.widgets = {
-            "tabs": QWidget(parent=self),
+            "tabs": QTabBar(parent=self),
             "viewer": EMGViewerWidget(self.emg_model["raw"], self.emg_clrs),
         }
         # Update colours with repeated version - makes easily accessible for text
@@ -132,41 +124,38 @@ class EMGViewerTabbedWidget(QWidget):
         self.emg_clrs = self.widgets["viewer"].widgets["plot"].emg_clrs
 
         # Add tabs to tabs widget
-        self.widgets["tabs"].setLayout(layout_tabs)
+        for txt in self.tab_text:
+            self.widgets["tabs"].addTab(txt)
 
+        # Layout
         layout = QVBoxLayout()
         for _, w in self.widgets.items():
             layout.addWidget(w)
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
-        self.widgets_tabs["preproc"].hide()  # Hide preproc tab until preprocessing
-        self.widgets_tabs["raw"].setEnabled(False)  # Disable raw EMG tab
+        # Hide preproc tab until preprocessing and set current tab to raw tab
+        self.widgets["tabs"].setTabVisible(self.tab_data.index("preproc"), False)
+        self.widgets["tabs"].setCurrentIndex(self.tab_data.index("raw"))
 
-        # Connections
-        self.connect_tabs_to_data()
+        # Connection tab clicks to changing data
+        self.widgets["tabs"].currentChanged.connect(self.switch_emg_model)
 
     def add_preproc_emg_model(self, preproc_emg_model: EMGDataPreprocModel):
         # Add preprocessed EMG data model and set to data in viewer
 
-        self.emg_model["preproc"] = preproc_emg_model
-        self.widgets_tabs["preproc"].show()
-        self.switch_emg_model("preproc")
+        data = "preproc"
+        self.emg_model[data] = preproc_emg_model
+        self.widgets["tabs"].setTabVisible(self.tab_data.index(data), True)
+        self.switch_emg_model(self.tab_data.index(data))
 
-    def connect_tabs_to_data(self):
-        # Set up connections between tabs and the data in the viewer
-
-        for k, w in self.widgets_tabs.items():
-            w.clicked.connect(lambda checked=None, data=k: self.switch_emg_model(data))
-
-    def switch_emg_model(self, data: str):
+    def switch_emg_model(self, tab_idx: int):
         # Switch EMG data in viewer (slot for tab clicks)
-        # Also changes appearance of tab buttons by enabling/disabling them
+        # Also changes adtive tab
 
+        data = self.tab_data[tab_idx]
         self.widgets["viewer"].widgets["plot"].replace_emg_model(self.emg_model[data])
-        for k, w in self.widgets_tabs.items():
-            # Disable if key matches EMG model key; otherwise, enable
-            w.setEnabled(k != data)
+        self.widgets["tabs"].setCurrentIndex(tab_idx)  # change tab
 
 
 class PreprocProgressDialog(QDialog):

@@ -153,13 +153,6 @@ class WidgetControlButton(QToolButton):
         super().__init__(*args, **kwargs)
 
 
-class TabButton(QPushButton):
-    # "Button" for tabs
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-
 # --- Spacers ---
 
 
