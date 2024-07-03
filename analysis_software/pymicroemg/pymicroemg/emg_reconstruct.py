@@ -40,6 +40,7 @@ from pymicroemg.emg_reconstruct_settings import EMGAnalysisMotorUnitSettings
 from pymicroemg.emg_motor_unit import EMGMotorUnit
 from pymicroemg.emg_motor_unit import EMGMotorUnits
 
+import pandas as pd
 
 class EMGAnalysisReconstruct:
     """
@@ -816,6 +817,16 @@ class EMGAnalysisReconstruct:
                 )
             )
 
+            #print("2D peak finding")
+            #print(signal_id)
+            #print(sig.shape)
+            #if signal_id % 50 == 0:
+            #    df = pd.DataFrame(sig)
+            #    name= 'richa'
+            #    filename = 'C:\\Users\\' + name + '\\OneDrive - Newcastle University\\RSE\\Micro-EMG\\Micro-EMG-analysis\\microEMG-software\\analysis_software\\analysis\\tests\\sig_'+ str(motor_unit_number) + "_" + str(signal_id) +'.csv'
+ 
+            #    df.to_csv(filename, header= False, index=False, na_rep='nan')
+                
             sub_clusters = self.find_peaks_2d(sig)
 
             if sub_clusters.shape[0] == 0:
@@ -898,6 +909,8 @@ class EMGAnalysisReconstruct:
         # (pending SM's final decision about the scaling)
         # pos[:, 0] = pos[:, 0] / 4
 
+        
+           
         # Add the results to the motor unit object
         if pos.shape[0] > 0:
             motor_unit.add_fibre_localisation(
@@ -998,8 +1011,13 @@ class EMGAnalysisReconstruct:
         base = sig
         # remove negative deflection to discount 'doubling peaks'
         # from negative initial deflection of SFAP
-        base[base < 0] = 0
-
+        #base[base < 0] = 0
+        
+        #base[base > 0] = 0
+        #base = - base
+        
+        base = np.abs(base)
+        
         sigma = 2
         im2 = np.abs(gaussian_filter(base, sigma, truncate=np.ceil(2 * sigma) / sigma))
 
@@ -1008,7 +1026,7 @@ class EMGAnalysisReconstruct:
         found = False
         parse_limit = 0
         im2_max = np.max(im2)
-        max_number_of_peaks = 22
+        max_number_of_peaks = 10 #22
 
         while not found:
             parse_limit = parse_limit + 1
