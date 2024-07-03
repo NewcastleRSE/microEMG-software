@@ -264,6 +264,11 @@ QPushButton {
     max-width: 50;
 }
 
+QCheckBox#select_channels_all {
+    margin-top: 20%;
+    margin-bottom: 0%;
+}
+
 /* EMG viewer */
 
 EMGViewerWidget {

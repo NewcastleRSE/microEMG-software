@@ -80,9 +80,9 @@ class ChannelsCheckBoxes(QWidget):
             if row == max_chan:  # reset row number
                 row = 0
                 col += 1
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(0, 0, 50, 0)
         layout.setVerticalSpacing(0)
-        layout.setHorizontalSpacing(75)
+        layout.setHorizontalSpacing(50)
         self.setLayout(layout)
 
         # Connections
@@ -107,6 +107,9 @@ class SelectChannels(QWidget):
             "all": QCheckBox("Select all", parent=self),
             "checkboxes": ChannelsCheckBoxes(chan, chan_clrs, parent=self),
         }
+
+        # Set name for "all" widget so can reference in style sheet
+        self.widgets["all"].setObjectName("select_channels_all")
 
         # Add to layout
         layout = QVBoxLayout()
@@ -165,12 +168,19 @@ class ChannelsWidget(QWidget):
         raw_emg_model: EMGDataRawModel,
         preproc_emg_model: EMGDataPreprocModel,
         emg_clrs: list[str],
+        min_chan=1,
         parent=None,
     ):
+        # min_chan = minimum number of channels needed to proceed with the analysis
+
         super().__init__(parent)
 
+        # Total number of channels for easy reference
+        self.n_chan = raw_emg_model.emg_data.n_chan
+        self.min_chan = min_chan  # Number of selected channels needed to proceed with analysis
+
         # Boolean list to store whether each channel is checked (all initially selected)
-        self.chan_checked = [True for i in range(raw_emg_model.emg_data.n_chan)]
+        self.chan_checked = [True for i in range(self.n_chan)]
         self.bad_chan_idx = []  # Indices of bad channels
 
         # Create widgets
@@ -220,7 +230,6 @@ class ChannelsWidget(QWidget):
         # Update check status of a channel; slot for chan_toggled
 
         self.chan_checked[idx] = checked
-        print(self.chan_checked)
 
         # Update bad channels
         self.update_bad_chan_idx()
@@ -233,7 +242,6 @@ class ChannelsWidget(QWidget):
         # Also updates corresponding message for channels that will be excluded
 
         self.bad_chan_idx = [i for i in range(len(self.chan_checked)) if not self.chan_checked[i]]
-        print(self.bad_chan_idx)
         self.update_exclude_message()
 
     def update_select_all_checkbox(self):
@@ -255,17 +263,27 @@ class ChannelsWidget(QWidget):
         bad_chan_names = [str(i + 1) for i in self.bad_chan_idx]
 
         # Text depends on the number of bad channels
-        if len(self.bad_chan_idx) == 1:
-            text = "Will exclude channel " + bad_chan_names[0]
-        elif len(self.bad_chan_idx) > 1:
-            text = "Will exclude channels " + ", ".join(bad_chan_names)
+        # First check if number of channels selected is less than min_chan
+        if self.n_chan - len(self.bad_chan_idx) < self.min_chan:
+            if self.min_chan == 1:
+                text = f"Select at least {self.min_chan} channel."
+            else:
+                text = f"Select at least {self.min_chan} channels."
+
+        # Otherwise, display info about excluded channels
         else:
-            text = "All channels will be included in the analysis"
+            if len(self.bad_chan_idx) == 1:
+                text = "Will exclude channel " + bad_chan_names[0] + "."
+            elif len(self.bad_chan_idx) > 1:
+                text = "Will exclude channels " + ", ".join(bad_chan_names) + "."
+            else:
+                text = "All channels will be included in the analysis."
 
         # Set text
         self.widgets["exclude"].setText(text)
 
 
 # TODO:
-# get list of bad channels from chan_checked
+# stop analysis from proceeding if less than min number of channels
+# if less than min number, make a warning label instead?
 # add list of bad channels to preprocessed data (probably in main window)
