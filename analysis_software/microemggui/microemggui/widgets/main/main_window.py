@@ -20,9 +20,15 @@ from microemggui.widgets.base import (
     ExpandingVSpacer,
 )
 
+# Toolbars
 from microemggui.widgets.main.toolbars import AnalysisToolbar, TopToolbar
+
+# Widgets for each step
 from microemggui.widgets.load.load_step import LoadWidget
 from microemggui.widgets.preproc.preproc_step import PreprocWidget
+from microemggui.widgets.channels.channels_step import ChannelsWidget
+
+# Models
 from microemggui.models.settings import EMGPreprocSettingsModel
 
 
@@ -152,6 +158,15 @@ class MicroEMGMain(QMainWindow):
             self.widgets["toptoolbar"].change_recording_label
         )
 
+    def add_preprocess_connections(self):
+        # Preprocess widget
+        preprocess_w = self.widgets["analysis"].widgets["preprocess"]
+
+        # Connection for updating preprocessed EMG and preprocessing settings in main window
+        preprocess_w.preproc_data_changed.connect(
+            self.update_preproc_emg_model_and_preprocess_settings
+        )
+
     def update_toolbar_connections(self):
         # Connects toolbar buttons to analysis widgets
         # Will need to call repeatedly as add more analysis widgets
@@ -175,6 +190,18 @@ class MicroEMGMain(QMainWindow):
             self.settings_model.preprocess_settings
         )
         self.add_preprocess_widget(self.emg_model["raw"], preprocess_settings_model, self.emg_clrs)
+
+    def update_preproc_emg_model_and_preprocess_settings(
+        self, preproc_emg_model, preprocess_settings_model
+    ):
+        # Slot for updating preprocess EMG model and the applied preprocessing settings
+        # Also updates and channel selection widget with the preprocessed data
+
+        self.emg_model["preproc"] = preproc_emg_model
+        self.settings_model.preprocess_settings = preprocess_settings_model.settings
+
+        # Use data to make channels widget
+        self.add_channels_widget()
 
     def connect_next_button_to_analysis_widget(self, next_button, w_name: str):
         # Connect the next button on an analysis step to the corresponding widget for
@@ -215,6 +242,35 @@ class MicroEMGMain(QMainWindow):
         # Update toolbar connections
         self.update_toolbar_connections()
 
-        # Add connection to next button
+        # Add connection to load step next button
         next_button = self.widgets["analysis"].widgets["load"].widgets["run"].widgets["next"]
         self.connect_next_button_to_analysis_widget(next_button, w_name)
+
+        # Add connections to signals from preprocessing widget
+        self.add_preprocess_connections()
+
+    def add_channels_widget(self):
+        # Add widget for channel selection once preprocessing is finished/updated
+
+        # Create widget and add to stack of analysis step widgets
+        w_name = "channels"
+        analysis_w = self.widgets["analysis"]
+        analysis_w.widgets[w_name] = ChannelsWidget(
+            self.emg_model["raw"], self.emg_model["preproc"], self.emg_clrs
+        )
+        analysis_w.layout.addWidget(analysis_w.widgets[w_name])
+
+        # Update toolbar connections
+        self.update_toolbar_connections()
+
+        # Enable toolbar button
+        self.enable_analysis_toolbar_button(True, "channels")
+
+        # Add connection to next button
+        next_button = (
+            self.widgets["analysis"].widgets["preprocess"].widgets["buttons"].widgets["next"]
+        )
+        self.connect_next_button_to_analysis_widget(next_button, w_name)
+
+
+# TODO: disable downstream toolbar buttons and delete data if load step data changed

@@ -182,8 +182,8 @@ CheckBoxMain {
 CheckBoxChannel {
     font-size: 12pt;
     font-weight: bold;
-    min-height: 25px;
-    max-height: 50px;
+    min-height: 20px;
+    max-height: 75px;
 }
 
 CheckBoxChannel::indicator {
@@ -233,10 +233,17 @@ InputInlineText {
 
 InputInlineHighlightedText {
     color: 'blue';
+    min-height: 20;
+    max-height: 20;
 }
 
 HighlightedLabel {
     color: 'blue';
+}
+
+HighlightedLabel#channels_widget_exclude {
+    min-height: 50;
+    max-height: 50;
 }
 
 InputWarningLabel {
@@ -265,7 +272,7 @@ QPushButton {
 }
 
 QCheckBox#select_channels_all {
-    margin-top: 20%;
+    margin-top: 10%;
     margin-bottom: 0%;
 }
 

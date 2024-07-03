@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
     QDialog,
     QTabBar,
 )
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 
 from microemggui.widgets.preproc.preproc_settings import PreprocSettingsWidget
 from microemggui.widgets.emg_viewer import EMGViewerWidget
@@ -176,6 +176,9 @@ class PreprocProgressDialog(QDialog):
 class PreprocWidget(QWidget):
     # Widget for preprocessing step
 
+    # Signal for sending data from preprocessing step to main window
+    preproc_data_changed = Signal(EMGDataPreprocModel, EMGPreprocSettingsModel)
+
     def __init__(
         self,
         raw_emg_model: EMGDataRawModel,
@@ -261,6 +264,9 @@ class PreprocWidget(QWidget):
 
         # Add preprocessed data to viewer
         self.widgets["tabbedviewer"].add_preproc_emg_model(self.emg_model["preproc"])
+
+        # Emit signal with preprocessed data
+        self.preproc_data_changed.emit(self.emg_model["preproc"], self.settings_model)
 
     def update_progress_bar_from_log(self, record):
         # Slot for logs from EMGDataRaw; used to update progress bar for preprocessing

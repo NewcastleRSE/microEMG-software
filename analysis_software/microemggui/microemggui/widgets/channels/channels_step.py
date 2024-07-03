@@ -6,7 +6,14 @@ Widget for selecting channels to use for analysis.
 
 from pymicroemg.emg_channels import EMGChannels
 
-from PySide6.QtWidgets import QWidget, QCheckBox, QGridLayout, QHBoxLayout, QVBoxLayout
+from PySide6.QtWidgets import (
+    QWidget,
+    QCheckBox,
+    QGridLayout,
+    QHBoxLayout,
+    QVBoxLayout,
+    QSizePolicy,
+)
 from PySide6.QtCore import Signal
 
 from microemggui.widgets.preproc.preproc_step import EMGViewerTabbedWidget
@@ -194,7 +201,7 @@ class ChannelsWidget(QWidget):
         # passed to the channel checkboxes
         viewer = EMGViewerTabbedWidget(raw_emg_model, emg_clrs)  # make viewer first
         self.widgets = {
-            "title": SectionTitle("Select channels to analyse", parent=self),
+            "title": SectionTitle("Select channels", parent=self),
             "channels": SelectChannels(
                 chan=raw_emg_model.emg_data.chan, chan_clrs=viewer.emg_clrs, parent=self
             ),
@@ -202,7 +209,10 @@ class ChannelsWidget(QWidget):
             "exclude": HighlightedLabel("", parent=self),
             "next": NextButton(parent=self),
         }
+
+        # Properties of exclude message - word wrap, fixed height
         self.widgets["exclude"].setWordWrap(True)
+        self.widgets["exclude"].setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.update_exclude_message()
 
         # Add preprocessed data to EMG viewer
@@ -217,10 +227,10 @@ class ChannelsWidget(QWidget):
         # layout.addWidget(self.widgets["next"], 2, 0)
 
         layout = QGridLayout()
-        layout.addWidget(self.widgets["title"], 0, 0, 1, 2)  # span 2 columns
+        layout.addWidget(self.widgets["title"], 0, 0)
         layout.addWidget(self.widgets["channels"], 1, 0)
-        layout.addWidget(self.widgets["viewer"], 1, 1)  # span 2 rows
-        layout.addWidget(self.widgets["exclude"], 2, 0, 1, 2)
+        layout.addWidget(self.widgets["viewer"], 0, 1, 2, 1)  # span 2 rows
+        layout.addWidget(self.widgets["exclude"], 2, 0, 1, 2)  # span 2 columns
         layout.addWidget(self.widgets["next"], 3, 0)
 
         self.setLayout(layout)
