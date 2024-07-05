@@ -133,6 +133,44 @@ class MicroEMGMain(QMainWindow):
         # Connections to signals from loading data
         self.add_load_connections()
 
+    def reset_gui(self):
+        # Remove any existing data, widgets with data, and later toolbar activations
+        # Should only be able to use home page and load step widget.
+        # TODO: remove data added later in the pipeline
+        # TODO: add dialog box for confirmation when click on button that would
+        # trigger a reset.
+        # TODO: remove print statements or add to logger
+        # TODO: behaviour if reset settings or (once implemented) trimming
+
+        print("Resetting GUI")
+
+        # Widgets to keep enabled and widgets to remove
+        # Only include widgets that have been added so far to avoid key erros
+        keep_w = ["home", "load"]
+        remove_w = [i for i in self.widgets["analysis"].widgets.keys() if i not in keep_w]
+        print(f"Remove widgets {remove_w}")
+
+        for w_name in remove_w:
+            # Remove widgets
+            # Also delete key in analysis widgets dictionary so do not try to reference
+            # deleted widget
+            w = self.widgets["analysis"].widgets.pop(w_name, None)
+            if w:
+                w.deleteLater()
+                print(f"Deleted {w_name} widget")
+
+            # Disable toolbar buttons
+            self.widgets["analysistoolbar"].widgets[w_name].setEnabled(False)
+
+            # Can leave connections since will not be able to click on buttons until
+            # new widgets are added
+
+        # Remove data (precaution - should be overwritten regardless)
+        # EMG data is not sent from load widget until settings are added, so this
+        # approach will not delete any newly loaded data.
+        self.emg_model = {}
+        self.settings_model = None
+
     def add_load_connections(self):
         # Connections to add from load step widget
         # Connections enable/disable preprocess toolbar button and updates data stored
@@ -150,6 +188,12 @@ class MicroEMGMain(QMainWindow):
 
         # Connection for updating raw EMG and settings data in main window
         load_w.load_data_changed.connect(self.update_raw_emg_model_and_settings_model)
+
+        # When load buttons are interacted with, reset GUI (regardless of whether
+        # load was successful)
+        load_w.widgets["recording"].recording_loaded.connect(
+            lambda recording_loaded: self.reset_gui()
+        )
 
         # Link recording label to top toolbar
         # TODO: consider storing in main window (e.g., for saving/exports)
