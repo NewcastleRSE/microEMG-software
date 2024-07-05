@@ -282,3 +282,9 @@ EMGViewerWidget {
     border: 1px solid grey;
     border-radius: 4px;
 }
+
+/* Preprocessing settings - ste width */
+PreprocSettingsWidget {
+    min-width: 250;
+    max-width: 250;
+}
