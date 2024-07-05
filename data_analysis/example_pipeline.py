@@ -22,7 +22,7 @@ plt.rcParams["figure.dpi"] = 600
 
 # %% Choose recording (0 - 5) and set recording-specific properties
 
-recording_num = 1
+recording_num = 3
 
 match recording_num:
     case 1:
@@ -159,8 +159,8 @@ for i in np.arange(reconstruct.found_motor_units.n_motor_units):
 match recording_num:
     case 1:
         motor_units_for_fibre_localisation = [0, 1, 2, 3]
-    case _:
-        motor_units_for_fibre_localisation = []
+    case 3:
+        motor_units_for_fibre_localisation = [0, 1, 2]
 
 for mu in motor_units_for_fibre_localisation:
     print(f"Reconstructing fibres for motor unit {mu + 1}\n")
