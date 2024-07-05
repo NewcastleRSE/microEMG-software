@@ -19,7 +19,7 @@ from microemggui.widgets.base import (
     LargePushButton,
     InputInlineText,
     InputInlineLabel,
-    InputInlineHighlightedText,
+    HighlightedLabel,
     InputWarningLabel,
     InputComboBox,
     SubsectionTitle,
@@ -165,7 +165,7 @@ class LoadRecordingSection(QWidget):
             "selectrecording": SelectRecordingWidget(parent=self),
             "label": RecordingLabel(parent=self),
             "load": LoadRecordingButton(parent=self),
-            "message": InputInlineHighlightedText("", self),
+            "message": HighlightedLabel("", self),
             "errormessage": InputWarningLabel("", self),
         }
 
@@ -237,6 +237,6 @@ class LoadRecordingSection(QWidget):
             n_chan = self.emg_model.emg_data.n_chan
             emg_dur = self.emg_model.emg_data.emg_dur
             self.widgets["message"].setText(
-                "Recording loaded!"
+                "Recording loaded! "
                 + f"The recording has {n_chan} channels and is {round(emg_dur/60, 2)} minutes."
             )

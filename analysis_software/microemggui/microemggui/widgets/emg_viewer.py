@@ -5,7 +5,6 @@ Current icons from https://icons.getbootstrap.com/
 
 """
 
-import os
 from math import ceil
 
 import numpy as np
@@ -31,6 +30,7 @@ from microemggui.widgets.base import (
     WidgetControlButton,
 )
 from microemggui.widgets.base_pyqtgraph import EMGYAxisItem
+from microemggui.icons import icons  # noqa - import allows icon references
 
 
 # --- Local helper functions ----
@@ -459,19 +459,11 @@ class EMGArrowsWidget(QWidget):
         }
 
         # Icons for buttons
-        # TODO: set resource path or otherwise define path for icons
-        icon_dir = os.path.join(
-            "analysis_software",
-            "microemggui",
-            "microemggui",
-            "icons",
-            "bootstrap-icons-1.11.3",
-        )
-        icons = [
-            "rewind.svg",
-            "caret-left.svg",
-            "caret-right.svg",
-            "fast-forward.svg",
+        my_icons = [
+            "rewind",
+            "caret-left",
+            "caret-right",
+            "fast-forward",
         ]
 
         # Tooltip text for each button
@@ -483,8 +475,8 @@ class EMGArrowsWidget(QWidget):
         ]
 
         # Set button icons and tooltip text
-        for w, ic, txt in zip(self.widgets.values(), icons, tooltip_text):
-            w.setIcon(QIcon(os.path.join(icon_dir, ic)))
+        for w, ic, txt in zip(self.widgets.values(), my_icons, tooltip_text):
+            w.setIcon(QIcon(":/bootstrap/" + ic))
             w.setToolTip(txt)
 
         # Number of divisions moved by each button
@@ -679,21 +671,13 @@ class EMGGainWidget(QWidget):
         self.widget_scale = [1 / scale_factor, scale_factor]
 
         # Icons for buttons
-        # TODO: set resource path or otherwise define path for icons
-        icon_dir = os.path.join(
-            "analysis_software",
-            "microemggui",
-            "microemggui",
-            "icons",
-            "bootstrap-icons-1.11.3",
-        )
-        icons = [
-            "caret-up.svg",
-            "caret-down.svg",
+        my_icons = [
+            "caret-up",
+            "caret-down",
         ]
 
-        for w, ic in zip(self.widgets.values(), icons):
-            w.setIcon(QIcon(os.path.join(icon_dir, ic)))
+        for w, ic in zip(self.widgets.values(), my_icons):
+            w.setIcon(QIcon(":/bootstrap/" + ic))
 
         # Add to layout
         layout = QVBoxLayout()
@@ -745,3 +729,6 @@ class EMGViewerWidget(QWidget):
         layout.addWidget(self.widgets["timecontrols"], 1, 1)
         self.setLayout(layout)
         self.setContentsMargins(0, 0, 0, 0)
+
+        # Change widget properties so will be drawn using styled background
+        self.setAttribute(Qt.WA_StyledBackground, True)
