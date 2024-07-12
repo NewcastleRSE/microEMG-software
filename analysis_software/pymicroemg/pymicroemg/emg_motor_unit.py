@@ -200,7 +200,7 @@ class EMGMotorUnit:
        
 
     def gmm_silhouette_score(self, estimator, X):
-        """Callable to pass to GridSearchCV that will use the BIC score."""
+        """Callable to pass to GridSearchCV that will use the silhouette score."""
         #       
         return silhouette_score(X, estimator.predict(X))
     
@@ -264,6 +264,10 @@ class EMGMotorUnit:
         k : int
             the of clusters to fit, if set to 0 uses default of (rounded) mean number of fibre
             potentials (FPs) per motor unit potential
+        time_scale : float
+            if greater than 0 then time is used as a 3rd dimension to cluster the points and
+            is scaled by this amount
+            
         Raises
         ------
         RuntimeError
@@ -1058,9 +1062,12 @@ class EMGMotorUnit:
         median_time2 = np.median(self.fibre_potential_times[all_fibre2_potentials_idx])
              
         # Length of time intervals between fibre potentials in the two different fibres
-        fibre_potential_time_diffs = np.full(len(self.mup_onsets), np.nan)
+        fibre_potential_time_diffs = np.full(self.n_potentials, np.nan)
         
         print("Jitter between 2")
+        print(len(self.mup_onsets))
+        print(self.n_potentials)
+        
         #print()
         # Compute length of time intervals between fibre potentials
         for mup_num in range(self.n_potentials):
@@ -1106,7 +1113,7 @@ class EMGMotorUnit:
             #print(fibre_potential_time_diffs)
             
         # Compute consecutive differences       
-        consecutive_diffs = np.full((len(self.mup_onsets) - 1), np.nan)
+        consecutive_diffs = np.full((self.n_potentials - 1), np.nan)
            
         for mup_num in range(self.n_potentials - 1):            
             if not np.isnan(fibre_potential_time_diffs[mup_num]) and not np.isnan(fibre_potential_time_diffs[mup_num + 1]):
@@ -1146,8 +1153,8 @@ class EMGMotorUnit:
         fibre1_numbers = np.zeros(number_of_jitter_calcs)
         fibre2_numbers = np.zeros(number_of_jitter_calcs)
         mean_consecutive_diffs = np.zeros(number_of_jitter_calcs)
-        fibre_potential_time_diffs = np.zeros((number_of_jitter_calcs, len(self.mup_onsets)))
-        consecutive_diffs = np.zeros((number_of_jitter_calcs, len(self.mup_onsets) - 1))
+        fibre_potential_time_diffs = np.zeros((number_of_jitter_calcs, self.n_potentials))
+        consecutive_diffs = np.zeros((number_of_jitter_calcs, self.n_potentials - 1))
         
         count = 0
         print("Num fibre clusters")
@@ -1170,7 +1177,7 @@ class EMGMotorUnit:
         
         self.analysis_performed["fibres_jitter_computed"] = True
  
-    def plot_fibre_potential_time_diffs(self, fibre1_num, fibre2_num, sampling_freq, show = False):
+    def plot_fibre_potential_time_diffs(self, fibre1_num, fibre2_num, sampling_freq, display_counts = True, show = False):
         """
         Plot a histogram for time differences between fibre potentials
             
@@ -1231,11 +1238,22 @@ class EMGMotorUnit:
         ax.text(0.05, 0.95, textstr, transform=ax.transAxes, fontsize=14,
                 verticalalignment='top', bbox=props)
 
+        #display counts and percent
+        if display_counts:
+            total_diffs = len(fibre_pot_diffs)
+            total_non_nan_diffs = np.count_nonzero(~np.isnan(fibre_pot_diffs))
+            percent = (total_non_nan_diffs/total_diffs)*100
+            textstr = r'MUPs $= %d$' % (total_diffs, ) + '\n' + r'Used $=%d (%0.2f$' % (total_non_nan_diffs, percent, ) + r'$\%$)'
+            
+            # place a text box in upper left in axes coords
+            ax.text(0.95, 0.95, textstr, transform=ax.transAxes, fontsize=14,
+                verticalalignment='top', horizontalalignment='right', bbox=props)
+        
         # Show plot on screen now if requested
         if show:
             plt.show() 
 
-    def plot_fibre_consecutive_diffs(self, fibre1_num, fibre2_num, sampling_freq, show = False):
+    def plot_fibre_consecutive_diffs(self, fibre1_num, fibre2_num, sampling_freq, display_counts = True, show = False):
         """
         Plot a histogram for the consecutive differences (from one MUP to the next)
         between the length of time intervals of timings between fibre potentials
@@ -1301,6 +1319,17 @@ class EMGMotorUnit:
         ax.text(0.05, 0.95, textstr, transform=ax.transAxes, fontsize=14,
                 verticalalignment='top', bbox=props)
 
+        #display counts and percent
+        if display_counts:
+            con_diffs = len(consecutive_diffs)
+            total_non_nan_diffs = np.count_nonzero(~np.isnan(consecutive_diffs))
+            percent = (total_non_nan_diffs/con_diffs)*100
+            textstr = r'MUPs $= %d$' % (con_diffs + 1, ) + '\n' + r'Used $=%d (%0.2f$' % (total_non_nan_diffs, percent, ) + r'$\%$)'
+            
+            # place a text box in upper left in axes coords
+            ax.text(0.95, 0.95, textstr, transform=ax.transAxes, fontsize=14,
+                verticalalignment='top', horizontalalignment='right', bbox=props)
+            
         # Show plot on screen now if requested
         if show:
             plt.show() 

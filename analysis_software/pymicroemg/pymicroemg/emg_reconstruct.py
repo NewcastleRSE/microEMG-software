@@ -968,29 +968,6 @@ class EMGAnalysisReconstruct:
 
         return groups
 
-    def find_peaks_2d_filters(self, image, threshold):
-        neighborhood_size = 5
-
-        data_max = filters.maximum_filter(image, neighborhood_size)
-        maxima = image == data_max
-        data_min = filters.minimum_filter(image, neighborhood_size)
-        diff = (data_max - data_min) > threshold
-        maxima[diff == 0] = 0
-
-        labeled, _ = ndimage.label(maxima)
-        slices = ndimage.find_objects(labeled)
-        x, y = [], []
-
-        for dy, dx in slices:
-            x_center = (dx.start + dx.stop - 1) / 2
-            x.append(x_center)
-            y_center = (dy.start + dy.stop - 1) / 2
-            y.append(y_center)
-
-        ans = np.vstack((x, y)).T
-
-        return ans
-
     def find_peaks_2d(self, sig):
         """
         Finds local maxima of a 2-dimensional image area
@@ -1018,36 +995,83 @@ class EMGAnalysisReconstruct:
         
         base = np.abs(base)
         
-        sigma = 2
+        sigma = 2 #         
         im2 = np.abs(gaussian_filter(base, sigma, truncate=np.ceil(2 * sigma) / sigma))
-
+        #im2 = base
+        
         # Extract each blob
         locs = np.array([])
         found = False
         parse_limit = 0
         im2_max = np.max(im2)
-        max_number_of_peaks = 10 #22
+        min_number_of_peaks = 1 # if possible
+        max_number_of_peaks = 5 #22
+        prev_n_peaks = 0
+       
+        # Initial set up for peak finding
+        neighborhood_size = (5, 5)
+        data_max = filters.maximum_filter(im2, neighborhood_size)
+        maxima_init = (im2 == data_max)
+        data_min = filters.minimum_filter(im2, neighborhood_size)
+        
+        diff = (data_max - data_min)
 
+        #print("np.sum(maxima_init)")
+        #print(np.sum(maxima_init))
+        
         while not found:
             parse_limit = parse_limit + 1
-            locs = self.find_peaks_2d_filters(im2, im2_max * threshold)
+            #locs = self.find_peaks_2d_filters(im2, im2_max * threshold)
+            #n_peaks = self.find_peaks_2d_filters_n_peaks(im2_max * threshold)
+            # Get number of peaks for this threshold
+            maxima = maxima_init
+            # Remove values below threshold
+            maxima[(diff > (im2_max * threshold)) == 0] = 0
 
-            if locs.shape[0] < 1:
-                threshold = threshold - 0.02
-            elif locs.shape[0] > max_number_of_peaks:
-                threshold = threshold + 0.02
+            
+            labeled, _ = ndimage.label(maxima)
+            slices = ndimage.find_objects(labeled)
+            n_peaks = len(slices)
+           
+            #print(n_peaks)
+            #print(threshold)
+            
+            if n_peaks < min_number_of_peaks and prev_n_peaks <= max_number_of_peaks:
+                threshold = threshold - 0.01
+            elif n_peaks > max_number_of_peaks:
+                threshold = threshold + 0.01         
             else:
                 found = True
                 # save nice threshold for next time to perhaps speed it up
                 self.threshold = threshold
 
-            if threshold <= 0.05 or threshold > 1 or parse_limit > 20:
+            if threshold <= 0.00 or threshold > 1 or parse_limit > 20:
                 locs = np.array([])
                 found = True
+            
+            prev_n_peaks = n_peaks
+            
+ 
+        # Get final locations       
+        if n_peaks > 0:  
+            x, y = [], []
 
-        if locs.shape[0] > 0:
+            for dy, dx in slices:               
+                
+                x_center = (dx.start + dx.stop - 1) / 2
+                x.append(x_center)
+                y_center = (dy.start + dy.stop - 1) / 2
+                y.append(y_center)
+
+            locs = np.vstack((x, y)).T
+            
             locs[locs[:, 1] < 0, 1] = 0
-
+       
+        #print("2D peaks")
+        #print(parse_limit)
+        #print(n_peaks)
+        #print("End")
+        
         return locs
 
     def deconv_wrapper(self, loc):
