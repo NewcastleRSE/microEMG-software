@@ -20,6 +20,7 @@ Please cite the paper if any of the methods were helpful
 
 import numpy as np
 import scipy.signal as sg
+import warnings
 from pymicroemg.detect_peaks import detect_peaks
 from pymicroemg.emg_constants import QUICK_VERSION
 
@@ -1114,9 +1115,11 @@ def TK_filter(sig, sampling_freq, C=0.1, threshold_PsC=0.1, init=True, wind=0.00
 
     # start from feature 6 which is period of each exterema
     for i in range(5, features.shape[1]):
-
-        original_range[0] = np.nanmin(features[:, i])
-        original_range[1] = np.nanmax(features[:, i])
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            original_range[0] = np.nanmin(features[:, i])
+            original_range[1] = np.nanmax(features[:, i])
+            
         if QUICK_VERSION:
             features[:, i] = linear_map2(
                 features[:, i], original_range, map_range, [1, 4]

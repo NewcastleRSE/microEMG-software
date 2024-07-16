@@ -17,6 +17,9 @@ import scipy.optimize as opt
 from scipy.linalg import toeplitz
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
+import warnings
+# install scikit-image
+from skimage import morphology
 
 # TODO: add csv and cv2 to poetry dependency management
 # Need to remove try/except block - temporary fix since functions not needed for
@@ -332,7 +335,6 @@ class EMGAnalysisReconstruct:
         ----------
         motor_unit_number: int
             motor unit number used as a label
-
         Returns
         -------
         None
@@ -342,7 +344,7 @@ class EMGAnalysisReconstruct:
         # Create motor unit objects for each motor unit
         all_motor_units = []
         for i in range(np.max(mu_numbers) + 1):
-            motor_unit = EMGMotorUnit(number=i, potentials_t_idx=mup_t_idx[mu_numbers == i])
+            motor_unit = EMGMotorUnit(i, mup_t_idx[mu_numbers == i], self.mu_settings, self.emg_data_preproc.fs)
             all_motor_units.append(motor_unit)
 
         self.found_motor_units = EMGMotorUnits(
@@ -640,7 +642,6 @@ class EMGAnalysisReconstruct:
 
         Note that the channel is specified using the channel index (counting from 0),
         not the channel numeric label (counting from 1)
-
 
         Parameters
         ----------
@@ -986,30 +987,29 @@ class EMGAnalysisReconstruct:
 
         threshold = self.threshold
         base = sig
-        # remove negative deflection to discount 'doubling peaks'
-        # from negative initial deflection of SFAP
-        #base[base < 0] = 0
         
-        #base[base > 0] = 0
-        #base = - base
-        
+        # Absolute value of signal to account for fibre potentials that are dips
+        # 
         base = np.abs(base)
         
-        sigma = 2 #         
-        im2 = np.abs(gaussian_filter(base, sigma, truncate=np.ceil(2 * sigma) / sigma))
+        sigma = (self.recon_settings.find_peaks_2d_sigma_mups, self.recon_settings.find_peaks_2d_sigma_time)
+        im2 = np.abs(gaussian_filter(base, sigma, truncate=self.recon_settings.find_peaks_2d_truncate))
         #im2 = base
         
+        if self.recon_settings.find_peaks_2d_use_tophat: 
+            im2 = morphology.white_tophat(im2, morphology.disk(self.recon_settings.find_peaks_2d_tophat_disk_radius))
+
         # Extract each blob
         locs = np.array([])
         found = False
         parse_limit = 0
         im2_max = np.max(im2)
-        min_number_of_peaks = 1 # if possible
-        max_number_of_peaks = 5 #22
+        min_number_of_peaks = self.recon_settings.find_peaks_2d_min_peaks # if possible
+        max_number_of_peaks = self.recon_settings.find_peaks_2d_max_peaks #22
         prev_n_peaks = 0
        
         # Initial set up for peak finding
-        neighborhood_size = (5, 5)
+        neighborhood_size = (self.recon_settings.find_peaks_2d_neighbour_mups, self.recon_settings.find_peaks_2d_neighbour_time)
         data_max = filters.maximum_filter(im2, neighborhood_size)
         maxima_init = (im2 == data_max)
         data_min = filters.minimum_filter(im2, neighborhood_size)
@@ -1128,8 +1128,10 @@ class EMGAnalysisReconstruct:
         dx = np.fabs(self.fbx - self.needle[channel, 0])  # X offset
         dy = np.fabs(self.fby - self.needle[channel, 1])  # Y offset of channel i
         dz = np.fabs(z - self.isz_half)  # Z distance along fibre
-
-        return np.reciprocal(np.sqrt(dx * dx + dy * dy + dz * dz))
+    
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            return np.reciprocal(np.sqrt(dx * dx + dy * dy + dz * dz))
 
     def calc_cn(self, fbx, fby, isz):
         """
