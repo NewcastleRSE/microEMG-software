@@ -222,7 +222,7 @@ def psuedo_correlation(template, sig, lag=None):
     Returns
     -------
     psuedo_correlation_score : float
-        maximum score at best lag    
+        maximum score at best lag
     """
 
     if lag is None:
@@ -1119,7 +1119,7 @@ def TK_filter(sig, sampling_freq, C=0.1, threshold_PsC=0.1, init=True, wind=0.00
             warnings.simplefilter("ignore", category=RuntimeWarning)
             original_range[0] = np.nanmin(features[:, i])
             original_range[1] = np.nanmax(features[:, i])
-            
+
         if QUICK_VERSION:
             features[:, i] = linear_map2(
                 features[:, i], original_range, map_range, [1, 4]
