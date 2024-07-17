@@ -33,7 +33,8 @@ class EMGAnalysisReconstructSettings:
         self.max_opt_iterations = 200
         self.xtol = 0.01
         self.ftol = 1
-            
+        self.y_scaling_factor = 2.0
+        
         # 2D peak finding options for localisation
         self.find_peaks_2d_sigma_mups = 2
         self.find_peaks_2d_sigma_time = 2
@@ -69,7 +70,8 @@ class EMGAnalysisReconstructSettings:
             "half_subsample_size" : self.half_subsample_size,
             "max_opt_iterations" : self.max_opt_iterations,
             "xtol" : self.xtol,
-            "ftol" : self.ftol,      
+            "ftol" : self.ftol,
+            "y_scaling_factor" : self.y_scaling_factor,
             "find_peaks_2d_sigma_mups" : self.find_peaks_2d_sigma_mups,
             "find_peaks_2d_sigma_time" : self.find_peaks_2d_sigma_time,
             "find_peaks_2d_truncate" : self.find_peaks_2d_truncate,
@@ -105,7 +107,8 @@ class EMGAnalysisReconstructSettings:
         self.half_subsample_size = settings_dict["half_subsample_size"]
         self.max_opt_iterations = settings_dict["max_opt_iterations"]
         self.xtol = settings_dict["xtol"]
-        self.ftol = settings_dict["ftol"] 
+        self.ftol = settings_dict["ftol"]
+        self.y_scaling_factor = settings_dict["y_scaling_factor"]
         self.find_peaks_2d_sigma_mups = settings_dict["find_peaks_2d_sigma_mups"]
         self.find_peaks_2d_sigma_time = settings_dict["find_peaks_2d_sigma_time"]
         self.find_peaks_2d_truncate = settings_dict["find_peaks_2d_truncate"]
@@ -143,6 +146,8 @@ class EMGAnalysisReconstructSettings:
         ans += str(self.xtol)
         ans += "\nOptimisation function value tolerance: "
         ans += str(self.ftol)
+        ans += "\nScaling factor, y: "
+        ans += str(self.y_scaling_factor)
         ans += "\n"
         ans += "\n2D Peak Finding Options"
         ans += "\nGaussian filter, sigma MUPs: "
@@ -211,6 +216,7 @@ class EMGAnalysisMotorUnitSettings:
         self.dbscan_eps = 0.1
         self.dbscan_min_samples = 10
         # Covariance type for GMM clustering, options are: "spherical", "tied", "diag" and "full"
+        # Only tied is currently coded, so do not change
         self.gmm_covariance_type = 'tied'
         self.remove_outliers = True
     

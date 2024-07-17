@@ -918,9 +918,8 @@ class EMGAnalysisReconstruct:
                 
         # End of signal_id loop
 
-        # TODO remove this line and self.needle scaling above
-        # (pending SM's final decision about the scaling)
-        # pos[:, 0] = pos[:, 0] / 4
+        # Scaling factor to account for tissue attenuation        
+        pos[:, 0] = pos[:, 0] * self.recon_settings.y_scaling_factor
           
         # Add the results to the motor unit object
         if pos.shape[0] > 0:
@@ -1025,10 +1024,7 @@ class EMGAnalysisReconstruct:
         data_min = filters.minimum_filter(im2, neighborhood_size)
         
         diff = (data_max - data_min)
-
-        #print("np.sum(maxima_init)")
-        #print(np.sum(maxima_init))
-        
+      
         while not found:
             parse_limit = parse_limit + 1
             #locs = self.find_peaks_2d_filters(im2, im2_max * threshold)
@@ -1042,10 +1038,7 @@ class EMGAnalysisReconstruct:
             labeled, _ = ndimage.label(maxima)
             slices = ndimage.find_objects(labeled)
             n_peaks = len(slices)
-           
-            #print(n_peaks)
-            #print(threshold)
-            
+                                
             if n_peaks < min_number_of_peaks and prev_n_peaks <= max_number_of_peaks:
                 threshold = threshold - 0.01
             elif n_peaks > max_number_of_peaks:

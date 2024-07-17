@@ -241,14 +241,7 @@ class EMGMotorUnit:
         # Note analysis performed
         if len(self.fibre_centres) > 0 and self.n_fibre_potentials is not None:
             self.analysis_performed["fibres_localised"] = True
-    
-    def gmm_bic_score(self, estimator, X):
-        """Callable to pass to GridSearchCV that will use the BIC score."""
-        #
-        # Make it negative since GridSearchCV expects a score to maximize
-        return -estimator.bic(X)
        
-
     def silhouette_score(self, estimator, X):
         """Callable to pass to GridSearchCV that will use the silhouette score."""
         #       
@@ -435,8 +428,6 @@ class EMGMotorUnit:
             fibre_centres_gmm_covariance = grid_search.best_estimator_.covariances_
        
 
-        print("mean_n_fps")
-        print(mean_n_fps)
         # Initialise arrays for storing results
 
         # Number of fibre potentials (FPs) in each MUP that belong to the same
@@ -861,41 +852,24 @@ class EMGMotorUnit:
                    )
             
     def _plot_fitted_gmms(self, ax, n_sigma):
-        #color_iter = sns.color_palette("tab10", 2)[::-1]
-        #Y_ = grid_search.predict(X)
-
-        #n_clusters = len(self.fibre_clustering_results["fibre_centres_gmm_mean"])
-        #if tied, define and save earlier in results - find out which cov model and adapt earlier...
+       
+        # If tied, define and save earlier in results
+        # Other covariance models have the covariance matrix saved different from GMM library (annoyingly)
+        # Other covariance models are not handled
         cov = self.fibre_clustering_results["fibre_centres_gmm_covariance"] 
         cov = np.array( [[cov[0,0], cov[0,1]], [cov[1,0], cov[1,1]]] )
         
-        #print(i)
-        #print("cov")
-        #print(cov)
         #if cov.ndim < 2:
         #    cov = np.array([[cov[0], 0], [0, cov[1]]]) # diag
-        print("cov-end")
-        print(cov)
-        print("\n")
-        
-        #for i, (mean, covX) in enumerate(
-        #for i, (mean) in enumerate(
-        #    zip(
-        #        self.fibre_clustering_results["fibre_centres_gmm_mean"],
-        #        #self.fibre_clustering_results["fibre_centres_gmm_covariance"]                
-        #    )
-        #):
-        for i, mean in enumerate(self.fibre_clustering_results["fibre_centres_gmm_mean"]):    
-            print(i)
+      
+        for i, mean in enumerate(self.fibre_clustering_results["fibre_centres_gmm_mean"]):            
             v, w = np.linalg.eigh(cov)           
 
             angle = np.arctan2(w[0][1], w[0][0])
             angle = 180.0 * angle / np.pi  # convert to degrees
             # Radius so times by 2 for diameter
             v = n_sigma * 2 * np.sqrt(v)
-            ellipse = Ellipse(mean, v[0], v[1], angle=180.0 + angle, edgecolor="black", facecolor='none') #color=self.get_cluster_colour(i, n_clusters))
-            #ellipse.set_clip_box(fig.bbox)
-            #ellipse.set_alpha(0.5)
+            ellipse = Ellipse(mean, v[0], v[1], angle=180.0 + angle, edgecolor="black", facecolor='none')
             ax.add_artist(ellipse)
 
     def confidence_ellipse(self, x, y, ax, n_std=3.0, facecolor='none', **kwargs):
@@ -961,10 +935,7 @@ class EMGMotorUnit:
             x = np.array(self.fibre_centres[(self.fibre_clustering_results["fibre_clusters"] == cluster_no), 0])
             y = np.array(self.fibre_centres[(self.fibre_clustering_results["fibre_clusters"] == cluster_no), 1])      
             center = np.array([[np.mean(x)], [np.mean(y)]])
-        
-        print("center")
-        print(center)
-        
+              
         if pt_facecolor is None:
             pt_facecolor = self.get_cluster_colour(cluster_no, n_clusters)
                 
@@ -1118,7 +1089,6 @@ class EMGMotorUnit:
         q25, q75 = np.nanpercentile(intervals, 25), np.nanpercentile(intervals, 75)
         iqr = q75 - q25
         
-        print('Percentiles: 25th=%.3f, 75th=%.3f, IQR=%.3f' % (q25, q75, iqr))
         # calculate the outlier cutoff
         cut_off = iqr * 1.5
         lower, upper = q25 - cut_off, q75 + cut_off
@@ -1183,11 +1153,6 @@ class EMGMotorUnit:
         # Length of time intervals between fibre potentials in the two different fibres
         fibre_potential_time_diffs = np.full(self.n_potentials, np.nan)
         
-        print("Jitter between 2")
-        print(len(self.mup_onsets))
-        print(self.n_potentials)
-        
-        #print()
         # Compute length of time intervals between fibre potentials
         for mup_num in range(self.n_potentials):
             mup_onset_idx = self.potentials_t_idx[mup_num]
@@ -1224,13 +1189,9 @@ class EMGMotorUnit:
                 fibre_potential_time_diffs[mup_num] = self._calculate_fibre_potentials_time_diff(fib_pot_pos1, fib_pot_pos2)
         
         # Remove outliers in time intervals
-        if self.mu_settings.remove_outliers:
-            #print("before")
-            #print(fibre_potential_time_diffs)
+        if self.mu_settings.remove_outliers:            
             fibre_potential_time_diffs = self.remove_outliers_iqr(fibre_potential_time_diffs)
-            #print("after")
-            #print(fibre_potential_time_diffs)
-            
+                    
         # Compute consecutive differences       
         consecutive_diffs = np.full((self.n_potentials - 1), np.nan)
            
@@ -1275,16 +1236,13 @@ class EMGMotorUnit:
         fibre_potential_time_diffs = np.zeros((number_of_jitter_calcs, self.n_potentials))
         consecutive_diffs = np.zeros((number_of_jitter_calcs, self.n_potentials - 1))
         
-        count = 0
-        print("Num fibre clusters")
-        print(n_fibre_clusters)
+        count = 0        
         for fibre1_num in range(n_fibre_clusters - 1):
             for fibre2_num in np.arange(fibre1_num + 1, n_fibre_clusters):               
                 mean_consecutive_diffs[count], fibre_potential_time_diffs[count,:], consecutive_diffs[count,:] = self.jitter_analysis_between_two_fibres(fibre1_num, fibre2_num)
                 fibre1_numbers[count] = fibre1_num
                 fibre2_numbers[count] = fibre2_num
-                count += 1
-                print(f"MCD between fibres {fibre1_num} and {fibre2_num} is {mean_consecutive_diffs[count-1]}")
+                count += 1                
         
         self.fibre_jitter_results = {
                 "fibre1_numbers": fibre1_numbers,
@@ -1334,7 +1292,6 @@ class EMGMotorUnit:
         fibre_pot_diffs = self.fibre_jitter_results["differences"][res_idx, :] / self.sampling_freq
         fibre_pot_diffs = fibre_pot_diffs.flatten()
         
-        print(fibre_pot_diffs.shape)
         fig, ax = plt.subplots()
         
         if not np.isnan(fibre_pot_diffs).all():
@@ -1409,7 +1366,6 @@ class EMGMotorUnit:
         consecutive_diffs = self.fibre_jitter_results["consecutive_diffs"][res_idx, :] / self.sampling_freq
         consecutive_diffs = consecutive_diffs.flatten()
         
-        print(consecutive_diffs.shape)
         fig, ax = plt.subplots()
         
         if not np.isnan(consecutive_diffs).all():
@@ -1424,8 +1380,6 @@ class EMGMotorUnit:
         r'Mean $= %.0f \mu$s' % (mean*1e6, ),     
         r'St. dev. $=%.0f \mu$s' % (st_dev*1e6, )))
 
-        print(mean_consecutive_diff)
-        print(mean)
         # these are matplotlib.patch.Patch properties
         props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
 
@@ -1433,7 +1387,7 @@ class EMGMotorUnit:
         ax.text(0.05, 0.95, textstr, transform=ax.transAxes, fontsize=14,
                 verticalalignment='top', bbox=props)
 
-        #display counts and percent
+        # display counts and percent
         if display_counts:
             con_diffs = len(consecutive_diffs)
             total_non_nan_diffs = np.count_nonzero(~np.isnan(consecutive_diffs))
@@ -1468,9 +1422,7 @@ class EMGMotorUnit:
         n_fibres = int(np.max(self.fibre_jitter_results["fibre2_numbers"]) + 1)
         
         data = np.full((n_fibres, n_fibres), np.nan)
-        print(data.shape)
-        print(self.fibre_jitter_results["fibre1_numbers"])
-        print(self.fibre_jitter_results["fibre2_numbers"])
+ 
         for i in range(n_fibre_pairs):
             fib1 = int(self.fibre_jitter_results["fibre1_numbers"][i])
             fib2 = int(self.fibre_jitter_results["fibre2_numbers"][i])
@@ -1483,8 +1435,7 @@ class EMGMotorUnit:
                       
         # plotting the heatmap
         str_fibres = [str(x) for x in np.arange(1, n_fibres + 1)]
-        print(str_fibres)
-        print(data)
+     
         hm = sns.heatmap(data=data, annot=True, xticklabels=str_fibres, yticklabels=str_fibres, cbar_kws={'label': r'$\mu$ seconds'}, fmt='g') 
     
         hm.set_xlabel("Fibre number")
@@ -1734,7 +1685,7 @@ class EMGMotorUnits:
                 mu_pt_facecolor = pt_facecolor
 
             if mu.analysis_performed["fibres_localised"]:
-                print(f"Plotting fibre locations of motor unit {mu.motor_unit_number + 1}")
+                
                 ax.scatter(
                     mu.fibre_centres[:, 0],
                     mu.fibre_centres[:, 1],
