@@ -287,7 +287,6 @@ class EMGData:
             Axis handle.
 
         """
-        # TODO: put offset in terms of gain (at least for GUI)
         # TODO: design alterations (e.g., default colors and color options)
 
         # Default end (stop) time is the segment's duration

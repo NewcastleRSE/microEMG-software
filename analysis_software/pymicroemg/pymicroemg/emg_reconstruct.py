@@ -8,6 +8,7 @@ For use with preprocessed EMG data.
 """
 
 from __future__ import annotations  # for type hints - must be at beginning of file
+from typing import TYPE_CHECKING
 
 import numpy as np
 import numpy.typing as npt  # for type hints
@@ -38,12 +39,16 @@ from pymicroemg.emg_constants import QUICK_VERSION
 
 import scipy.ndimage as ndimage
 import scipy.ndimage.filters as filters
-from pymicroemg.emg_data_preproc import EMGDataPreproc
 
-from pymicroemg.emg_reconstruct_settings import EMGAnalysisReconstructSettings
-from pymicroemg.emg_reconstruct_settings import EMGAnalysisMotorUnitSettings
-from pymicroemg.emg_motor_unit import EMGMotorUnit
-from pymicroemg.emg_motor_unit import EMGMotorUnits
+from pymicroemg.emg_motor_unit import EMGMotorUnit, EMGMotorUnits
+
+# Imports only needed for type hints
+if TYPE_CHECKING:
+    from pymicroemg.emg_data_preproc import EMGDataPreproc
+    from pymicroemg.emg_reconstruct_settings import (
+        EMGAnalysisMotorUnitSettings,
+        EMGAnalysisReconstructSettings,
+    )
 
 
 class EMGAnalysisReconstruct:
@@ -832,7 +837,6 @@ class EMGAnalysisReconstruct:
         max_signal_id = all_spikes.shape[0] - self.recon_settings.mavg_length
 
         for signal_id in range(max_signal_id):
-
             sig = np.squeeze(
                 np.mean(
                     all_spikes[

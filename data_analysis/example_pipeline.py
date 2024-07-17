@@ -12,16 +12,17 @@ from pymicroemg.emg_files import EMGFiles
 from pymicroemg.emg_preproc_settings import EMGPreprocSettings
 import pymicroemg.helper_config as cfg
 
-
-from pymicroemg.emg_reconstruct import EMGAnalysisReconstructSettings
-from pymicroemg.emg_reconstruct import EMGAnalysisReconstruct
+from pymicroemg.emg_reconstruct_settings import (
+    EMGAnalysisReconstructSettings,
+    EMGAnalysisMotorUnitSettings,
+)
 
 # increase figure resolution (needed for Spyder IDE)
 plt.rcParams["figure.dpi"] = 600
 
 # %% Choose recording (0 - 5) and set recording-specific properties
 
-recording_num = 1
+recording_num = 3
 
 match recording_num:
     case 1:
@@ -113,19 +114,16 @@ emg_pxx_preproc.plot_pxx(start_f, stop_f, plot_chan=plot_chan)
 # analysis
 
 # Mark any bad channels
-# TODO: check that incorporated into all downstream analysis
 emg_data_preproc.set_bad_chan(bad_chan)
 
 # Find motor units
 
 # Create settings for this part of the analysis
-# TODO: update this step when n_electrodes is removed as attribute
-analysis_settings = EMGAnalysisReconstructSettings()
-analysis_settings.n_electrodes = emg_data_preproc.n_chan
-print(analysis_settings)
+mu_settings = EMGAnalysisMotorUnitSettings()
+recon_settings = EMGAnalysisReconstructSettings()
 
 # Find motor units
-reconstruct = EMGAnalysisReconstruct(emg_data_preproc, analysis_settings)
+reconstruct = emg_data_preproc.set_up_reconstruct_analysis(mu_settings, recon_settings)
 reconstruct.find_motor_units()
 
 # %% Visualise/analyse the motor units
@@ -160,9 +158,9 @@ for i in np.arange(reconstruct.found_motor_units.n_motor_units):
 
 match recording_num:
     case 1:
+        motor_units_for_fibre_localisation = [0, 1, 2, 3]
+    case 3:
         motor_units_for_fibre_localisation = [0, 1, 2]
-    case _:
-        motor_units_for_fibre_localisation = []
 
 for mu in motor_units_for_fibre_localisation:
     print(f"Reconstructing fibres for motor unit {mu + 1}\n")

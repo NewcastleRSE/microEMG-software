@@ -3,8 +3,9 @@
 SectionTitle{
     font-weight: bold;
     font-size: 20pt;
-    min-height: 50;
-    max-height: 50;
+    min-height: 40;
+    max-height: 40;
+    qproperty-alignment: 'AlignTop | AlignLeft';
 }
 
 SubsectionTitle{
@@ -85,6 +86,89 @@ WidgetControlButton:disabled {
 }
 
 
+/* Toolbars and toolbar widgets */
+
+TopToolbar {
+    padding: 5px;
+    background: 'white';
+    border-left: none;
+    border-top: none;
+    border-bottom: 1px solid #D9D9D9;
+    border-right: none;
+}
+
+AnalysisToolbar {
+    background: 'white';
+    border-left: none;
+    border-top: none;
+    border-bottom: none;
+    border-right: 1px solid grey;
+    spacing: 0px;
+}
+
+AnalysisToolbarButton {
+    font-size: 14pt;
+    text-align: left;
+    background-color: 'white';
+    border-left: none;
+    border-top: none;
+    border-bottom: none;
+    border-right: 1px solid grey;
+    padding: 10px;
+    width: 125px;
+    border-radius: 0;
+}
+
+AnalysisToolbarButton:hover {
+    background-color: #D9D9D9;
+}
+
+AnalysisToolbarButton:checked {
+    background-color: "light blue";
+}
+
+AnalysisToolbarButton:disabled {
+    color: #D9D9D9;
+}
+
+AnalysisToolbarLabel {
+    color: 'grey';
+    font-weight: bold;
+    font-size: 12pt;
+    padding-left: 5px;
+    padding-top: 20px;
+    padding-bottom: 5px;
+}
+
+RecordingLabel {
+    color: 'grey';
+    font-size: 12pt;
+}
+
+MicroEMGLogo {
+    text-align: center;
+    background-color: 'white';
+    border-left: none;
+    border-top: none;
+    border-bottom: none;
+    border-right: 1px solid grey;
+    padding-left: 10px;
+    padding-top: 5px;
+    padding-right: 10px;
+    padding-bottom: 5px;
+    width: 125px;
+    qproperty-iconSize: 75px;
+    border-radius: 0;
+}
+
+MicroEMGLogo:hover {
+    background-color: #D9D9D9;
+}
+
+MicroEMGLogo:checked {
+    background-color: "light blue";
+}
+
 /* Settings input widgets - main section */
 
 CheckBoxMain {
@@ -95,6 +179,45 @@ CheckBoxMain {
 }
 
 /* Settings input widgets */
+
+CheckBoxChannel {
+    font-size: 12pt;
+    font-weight: bold;
+    min-height: 20px;
+    max-height: 75px;
+}
+
+CheckBoxChannel::indicator {
+    width: 15px;
+    height: 15px;
+}
+
+CheckBoxChannel::indicator:checked {
+    background-color: lightblue;
+    border: 1px solid grey;
+}
+
+CheckBoxChannel::indicator:unchecked {
+    background-color: white;
+    border: 1px solid #D9D9D9;
+}
+
+CheckBoxChannel::indicator:checked {
+    image: url(none);
+}
+
+CheckBoxChannel::indicator:checked {
+    background-color: white;
+    border: 1px solid #D9D9D9;
+    image: url(:/bootstrap/check)
+}
+
+CheckBoxChannelLabel {
+    font-size: 12pt;
+    font-weight: bold;
+    min-height: 20;
+    max-height: 20;
+}
 
 InputLabel {
     qproperty-alignment: 'AlignBottom | AlignLeft';
@@ -111,6 +234,20 @@ InputInlineText {
 
 InputInlineHighlightedText {
     color: 'blue';
+    min-height: 20;
+    max-height: 20;
+}
+
+HighlightedLabel {
+    color: 'blue';
+}
+
+HighlightedLabel#channels_widget_exclude {
+    qproperty-alignment: 'AlignBottom | AlignLeft';
+    min-height: 100;
+    max-height: 100;
+    min-width: 250;
+    max-width: 250;
 }
 
 InputWarningLabel {
@@ -138,3 +275,16 @@ QPushButton {
     max-width: 50;
 }
 
+/* EMG viewer */
+
+EMGViewerWidget {
+    background: white;
+    border: 1px solid grey;
+    border-radius: 4px;
+}
+
+/* Preprocessing settings - ste width */
+PreprocSettingsWidget {
+    min-width: 250;
+    max-width: 250;
+}

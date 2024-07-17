@@ -6,10 +6,54 @@ interface to pymicroemg data classes for settings:
     - EMGPreprocSettings
 """
 
-from pymicroemg.emg_preproc_settings import EMGPreprocSettings
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pymicroemg.emg_preproc_settings import EMGPreprocSettings
+
+
+class EMGSettingsModel:
+    # Model for all EMG settings. Each settings object is stored as a separate
+    # attribute. Note that the pymicroemg settings class (not the microemggui model
+    # classes) are used for each attribute - the corresponding models will be created
+    # by the GUI as needed.
+    # TODO: consider passing in object that contains all settings instead of individual
+    # groups of settings.
+
+    def __init__(self, preprocess_settings: EMGPreprocSettings):
+        self.preprocess_settings = preprocess_settings
+
+    def get_formatted_settings_text(self) -> str:
+        # Formatted settings text with breaks and bold section headers, for display in
+        # GUI
+
+        # Preprocessing
+        remove_mains_str = f"Remove mains: {self.preprocess_settings.remove_mains}"
+        filter_str = f"Filter: {self.preprocess_settings.butterworth_filter}"
+        if self.preprocess_settings.butterworth_filter:
+            filter_type = self.preprocess_settings.butterworth_filter_settings["filter_type"]
+            order = self.preprocess_settings.butterworth_filter_settings["order"]
+            cutoff1 = self.preprocess_settings.butterworth_filter_settings["cutoff1"]
+            if filter_type == "bandpass":
+                cutoff2 = self.preprocess_settings.butterworth_filter_settings["cutoff2"]
+                cutoff_str = f"cutoff frequencies: {cutoff1} to {cutoff2} Hz"
+            else:
+                cutoff_str = f"cutoff frequency: {cutoff1} Hz"
+            filter_str = (
+                filter_str + f" ({filter_type} Butterworth filter, {cutoff_str}, order: {order})"
+            )
+
+        preprocess_str = f"<b>Preprocessing settings</b><br>{remove_mains_str}<br>{filter_str}"
+
+        # TODO: add remaining settings
+        settings_text = preprocess_str
+        return settings_text
 
 
 class EMGPreprocSettingsModel:
+    # Model for the EMG preprocessing settings
+
     def __init__(self, settings: EMGPreprocSettings):
         self.settings = settings
 
