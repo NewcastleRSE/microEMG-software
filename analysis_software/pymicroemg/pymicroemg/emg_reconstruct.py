@@ -917,7 +917,8 @@ class EMGAnalysisReconstruct:
 
                 mup_onsets = np.append(mup_onsets, motor_unit.potentials_t_idx[signal_id])
 
-                # Add fibre potential times, these are already adjusted and relative to the MUP onset times
+                # Add fibre potential times, these are already adjusted
+                #  and relative to the MUP onset times
                 fibre_potential_times = np.append(fibre_potential_times, time_peak)
 
         # End of signal_id loop

@@ -398,22 +398,18 @@ class EMGMotorUnit:
             n_fibre_clusters = np.max(clustering.labels_) + 1
             fibre_clusters = clustering.labels_
 
-        elif self.mu_settings.clustering_method == "k-means":
-            # Use rounded mean number of fibre potentials (FPs) per motor unit potential as
+        elif self.mu_settings.clustering_method == "k-means":            
             # k for clustering
-            # k = self.mu_settings.k_means_k
-
-            # if k == 0:
-            #    k = mean_n_fps
-
-            # if k == 0:
-            #    return
-
-            # fibre_kmeans = KMeans(n_clusters=k, random_state=self.mu_settings.k_means_random_state).fit(data_to_cluster)
-
-            min_n_clusters = np.max([2, mean_n_fps - 2])
-            max_n_clusters = mean_n_fps + 2
-
+            k = self.mu_settings.k_means_k
+         
+            # Use a range if no values of k if not given
+            if k == 0:
+                min_n_clusters = np.max([2, mean_n_fps - 2])
+                max_n_clusters = mean_n_fps + 2
+            else:
+                min_n_clusters = k
+                max_n_clusters = k
+                
             grid_search = self.k_means_selection(data_to_cluster, min_n_clusters, max_n_clusters)
 
             # fibre cluster assignments
@@ -422,10 +418,6 @@ class EMGMotorUnit:
 
             # Record results for graph plotting
             self.k_means_cluster_scores = grid_search.cv_results_
-
-            # fibre cluster assignments
-            # n_fibre_clusters = np.max(fibre_kmeans.labels_) + 1
-            # fibre_clusters = fibre_kmeans.labels_
 
         else:
             # Use Gaussian Mixture Model Selection
@@ -697,7 +689,8 @@ class EMGMotorUnit:
     ):
         """
         Create scatter plot of fibre localisations estimated from all fibre potentials
-        with the location of each fibre overlaid. Ellipse confidence regions are plotted around te fibre locations
+        with the location of each fibre overlaid. Ellipse confidence regions are plotted
+        around te fibre locations
         Plots results from one motor unit at a time.
 
         Default point colour depends on the fibre cluster.
@@ -872,7 +865,8 @@ class EMGMotorUnit:
     def _plot_fitted_gmms(self, ax, n_sigma):
 
         # If tied, define and save earlier in results
-        # Other covariance models have the covariance matrix saved different from GMM library (annoyingly)
+        # Other covariance models have the covariance matrix saved different
+        #  from GMM library (annoyingly)
         # Other covariance models are not handled
         cov = self.fibre_clustering_results["fibre_centres_gmm_covariance"]
         cov = np.array([[cov[0, 0], cov[0, 1]], [cov[1, 0], cov[1, 1]]])
@@ -880,7 +874,7 @@ class EMGMotorUnit:
         # if cov.ndim < 2:
         #    cov = np.array([[cov[0], 0], [0, cov[1]]]) # diag
 
-        for i, mean in enumerate(self.fibre_clustering_results["fibre_centres_gmm_mean"]):
+        for mean in self.fibre_clustering_results["fibre_centres_gmm_mean"]:
             v, w = np.linalg.eigh(cov)
 
             angle = np.arctan2(w[0][1], w[0][0])
@@ -1005,7 +999,8 @@ class EMGMotorUnit:
     ):
         """
         Create scatter plot of fibre localisations estimated from all fibre potentials
-        with the location of each fibre overlaid. Ellipse confidence regions are plotted around te fibre locations
+        with the location of each fibre overlaid. Ellipse confidence regions are plotted
+        around te fibre locations
         Plots results from one motor unit at a time.
 
         Default point colour depends on the fibre cluster.
@@ -1110,7 +1105,8 @@ class EMGMotorUnit:
         # Set x axis limits
         ax.set_xlim(-1, max_x)
 
-        # Equal aspect ratio, (this can mess up the axis limits if true when displaying as pop up plot in Windows)
+        # Equal aspect ratio, (this can mess up the axis limits if true when
+        #  displaying as pop up plot in Windows)
         if axis_equal:
             ax.axis("equal")
 
@@ -1277,7 +1273,8 @@ class EMGMotorUnit:
             or not self.analysis_performed["fibres_clustered"]
         ):
             raise RuntimeError(
-                "Localisation analysis and fibre cluster analysis must be performed before jitter analysis!"
+                "Localisation analysis and fibre cluster analysis" +
+                "must be performed before jitter analysis!"
             )
 
         if self.n_potentials < 2:
@@ -1370,10 +1367,10 @@ class EMGMotorUnit:
             )
 
         plt.title(
-            f"Fibre potential intervals (motor unit {self.motor_unit_number+1}, fibres {fibre1_num+1} and {fibre2_num+1})"
+            f"Fibre potential intervals (motor unit {self.motor_unit_number+1}" +
+            f", fibres {fibre1_num+1} and {fibre2_num+1})"
         )
-        # mean_consecutive_diff = self.fibre_jitter_results["mean_consecutive_diffs"][res_idx]
-
+       
         mean = np.nanmean(fibre_pot_diffs)
         st_dev = np.nanstd(fibre_pot_diffs, ddof=1)
         textstr = "\n".join(
@@ -1479,7 +1476,8 @@ class EMGMotorUnit:
             )
 
         plt.title(
-            f"Consecutive differences (motor unit {self.motor_unit_number+1}, fibres {fibre1_num+1} and {fibre2_num+1})"
+            f"Consecutive differences (motor unit {self.motor_unit_number+1}" +
+            f", fibres {fibre1_num+1} and {fibre2_num+1})"
         )
 
         mean = np.nanmean(consecutive_diffs)
