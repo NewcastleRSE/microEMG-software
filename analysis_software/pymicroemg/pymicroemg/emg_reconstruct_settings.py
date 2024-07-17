@@ -45,6 +45,76 @@ class EMGAnalysisReconstructSettings:
         self.find_peaks_2d_max_peaks = 5
         self.find_peaks_2d_neighbour_mups = 5
         self.find_peaks_2d_neighbour_time = 5
+    
+    def get_settings_dict(self):
+        """
+        Saves settings for analysis
+
+        Parameters
+        ----------
+        None. 
+            
+        Returns
+        -------
+        None
+
+        """
+        
+        # Define settings dictionary
+        settings_dict = { 
+            "n_electrodes" : self.n_electrodes,
+            "mavg_length" : self.mavg_length,
+            "mavg_all" : self.mavg_all,
+            "spike_dur" : self.spike_dur,
+            "half_subsample_size" : self.half_subsample_size,
+            "max_opt_iterations" : self.max_opt_iterations,
+            "xtol" : self.xtol,
+            "ftol" : self.ftol,      
+            "find_peaks_2d_sigma_mups" : self.find_peaks_2d_sigma_mups,
+            "find_peaks_2d_sigma_time" : self.find_peaks_2d_sigma_time,
+            "find_peaks_2d_truncate" : self.find_peaks_2d_truncate,
+            "find_peaks_2d_use_tophat" : self.find_peaks_2d_use_tophat,      
+            "find_peaks_2d_tophat_disk_radius" : self.find_peaks_2d_tophat_disk_radius,
+            "find_peaks_2d_min_peaks" : self.find_peaks_2d_min_peaks,
+            "find_peaks_2d_max_peaks" : self.find_peaks_2d_max_peaks,
+            "find_peaks_2d_neighbour_mups" : self.find_peaks_2d_neighbour_mups,
+            "find_peaks_2d_neighbour_time" : self.find_peaks_2d_neighbour_time         
+        } 
+        
+        return settings_dict
+    
+    def set_settings_from_dict(self, settings_dict):
+        """
+        Saves settings for analysis
+
+        Parameters
+        ----------
+        settings_dict: Dictionary
+            Dictionary with all the settings save in it 
+            
+        Returns
+        -------
+        None
+
+        """
+        
+        self.n_electrodes = settings_dict["n_electrodes"]
+        self.mavg_length = settings_dict["mavg_length"]
+        self.mavg_all = settings_dict["mavg_all"]
+        self.spike_dur = settings_dict["spike_dur"]
+        self.half_subsample_size = settings_dict["half_subsample_size"]
+        self.max_opt_iterations = settings_dict["max_opt_iterations"]
+        self.xtol = settings_dict["xtol"]
+        self.ftol = settings_dict["ftol"] 
+        self.find_peaks_2d_sigma_mups = settings_dict["find_peaks_2d_sigma_mups"]
+        self.find_peaks_2d_sigma_time = settings_dict["find_peaks_2d_sigma_time"]
+        self.find_peaks_2d_truncate = settings_dict["find_peaks_2d_truncate"]
+        self.find_peaks_2d_use_tophat = settings_dict["find_peaks_2d_use_tophat"]
+        self.find_peaks_2d_tophat_disk_radius = settings_dict["find_peaks_2d_tophat_disk_radius"]
+        self.find_peaks_2d_min_peaks = settings_dict["find_peaks_2d_min_peaks"]
+        self.find_peaks_2d_max_peaks = settings_dict["find_peaks_2d_max_peaks"]
+        self.find_peaks_2d_neighbour_mups = settings_dict["find_peaks_2d_neighbour_mups"]
+        self.find_peaks_2d_neighbour_time  = settings_dict["find_peaks_2d_neighbour_time"]
         
     def __str__(self):
         """
@@ -144,6 +214,63 @@ class EMGAnalysisMotorUnitSettings:
         self.gmm_covariance_type = 'tied'
         self.remove_outliers = True
     
+    def get_settings_dict(self):
+        """
+        Saves settings for analysis
+
+        Parameters
+        ----------
+        None. 
+            
+        Returns
+        -------
+        None
+
+        """
+        
+        # Define settings dictionary
+        settings_dict = {            
+            "tk_filt_thres_spike" : self.tk_filt_thres_spike,
+            "tk_filt_thres_PsC" : self.tk_filt_thres_PsC,     
+            "clustering_method" : self.clustering_method,     
+            "time_scale" : self.time_scale,
+            "k_means_random_state" : self.k_means_random_state,
+            "k_means_k" : self.k_means_k,
+            "dbscan_eps" : self.dbscan_eps,
+            "dbscan_min_samples" : self.dbscan_min_samples,
+            "gmm_covariance_type" : self.gmm_covariance_type,
+            "remove_outliers" : self.remove_outliers,
+        } 
+        
+        return settings_dict
+    
+    def set_settings_from_dict(self, settings_dict):
+        """
+        Saves settings for analysis
+
+        Parameters
+        ----------
+        settings_dict: Dictionary
+            Dictionary with all the settings save in it 
+            
+        Returns
+        -------
+        None
+
+        """
+        
+        self.tk_filt_thres_spike = settings_dict["tk_filt_thres_spike"] 
+        self.tk_filt_thres_PsC = settings_dict["tk_filt_thres_PsC"]  
+        self.clustering_method  = settings_dict["clustering_method"]
+        self.time_scale = settings_dict["time_scale"]
+        self.k_means_random_state = settings_dict["k_means_random_state"]
+        self.k_means_k = settings_dict["k_means_k"]
+        self.dbscan_eps = settings_dict["dbscan_eps"]
+        self.dbscan_min_samples = settings_dict["dbscan_min_samples"]
+        self.gmm_covariance_type = settings_dict["gmm_covariance_type"]
+        self.remove_outliers = settings_dict["remove_outliers"]
+        
+            
     def __str__(self):
         """
         Return a string for the object

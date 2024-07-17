@@ -199,15 +199,48 @@ class EMGMotorUnit:
         self.fibre_potential_times = fibre_potential_times
         self.all_spikes = all_spikes
         self.generator_potential = generator_potential
+        
+    def get_fibre_localisation_dict(self):
+        """
+        Returns dictionary of fibre localisation so that it can be saved
 
-    def load_test_data(self, filename):
-        # Importing csv module
-        with open(filename, "r") as x:
-            some_data = list(
-                csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC)
-            )
+        Returns
+        -------
+        Dictionary
 
-        return np.array(some_data)
+        """
+        
+        fibre_local_dict = {
+            "n_fibre_potentials" : self.n_fibre_potentials,      
+            "fibre_centres" : self.fibre_centres.tolist(), 
+            "mup_onsets" : self.mup_onsets.tolist(),
+            "fibre_potential_times" : self.fibre_potential_times.tolist(),
+            "all_spikes" : self.all_spikes.tolist(),
+            #"generator_potential" : self.generator_potential.tolist()
+        }
+        
+        return fibre_local_dict
+    
+    def set_fibre_localisation_from_dict(self, fibre_local_dict):
+        """
+        Returns dictionary of fibre localisation so that it can be saved
+
+        Returns
+        -------
+        Dictionary
+
+        """
+        
+        self.n_fibre_potentials = fibre_local_dict["n_fibre_potentials"]            
+        self.fibre_centres = np.array(fibre_local_dict["fibre_centres"]) 
+        self.mup_onsets = np.array(fibre_local_dict["mup_onsets"])
+        self.fibre_potential_times = np.array(fibre_local_dict["fibre_potential_times"])
+        self.all_spikes = np.array(fibre_local_dict["all_spikes"])
+        #self.generator_potential = np.array(fibre_local_dict["generator_potential"])
+         
+        # Note analysis performed
+        if len(self.fibre_centres) > 0 and self.n_fibre_potentials is not None:
+            self.analysis_performed["fibres_localised"] = True
     
     def gmm_bic_score(self, estimator, X):
         """Callable to pass to GridSearchCV that will use the BIC score."""
