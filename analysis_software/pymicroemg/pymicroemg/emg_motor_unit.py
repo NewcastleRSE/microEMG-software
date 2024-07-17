@@ -398,10 +398,10 @@ class EMGMotorUnit:
             n_fibre_clusters = np.max(clustering.labels_) + 1
             fibre_clusters = clustering.labels_
 
-        elif self.mu_settings.clustering_method == "k-means":            
+        elif self.mu_settings.clustering_method == "k-means":
             # k for clustering
             k = self.mu_settings.k_means_k
-         
+
             # Use a range if no values of k if not given
             if k == 0:
                 min_n_clusters = np.max([2, mean_n_fps - 2])
@@ -409,7 +409,7 @@ class EMGMotorUnit:
             else:
                 min_n_clusters = k
                 max_n_clusters = k
-                
+
             grid_search = self.k_means_selection(data_to_cluster, min_n_clusters, max_n_clusters)
 
             # fibre cluster assignments
@@ -1273,8 +1273,8 @@ class EMGMotorUnit:
             or not self.analysis_performed["fibres_clustered"]
         ):
             raise RuntimeError(
-                "Localisation analysis and fibre cluster analysis" +
-                "must be performed before jitter analysis!"
+                "Localisation analysis and fibre cluster analysis"
+                + "must be performed before jitter analysis!"
             )
 
         if self.n_potentials < 2:
@@ -1367,10 +1367,10 @@ class EMGMotorUnit:
             )
 
         plt.title(
-            f"Fibre potential intervals (motor unit {self.motor_unit_number+1}" +
-            f", fibres {fibre1_num+1} and {fibre2_num+1})"
+            f"Fibre potential intervals (motor unit {self.motor_unit_number+1}"
+            + f", fibres {fibre1_num+1} and {fibre2_num+1})"
         )
-       
+
         mean = np.nanmean(fibre_pot_diffs)
         st_dev = np.nanstd(fibre_pot_diffs, ddof=1)
         textstr = "\n".join(
@@ -1476,8 +1476,8 @@ class EMGMotorUnit:
             )
 
         plt.title(
-            f"Consecutive differences (motor unit {self.motor_unit_number+1}" +
-            f", fibres {fibre1_num+1} and {fibre2_num+1})"
+            f"Consecutive differences (motor unit {self.motor_unit_number+1}"
+            + f", fibres {fibre1_num+1} and {fibre2_num+1})"
         )
 
         mean = np.nanmean(consecutive_diffs)
