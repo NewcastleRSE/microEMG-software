@@ -671,14 +671,16 @@ class EMGGainWidget(QWidget):
         scale_factor = 0.75
         self.widget_scale = [1 / scale_factor, scale_factor]
 
-        # Icons for buttons
+        # Icons and tooltips for buttons
         my_icons = [
             "caret-up",
             "caret-down",
         ]
+        tooltip_text = ["Increase signal amplitude", "Decrease signal amplitude"]
 
-        for w, ic in zip(self.widgets.values(), my_icons):
+        for w, ic, txt in zip(self.widgets.values(), my_icons, tooltip_text):
             w.setIcon(QIcon(":/bootstrap/" + ic))
+            w.setToolTip(txt)
 
         # Additional widget for amplitude image
         # Defined separately since will not need to iterate through for connections, etc.
