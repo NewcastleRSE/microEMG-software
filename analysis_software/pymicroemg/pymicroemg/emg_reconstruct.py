@@ -898,9 +898,6 @@ class EMGAnalysisReconstruct:
                 ).T
 
                 self.needle = self.emg_data_preproc.chan.chan_xy
-
-                # Scaling factor from mm to scaled AU
-                # self.needle = self.needle * 4
                 x0 = self.needle[int(peak_electrode), :]
                 self.needle = self.needle[included_electrodes, :]
 
@@ -925,8 +922,8 @@ class EMGAnalysisReconstruct:
 
         # End of signal_id loop
 
-        # Scaling factor to account for tissue attenuation
-        pos[:, 0] = pos[:, 0] * self.recon_settings.y_scaling_factor
+        # Scaling factor to account for tissue attenuation differences in y-axis direction
+        pos[:, 1] = pos[:, 1] * self.recon_settings.y_scaling_factor
 
         # Add the results to the motor unit object
         if pos.shape[0] > 0:
