@@ -17,6 +17,7 @@ microemggui = {path = "analysis_software/microemggui", develop = true}
 pyqtgraph = "^0.13.4"
 palettable = "^3.3.3"
 scikit-learn = "^1.5.0"
+scikit-image = "^0.24.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.0"
