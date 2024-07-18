@@ -10,24 +10,27 @@ For use with preprocessed EMG data.
 from __future__ import annotations  # for type hints - must be at beginning of file
 from typing import TYPE_CHECKING
 
+import json
+import warnings
+
 import numpy as np
 import numpy.typing as npt  # for type hints
-
 import scipy.signal as sg
 import scipy.optimize as opt
 from scipy.linalg import toeplitz
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
+from skimage import morphology
 
 # TODO: add csv and cv2 to poetry dependency management
 # Need to remove try/except block - temporary fix since functions not needed for
 # example pipeline
-try:
-    import csv
+# try:
+#    import csv
 #    import cv2
-except Exception as e:
-    print(e)
-import os
+# except Exception as e:
+#    print(e)
+# import os
 
 import pymicroemg.emg_tk_filter as tk
 from pymicroemg.emg_constants import QUICK_VERSION
@@ -85,11 +88,6 @@ class EMGAnalysisReconstruct:
         # ranks: The rank of each channel on highest SNR
         self.signal_noise_ratios_ranks = np.array([])
 
-        # Found by running find_motor_units
-        # TODO: rename these attributes and/or remove (store in MU class instead)
-        self.indices = np.array([])
-        self.locs = np.array([])
-
         # Space for motor unit results
         # Initialise in find_motor_units
         # Fill in additional motor unit data by running fibre_reconstruction
@@ -97,159 +95,8 @@ class EMGAnalysisReconstruct:
         self.chan_for_find_motor_units = None
 
         # Initial threshold for 2D peak detection,
-        # when decting multiple peaks
+        # when detecting multiple peaks
         self.threshold = 0.15
-
-    def load_data(self, filename):
-        """
-        Load data - most likely just for testing.
-
-        Parameters
-        ----------
-        filename: string
-            file name and path of csv file
-
-        Returns
-        -------
-        None
-
-        """
-
-        # Importing csv module
-        with open(filename, "r") as x:
-            self.emg_data_preproc.emg_ts = list(
-                csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC)
-            )
-
-        self.emg_data_preproc.emg_ts = np.array(self.emg_data_preproc.emg_ts)
-
-    def load_motor_unit_data_from_matlab(self, filename_indices, filename_locs, set_unbroken=True):
-        """
-        Load data for motor units from MATLAB, so take 1 away from index locations
-        - most likely to be used just for testing.
-
-        Parameters
-        ----------
-        filename_indices: string
-            file name and path of csv file of indices.
-            Indices refer to positions in self.emg_data_preproc.emg_ts
-
-        filename_locs: string
-            file name and path of csv file of motor unit labels,
-            which are positive integers
-            These labels correspond to the indices above
-
-        set_unbroken: bool
-            Sets all channels to unbroken
-
-        Returns
-        -------
-        None
-
-        """
-
-        # Importing csv module
-        with open(filename_indices, "r") as x:
-            mup_t_idx = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
-
-        with open(filename_locs, "r") as x:
-            mu_numbers = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
-
-        mu_numbers = (np.array(mu_numbers)).flatten()
-        mup_t_idx = (np.array(mup_t_idx)).flatten()
-        mup_t_idx = (np.round(mup_t_idx - 1)).astype(int)
-        mu_numbers = (np.round(mu_numbers - 1)).astype(int)
-
-        # Add motor unit objects
-        self.add_motor_units(mup_t_idx, mu_numbers)
-
-        if set_unbroken:
-            # Set all to non broken like MATLAB analysis for this data
-            self.emg_data_preproc.chan.analyse_chan = np.full(self.n_chan, True)
-
-    def load_mup_data_from_matlab(
-        self, motor_unit_number, filename_fibre_centres, filename_onsets
-    ):
-        """
-        Load fibre centre and onset data for one motor unit from MATLAB,
-        - so take 1 away from index locations
-        - most likely to be used just for testing, esp clustering of MUPs
-
-        Parameters
-        ----------
-        motor_unit_number: int
-            number of the motor unit (starting from 0)
-
-        filename_fibre_centres: string
-            file name and path of csv file of fibre centres
-            Indices refer to positions in self.emg_data_preproc.emg_ts
-
-        filename_onsets: string
-            file name and path of csv file of motor unit labels,
-            which are positive integers
-
-
-        Returns
-        -------
-        None
-
-        """
-
-        # Importing csv module
-        with open(filename_fibre_centres, "r") as x:
-            fibre_centres = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
-
-        with open(filename_onsets, "r") as x:
-            onsets = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
-
-        motor_unit = self.found_motor_units.motor_units[motor_unit_number]
-
-        motor_unit.fibre_centres = np.array(fibre_centres, dtype=float)
-        motor_unit.onsets = np.array(onsets).astype(int)
-        motor_unit.onsets = (motor_unit.onsets[0, :] - 1).flatten()
-        motor_unit.analysis_performed["fibres_localised"] = True
-
-    def load_mup_data(self, motor_unit_number, filename_fibre_centres, filename_onsets):
-        """
-        Load fibre centre and onset data for one motor unit from MATLAB,
-        - so take 1 away from index locations
-        - most likely to be used just for testing, esp clustering of MUPs
-
-        Parameters
-        ----------
-        motor_unit_number: int
-            number of the motor unit (starting from 0)
-
-        filename_fibre_centres: string
-            file name and path of csv file of fibre centres
-            Indices refer to positions in self.emg_data_preproc.emg_ts
-
-        filename_onsets: string
-            file name and path of csv file of motor unit labels,
-            which are positive integers
-
-
-        Returns
-        -------
-        None
-
-        """
-
-        # Importing csv module
-        with open(filename_fibre_centres, "r") as x:
-            fibre_centres = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
-
-        with open(filename_onsets, "r") as x:
-            onsets = list(csv.reader(x, delimiter=",", quoting=csv.QUOTE_NONNUMERIC))
-
-        motor_unit = self.found_motor_units.motor_units[motor_unit_number]
-
-        motor_unit.fibre_centres = np.array(fibre_centres, dtype=float)
-        motor_unit.onsets = np.array(onsets).astype(int).flatten()
-
-        print(motor_unit.fibre_centres)
-        print(motor_unit.onsets)
-        motor_unit.analysis_performed["fibres_localised"] = True
 
     def calculate_SNR_ranks(self):
         """
@@ -337,7 +184,6 @@ class EMGAnalysisReconstruct:
         ----------
         motor_unit_number: int
             motor unit number used as a label
-
         Returns
         -------
         None
@@ -347,12 +193,192 @@ class EMGAnalysisReconstruct:
         # Create motor unit objects for each motor unit
         all_motor_units = []
         for i in range(np.max(mu_numbers) + 1):
-            motor_unit = EMGMotorUnit(number=i, potentials_t_idx=mup_t_idx[mu_numbers == i])
+            motor_unit = EMGMotorUnit(
+                i, mup_t_idx[mu_numbers == i], self.mu_settings, self.emg_data_preproc.fs
+            )
             all_motor_units.append(motor_unit)
 
         self.found_motor_units = EMGMotorUnits(
             all_motor_units, chan_xy=self.emg_data_preproc.chan.chan_xy
         )
+
+    def save_motor_units(self, filename, include_settings=False):
+        """
+        Saves motor unit data so that it can be loaded without recalculating
+
+        Parameters
+        ----------
+        filename: string
+            Name of file to save in
+        include_settings: booelan
+            Whether to include motor unit settings or not
+
+        Returns
+        -------
+        None
+
+        """
+
+        numbers_motor_units = []
+        mup_potentials_t_idx_all_motor_units = []
+
+        for mu in self.found_motor_units.motor_units:
+            numbers_motor_units.append(mu.motor_unit_number)
+            mup_potentials_t_idx_all_motor_units.append(mu.potentials_t_idx.tolist())
+
+        # Define motor units dictionary
+        motor_units_dict = {
+            "numbers": numbers_motor_units,
+            "mup_potentials_t_idx": mup_potentials_t_idx_all_motor_units,
+            "sampling_freq": self.emg_data_preproc.fs,
+        }
+
+        if include_settings:
+            motor_units_dict["mu_settings"] = self.mu_settings
+
+        # Convert and write JSON object to file
+        with open(filename, "w") as outfile:
+            json.dump(motor_units_dict, outfile)
+
+    def load_motor_units(self, filename):
+        """
+        Loads motor unit data
+
+        Parameters
+        ----------
+        filename: string
+            Name of file to load
+
+        Returns
+        -------
+        None
+
+        """
+
+        # Opening JSON file
+        with open(filename) as json_file:
+            motor_units_dict = json.load(json_file)
+
+        self.emg_data_preproc.fs = motor_units_dict["sampling_freq"]
+
+        if "mu_settings" in motor_units_dict:
+            self.mu_settings = motor_units_dict["mu_settings"]
+
+        numbers_motor_units = motor_units_dict["numbers"]
+        mup_potentials_t_idx_all_motor_units = motor_units_dict["mup_potentials_t_idx"]
+
+        # Create motor unit objects for each motor unit
+        all_motor_units = []
+        for i in range(len(numbers_motor_units)):
+            motor_unit = EMGMotorUnit(
+                numbers_motor_units[i],
+                np.array(mup_potentials_t_idx_all_motor_units[i]),
+                self.mu_settings,
+                self.emg_data_preproc.fs,
+            )
+            all_motor_units.append(motor_unit)
+
+        self.found_motor_units = EMGMotorUnits(
+            all_motor_units, chan_xy=self.emg_data_preproc.chan.chan_xy
+        )
+
+    def save_mu_fibre_localisations(self, filename):
+        """
+        Saves fibre_localisations for every motor unit
+
+        Parameters
+        ----------
+        filename: string
+            Name of file to save in
+
+        Returns
+        -------
+        None
+
+        """
+
+        # Define dictiionary to save results
+        fibre_local_dict = {}
+
+        # Add localisation results for each motor unit
+        for mu in self.found_motor_units.motor_units:
+            dict_name = "motor_unit_" + str(mu.motor_unit_number)
+            fibre_local_dict[dict_name] = mu.get_fibre_localisation_dict()
+
+        # Convert and write JSON object to file
+        with open(filename, "w") as outfile:
+            json.dump(fibre_local_dict, outfile)
+
+    def load_mu_fibre_localisations(self, filename):
+        """
+        Saves fibre_localisations for every motor unit
+
+        Parameters
+        ----------
+        filename: string
+            Name of file to save in
+
+        Returns
+        -------
+        None
+
+        """
+
+        # Opening JSON file
+        with open(filename) as json_file:
+            fibre_local_dict = json.load(json_file)
+
+        # Set localisation results for each motor unit
+        for mu in self.found_motor_units.motor_units:
+            dict_name = "motor_unit_" + str(mu.motor_unit_number)
+            mu.set_fibre_localisation_from_dict(fibre_local_dict[dict_name])
+
+    def save_settings(self, filename):
+        """
+        Saves settings for analysis
+
+        Parameters
+        ----------
+        filename: string
+            Name of file to save in
+
+        Returns
+        -------
+        None
+
+        """
+
+        # Define settings dictionary
+        all_settings_dict = {
+            "mu_settings": self.mu_settings.get_settings_dict(),
+            "recon_settings": self.recon_settings.get_settings_dict(),
+        }
+
+        # Convert and write JSON object to file
+        with open(filename, "w") as outfile:
+            json.dump(all_settings_dict, outfile)
+
+    def load_settings(self, filename):
+        """
+        Loads settings for analysis
+
+        Parameters
+        ----------
+        filename: string
+            Name of file to load
+
+        Returns
+        -------
+        None
+
+        """
+
+        # Opening JSON file
+        with open(filename) as json_file:
+            all_settings_dict = json.load(json_file)
+
+        self.mu_settings.set_settings_from_dict(all_settings_dict["mu_settings"])
+        self.recon_settings.set_settings_from_dict(all_settings_dict["recon_settings"])
 
     def plot_motor_units_raster(
         self,
@@ -646,7 +672,6 @@ class EMGAnalysisReconstruct:
         Note that the channel is specified using the channel index (counting from 0),
         not the channel numeric label (counting from 1)
 
-
         Parameters
         ----------
         motor_unit_idx : int
@@ -799,8 +824,13 @@ class EMGAnalysisReconstruct:
             print("Too few firings found to model this motor unit")
             return
 
+        # The x, y coordinates of the fibre potential
         pos = np.zeros((0, 2))
-        onsets = np.array([])
+        # Onset indices of the MUPs (firings) relative to the overall time
+        mup_onsets = np.array([])
+        # Fibre potential peak times relative to the onset time
+        # of the corresponding MUP (in indices units)
+        fibre_potential_times = np.array([])
 
         max_signal_id = all_spikes.shape[0] - self.recon_settings.mavg_length
 
@@ -868,9 +898,6 @@ class EMGAnalysisReconstruct:
                 ).T
 
                 self.needle = self.emg_data_preproc.chan.chan_xy
-
-                # Scaling factor from mm to scaled AU
-                # self.needle = self.needle * 4
                 x0 = self.needle[int(peak_electrode), :]
                 self.needle = self.needle[included_electrodes, :]
 
@@ -887,72 +914,29 @@ class EMGAnalysisReconstruct:
 
                 pos = np.vstack((pos, opt_paras))
 
-                onsets = np.append(onsets, motor_unit.potentials_t_idx[signal_id])
+                mup_onsets = np.append(mup_onsets, motor_unit.potentials_t_idx[signal_id])
+
+                # Add fibre potential times, these are already adjusted
+                #  and relative to the MUP onset times
+                fibre_potential_times = np.append(fibre_potential_times, time_peak)
 
         # End of signal_id loop
 
-        # TODO remove this line and self.needle scaling above
-        # (pending SM's final decision about the scaling)
-        # pos[:, 0] = pos[:, 0] / 4
+        # Scaling factor to account for tissue attenuation differences in y-axis direction
+        pos[:, 1] = pos[:, 1] * self.recon_settings.y_scaling_factor
 
         # Add the results to the motor unit object
         if pos.shape[0] > 0:
             motor_unit.add_fibre_localisation(
                 fibre_centres=pos,
-                onsets=onsets,
+                mup_onsets=mup_onsets,
+                fibre_potential_times=fibre_potential_times,
                 all_spikes=all_spikes,
                 generator_potential=np.array(np.transpose(self.opr)),
             )
 
         # Restore needle to full needle, rather than subset of the needle
         self.needle = self.emg_data_preproc.chan.chan_xy
-
-    def plot_MUs(self, used_data, indices, locs):
-        """
-        Plot MUs for testing purposes
-
-        Parameters
-        ----------
-        Index : 1D numpy NDArray[int]
-                Index of MUAPs clustered
-        loc : 1D numpy NDArray[int]
-                location of the MUAPs in the signal
-
-        Returns
-        -------
-        None
-
-        """
-
-        no_MUs = np.max(locs) + 1
-        xmax = len(used_data)
-        ymin = np.min(used_data)
-        ymax = np.max(used_data)
-
-        plt.subplots(no_MUs, 1)
-
-        # Loop thro' MUs
-        for one_MU in range(no_MUs):
-            # Plot subplot
-            plt.subplot(no_MUs, 1, one_MU + 1)
-            # Get subset for this MU
-            subset_MU = one_MU == locs
-            # Get index positions for this MU
-            positions = indices[subset_MU]
-            plt.plot(indices[subset_MU], used_data[positions], "k-", linewidth=1)
-            plt.xlim(0, xmax)
-            plt.ylim(ymin, ymax)
-
-        # Save the plot
-        # Firstly ensure the execution path is the same as the file path
-        abspath = os.path.abspath(__file__)
-        dname = os.path.dirname(abspath)
-
-        # Save all images in the Images folder
-        plt.savefig(os.path.join(dname, "MUs.png"), format="png")
-
-        # Close the plot
-        plt.close()
 
     def find_peaks(self, data, distance=1, min_peak_height=None):
         """
@@ -998,29 +982,6 @@ class EMGAnalysisReconstruct:
 
         return groups
 
-    def find_peaks_2d_filters(self, image, threshold):
-        neighborhood_size = 5
-
-        data_max = filters.maximum_filter(image, neighborhood_size)
-        maxima = image == data_max
-        data_min = filters.minimum_filter(image, neighborhood_size)
-        diff = (data_max - data_min) > threshold
-        maxima[diff == 0] = 0
-
-        labeled, _ = ndimage.label(maxima)
-        slices = ndimage.find_objects(labeled)
-        x, y = [], []
-
-        for dy, dx in slices:
-            x_center = (dx.start + dx.stop - 1) / 2
-            x.append(x_center)
-            y_center = (dy.start + dy.stop - 1) / 2
-            y.append(y_center)
-
-        ans = np.vstack((x, y)).T
-
-        return ans
-
     def find_peaks_2d(self, sig):
         """
         Finds local maxima of a 2-dimensional image area
@@ -1039,38 +1000,85 @@ class EMGAnalysisReconstruct:
 
         threshold = self.threshold
         base = sig
-        # remove negative deflection to discount 'doubling peaks'
-        # from negative initial deflection of SFAP
-        base[base < 0] = 0
 
-        sigma = 2
-        im2 = np.abs(gaussian_filter(base, sigma, truncate=np.ceil(2 * sigma) / sigma))
+        # Absolute value of signal to account for fibre potentials that are dips
+        #
+        base = np.abs(base)
+
+        sigma = (
+            self.recon_settings.find_peaks_2d_sigma_mups,
+            self.recon_settings.find_peaks_2d_sigma_time,
+        )
+        im2 = np.abs(
+            gaussian_filter(base, sigma, truncate=self.recon_settings.find_peaks_2d_truncate)
+        )
+        # im2 = base
+
+        if self.recon_settings.find_peaks_2d_use_tophat:
+            im2 = morphology.white_tophat(
+                im2, morphology.disk(self.recon_settings.find_peaks_2d_tophat_disk_radius)
+            )
 
         # Extract each blob
         locs = np.array([])
         found = False
         parse_limit = 0
         im2_max = np.max(im2)
-        max_number_of_peaks = 22
+        min_number_of_peaks = self.recon_settings.find_peaks_2d_min_peaks  # if possible
+        max_number_of_peaks = self.recon_settings.find_peaks_2d_max_peaks  # 22
+        prev_n_peaks = 0
+
+        # Initial set up for peak finding
+        neighborhood_size = (
+            self.recon_settings.find_peaks_2d_neighbour_mups,
+            self.recon_settings.find_peaks_2d_neighbour_time,
+        )
+        data_max = filters.maximum_filter(im2, neighborhood_size)
+        maxima_init = im2 == data_max
+        data_min = filters.minimum_filter(im2, neighborhood_size)
+
+        diff = data_max - data_min
 
         while not found:
             parse_limit = parse_limit + 1
-            locs = self.find_peaks_2d_filters(im2, im2_max * threshold)
+            # locs = self.find_peaks_2d_filters(im2, im2_max * threshold)
+            # n_peaks = self.find_peaks_2d_filters_n_peaks(im2_max * threshold)
+            # Get number of peaks for this threshold
+            maxima = maxima_init
+            # Remove values below threshold
+            maxima[(diff > (im2_max * threshold)) == 0] = 0
 
-            if locs.shape[0] < 1:
-                threshold = threshold - 0.02
-            elif locs.shape[0] > max_number_of_peaks:
-                threshold = threshold + 0.02
+            labeled, _ = ndimage.label(maxima)
+            slices = ndimage.find_objects(labeled)
+            n_peaks = len(slices)
+
+            if n_peaks < min_number_of_peaks and prev_n_peaks <= max_number_of_peaks:
+                threshold = threshold - 0.01
+            elif n_peaks > max_number_of_peaks:
+                threshold = threshold + 0.01
             else:
                 found = True
                 # save nice threshold for next time to perhaps speed it up
                 self.threshold = threshold
 
-            if threshold <= 0.05 or threshold > 1 or parse_limit > 20:
+            if threshold <= 0.00 or threshold > 1 or parse_limit > 20:
                 locs = np.array([])
                 found = True
 
-        if locs.shape[0] > 0:
+            prev_n_peaks = n_peaks
+
+        # Get final locations
+        if n_peaks > 0:
+            x, y = [], []
+
+            for dy, dx in slices:
+                x_center = (dx.start + dx.stop - 1) / 2
+                x.append(x_center)
+                y_center = (dy.start + dy.stop - 1) / 2
+                y.append(y_center)
+
+            locs = np.vstack((x, y)).T
+
             locs[locs[:, 1] < 0, 1] = 0
 
         return locs
@@ -1130,7 +1138,9 @@ class EMGAnalysisReconstruct:
         dy = np.fabs(self.fby - self.needle[channel, 1])  # Y offset of channel i
         dz = np.fabs(z - self.isz_half)  # Z distance along fibre
 
-        return np.reciprocal(np.sqrt(dx * dx + dy * dy + dz * dz))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            return np.reciprocal(np.sqrt(dx * dx + dy * dy + dz * dz))
 
     def calc_cn(self, fbx, fby, isz):
         """
