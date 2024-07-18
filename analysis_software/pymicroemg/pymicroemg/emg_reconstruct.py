@@ -10,18 +10,16 @@ For use with preprocessed EMG data.
 from __future__ import annotations  # for type hints - must be at beginning of file
 from typing import TYPE_CHECKING
 
+import json
+import warnings
+
 import numpy as np
 import numpy.typing as npt  # for type hints
-import json
-
 import scipy.signal as sg
 import scipy.optimize as opt
 from scipy.linalg import toeplitz
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
-import warnings
-
-# install scikit-image
 from skimage import morphology
 
 # TODO: add csv and cv2 to poetry dependency management
@@ -1077,7 +1075,6 @@ class EMGAnalysisReconstruct:
             x, y = [], []
 
             for dy, dx in slices:
-
                 x_center = (dx.start + dx.stop - 1) / 2
                 x.append(x_center)
                 y_center = (dy.start + dy.stop - 1) / 2
