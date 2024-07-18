@@ -11,13 +11,14 @@ import numpy as np
 
 from PySide6.QtWidgets import (
     QWidget,
+    QLabel,
     QSlider,
     QHBoxLayout,
     QVBoxLayout,
     QGridLayout,
     QSizePolicy,
 )
-from PySide6.QtGui import QIcon, QPen, QFont
+from PySide6.QtGui import QIcon, QPen, QFont, QPixmap
 from PySide6.QtCore import Qt, Signal
 import pyqtgraph as pg
 
@@ -679,11 +680,19 @@ class EMGGainWidget(QWidget):
         for w, ic in zip(self.widgets.values(), my_icons):
             w.setIcon(QIcon(":/bootstrap/" + ic))
 
+        # Additional widget for amplitude image
+        # Defined separately since will not need to iterate through for connections, etc.
+        self.amp_image = QLabel(self)
+        self.amp_image.setPixmap(QPixmap(":/amplitude/amp1"))
+        self.amp_image.setScaledContents(True)
+        self.amp_image.setObjectName("amp")  # name so can control size via style sheet
+
         # Add to layout
         layout = QVBoxLayout()
         layout.addItem(ExpandingVSpacer())  # add vertical spacer
-        for _, w in self.widgets.items():
-            layout.addWidget(w)
+        layout.addWidget(self.widgets["increase"])
+        layout.addWidget(self.amp_image)
+        layout.addWidget(self.widgets["decrease"])
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(2)
         self.setLayout(layout)

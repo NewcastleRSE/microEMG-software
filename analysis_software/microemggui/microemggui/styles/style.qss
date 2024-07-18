@@ -85,7 +85,6 @@ WidgetControlButton:disabled {
     background-color: #D9D9D9;
 }
 
-
 /* Toolbars and toolbar widgets */
 
 TopToolbar {
@@ -281,6 +280,13 @@ EMGViewerWidget {
     background: white;
     border: 1px solid grey;
     border-radius: 4px;
+}
+
+QLabel#amp{
+    min-height: 25;
+    max-height: 25;
+    min-width: 25;
+    max-width: 25;
 }
 
 /* Preprocessing settings - ste width */
