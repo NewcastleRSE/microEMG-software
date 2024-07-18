@@ -139,11 +139,11 @@ class EMGViewerTabbedWidget(QWidget):
         layout.setSpacing(0)
         self.setLayout(layout)
 
-        # Hide preproc tab until preprocessing and set current tab to raw tab
-        self.widgets["tabs"].setTabVisible(self.tab_data.index("preproc"), False)
+        # Set current tab to raw EMG tab and disable preproc EMG tab until preprocessing
         self.widgets["tabs"].setCurrentIndex(self.tab_data.index("raw"))
+        self.widgets["tabs"].setTabEnabled(self.tab_data.index("preproc"), False)
 
-        # Connection tab clicks to changing data
+        # Connect tab clicks to changing data
         self.widgets["tabs"].currentChanged.connect(self.switch_emg_model)
 
     def add_preproc_emg_model(self, preproc_emg_model: EMGDataPreprocModel):
@@ -151,7 +151,7 @@ class EMGViewerTabbedWidget(QWidget):
 
         data = "preproc"
         self.emg_model[data] = preproc_emg_model
-        self.widgets["tabs"].setTabVisible(self.tab_data.index(data), True)
+        self.widgets["tabs"].setTabEnabled(self.tab_data.index(data), True)
         self.switch_emg_model(self.tab_data.index(data))
 
     def switch_emg_model(self, tab_idx: int):
