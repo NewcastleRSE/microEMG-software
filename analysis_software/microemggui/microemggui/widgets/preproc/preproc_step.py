@@ -233,6 +233,10 @@ class PreprocWidget(QWidget):
         # Check if initial settings are valid
         self.widgets["settings"].settings_changed()
 
+        # Set the focus of the EMG viewer so it is the default processer of arrow key presses
+        self.widgets["tabbedviewer"].setFocus()
+        self.setFocusPolicy(Qt.StrongFocus)  # results in focus returning to EMG viewer by default
+
     def apply_preproc(self):
         # Apply preprocessing settings to raw data to generate preprocessed data.
         # Add preprocessed data to viewer.

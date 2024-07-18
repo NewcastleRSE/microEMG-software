@@ -475,10 +475,15 @@ class EMGArrowsWidget(QWidget):
             "Next 10 divisions",
         ]
 
+        # # Shortcut keys
+        shortcuts = [Qt.Key.Key_Left, None, None, Qt.Key.Key_Right]
+
         # Set button icons and tooltip text
-        for w, ic, txt in zip(self.widgets.values(), my_icons, tooltip_text):
+        for w, ic, txt, sc in zip(self.widgets.values(), my_icons, tooltip_text, shortcuts):
             w.setIcon(QIcon(":/bootstrap/" + ic))
             w.setToolTip(txt)
+            if sc:
+                w.setShortcut(sc)
 
         # Number of divisions moved by each button
         # (will send with button clicked signals)
@@ -671,16 +676,15 @@ class EMGGainWidget(QWidget):
         scale_factor = 0.75
         self.widget_scale = [1 / scale_factor, scale_factor]
 
-        # Icons and tooltips for buttons
-        my_icons = [
-            "caret-up",
-            "caret-down",
-        ]
+        # Icons, tooltips, and shortcuts for buttons
+        my_icons = ["caret-up", "caret-down"]
         tooltip_text = ["Increase signal amplitude", "Decrease signal amplitude"]
+        shortcuts = [Qt.Key.Key_Up, Qt.Key.Key_Down]
 
-        for w, ic, txt in zip(self.widgets.values(), my_icons, tooltip_text):
+        for w, ic, txt, sc in zip(self.widgets.values(), my_icons, tooltip_text, shortcuts):
             w.setIcon(QIcon(":/bootstrap/" + ic))
             w.setToolTip(txt)
+            w.setShortcut(sc)
 
         # Additional widget for amplitude image
         # Defined separately since will not need to iterate through for connections, etc.
