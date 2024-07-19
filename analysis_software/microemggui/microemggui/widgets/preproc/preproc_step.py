@@ -109,7 +109,7 @@ class EMGViewerTabbedWidget(QWidget):
     ):
         super().__init__(parent)
 
-        self.emg_model = {"raw": raw_emg_model}
+        self.emg_model: dict[str, Any] = {"raw": raw_emg_model}
 
         self.emg_clrs = emg_clrs
 
@@ -191,7 +191,7 @@ class PreprocWidget(QWidget):
     ):
         super().__init__(parent)
 
-        self.emg_model = {"raw": raw_emg_model}
+        self.emg_model: dict[str, Any] = {"raw": raw_emg_model}
         self.settings_model = settings_model
         self.emg_clrs = emg_clrs
 
