@@ -397,7 +397,7 @@ class EMGDivSizeWidget(QWidget):
         MS_TO_S = 1000
 
         # Info about each option
-        options = {}
+        options: dict[str, Any] = {}
 
         # Options in ms
         # (using ms so can ensure are integers for text conversion)
