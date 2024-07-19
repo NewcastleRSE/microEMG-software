@@ -245,7 +245,10 @@ class MicroEMGMain(QMainWindow):
         # Also updates and channel selection widget with the preprocessed data
 
         self.emg_model["preproc"] = preproc_emg_model
-        self.settings_model.preprocess_settings = preprocess_settings_model.settings
+        if self.settings_model:
+            self.settings_model.preprocess_settings = preprocess_settings_model.settings
+        else:
+            raise ValueError("settings_model must be added to main window before preprocessing")
 
         # Use data to make channels widget
         self.add_channels_widget()
