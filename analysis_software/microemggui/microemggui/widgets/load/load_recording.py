@@ -100,10 +100,13 @@ class SelectRecordingWidget(QWidget):
         # Emit new recording path
         self.recording_path_changed.emit(recording_path)
 
-        # Get label based on file name and emit
+        # Get label based on file name (last folder) and emit
         if recording_path:
             recording_label_match = re.search(r"/[^/]*$", recording_path)
-            recording_label = recording_path[recording_label_match.start() + 1 :]
+            if recording_label_match:
+                recording_label = recording_path[recording_label_match.start() + 1 :]
+            else:
+                recording_label = recording_path
         else:  # If no file name (empty path), send empty string for label
             recording_label = ""
         self.recording_label_changed.emit(recording_label)
