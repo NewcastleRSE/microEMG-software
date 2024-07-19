@@ -192,7 +192,7 @@ class ChannelsWidget(QWidget):
 
         # Boolean list to store whether each channel is checked (all initially selected)
         self.chan_checked = [True for i in range(self.n_chan)]
-        self.bad_chan_idx = []  # Indices of bad channels
+        self.bad_chan_idx: list[int] = []  # Indices of bad channels
 
         # Create widgets
         # Make viewer first so its full colour array (with repeated colours) can be
