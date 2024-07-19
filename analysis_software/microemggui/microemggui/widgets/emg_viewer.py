@@ -80,10 +80,10 @@ class EMGPlotWidget(QWidget):
         self.emg_model = emg_model
 
         # EMG data segment options
-        self.start_t = 0  # start time (in seconds)
+        self.start_t = 0.0  # start time (in seconds)
         self.div_size = 0.1  # division size (in seconds)
         self.ds_factor = self.compute_ds_factor()  # downsampling factor
-        self.offset = 1000  # initial vertical offset between signals
+        self.offset = 1000.0  # initial vertical offset between signals
         self.n_div = 10  # number of divisions per "page"
 
         # Style options
