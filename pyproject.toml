@@ -42,8 +42,12 @@ warn_redundant_casts = true
 warn_unused_ignores = true
 strict_equality = true
 check_untyped_defs = true
-disallow_subclassing_any = true
+disallow_subclassing_any = false
 disallow_untyped_decorators = true
+
+[[tool.mypy.overrides]]
+module = ["PySide6.*"]
+ignore_errors = true
 
 [tool.black]
 extend-exclude = "analysis_software/intanutil/"

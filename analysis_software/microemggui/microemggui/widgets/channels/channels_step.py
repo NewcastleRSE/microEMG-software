@@ -3,7 +3,7 @@
 """
 Widget for selecting channels to use for analysis.
 """
-
+from typing import Any
 from pymicroemg.emg_channels import EMGChannels
 
 from PySide6.QtWidgets import (
@@ -67,7 +67,7 @@ class ChannelsCheckBoxes(QWidget):
         n_chan = len(chan_names)
 
         # Make checkbox for each channel
-        self.widgets = {"checkboxes": dict()}
+        self.widgets: dict[str, dict[int, Any]] = {"checkboxes": dict()}
         for i in range(n_chan):
             w = CheckBoxChannel(chan_names[i], parent=self)
             w.setStyleSheet("color: " + chan_clrs[i])
@@ -110,7 +110,7 @@ class SelectChannels(QWidget):
         super().__init__(parent)
 
         # Create widgets
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "all": QCheckBox("Select all", parent=self),
             "checkboxes": ChannelsCheckBoxes(chan, chan_clrs, parent=self),
         }
@@ -198,7 +198,7 @@ class ChannelsWidget(QWidget):
         # Make viewer first so its full colour array (with repeated colours) can be
         # passed to the channel checkboxes
         viewer = EMGViewerTabbedWidget(raw_emg_model, emg_clrs)  # make viewer first
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "title": SectionTitle("Select channels", parent=self),
             "channels": SelectChannels(
                 chan=raw_emg_model.emg_data.chan, chan_clrs=viewer.emg_clrs, parent=self

@@ -4,6 +4,7 @@ Widget for viewing EMG time series.
 Current icons from https://icons.getbootstrap.com/
 
 """
+from typing import Any
 
 from math import ceil
 
@@ -364,7 +365,7 @@ class EMGDivSizeWidget(QWidget):
         self.plot_widget = plot_widget
 
         # Create combobox widget
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "div_combobox": InputComboBox(self),
         }
 
@@ -452,7 +453,7 @@ class EMGArrowsWidget(QWidget):
         self.plot_widget = plot_widget
 
         # Create button widgets
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "previous_fast": WidgetControlButton(self),
             "previous": WidgetControlButton(self),
             "next": WidgetControlButton(self),
@@ -542,7 +543,7 @@ class EMGStartTimeWidget(QWidget):
         self.emg_dur = plot_widget.emg_model.emg_data.emg_dur
 
         # Create widgets
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "label": InputInlineLabel("Start time: ", self),
             "time": InputInlineHighlightedText("00:00", self),
             "slider": QSlider(Qt.Horizontal, self),
@@ -641,7 +642,7 @@ class EMGTimeControlsWidget(QWidget):
         super().__init__(parent)
 
         # Create widgets; plot_widget is passed to each one for connections
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "arrows": EMGArrowsWidget(plot_widget, parent=self),
             "div": EMGDivSizeWidget(plot_widget, parent=self),
             "starttime": EMGStartTimeWidget(plot_widget, parent=self),
@@ -667,7 +668,7 @@ class EMGGainWidget(QWidget):
         self.plot_widget = plot_widget
 
         # Create button widgets for changing signal amplitude
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "increase": WidgetControlButton(self),
             "decrease": WidgetControlButton(self),
         }
@@ -729,7 +730,7 @@ class EMGViewerWidget(QWidget):
         plot_widget = EMGPlotWidget(emg_model, emg_clrs, parent=self)
 
         # Create widgets for viewer
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "plot": plot_widget,
             "timecontrols": EMGTimeControlsWidget(plot_widget, parent=self),
             "gaincontrols": EMGGainWidget(plot_widget, parent=self),

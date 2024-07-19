@@ -4,6 +4,7 @@
 Widget for main window with toolbars and other navigation elements.
 
 """
+from typing import Any
 
 from palettable.cartocolors.qualitative import Prism_10
 
@@ -42,7 +43,9 @@ class WelcomeWidget(QWidget):
         super().__init__(*args, **kwargs)
 
         # Create widgets
-        self.widgets = {"title": SectionTitle("Welcome to the microEMG analysis GUI", parent=self)}
+        self.widgets: dict[str, Any] = {
+            "title": SectionTitle("Welcome to the microEMG analysis GUI", parent=self)
+        }
 
         # Add to layout
         layout = QVBoxLayout()
@@ -63,7 +66,7 @@ class AnalysisStepsWidget(QWidget):
         # Make iniital widgets
         # Will use same names as AnalysisToolbar so easy to link buttons to corresponding pages:
         # "home", "load", "preprocess", "channels", "motorunits", "fibres", "jitter","export"
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "home": WelcomeWidget(parent=self),
             "load": LoadWidget(parent=self),
         }
@@ -101,7 +104,7 @@ class MicroEMGMain(QMainWindow):
         self.emg_clrs = Prism_10.hex_colors
 
         # Make widgets and toolbars
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "analysistoolbar": AnalysisToolbar("Analysis toolbar"),
             "toptoolbar": TopToolbar(parent=self),
             "analysis": AnalysisStepsWidget(parent=self),
@@ -315,6 +318,3 @@ class MicroEMGMain(QMainWindow):
             self.widgets["analysis"].widgets["preprocess"].widgets["buttons"].widgets["next"]
         )
         self.connect_next_button_to_analysis_widget(next_button, w_name)
-
-
-# TODO: disable downstream toolbar buttons and delete data if load step data changed

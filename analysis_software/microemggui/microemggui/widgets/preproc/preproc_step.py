@@ -3,7 +3,7 @@
 """
 Widget for the preprocessing step in the EMG data analysis pipeline.
 """
-
+from typing import Any
 import logging
 
 from PySide6.QtWidgets import (
@@ -82,7 +82,10 @@ class MainButtons(QWidget):
         super().__init__(parent)
 
         # Create widgets
-        self.widgets = {"apply": ApplyPreprocButton(self), "next": NextButton(self)}
+        self.widgets: dict[str, Any] = {
+            "apply": ApplyPreprocButton(self),
+            "next": NextButton(self),
+        }
 
         # Add to layout
         layout = QHBoxLayout()
@@ -115,7 +118,7 @@ class EMGViewerTabbedWidget(QWidget):
         self.tab_data = ["raw", "preproc"]  # so can convert between tab indices and data
 
         # All widgets - start viewer with raw EMG data
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "tabs": QTabBar(parent=self),
             "viewer": EMGViewerWidget(self.emg_model["raw"], self.emg_clrs),
         }
@@ -193,7 +196,7 @@ class PreprocWidget(QWidget):
         self.emg_clrs = emg_clrs
 
         # Create widgets
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "title": SectionTitle("Preprocessing", self),
             "settings": PreprocSettingsWidget(self.settings_model, parent=self),
             "tabbedviewer": EMGViewerTabbedWidget(

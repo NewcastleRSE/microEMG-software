@@ -1,6 +1,7 @@
 """
 Widgets for specifying preprocessing settings
 """
+from typing import Any
 
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
 from PySide6.QtWidgets import QSizePolicy
@@ -355,7 +356,7 @@ class FilterSpecWidget(QWidget):
         super().__init__(parent)
 
         # Widgets for filter specifications
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "filter_type": FilterTypeWidget(
                 settings_model=settings_model, filter_types=filter_types, parent=self
             ),  # type
@@ -406,7 +407,7 @@ class PreprocSettingsWidget(QWidget):
         )
 
         # All widgets
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "title": SubsectionTitle("Settings", self),
             "mains_checkbox": mains_checkbox,
             "filter_checkbox": filter_checkbox,

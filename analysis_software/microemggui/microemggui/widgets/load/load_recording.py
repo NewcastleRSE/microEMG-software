@@ -3,7 +3,7 @@
 """
 Widgets for selecting and loading recording in load step.
 """
-
+from typing import Any
 import re
 
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QFileDialog
@@ -40,7 +40,7 @@ class SelectRecordingWidget(QWidget):
         super().__init__(parent)
 
         # Create widgets
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "button": SmallPushButton(self),
             "label": InputInlineLabel("or select demo recording:"),
             "combobox": InputComboBox(parent=self),
@@ -116,7 +116,7 @@ class RecordingLabel(QWidget):
         super().__init__(parent)
 
         # Create widgets
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "label": InputInlineLabel("Recording: ", self),
             "recording": InputInlineText("", self),
         }
@@ -160,7 +160,7 @@ class LoadRecordingSection(QWidget):
         self.emg_label = ""
 
         # Create widgets
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "title": SubsectionTitle("Load recording", self),
             "selectrecording": SelectRecordingWidget(parent=self),
             "label": RecordingLabel(parent=self),
