@@ -282,7 +282,7 @@ class EMGAnalysisReconstruct:
             all_motor_units, chan_xy=self.emg_data_preproc.chan.chan_xy
         )
 
-    def save_mu_fibre_localisations(self, filename):
+    def save_mu_fibre_localisations(self, filename, save_all_spikes = False):
         """
         Saves fibre_localisations for every motor unit
 
@@ -290,20 +290,22 @@ class EMGAnalysisReconstruct:
         ----------
         filename: string
             Name of file to save in
-
+        save_all_spikes : bool
+            Whether to save all_spikes. Uses a lot of data and is not necessary.
+            
         Returns
         -------
         None
 
         """
 
-        # Define dictiionary to save results
+        # Define dictionary to save results
         fibre_local_dict = {}
 
         # Add localisation results for each motor unit
         for mu in self.found_motor_units.motor_units:
             dict_name = "motor_unit_" + str(mu.motor_unit_number)
-            fibre_local_dict[dict_name] = mu.get_fibre_localisation_dict()
+            fibre_local_dict[dict_name] = mu.get_fibre_localisation_dict(save_all_spikes)
 
         # Convert and write JSON object to file
         with open(filename, "w") as outfile:
@@ -311,12 +313,12 @@ class EMGAnalysisReconstruct:
 
     def load_mu_fibre_localisations(self, filename):
         """
-        Saves fibre_localisations for every motor unit
+        Loads fibre localisation for every motor unit
 
         Parameters
         ----------
         filename: string
-            Name of file to save in
+            Name of file to load data from
 
         Returns
         -------
@@ -333,6 +335,108 @@ class EMGAnalysisReconstruct:
             dict_name = "motor_unit_" + str(mu.motor_unit_number)
             mu.set_fibre_localisation_from_dict(fibre_local_dict[dict_name])
 
+    def save_mu_fibre_clustering(self, filename):
+        """
+        Saves fibre clustering for every motor unit
+
+        Parameters
+        ----------
+        filename: string
+            Name of file to save in
+
+        Returns
+        -------
+        None
+
+        """
+
+        # Define dictionary to save results
+        fibre_clustering_dict = {}
+
+        # Add localisation results for each motor unit
+        for mu in self.found_motor_units.motor_units:
+            dict_name = "motor_unit_" + str(mu.motor_unit_number)
+            fibre_clustering_dict[dict_name] = mu.get_fibre_clusters_dict()
+
+        # Convert and write JSON object to file
+        with open(filename, "w") as outfile:
+            json.dump(fibre_clustering_dict, outfile)
+
+    def load_mu_fibre_clustering(self, filename):
+        """
+        Loads fibre clustering for every motor unit
+
+        Parameters
+        ----------
+        filename: string
+            Name of file to load results from
+
+        Returns
+        -------
+        None
+
+        """
+
+        # Opening JSON file
+        with open(filename) as json_file:
+            fibre_clustering_dict = json.load(json_file)
+
+        # Set localisation results for each motor unit
+        for mu in self.found_motor_units.motor_units:
+            dict_name = "motor_unit_" + str(mu.motor_unit_number)
+            mu.set_fibre_clusters_from_dict(fibre_clustering_dict[dict_name])
+     
+    def save_mu_fibre_jitter(self, filename):
+        """
+        Saves fibre jitter analysis results for every motor unit
+
+        Parameters
+        ----------
+        filename: string
+            Name of file to save in
+
+        Returns
+        -------
+        None
+
+        """
+
+        # Define dictionary to save results
+        fibre_jitter_dict = {}
+
+        # Add localisation results for each motor unit
+        for mu in self.found_motor_units.motor_units:
+            dict_name = "motor_unit_" + str(mu.motor_unit_number)
+            fibre_jitter_dict[dict_name] = mu.get_fibre_jitter_dict()
+
+        # Convert and write JSON object to file
+        with open(filename, "w") as outfile:
+            json.dump(fibre_jitter_dict, outfile)
+
+    def load_mu_fibre_jitter(self, filename):
+        """
+        Loads fibre jitter analysis results for every motor unit
+
+        Parameters
+        ----------
+        filename: string
+            Name of file to load results from
+
+        Returns
+        -------
+        None
+
+        """
+
+        # Opening JSON file
+        with open(filename) as json_file:
+            fibre_jitter_dict = json.load(json_file)
+
+        # Set localisation results for each motor unit
+        for mu in self.found_motor_units.motor_units:
+            dict_name = "motor_unit_" + str(mu.motor_unit_number)
+            mu.set_fibre_jitter_from_dict(fibre_jitter_dict[dict_name])
+            
     def save_settings(self, filename):
         """
         Saves settings for analysis

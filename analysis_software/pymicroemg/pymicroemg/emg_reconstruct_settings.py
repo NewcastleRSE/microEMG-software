@@ -215,8 +215,7 @@ class EMGAnalysisMotorUnitSettings:
         self.k_means_k = 0
         self.dbscan_eps = 0.1
         self.dbscan_min_samples = 10
-        # Covariance type for GMM clustering, options are: "spherical", "tied", "diag" and "full"
-        # Only tied is currently coded, so do not change
+        # Covariance type for GMM clustering, options are: "spherical", "tied", "diag" and "full"        
         self.gmm_covariance_type = "tied"
         self.remove_outliers = True
 

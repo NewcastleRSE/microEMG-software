@@ -132,7 +132,7 @@ class EMGMotorUnit:
         self.generator_potential = np.array([])
 
         # Results for comparing number of clusters for GMM
-        self.gmm_cluster_scores = None
+        self.cluster_scores = None
 
         # Dictionaries for storing results of clustering and jitter analysis
         self.fibre_clustering_results = {}
@@ -210,10 +210,15 @@ class EMGMotorUnit:
         self.all_spikes = all_spikes
         self.generator_potential = generator_potential
 
-    def get_fibre_localisation_dict(self):
+    def get_fibre_localisation_dict(self, save_all_spikes):
         """
         Returns dictionary of fibre localisation so that it can be saved
 
+        Parameters
+        ----------
+        save_all_spikes : bool
+            Whether to save all_spikes. Uses a lot of data and is not necessary.
+        
         Returns
         -------
         Dictionary
@@ -225,19 +230,27 @@ class EMGMotorUnit:
             "fibre_centres": self.fibre_centres.tolist(),
             "mup_onsets": self.mup_onsets.tolist(),
             "fibre_potential_times": self.fibre_potential_times.tolist(),
-            "all_spikes": self.all_spikes.tolist(),
+            "all_spikes": [],
             # "generator_potential" : self.generator_potential.tolist()
         }
 
+        if save_all_spikes:
+            fibre_local_dict["all_spikes"] = self.all_spikes.tolist()
+            
         return fibre_local_dict
 
     def set_fibre_localisation_from_dict(self, fibre_local_dict):
         """
-        Returns dictionary of fibre localisation so that it can be saved
+        Sets fibre localisation results from loaded dictionary
 
+        Parameters
+        ----------
+        fibre_local_dict : Dictionary
+            Dictionary containing saved results of clustering
+           
         Returns
         -------
-        Dictionary
+        None.
 
         """
 
@@ -249,7 +262,7 @@ class EMGMotorUnit:
         # self.generator_potential = np.array(fibre_local_dict["generator_potential"])
 
         # Note analysis performed
-        if len(self.fibre_centres) > 0 and self.n_fibre_potentials is not None:
+        if self.n_fibre_potentials is not None and len(self.fibre_centres) > 0:
             self.analysis_performed["fibres_localised"] = True
 
     def silhouette_score(self, estimator, X):
@@ -359,8 +372,8 @@ class EMGMotorUnit:
                 "Localisation analysis has not been performed; cannot cluster fibres."
             )
 
-        fibre_centres_gmm_mean = []
-        fibre_centres_gmm_covariance = []
+        fibre_centres_gmm_mean = np.array([])
+        fibre_centres_gmm_covariance = np.array([])
 
         # Onset indices of all MUPs that have fibre potentials
         unique_mup_onsets = np.unique(self.mup_onsets)
@@ -417,7 +430,7 @@ class EMGMotorUnit:
             n_fibre_clusters = np.max(fibre_clusters) + 1
 
             # Record results for graph plotting
-            self.k_means_cluster_scores = grid_search.cv_results_
+            self.cluster_scores = grid_search.cv_results_
 
         else:
             # Use Gaussian Mixture Model Selection
@@ -427,7 +440,7 @@ class EMGMotorUnit:
             grid_search = self.gmm_selection(data_to_cluster, min_n_clusters, max_n_clusters)
 
             # Record results for graph plotting
-            self.gmm_cluster_scores = grid_search.cv_results_
+            self.cluster_scores = grid_search.cv_results_
 
             # fibre cluster assignments
             fibre_clusters = grid_search.predict(data_to_cluster)
@@ -498,6 +511,70 @@ class EMGMotorUnit:
         }
         self.analysis_performed["fibres_clustered"] = True
 
+    def get_fibre_clusters_dict(self):
+        """
+        Returns dictionary of fibre clusters so that it can be saved
+
+        Parameters
+        ----------
+        None.
+        
+        Returns
+        -------
+        Dictionary
+
+        """
+
+        if self.analysis_performed["fibres_clustered"]:
+            fibre_clusters_dict = {
+                "clustering_method" : self.mu_settings.clustering_method,
+                "mean_n_fps": int(self.fibre_clustering_results["mean_n_fps"]),
+                "n_fibre_clusters": int(self.fibre_clustering_results["n_fibre_clusters"]),
+                "fibre_clusters": self.fibre_clustering_results["fibre_clusters"].tolist(),
+                "n_fps_per_mup_and_cluster": self.fibre_clustering_results["n_fps_per_mup_and_cluster"].tolist(),
+                "mup_fibre_pos": self.fibre_clustering_results["mup_fibre_pos"].tolist(),
+                "fibre_centres_median": self.fibre_clustering_results["fibre_centres_median"].tolist(),
+                "fibre_centres_gmm_mean": self.fibre_clustering_results["fibre_centres_gmm_mean"].tolist(),
+                "fibre_centres_gmm_covariance": self.fibre_clustering_results["fibre_centres_gmm_covariance"].tolist()
+            }
+        else:
+            fibre_clusters_dict = {}
+            
+        return fibre_clusters_dict
+    
+    def set_fibre_clusters_from_dict(self, fibre_clusters_dict):
+        """
+        Sets fibre localisation results from loaded dictionary
+
+        Parameters
+        ----------
+        fibre_clusters_dict : Dictionary
+            Dictionary containing saved results of clustering
+        
+        Returns
+        -------
+        None.
+
+        """
+
+        # If clustering not done for this MU then do not set anything
+        if fibre_clusters_dict:
+            self.mu_settings.clustering_method = fibre_clusters_dict["clustering_method"]            
+        
+            self.fibre_clustering_results = {            
+                "mean_n_fps": fibre_clusters_dict["mean_n_fps"],
+                "n_fibre_clusters": fibre_clusters_dict["n_fibre_clusters"],
+                "fibre_clusters": np.array(fibre_clusters_dict["fibre_clusters"]),
+                "n_fps_per_mup_and_cluster": np.array(fibre_clusters_dict["n_fps_per_mup_and_cluster"]),
+                "mup_fibre_pos": np.array(fibre_clusters_dict["mup_fibre_pos"]),
+                "fibre_centres_median": np.array(fibre_clusters_dict["fibre_centres_median"]),
+                "fibre_centres_gmm_mean": np.array(fibre_clusters_dict["fibre_centres_gmm_mean"]),
+                "fibre_centres_gmm_covariance": np.array(fibre_clusters_dict["fibre_centres_gmm_covariance"])        
+            }
+        
+            # Note analysis performed
+            self.analysis_performed["fibres_clustered"] = True
+
     def plot_gmm_compare_cluster_scores(self):
         """
 
@@ -512,7 +589,7 @@ class EMGMotorUnit:
 
         """
 
-        df = pd.DataFrame(self.gmm_cluster_scores)[
+        df = pd.DataFrame(self.cluster_scores)[
             ["param_n_components", "param_covariance_type", "mean_test_score"]
         ]
 
@@ -552,7 +629,7 @@ class EMGMotorUnit:
 
         """
 
-        df = pd.DataFrame(self.k_means_cluster_scores)[["param_n_clusters", "mean_test_score"]]
+        df = pd.DataFrame(self.cluster_scores)[["param_n_clusters", "mean_test_score"]]
 
         # df["mean_test_score"] = -df["mean_test_score"]
 
@@ -864,17 +941,24 @@ class EMGMotorUnit:
 
     def _plot_fitted_gmms(self, ax, n_sigma):
 
-        # If tied, define and save earlier in results
-        # Other covariance models have the covariance matrix saved different
-        #  from GMM library (annoyingly)
-        # Other covariance models are not handled
-        cov = self.fibre_clustering_results["fibre_centres_gmm_covariance"]
-        cov = np.array([[cov[0, 0], cov[0, 1]], [cov[1, 0], cov[1, 1]]])
-
-        # if cov.ndim < 2:
-        #    cov = np.array([[cov[0], 0], [0, cov[1]]]) # diag
-
-        for mean in self.fibre_clustering_results["fibre_centres_gmm_mean"]:
+        # Set up covariance matrix depending on which coveriance model was used.
+        cv = self.fibre_clustering_results["fibre_centres_gmm_covariance"]
+        
+        print(cv)
+        
+        # Covariance trhe same for every cluster
+        if self.mu_settings.gmm_covariance_type == "tied":
+            cov = np.array([[cv[0, 0], cv[0, 1]], [cv[1, 0], cv[1, 1]]])
+                  
+        for i, mean in enumerate(self.fibre_clustering_results["fibre_centres_gmm_mean"]):
+            
+            if self.mu_settings.gmm_covariance_type == "diag":        
+                cov = np.array([[cv[i, 0], 0], [0, cv[i, 1]]])
+            elif self.mu_settings.gmm_covariance_type == "spherical":
+                cov = np.array([[cv[i], 0], [0, cv[i]]])
+            elif self.mu_settings.gmm_covariance_type == "full":
+                cov = np.array(cv[i])
+                
             v, w = np.linalg.eigh(cov)
 
             angle = np.arctan2(w[0][1], w[0][0])
@@ -1314,6 +1398,62 @@ class EMGMotorUnit:
         }
 
         self.analysis_performed["fibres_jitter_computed"] = True
+
+    def get_fibre_jitter_dict(self):
+        """
+        Returns dictionary of fibre jitter results so that it can be saved
+
+        Parameters
+        ----------
+        None.
+        
+        Returns
+        -------
+        Dictionary
+
+        """
+
+        # If jitter analysis is not done then return empty dictionary
+        if self.analysis_performed["fibres_jitter_computed"]:
+            fibre_jitter_dict = {
+                "fibre1_numbers": self.fibre_jitter_results["fibre1_numbers"].tolist(),
+                "fibre2_numbers": self.fibre_jitter_results["fibre2_numbers"].tolist(),
+                "mean_consecutive_diffs": self.fibre_jitter_results["mean_consecutive_diffs"].tolist(),
+                "differences": self.fibre_jitter_results["differences"].tolist(),
+                "consecutive_diffs": self.fibre_jitter_results["consecutive_diffs"].tolist(),
+            }
+        else:
+            fibre_jitter_dict = {}
+
+        return fibre_jitter_dict
+    
+    def set_fibre_jitter_from_dict(self, fibre_jitter_dict):
+        """
+        Sets fibre jitter results from loaded jitter results
+
+        Parameters
+        ----------
+        fibre_jitter_dict : Dictionary
+            Dictionary containing saved results of clustering
+        
+        Returns
+        -------
+        None.
+
+        """
+  
+        # Check jitter analysis results are saved
+        if fibre_jitter_dict:
+            self.fibre_jitter_results = {
+                "fibre1_numbers": np.array(fibre_jitter_dict["fibre1_numbers"]),
+                "fibre2_numbers": np.array(fibre_jitter_dict["fibre2_numbers"]),
+                "mean_consecutive_diffs": np.array(fibre_jitter_dict["mean_consecutive_diffs"]),
+                "differences": np.array(fibre_jitter_dict["differences"]),
+                "consecutive_diffs": np.array(fibre_jitter_dict["consecutive_diffs"]),
+            }
+        
+            # Note analysis performed            
+            self.analysis_performed["fibres_jitter_computed"] = True
 
     def plot_fibre_potential_time_diffs(self, fibre1_num, fibre2_num, display_counts=True):
         """
