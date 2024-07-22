@@ -18,6 +18,8 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt, Signal
 
+from pymicroemg.emg_data_raw import EMGDataRawLoggerAdapter
+
 from microemggui.widgets.preproc.preproc_settings import PreprocSettingsWidget
 from microemggui.widgets.emg_viewer import EMGViewerWidget
 from microemggui.models.emg import EMGDataRawModel, EMGDataPreprocModel
@@ -51,7 +53,7 @@ class ApplyPreprocButton(LargePushButton):
         self.setText("Re-apply")
         self.setEnabled(False)
 
-    def change_enabled(self, settings_valid):
+    def change_enabled(self, settings_valid: bool):
         # Slot for enable/disabling button based on whether settings are valid.
         # This approach is also used to re-enable the button if the preprocessing
         # settings are changed after the initial preprocessing.
@@ -244,7 +246,6 @@ class PreprocWidget(QWidget):
         # Apply preprocessing settings to raw data to generate preprocessed data.
         # Add preprocessed data to viewer.
         # Will overwrite any previously computed preprocessed data.
-        # TODO: also send preprocessed data to main window for downstream steps
         # TODO: figure out how to nicely cancel preprocessing using dialog window
         # TODO: create variable/config for logger name
 
@@ -276,7 +277,7 @@ class PreprocWidget(QWidget):
         # Emit signal with preprocessed data
         self.preproc_data_changed.emit(self.emg_model["preproc"], self.settings_model)
 
-    def update_progress_bar_from_log(self, record):
+    def update_progress_bar_from_log(self, record: EMGDataRawLoggerAdapter):
         # Slot for logs from EMGDataRaw; used to update progress bar for preprocessing
         # steps.
 
