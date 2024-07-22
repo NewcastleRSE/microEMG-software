@@ -30,7 +30,8 @@ from microemggui.widgets.preproc.preproc_step import PreprocWidget
 from microemggui.widgets.channels.channels_step import ChannelsWidget
 
 # Models
-from microemggui.models.settings import EMGPreprocSettingsModel
+from microemggui.models.settings import EMGSettingsModel, EMGPreprocSettingsModel
+from microemggui.models.emg import EMGDataRawModel, EMGDataPreprocModel
 
 
 # --- Widgets to put within main window ---
@@ -225,7 +226,9 @@ class MicroEMGMain(QMainWindow):
             )
             print(w_name)
 
-    def update_raw_emg_model_and_settings_model(self, raw_emg_model, settings_model):
+    def update_raw_emg_model_and_settings_model(
+        self, raw_emg_model: EMGDataRawModel, settings_model: EMGSettingsModel
+    ):
         # Slot for updating raw EMG model and settings model
         # Also updates preprocessing widget with this data
 
@@ -233,15 +236,14 @@ class MicroEMGMain(QMainWindow):
         self.settings_model = settings_model
 
         # Use data to make preprocessing widget
-        preprocess_settings_model = EMGPreprocSettingsModel(
-            self.settings_model.preprocess_settings
-        )
-        self.add_preprocess_widget(self.emg_model["raw"], preprocess_settings_model, self.emg_clrs)
+        self.add_preprocess_widget()
 
     def update_preproc_emg_model_and_preprocess_settings(
-        self, preproc_emg_model, preprocess_settings_model
+        self,
+        preproc_emg_model: EMGDataPreprocModel,
+        preprocess_settings_model: EMGPreprocSettingsModel,
     ):
-        # Slot for updating preprocess EMG model and the applied preprocessing settings
+        # Slot for updating preprocessed EMG model and the applied preprocessing settings
         # Also updates and channel selection widget with the preprocessed data
 
         self.emg_model["preproc"] = preproc_emg_model
@@ -278,14 +280,22 @@ class MicroEMGMain(QMainWindow):
         # finished
         self.widgets["analysistoolbar"].widgets[w_name].setEnabled(previous_step_finished)
 
-    def add_preprocess_widget(self, raw_emg_model, preprocess_settings_model, emg_clrs):
+    def add_preprocess_widget(self):
         # Add preprocessing widget using data stored in main window
+
+        # Extract preprocessing settings
+        if self.settings_model:
+            preprocess_settings_model = EMGPreprocSettingsModel(
+                self.settings_model.preprocess_settings
+            )
+        else:
+            raise ValueError("settings_model must be added to main window before preprocessing")
 
         # Create widget and add to stack of analysis step widgets
         w_name = "preprocess"
         analysis_w = self.widgets["analysis"]
         analysis_w.widgets[w_name] = PreprocWidget(
-            raw_emg_model, preprocess_settings_model, emg_clrs
+            self.emg_model["raw"], preprocess_settings_model, self.emg_clrs
         )
         analysis_w.layout.addWidget(analysis_w.widgets[w_name])
 
