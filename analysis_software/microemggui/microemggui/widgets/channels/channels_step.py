@@ -45,7 +45,7 @@ class ColourfulChannelCheckBox(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
-    def setChecked(self, is_checked):
+    def setChecked(self, is_checked: bool):
         self.checkbox.setChecked(is_checked)
 
 
@@ -179,7 +179,7 @@ class ChannelsWidget(QWidget):
         raw_emg_model: EMGDataRawModel,
         preproc_emg_model: EMGDataPreprocModel,
         emg_clrs: list[str],
-        min_chan=1,
+        min_chan: int = 1,
         parent=None,
     ):
         # min_chan = minimum number of channels needed to proceed with the analysis
