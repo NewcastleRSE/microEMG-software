@@ -5,6 +5,7 @@ Current icons from https://icons.getbootstrap.com/
 
 """
 from typing import Any
+from typing import TYPE_CHECKING
 
 from math import ceil
 
@@ -34,11 +35,14 @@ from microemggui.widgets.base import (
 from microemggui.widgets.base_pyqtgraph import EMGYAxisItem
 from microemggui.icons import icons  # noqa - import allows icon references
 
+if TYPE_CHECKING:
+    from microemggui.models.emg import EMGDataRawModel, EMGDataPreprocModel
+
 
 # --- Local helper functions ----
 
 
-def convert_seconds_to_time_label(time_s: float, with_ms: bool = False, n_dec=4) -> str:
+def convert_seconds_to_time_label(time_s: float, with_ms: bool = False, n_dec: int = 4) -> str:
     # Convert time in seconds to a mm:ss string
     # TODO: check for any floating point issues
 
@@ -339,7 +343,7 @@ class EMGPlotWidget(QWidget):
         self.update_plot()  # update plot
         self.set_y_ticks_and_range()  # update y-axis ticks
 
-    def eventFilter(self, obj, event):
+    def eventFilter(self, obj, event) -> bool:
         # Catch wheel events on pyqtgraph plot
         # TODO: check that works as expected using mouse and WindowsOS
 
@@ -723,7 +727,9 @@ class EMGGainWidget(QWidget):
 class EMGViewerWidget(QWidget):
     # Widget for viewing EMG time series data
 
-    def __init__(self, emg_model, emg_clrs: list[str], parent=None):
+    def __init__(
+        self, emg_model: EMGDataRawModel | EMGDataPreprocModel, emg_clrs: list[str], parent=None
+    ):
         super().__init__(parent)
 
         # Create plot widget for provided EMG data
