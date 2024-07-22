@@ -20,6 +20,7 @@ from microemggui.widgets.load.load_recording import LoadRecordingSection
 from microemggui.widgets.load.load_settings import LoadSettingsSection
 from microemggui.widgets.load.run_analysis import RunAnalysisSection
 
+
 # --- Widgets with all initial steps ---
 
 

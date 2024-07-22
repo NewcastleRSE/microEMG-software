@@ -5,7 +5,6 @@ Current icons from https://icons.getbootstrap.com/
 
 """
 from typing import Any
-from typing import TYPE_CHECKING
 
 from math import ceil
 
@@ -34,9 +33,7 @@ from microemggui.widgets.base import (
 )
 from microemggui.widgets.base_pyqtgraph import EMGYAxisItem
 from microemggui.icons import icons  # noqa - import allows icon references
-
-if TYPE_CHECKING:
-    from microemggui.models.emg import EMGDataRawModel, EMGDataPreprocModel
+from microemggui.models.emg import EMGDataRawModel, EMGDataPreprocModel
 
 
 # --- Local helper functions ----
