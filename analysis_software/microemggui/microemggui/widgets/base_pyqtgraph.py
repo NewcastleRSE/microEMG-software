@@ -16,7 +16,7 @@ class EMGYAxisItem(AxisItem):
     Overrides AxisItem method "drawPicture"
     """
 
-    def __init__(self, pens=None, draw_ticks=True, tick_width=2, *args, **kwargs):
+    def __init__(self, pens=None, draw_ticks=True, tick_width: float = 2, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # list of multiple pens, one per tick label
