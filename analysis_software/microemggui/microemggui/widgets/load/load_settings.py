@@ -3,6 +3,7 @@
 """
 Widgets for selecting and loading analysis settings in load step.
 """
+from typing import Any
 
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
 from PySide6.QtCore import Signal
@@ -34,7 +35,7 @@ class LoadSettingsWidget(QWidget):
         super().__init__(parent)
 
         # Create widgets
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "label": InputInlineLabel("Settings: ", parent=self),
             "combobox": InputComboBox(parent=self),
         }
@@ -69,7 +70,7 @@ class LoadSettingsSection(QWidget):
         self.settings_model = None
 
         # Create widgets
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "title": SubsectionTitle("Choose initial analysis settings", self),
             "load": LoadSettingsWidget(parent=self),
             "settingstext": InputInlineText("", parent=self),

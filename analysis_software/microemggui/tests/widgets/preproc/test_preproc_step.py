@@ -39,7 +39,7 @@ def settings_model_limited(request):
 
     # Add filter with specified filter type
     if request.param[2] == "bandpass":  # Bandpass requires two cutoff frequencies
-        cutoff_freq = [100.0, 400]  # Test initial values as float and int
+        cutoff_freq: list[float] | float = [100.0, 400]  # Test initial values as float and int
     else:
         cutoff_freq = 100.0
     settings.add_butterworth_filter(

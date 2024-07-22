@@ -1,6 +1,7 @@
 """
 Widgets for specifying preprocessing settings
 """
+from typing import Any
 
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
 from PySide6.QtWidgets import QSizePolicy
@@ -57,14 +58,14 @@ class FilterTypeWidget(QWidget):
         # Connect to filter settigns interface
         self.connect_to_settings(settings_model)
 
-    def match_input_to_settings(self, settings_model):
+    def match_input_to_settings(self, settings_model: EMGPreprocSettingsModel):
         # Set combobox text to corresponding text in preprocessing settings
 
         self.type_combobox.setCurrentText(
             settings_model.settings.butterworth_filter_settings["filter_type"]
         )
 
-    def connect_to_settings(self, settings_model):
+    def connect_to_settings(self, settings_model: EMGPreprocSettingsModel):
         # Connect combobox value to corresponding values in preprocessing settings.
         # Changes filter type and also sets cutoff2 frequency to none if filter type
         # only requires one frequency
@@ -77,6 +78,9 @@ class FilterOrderWidget(QWidget):
 
     def __init__(self, settings_model: EMGPreprocSettingsModel, parent=None):
         super().__init__(parent)
+
+        # Settings
+        self.settings_model = settings_model
 
         # Label
         self.order_label = InputLabel("Order", self)
@@ -97,20 +101,22 @@ class FilterOrderWidget(QWidget):
         self.setLayout(layout)
 
         # Set initial value using provided settings
-        self.match_input_to_settings(settings_model)
+        self.match_input_to_settings()
 
         # Connect to filter settings interface
-        self.connect_to_settings(settings_model)
+        self.connect_to_settings()
 
-    def match_input_to_settings(self, settings_model):
+    def match_input_to_settings(self):
         # Set spinbox value to corresponding value in preprocessing settings
 
-        self.order_spinbox.setValue(settings_model.settings.butterworth_filter_settings["order"])
+        self.order_spinbox.setValue(
+            self.settings_model.settings.butterworth_filter_settings["order"]
+        )
 
-    def connect_to_settings(self, settings_model):
+    def connect_to_settings(self):
         # Connect spinbox value to corresponding value in preprocessing settings
 
-        self.order_spinbox.valueChanged.connect(settings_model.filter_order_changed)
+        self.order_spinbox.valueChanged.connect(self.settings_model.filter_order_changed)
 
 
 class FilterFreqWidget(QWidget):
@@ -208,9 +214,10 @@ class FilterFreqWidget(QWidget):
         # are not valid.
         self.match_input_to_settings()
 
-    def set_n_freq(self, filter_type):
+    def set_n_freq(self, filter_type: str):
         # Set frequency input to match the number of frequencies needed (determined
-        # by filter type)
+        # by filter type).
+        # Used both by the class and as a slot for the filter type combobox.
         # Note that setting cutoff2 frequency to None is handled by FilterTypeWidget
         # signal.
 
@@ -355,7 +362,7 @@ class FilterSpecWidget(QWidget):
         super().__init__(parent)
 
         # Widgets for filter specifications
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "filter_type": FilterTypeWidget(
                 settings_model=settings_model, filter_types=filter_types, parent=self
             ),  # type
@@ -406,7 +413,7 @@ class PreprocSettingsWidget(QWidget):
         )
 
         # All widgets
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "title": SubsectionTitle("Settings", self),
             "mains_checkbox": mains_checkbox,
             "filter_checkbox": filter_checkbox,
@@ -462,7 +469,7 @@ class PreprocSettingsWidget(QWidget):
         # Filter checkbox
         self.widgets["filter_checkbox"].setChecked(settings.butterworth_filter)
 
-    def change_filter_spec_visibility(self, checked):
+    def change_filter_spec_visibility(self, checked: bool):
         # Show or hide filter specification widgets based on filter checkbox state
         # Note that filter specification settings are retained so they are available
         # if the filtering option is added back to the preprocessing steps.

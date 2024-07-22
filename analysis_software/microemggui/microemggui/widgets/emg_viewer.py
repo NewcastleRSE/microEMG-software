@@ -4,6 +4,7 @@ Widget for viewing EMG time series.
 Current icons from https://icons.getbootstrap.com/
 
 """
+from typing import Any
 
 from math import ceil
 
@@ -11,13 +12,14 @@ import numpy as np
 
 from PySide6.QtWidgets import (
     QWidget,
+    QLabel,
     QSlider,
     QHBoxLayout,
     QVBoxLayout,
     QGridLayout,
     QSizePolicy,
 )
-from PySide6.QtGui import QIcon, QPen, QFont
+from PySide6.QtGui import QIcon, QPen, QFont, QPixmap
 from PySide6.QtCore import Qt, Signal
 import pyqtgraph as pg
 
@@ -31,12 +33,13 @@ from microemggui.widgets.base import (
 )
 from microemggui.widgets.base_pyqtgraph import EMGYAxisItem
 from microemggui.icons import icons  # noqa - import allows icon references
+from microemggui.models.emg import EMGDataRawModel, EMGDataPreprocModel
 
 
 # --- Local helper functions ----
 
 
-def convert_seconds_to_time_label(time_s: float, with_ms: bool = False, n_dec=4) -> str:
+def convert_seconds_to_time_label(time_s: float, with_ms: bool = False, n_dec: int = 4) -> str:
     # Convert time in seconds to a mm:ss string
     # TODO: check for any floating point issues
 
@@ -78,10 +81,10 @@ class EMGPlotWidget(QWidget):
         self.emg_model = emg_model
 
         # EMG data segment options
-        self.start_t = 0  # start time (in seconds)
+        self.start_t = 0.0  # start time (in seconds)
         self.div_size = 0.1  # division size (in seconds)
         self.ds_factor = self.compute_ds_factor()  # downsampling factor
-        self.offset = 1000  # initial vertical offset between signals
+        self.offset = 1000.0  # initial vertical offset between signals
         self.n_div = 10  # number of divisions per "page"
 
         # Style options
@@ -337,7 +340,7 @@ class EMGPlotWidget(QWidget):
         self.update_plot()  # update plot
         self.set_y_ticks_and_range()  # update y-axis ticks
 
-    def eventFilter(self, obj, event):
+    def eventFilter(self, obj, event) -> bool:
         # Catch wheel events on pyqtgraph plot
         # TODO: check that works as expected using mouse and WindowsOS
 
@@ -363,7 +366,7 @@ class EMGDivSizeWidget(QWidget):
         self.plot_widget = plot_widget
 
         # Create combobox widget
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "div_combobox": InputComboBox(self),
         }
 
@@ -395,7 +398,7 @@ class EMGDivSizeWidget(QWidget):
         MS_TO_S = 1000
 
         # Info about each option
-        options = {}
+        options: dict[str, Any] = {}
 
         # Options in ms
         # (using ms so can ensure are integers for text conversion)
@@ -451,7 +454,7 @@ class EMGArrowsWidget(QWidget):
         self.plot_widget = plot_widget
 
         # Create button widgets
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "previous_fast": WidgetControlButton(self),
             "previous": WidgetControlButton(self),
             "next": WidgetControlButton(self),
@@ -474,10 +477,15 @@ class EMGArrowsWidget(QWidget):
             "Next 10 divisions",
         ]
 
+        # # Shortcut keys
+        shortcuts = [Qt.Key.Key_Left, None, None, Qt.Key.Key_Right]
+
         # Set button icons and tooltip text
-        for w, ic, txt in zip(self.widgets.values(), my_icons, tooltip_text):
+        for w, ic, txt, sc in zip(self.widgets.values(), my_icons, tooltip_text, shortcuts):
             w.setIcon(QIcon(":/bootstrap/" + ic))
             w.setToolTip(txt)
+            if sc:
+                w.setShortcut(sc)
 
         # Number of divisions moved by each button
         # (will send with button clicked signals)
@@ -536,7 +544,7 @@ class EMGStartTimeWidget(QWidget):
         self.emg_dur = plot_widget.emg_model.emg_data.emg_dur
 
         # Create widgets
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "label": InputInlineLabel("Start time: ", self),
             "time": InputInlineHighlightedText("00:00", self),
             "slider": QSlider(Qt.Horizontal, self),
@@ -635,7 +643,7 @@ class EMGTimeControlsWidget(QWidget):
         super().__init__(parent)
 
         # Create widgets; plot_widget is passed to each one for connections
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "arrows": EMGArrowsWidget(plot_widget, parent=self),
             "div": EMGDivSizeWidget(plot_widget, parent=self),
             "starttime": EMGStartTimeWidget(plot_widget, parent=self),
@@ -661,7 +669,7 @@ class EMGGainWidget(QWidget):
         self.plot_widget = plot_widget
 
         # Create button widgets for changing signal amplitude
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "increase": WidgetControlButton(self),
             "decrease": WidgetControlButton(self),
         }
@@ -670,20 +678,29 @@ class EMGGainWidget(QWidget):
         scale_factor = 0.75
         self.widget_scale = [1 / scale_factor, scale_factor]
 
-        # Icons for buttons
-        my_icons = [
-            "caret-up",
-            "caret-down",
-        ]
+        # Icons, tooltips, and shortcuts for buttons
+        my_icons = ["caret-up", "caret-down"]
+        tooltip_text = ["Increase signal amplitude", "Decrease signal amplitude"]
+        shortcuts = [Qt.Key.Key_Up, Qt.Key.Key_Down]
 
-        for w, ic in zip(self.widgets.values(), my_icons):
+        for w, ic, txt, sc in zip(self.widgets.values(), my_icons, tooltip_text, shortcuts):
             w.setIcon(QIcon(":/bootstrap/" + ic))
+            w.setToolTip(txt)
+            w.setShortcut(sc)
+
+        # Additional widget for amplitude image
+        # Defined separately since will not need to iterate through for connections, etc.
+        self.amp_image = QLabel(self)
+        self.amp_image.setPixmap(QPixmap(":/amplitude/amp1"))
+        self.amp_image.setScaledContents(True)
+        self.amp_image.setObjectName("amp")  # name so can control size via style sheet
 
         # Add to layout
         layout = QVBoxLayout()
         layout.addItem(ExpandingVSpacer())  # add vertical spacer
-        for _, w in self.widgets.items():
-            layout.addWidget(w)
+        layout.addWidget(self.widgets["increase"])
+        layout.addWidget(self.amp_image)
+        layout.addWidget(self.widgets["decrease"])
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(2)
         self.setLayout(layout)
@@ -707,14 +724,16 @@ class EMGGainWidget(QWidget):
 class EMGViewerWidget(QWidget):
     # Widget for viewing EMG time series data
 
-    def __init__(self, emg_model, emg_clrs: list[str], parent=None):
+    def __init__(
+        self, emg_model: EMGDataRawModel | EMGDataPreprocModel, emg_clrs: list[str], parent=None
+    ):
         super().__init__(parent)
 
         # Create plot widget for provided EMG data
         plot_widget = EMGPlotWidget(emg_model, emg_clrs, parent=self)
 
         # Create widgets for viewer
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "plot": plot_widget,
             "timecontrols": EMGTimeControlsWidget(plot_widget, parent=self),
             "gaincontrols": EMGGainWidget(plot_widget, parent=self),

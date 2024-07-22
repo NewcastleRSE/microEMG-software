@@ -3,6 +3,7 @@
 """
 Widget for loading recording and analysis settings, then starting the analysis.
 """
+from typing import Any
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout
 from PySide6.QtCore import Signal
@@ -18,6 +19,7 @@ from microemggui.widgets.base import (
 from microemggui.widgets.load.load_recording import LoadRecordingSection
 from microemggui.widgets.load.load_settings import LoadSettingsSection
 from microemggui.widgets.load.run_analysis import RunAnalysisSection
+
 
 # --- Widgets with all initial steps ---
 
@@ -42,7 +44,7 @@ class LoadWidget(QWidget):
         # Create widgets
         self.title = SectionTitle("MicroEMG analysis set-up", self)
 
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "recording": LoadRecordingSection(parent=self),
             "settings": LoadSettingsSection(parent=self),
             "run": RunAnalysisSection(parent=self),
