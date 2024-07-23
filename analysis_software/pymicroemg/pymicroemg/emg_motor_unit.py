@@ -30,6 +30,8 @@ import pandas as pd
 from sklearn.cluster import DBSCAN
 
 from pymicroemg.emg_reconstruct_settings import EMGAnalysisMotorUnitSettings
+from pymicroemg.emg_reconstruct_settings import EMGAnalysisMotorUnitClusterSettings
+from pymicroemg.emg_reconstruct_settings import EMGAnalysisMotorUnitJitterSettings
 
 # TODO: add csv and cv2 to poetry dependency management
 # Need to remove try/except block - temporary fix since functions not needed for
@@ -52,8 +54,7 @@ class EMGMotorUnit:
     def __init__(
         self,
         number,
-        potentials_t_idx: npt.NDArray[np.int64],
-        mu_settings: EMGAnalysisMotorUnitSettings,
+        potentials_t_idx: npt.NDArray[np.int64],        
         sampling_freq,
     ):
         """
@@ -91,8 +92,6 @@ class EMGMotorUnit:
         self.n_potentials = len(potentials_t_idx)
         # Time indices of potentials in EMG
         self.potentials_t_idx = potentials_t_idx
-
-        self.mu_settings = mu_settings
 
         self.sampling_freq = sampling_freq
 
@@ -278,7 +277,7 @@ class EMGMotorUnit:
 
         param_grid = {
             "n_components": range(min_n_clusters, max_n_clusters + 1),
-            "covariance_type": [self.mu_settings.gmm_covariance_type],
+            "covariance_type": [self.mu_cluster_settings.gmm_covariance_type],
         }
 
         grid_search = GridSearchCV(
@@ -294,7 +293,8 @@ class EMGMotorUnit:
 
         param_grid = {
             "n_clusters": range(min_n_clusters, max_n_clusters + 1),
-            "random_state": [self.mu_settings.k_means_random_state],
+            "random_state": [self.mu_cluster_settings.k_means_random_state],
+            "n_init": ["auto"],
         }
 
         grid_search = GridSearchCV(KMeans(), param_grid=param_grid, scoring=self.silhouette_score)
@@ -303,7 +303,7 @@ class EMGMotorUnit:
 
         return grid_search
 
-    def cluster_fibre_potentials(self):
+    def cluster_fibre_potentials(self, mu_cluster_settings: EMGAnalysisMotorUnitClusterSettings):
         """
         Cluster the fibre potentials and compute median fibre locations of the
         specified motor unit.
@@ -357,15 +357,12 @@ class EMGMotorUnit:
          - position changes (based on position change between consecutive MUPs) to get a
          measure of variability in location estimate (will need to remove nan positions
         in mup_fibre_pos before computing)
-         - distances between fibres (can also add as a separate method)
-
-        TODO: check other k-means parameters; determine if any defaults should be
-        changed. Also evaluate clustering performance and determine if approach needs to
-        be modified (e.g., how number of clusters is determined)
-
-        TODO: why is this method not in the motor unit class? - RH
+      
         """
 
+        # Set settings for cluster analysis
+        self.mu_cluster_settings = mu_cluster_settings
+        
         # Check that localisation has been run
         if not self.analysis_performed["fibres_localised"]:
             raise RuntimeError(
@@ -381,7 +378,7 @@ class EMGMotorUnit:
         mean_n_fps = round(len(self.mup_onsets) / n_unique_mup_onsets)
 
         # Set up data to use to fit
-        if self.mu_settings.time_scale > 0:
+        if self.mu_cluster_settings.time_scale > 0:
             # scale time column
             # do not scale fibre locations as they are in the same units (mm)
             time_min = np.min(self.fibre_potential_times)
@@ -395,7 +392,7 @@ class EMGMotorUnit:
                         (np.atleast_2d(self.fibre_potential_times).T - time_min)
                         / (time_max - time_min)
                     )
-                    * self.mu_settings.time_scale,
+                    * self.mu_cluster_settings.time_scale,
                 )
             )
 
@@ -403,17 +400,17 @@ class EMGMotorUnit:
             data_to_cluster = self.fibre_centres
 
         # Choose clustering method
-        if self.mu_settings.clustering_method == "dbscan":
+        if self.mu_cluster_settings.clustering_method == "dbscan":
             # Use Density-based spatial clustering of applications with noise (DBSCAN)
             clustering = DBSCAN(
-                eps=self.mu_settings.dbscan_eps, min_samples=self.mu_settings.dbscan_min_samples
+                eps=self.mu_cluster_settings.dbscan_eps, min_samples=self.mu_cluster_settings.dbscan_min_samples
             ).fit(data_to_cluster)
             n_fibre_clusters = np.max(clustering.labels_) + 1
             fibre_clusters = clustering.labels_
 
-        elif self.mu_settings.clustering_method == "k-means":
+        elif self.mu_cluster_settings.clustering_method == "k-means":
             # k for clustering
-            k = self.mu_settings.k_means_k
+            k = self.mu_cluster_settings.k_means_k
 
             # Use a range if no values of k if not given
             if k == 0:
@@ -527,7 +524,7 @@ class EMGMotorUnit:
 
         if self.analysis_performed["fibres_clustered"]:
             fibre_clusters_dict = {
-                "clustering_method" : self.mu_settings.clustering_method,
+                "clustering_method" : self.mu_cluster_settings.clustering_method,
                 "mean_n_fps": int(self.fibre_clustering_results["mean_n_fps"]),
                 "n_fibre_clusters": int(self.fibre_clustering_results["n_fibre_clusters"]),
                 "fibre_clusters": self.fibre_clustering_results["fibre_clusters"].tolist(),
@@ -559,7 +556,7 @@ class EMGMotorUnit:
 
         # If clustering not done for this MU then do not set anything
         if fibre_clusters_dict:
-            self.mu_settings.clustering_method = fibre_clusters_dict["clustering_method"]            
+            self.mu_cluster_settings.clustering_method = fibre_clusters_dict["clustering_method"]            
         
             self.fibre_clustering_results = {            
                 "mean_n_fps": fibre_clusters_dict["mean_n_fps"],
@@ -854,12 +851,12 @@ class EMGMotorUnit:
                 cluster_no,
                 n_clusters,
                 ax,
-                (self.mu_settings.clustering_method == "gmm"),
+                (self.mu_cluster_settings.clustering_method == "gmm"),
                 pt_mean_size,
                 n_sigma,
             )
 
-        if self.mu_settings.clustering_method == "gmm":
+        if self.mu_cluster_settings.clustering_method == "gmm":
             self._plot_fitted_gmms(ax, n_sigma)
 
         # Plot larger markers for median fibre locations, Not much difference to medians
@@ -947,16 +944,16 @@ class EMGMotorUnit:
         print(cv)
         
         # Covariance trhe same for every cluster
-        if self.mu_settings.gmm_covariance_type == "tied":
+        if self.mu_cluster_settings.gmm_covariance_type == "tied":
             cov = np.array([[cv[0, 0], cv[0, 1]], [cv[1, 0], cv[1, 1]]])
                   
         for i, mean in enumerate(self.fibre_clustering_results["fibre_centres_gmm_mean"]):
             
-            if self.mu_settings.gmm_covariance_type == "diag":        
+            if self.mu_cluster_settings.gmm_covariance_type == "diag":        
                 cov = np.array([[cv[i, 0], 0], [0, cv[i, 1]]])
-            elif self.mu_settings.gmm_covariance_type == "spherical":
+            elif self.mu_cluster_settings.gmm_covariance_type == "spherical":
                 cov = np.array([[cv[i], 0], [0, cv[i]]])
-            elif self.mu_settings.gmm_covariance_type == "full":
+            elif self.mu_cluster_settings.gmm_covariance_type == "full":
                 cov = np.array(cv[i])
                 
             v, w = np.linalg.eigh(cov)
@@ -998,6 +995,10 @@ class EMGMotorUnit:
         if x.size != y.size:
             raise ValueError("x and y must be the same size")
 
+        # No data to do anythinmg with!
+        if len(x) == 0:
+            return
+        
         cov = np.cov(x, y)
         pearson = cov[0, 1] / np.sqrt(cov[0, 0] * cov[1, 1])
         # Using a special case to obtain the eigenvalues of this
@@ -1324,7 +1325,7 @@ class EMGMotorUnit:
                 )
 
         # Remove outliers in time intervals
-        if self.mu_settings.remove_outliers:
+        if self.mu_jitter_settings.remove_outliers:
             fibre_potential_time_diffs = self.remove_outliers_iqr(fibre_potential_time_diffs)
 
         # Compute consecutive differences
@@ -1338,7 +1339,7 @@ class EMGMotorUnit:
                     fibre_potential_time_diffs[mup_num] - fibre_potential_time_diffs[mup_num + 1]
                 )
 
-        if self.mu_settings.remove_outliers:
+        if self.mu_jitter_settings.remove_outliers:
             consecutive_diffs = self.remove_outliers_iqr(consecutive_diffs)
 
         # Compute mean consecutive difference
@@ -1346,11 +1347,14 @@ class EMGMotorUnit:
 
         return mean_consecutive_diff, fibre_potential_time_diffs, consecutive_diffs
 
-    def jitter_analysis(self):
+    def jitter_analysis(self, mu_jitter_settings : EMGAnalysisMotorUnitJitterSettings):
         """
         Do jitter analysis betwwen all pairs
         """
 
+        # Set jitter settings
+        self.mu_jitter_settings = mu_jitter_settings
+        
         # Check that localisation and fibre clustering has been run
         if (
             not self.analysis_performed["fibres_localised"]

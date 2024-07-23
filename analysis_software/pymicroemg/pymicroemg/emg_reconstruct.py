@@ -13,6 +13,10 @@ from typing import TYPE_CHECKING
 import json
 import warnings
 
+from pymicroemg.emg_reconstruct_settings import EMGAnalysisMotorUnitSettings
+from pymicroemg.emg_reconstruct_settings import EMGAnalysisMotorUnitClusterSettings
+from pymicroemg.emg_reconstruct_settings import EMGAnalysisMotorUnitJitterSettings
+
 import numpy as np
 import numpy.typing as npt  # for type hints
 import scipy.signal as sg
@@ -194,7 +198,7 @@ class EMGAnalysisReconstruct:
         all_motor_units = []
         for i in range(np.max(mu_numbers) + 1):
             motor_unit = EMGMotorUnit(
-                i, mup_t_idx[mu_numbers == i], self.mu_settings, self.emg_data_preproc.fs
+                i, mup_t_idx[mu_numbers == i], self.emg_data_preproc.fs
             )
             all_motor_units.append(motor_unit)
 
@@ -437,7 +441,7 @@ class EMGAnalysisReconstruct:
             dict_name = "motor_unit_" + str(mu.motor_unit_number)
             mu.set_fibre_jitter_from_dict(fibre_jitter_dict[dict_name])
             
-    def save_settings(self, filename):
+    def save_settings(self, filename, mu_cluster_settings : EMGAnalysisMotorUnitClusterSettings, mu_jitter_settings : EMGAnalysisMotorUnitJitterSettings):
         """
         Saves settings for analysis
 
@@ -445,7 +449,11 @@ class EMGAnalysisReconstruct:
         ----------
         filename: string
             Name of file to save in
-
+        mu_cluster_settings : EMGAnalysisMotorUnitClusterSettings
+            Settings for performing cluster analysis
+        mu_jitter_settings : EMGAnalysisMotorUnitJitterSettings
+            Settings for performing jitter analysis
+            
         Returns
         -------
         None
@@ -455,6 +463,8 @@ class EMGAnalysisReconstruct:
         # Define settings dictionary
         all_settings_dict = {
             "mu_settings": self.mu_settings.get_settings_dict(),
+            "mu_cluster_settings": mu_cluster_settings.get_settings_dict(),
+            "mu_jitter_settings": mu_jitter_settings.get_settings_dict(),
             "recon_settings": self.recon_settings.get_settings_dict(),
         }
 
@@ -473,7 +483,10 @@ class EMGAnalysisReconstruct:
 
         Returns
         -------
-        None
+        mu_cluster_settings : EMGAnalysisMotorUnitClusterSettings
+            Settings for performing cluster analysis
+        mu_jitter_settings : EMGAnalysisMotorUnitJitterSettings
+            Settings for performing jitter analysis
 
         """
 
@@ -483,6 +496,14 @@ class EMGAnalysisReconstruct:
 
         self.mu_settings.set_settings_from_dict(all_settings_dict["mu_settings"])
         self.recon_settings.set_settings_from_dict(all_settings_dict["recon_settings"])
+        
+        mu_cluster_settings = EMGAnalysisMotorUnitClusterSettings()
+        mu_jitter_settings = EMGAnalysisMotorUnitJitterSettings()
+        
+        mu_cluster_settings.set_settings_from_dict(all_settings_dict["mu_cluster_settings"])
+        mu_jitter_settings.set_settings_from_dict(all_settings_dict["mu_jitter_settings"])
+    
+        return mu_cluster_settings, mu_jitter_settings
 
     def plot_motor_units_raster(
         self,
