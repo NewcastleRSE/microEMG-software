@@ -91,6 +91,16 @@ Example recording data needs to be manually added in a "recordings" folder at th
 
 To run the user interface during development testing, open a terminal and navigate to the `gui_dev` folder, then enter `python gui_dev_main.py` and the user interface should appear.
 
+Adding new packages: 
+1. `poetry add <package name>` which adds a package to the pyproject.toml file (the list of requirements)
+
+To add a package to a specific group, e.g. dev: `poetry add <package name> -G dev` 
+
+2. `poetry lock --no-update` updates the lock file (with all the packages needed and the exact versions, including dependencies of the packages in the pyproject.toml file), but does not change the version of the previously tracked dependencies
+
+3. `poetry export -f requirements.txt --without-hashes > requirements.txt` will then overwrite the requirements.txt file with the latest updates to the lockfile.
+
+
 ### Running Tests
 
 How to run tests on your local system.
