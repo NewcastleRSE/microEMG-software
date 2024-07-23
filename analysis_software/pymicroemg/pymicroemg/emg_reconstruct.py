@@ -1131,7 +1131,7 @@ class EMGAnalysisReconstruct:
         base = np.abs(base)
 
         sigma = (
-            self.recon_settings.find_peaks_2d_sigma_mups,
+            self.recon_settings.find_peaks_2d_sigma_chns,
             self.recon_settings.find_peaks_2d_sigma_time,
         )
         im2 = np.abs(
@@ -1143,7 +1143,7 @@ class EMGAnalysisReconstruct:
             im2 = morphology.white_tophat(
                 im2, morphology.disk(self.recon_settings.find_peaks_2d_tophat_disk_radius)
             )
-
+      
         # Extract each blob
         locs = np.array([])
         found = False
@@ -1155,7 +1155,7 @@ class EMGAnalysisReconstruct:
 
         # Initial set up for peak finding
         neighborhood_size = (
-            self.recon_settings.find_peaks_2d_neighbour_mups,
+            self.recon_settings.find_peaks_2d_neighbour_chns,
             self.recon_settings.find_peaks_2d_neighbour_time,
         )
         data_max = filters.maximum_filter(im2, neighborhood_size)

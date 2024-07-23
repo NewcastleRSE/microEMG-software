@@ -36,7 +36,7 @@ class EMGAnalysisReconstructSettings:
         self.y_scaling_factor = 1.0
 
         # 2D peak finding options for localisation
-        self.find_peaks_2d_sigma_mups = 2
+        self.find_peaks_2d_sigma_chns = 2
         self.find_peaks_2d_sigma_time = 2
         self.find_peaks_2d_truncate = 2
         self.find_peaks_2d_use_tophat = False
@@ -44,7 +44,7 @@ class EMGAnalysisReconstructSettings:
         self.find_peaks_2d_tophat_disk_radius = 1
         self.find_peaks_2d_min_peaks = 1
         self.find_peaks_2d_max_peaks = 5
-        self.find_peaks_2d_neighbour_mups = 5
+        self.find_peaks_2d_neighbour_chns = 5
         self.find_peaks_2d_neighbour_time = 5
 
     def get_settings_dict(self):
@@ -72,14 +72,14 @@ class EMGAnalysisReconstructSettings:
             "xtol": self.xtol,
             "ftol": self.ftol,
             "y_scaling_factor": self.y_scaling_factor,
-            "find_peaks_2d_sigma_mups": self.find_peaks_2d_sigma_mups,
+            "find_peaks_2d_sigma_chns": self.find_peaks_2d_sigma_chns,
             "find_peaks_2d_sigma_time": self.find_peaks_2d_sigma_time,
             "find_peaks_2d_truncate": self.find_peaks_2d_truncate,
             "find_peaks_2d_use_tophat": self.find_peaks_2d_use_tophat,
             "find_peaks_2d_tophat_disk_radius": self.find_peaks_2d_tophat_disk_radius,
             "find_peaks_2d_min_peaks": self.find_peaks_2d_min_peaks,
             "find_peaks_2d_max_peaks": self.find_peaks_2d_max_peaks,
-            "find_peaks_2d_neighbour_mups": self.find_peaks_2d_neighbour_mups,
+            "find_peaks_2d_neighbour_chns": self.find_peaks_2d_neighbour_chns,
             "find_peaks_2d_neighbour_time": self.find_peaks_2d_neighbour_time,
         }
 
@@ -109,14 +109,14 @@ class EMGAnalysisReconstructSettings:
         self.xtol = settings_dict["xtol"]
         self.ftol = settings_dict["ftol"]
         self.y_scaling_factor = settings_dict["y_scaling_factor"]
-        self.find_peaks_2d_sigma_mups = settings_dict["find_peaks_2d_sigma_mups"]
+        self.find_peaks_2d_sigma_chns = settings_dict["find_peaks_2d_sigma_chns"]
         self.find_peaks_2d_sigma_time = settings_dict["find_peaks_2d_sigma_time"]
         self.find_peaks_2d_truncate = settings_dict["find_peaks_2d_truncate"]
         self.find_peaks_2d_use_tophat = settings_dict["find_peaks_2d_use_tophat"]
         self.find_peaks_2d_tophat_disk_radius = settings_dict["find_peaks_2d_tophat_disk_radius"]
         self.find_peaks_2d_min_peaks = settings_dict["find_peaks_2d_min_peaks"]
         self.find_peaks_2d_max_peaks = settings_dict["find_peaks_2d_max_peaks"]
-        self.find_peaks_2d_neighbour_mups = settings_dict["find_peaks_2d_neighbour_mups"]
+        self.find_peaks_2d_neighbour_chns = settings_dict["find_peaks_2d_neighbour_chns"]
         self.find_peaks_2d_neighbour_time = settings_dict["find_peaks_2d_neighbour_time"]
 
     def __str__(self):
@@ -151,7 +151,7 @@ class EMGAnalysisReconstructSettings:
         ans += "\n"
         ans += "\n2D Peak Finding Options"
         ans += "\nGaussian filter, sigma MUPs: "
-        ans += str(self.find_peaks_2d_sigma_mups)
+        ans += str(self.find_peaks_2d_sigma_chns)
         ans += "\nGaussian filter, sigma time (indices): "
         ans += str(self.find_peaks_2d_sigma_time)
         ans += "\nGaussian filter, truncate: "
@@ -166,7 +166,7 @@ class EMGAnalysisReconstructSettings:
         ans += "\nMaximum number of peaks: "
         ans += str(self.find_peaks_2d_max_peaks)
         ans += "\nNeighbourhood size, MUPs: "
-        ans += str(self.find_peaks_2d_neighbour_mups)
+        ans += str(self.find_peaks_2d_neighbour_chns)
         ans += "\nNeighbourhood size, time (indices): "
         ans += str(self.find_peaks_2d_neighbour_time)
 
