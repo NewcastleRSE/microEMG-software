@@ -1,5 +1,25 @@
+# Mac
 .DS_Store
-.dat
+
+# Python
+__pycache__/
+.spyproject/*
+
+# Data
+data/*
 .sp
 .mat
-__pycache__/
+recordings/**/*.csv
+recordings/**/*.txt
+recordings/**/board-*.dat
+recordings/**/aux-*.dat
+recordings/**/vdd-*.dat
+analysis_software/analysis/
+
+# Images
+*.png
+*.jpg
+*.jpeg
+
+# Remove below to easily add new demo recordings
+recordings/**

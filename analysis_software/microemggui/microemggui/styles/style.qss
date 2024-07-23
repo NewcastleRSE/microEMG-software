@@ -1,0 +1,296 @@
+/* Titles */
+
+SectionTitle{
+    font-weight: bold;
+    font-size: 20pt;
+    min-height: 40;
+    max-height: 40;
+    qproperty-alignment: 'AlignTop | AlignLeft';
+}
+
+SubsectionTitle{
+    font-weight: bold;
+    font-size: 16pt;
+}
+
+/* Buttons */
+
+SmallPushButton {
+    font-size: 12pt;
+    background-color: 'white';
+    border-style: solid;
+    border-width: 1px;
+    border-color: #D9D9D9;
+    padding: 4;
+    width: 100px;
+    border-radius: 2;
+}
+
+SmallPushButton:pressed {
+    background-color: 'grey';
+}
+
+LargePushButton {
+    font-size: 16pt;
+    background-color: 'light blue';
+    border-style: solid;
+    border-width: 1px;
+    border-color: #D9D9D9;
+    padding: 4;
+    width: 100px;
+    border-radius: 2;
+}
+
+LargePushButton:pressed {
+    background-color: 'grey';
+}
+
+TabButton {
+    font-size: 12pt;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #D9D9D9;
+    padding: 4;
+    width: 150px;
+    border-radius: 2;
+}
+
+TabButton:disabled {
+    background-color: 'white';
+    font-weight: bold;
+    color: 'black';
+    font-size: 12pt;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #D9D9D9;
+    padding: 4;
+    width: 150px;
+    border-radius: 2;
+}
+
+WidgetControlButton {
+    background-color: 'white';
+    border-style: solid;
+    border-width: 1px;
+    border-color: #D9D9D9;
+    border-radius: 2;
+    padding: 3;
+}
+
+WidgetControlButton:pressed {
+    background-color: #D9D9D9;
+}
+
+WidgetControlButton:disabled {
+    background-color: #D9D9D9;
+}
+
+/* Toolbars and toolbar widgets */
+
+TopToolbar {
+    padding: 5px;
+    background: 'white';
+    border-left: none;
+    border-top: none;
+    border-bottom: 1px solid #D9D9D9;
+    border-right: none;
+}
+
+AnalysisToolbar {
+    background: 'white';
+    border-left: none;
+    border-top: none;
+    border-bottom: none;
+    border-right: 1px solid grey;
+    spacing: 0px;
+}
+
+AnalysisToolbarButton {
+    font-size: 14pt;
+    text-align: left;
+    background-color: 'white';
+    border-left: none;
+    border-top: none;
+    border-bottom: none;
+    border-right: 1px solid grey;
+    padding: 10px;
+    width: 125px;
+    border-radius: 0;
+}
+
+AnalysisToolbarButton:hover {
+    background-color: #D9D9D9;
+}
+
+AnalysisToolbarButton:checked {
+    background-color: "light blue";
+}
+
+AnalysisToolbarButton:disabled {
+    color: #D9D9D9;
+}
+
+AnalysisToolbarLabel {
+    color: 'grey';
+    font-weight: bold;
+    font-size: 12pt;
+    padding-left: 5px;
+    padding-top: 20px;
+    padding-bottom: 5px;
+}
+
+RecordingLabel {
+    color: 'grey';
+    font-size: 12pt;
+}
+
+MicroEMGLogo {
+    text-align: center;
+    background-color: 'white';
+    border-left: none;
+    border-top: none;
+    border-bottom: none;
+    border-right: 1px solid grey;
+    padding-left: 10px;
+    padding-top: 5px;
+    padding-right: 10px;
+    padding-bottom: 5px;
+    width: 125px;
+    qproperty-iconSize: 75px;
+    border-radius: 0;
+}
+
+MicroEMGLogo:hover {
+    background-color: #D9D9D9;
+}
+
+MicroEMGLogo:checked {
+    background-color: "light blue";
+}
+
+/* Settings input widgets - main section */
+
+CheckBoxMain {
+    font-weight: bold;
+    font-size: 14pt;
+    min-height: 35;
+    max-height: 35;
+}
+
+/* Settings input widgets */
+
+CheckBoxChannel {
+    font-size: 12pt;
+    font-weight: bold;
+    min-height: 20px;
+    max-height: 75px;
+}
+
+CheckBoxChannel::indicator {
+    width: 15px;
+    height: 15px;
+}
+
+CheckBoxChannel::indicator:checked {
+    background-color: lightblue;
+    border: 1px solid grey;
+}
+
+CheckBoxChannel::indicator:unchecked {
+    background-color: white;
+    border: 1px solid #D9D9D9;
+}
+
+CheckBoxChannel::indicator:checked {
+    image: url(none);
+}
+
+CheckBoxChannel::indicator:checked {
+    background-color: white;
+    border: 1px solid #D9D9D9;
+    image: url(:/bootstrap/check)
+}
+
+CheckBoxChannelLabel {
+    font-size: 12pt;
+    font-weight: bold;
+    min-height: 20;
+    max-height: 20;
+}
+
+InputLabel {
+    qproperty-alignment: 'AlignBottom | AlignLeft';
+    min-height: 20;
+    max-height: 20;
+}
+
+InputInlineLabel {
+}
+
+InputInlineText {
+    color: 'grey';
+}
+
+InputInlineHighlightedText {
+    color: 'blue';
+    min-height: 20;
+    max-height: 20;
+}
+
+HighlightedLabel {
+    color: 'blue';
+}
+
+HighlightedLabel#channels_widget_exclude {
+    qproperty-alignment: 'AlignBottom | AlignLeft';
+    min-height: 100;
+    max-height: 100;
+    min-width: 250;
+    max-width: 250;
+}
+
+InputWarningLabel {
+    color: 'red';
+    font-size: 12pt;
+}
+
+InputComboBox {
+    min-width: 150;
+    max-width: 150;
+}
+
+InputSpinBox {
+    min-width: 100;
+    max-width: 100;
+}
+
+InputLineEdit {
+    min-width: 50;
+    max-width: 50;
+}
+
+QPushButton {
+    min-width: 50;
+    max-width: 50;
+}
+
+/* EMG viewer */
+
+EMGViewerWidget {
+    background: white;
+    border: 1px solid grey;
+    border-radius: 4px;
+}
+
+QLabel#amp{
+    min-height: 25;
+    max-height: 25;
+    min-width: 25;
+    max-width: 25;
+}
+
+/* Preprocessing settings - ste width */
+PreprocSettingsWidget {
+    min-width: 250;
+    max-width: 250;
+}

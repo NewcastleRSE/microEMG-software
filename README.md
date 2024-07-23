@@ -39,19 +39,53 @@ Newcastle University
 
 This section is intended to list the frameworks and tools you're using to develop this software. Please link to the home page or documentation in each case.
 
-[Framework 1](https://something.com)  
-[Framework 2](https://something.com)  
+[Python 3.11](https://www.python.org/)  
+[PySide6](https://www.qt.io/qt-for-python)  
 [Framework 3](https://something.com)  
 
 ## Getting Started
 
 ### Prerequisites
 
-Any tools or versions of languages needed to run code. For example, specific Python or Node versions. Minimum hardware requirements also go here.
+Developed using Python 3.11
+
+Dependencies are managed using Python package [Poetry](https://python-poetry.org/), version 1.4.0
+
+See pyproject.toml file for list of Python package dependencies.
+
+
+#### Development tools
+
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) as a formatter
+
+[mypy](https://mypy.readthedocs.io/en/stable/) as a static type checker
+
+[Flake8](https://flake8.pycqa.org/en/latest/) (including the [bugbear](https://github.com/PyCQA/flake8-bugbear) plugin) as a linter
+
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit) for running checks on committed code (run `pre-commit install` to use the included pre-commit hooks)
+
 
 ### Installation
 
-How to build or install the application.
+First install poetry in your Python environment:
+
+Using pip:
+```
+pip install poetry==1.4.0
+```
+
+Alternatively, using [Anaconda](https://anaconda.org/):
+```
+conda install poetry==1.4.0
+```
+
+Next, [install the packages using poetry](https://python-poetry.org/docs/basic-usage/#installing-dependencies) (run within the project directory):
+
+```
+poetry install
+```
+
+Example recording data needs to be manually added in a "recordings" folder at the root level. See the paths in helper_config.py in pymicroemg. These paths are the same as in the provided data, with the exception that the "64 channel" directory is replaced with "64-channel".
 
 ### Running Locally
 
@@ -64,8 +98,6 @@ How to run tests on your local system.
 ## Deployment
 
 ### Local
-
-Deploying to a production-style setup but on the local system. Examples of this would include `venv`, `anaconda`, `Docker` or `minikube`. 
 
 ### Production
 
