@@ -167,7 +167,7 @@ class FilterFreqWidget(QWidget):
         self.freq_val_low = 0.01
         self.freq_val_high = 9999  # Nyquist frequency for 20k Hz sampling frequency
         freq_val = QDoubleValidator(self.freq_val_low, self.freq_val_high, 2)
-        for _, w in self.freq_lineedit.items():
+        for w in self.freq_lineedit.values():
             w.setValidator(freq_val)
 
         # Get current widget size to limit size of warning labels
@@ -191,7 +191,7 @@ class FilterFreqWidget(QWidget):
         )
 
         # Initially hidden warnings (will check validity below); set width
-        for _, w in self.warning_labels.items():
+        for w in self.warning_labels.values():
             w.hide()
             w.setMaximumWidth(w_width * 1.75)
 
@@ -199,7 +199,7 @@ class FilterFreqWidget(QWidget):
         layout = QVBoxLayout()
         layout.addWidget(self.freq_label)
         layout.addWidget(self.freq_input)
-        for _, w in self.warning_labels.items():
+        for w in self.warning_labels.values():
             layout.addWidget(w)
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
@@ -311,7 +311,7 @@ class FilterFreqWidget(QWidget):
     def connect_input_to_check_freq_values_valid(self):
         # Connection between changes in input text and check for frequency validity
 
-        for _, w in self.freq_lineedit.items():
+        for w in self.freq_lineedit.values():
             w.textChanged.connect(self.check_freq_values_valid)
 
     def check_freq_values_valid(self):
@@ -372,7 +372,7 @@ class FilterSpecWidget(QWidget):
 
         # Add to filter specifications to vertical layout
         layout = QVBoxLayout()
-        for _, w in self.widgets.items():
+        for w in self.widgets.values():
             layout.addWidget(w)
         layout.setContentsMargins(35, 0, 0, 0)  # add padding to left
         self.setLayout(layout)
@@ -422,7 +422,7 @@ class PreprocSettingsWidget(QWidget):
 
         # Create layout and add widgets
         layout = QVBoxLayout()
-        for _, w in self.widgets.items():
+        for w in self.widgets.values():
             layout.addWidget(w)
         layout.setContentsMargins(0, 0, 0, 0)
 
@@ -456,7 +456,7 @@ class PreprocSettingsWidget(QWidget):
             self.settings_changed
         )
         freq_widgets = filter_spec.widgets["filter_freq"].freq_lineedit
-        for _, w in freq_widgets.items():
+        for w in freq_widgets.values():
             w.textChanged.connect(self.settings_changed)
 
     def match_input_to_settings(self):
@@ -482,12 +482,12 @@ class PreprocSettingsWidget(QWidget):
     def hide_filter_spec(self):
         # Hides filter specification widgets
         # Values do not change, but will not be used if filter checkbox is not checked
-        for _, w in self.widgets["filter_spec"].widgets.items():
+        for w in self.widgets["filter_spec"].widgets.values():
             w.hide()
 
     def show_filter_spec(self):
         # Shows filter specification widgets
-        for _, w in self.widgets["filter_spec"].widgets.items():
+        for w in self.widgets["filter_spec"].widgets.values():
             w.show()
 
     def settings_changed(self):
