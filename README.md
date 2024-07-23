@@ -67,7 +67,7 @@ See pyproject.toml file for list of Python package dependencies.
 
 ### Installation
 
-First install poetry in your Python environment:
+After ensuring you have the project frameworks installed (PySide6, Python 3.11+), install poetry in your Python environment:
 
 Using pip:
 ```
@@ -89,7 +89,7 @@ Example recording data needs to be manually added in a "recordings" folder at th
 
 ### Running Locally
 
-How to run the application on your local system.
+To run the user interface during development testing, open a terminal and navigate to the `gui_dev` folder, then enter `python gui_dev_main.py` and the user interface should appear.
 
 ### Running Tests
 
@@ -102,6 +102,10 @@ How to run tests on your local system.
 ### Production
 
 Deploying to the production system. Examples of this would include cloud, HPC or virtual machine. 
+
+### Troubleshooting
+ 
+For linux users an error has been noted when trying to run the GUI where the QT platform plugin fails to load. [This thread](https://stackoverflow.com/questions/77725761/from-6-5-0-xcb-cursor0-or-libxcb-cursor0-is-needed-to-load-the-qt-xcb-platform) proposes a solution that worked in our testing, to install libxcb-cursor-dev.
 
 ## Usage
 
