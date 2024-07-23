@@ -60,9 +60,10 @@ class AnalysisToolbar(QToolBar):
             "preprocess": "2. Preprocess",
             "channels": "3. Select channels",
             "analysetext": "Analyse EMG",
-            "motorunits": "4. Find motor units",
-            "fibres": "5. Localise fibres",
-            "jitter": "6. Compute jitter",
+            "findmu": "4. Find motor units",
+            "selectmu": "5. Select motor units",
+            "fibres": "6. Localise fibres",
+            "jitter": "7. Compute jitter",
             "exporttext": "Export results",
             "export": "Export",
         }
