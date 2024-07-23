@@ -92,6 +92,13 @@ class InputWarningLabel(QLabel):
         self.setWordWrap(True)
 
 
+class InputExplanationLabel(QLabel):
+    # Explanation text for settings input
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setWordWrap(True)
+
+
 class SubsectionTitle(QLabel):
     # Label for subsection of a larger widget (e.g., settings)
     def __init__(self, *args, **kwargs):
