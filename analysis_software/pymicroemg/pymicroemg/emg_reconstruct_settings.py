@@ -33,7 +33,7 @@ class EMGAnalysisReconstructSettings:
         self.max_opt_iterations = 200
         self.xtol = 0.01
         self.ftol = 1
-        self.y_scaling_factor = 0.0
+        self.y_scaling_factor = 1.0
 
         # 2D peak finding options for localisation
         self.find_peaks_2d_sigma_mups = 2
