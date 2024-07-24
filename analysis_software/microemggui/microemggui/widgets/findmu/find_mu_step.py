@@ -9,6 +9,7 @@ from typing import Any
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QGridLayout
 from PySide6.QtCore import Qt
 
+from microemggui.models.settings import EMGAnalysisMotorUnitSettingsModel
 from microemggui.widgets.findmu.mu_settings import MUSettingsWidget
 from microemggui.widgets.base import LargePushButton, SectionTitle
 
@@ -82,13 +83,13 @@ class MainButtons(QWidget):
 class FindMUWidget(QWidget):
     # Widget for find motor units step
 
-    def __init__(self, parent=None):
+    def __init__(self, mu_settings: EMGAnalysisMotorUnitSettingsModel, parent=None):
         super().__init__(parent)
 
         # Create widgets
         self.widgets: dict[str, Any] = {
             "title": SectionTitle("Find motor units", self),
-            "settings": MUSettingsWidget(parent=self),
+            "settings": MUSettingsWidget(mu_settings, parent=self),
             "buttons": MainButtons(self),
         }
 

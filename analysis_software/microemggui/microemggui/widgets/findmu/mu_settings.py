@@ -7,6 +7,7 @@ from typing import Any
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout
 
+from microemggui.models.settings import EMGAnalysisMotorUnitSettingsModel
 from microemggui.widgets.base import (
     InputLabel,
     InputExplanationLabel,
@@ -18,30 +19,37 @@ from microemggui.widgets.base import (
 # --- Widgets for settings --- #
 
 
-class MUSensitivityWidget(QWidget):
-    # Widget for setting detection sensitivity for "find motor units" step
+class MUSettingComboboxWidget(QWidget):
+    # Generic class for motor unit settings input with combobox and labels
 
-    def __init__(self, parent=None):
+    def __init__(
+        self,
+        mu_settings: EMGAnalysisMotorUnitSettingsModel,
+        setting_name: str,  # setting modified by this widget
+        label: str,
+        explanation: str,
+        parent=None,
+    ):
         super().__init__(parent)
+
+        # Setting modified by this widget
+        self.setting_name = setting_name
 
         # Create widgets
         self.widgets: dict[str, Any] = {
-            "label": InputLabel("Detection sensitivity", self),
-            "explanation": InputExplanationLabel(
-                "Increasing the sensitivity threshold captures more motor units, "
-                + "but may increase false positives.",
-                self,
-            ),
+            "label": InputLabel(label, self),
+            "explanation": InputExplanationLabel(explanation, self),
             "combobox": InputComboBox(self),
         }
 
-        # Mapping of combobox terms to values
-        # TODO: set reasonable defaults
-        # TODO: have options as text or numbers?
-        self.combobox_values = {"low": 0.05, "medium (default)": 0.1, "high": 0.15}
+        # Get possible combobox values from settings model
+        mapping = mu_settings.mapping[self.setting_name]
+        self.combobox_values = list(mapping["text2values"].keys())
 
-        # Add combobox options
-        self.widgets["combobox"].addItems(list(self.combobox_values.keys()))
+        # Add combobox options and set current value
+        self.widgets["combobox"].addItems(self.combobox_values)
+        current_text = mu_settings.get_setting_current_text(self.setting_name)
+        self.widgets["combobox"].setCurrentText(current_text)
 
         # Layout
         layout = QVBoxLayout()
@@ -50,53 +58,43 @@ class MUSensitivityWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
-
-class MUSimilarityWidget(QWidget):
-    # Widget for setting similarity threshold for "find motor units" step
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-        # Create widgets
-        self.widgets: dict[str, Any] = {
-            "label": InputLabel("Motor unit similarity", self),
-            "explanation": InputExplanationLabel(
-                "Increasing the similarity threshold means potentials "
-                + "assigned to the same motor unit must be more similar.",
-                self,
-            ),
-            "combobox": InputComboBox(self),
-        }
-
-        # Mapping of combobox terms to values
-        # MUPs are assigned to same MU if pseudocorrelation is above the threshold
-        # TODO: set reasonable defaults
-        # TODO: have options as text or numbers?
-        self.combobox_values = {"low": 0.05, "medium (default)": 0.1, "high": 0.15}
-
-        # Add combobox options
-        self.widgets["combobox"].addItems(list(self.combobox_values.keys()))
-
-        # Layout
-        layout = QVBoxLayout()
-        for w in self.widgets.values():
-            layout.addWidget(w)
-        layout.setContentsMargins(0, 0, 0, 0)
-        self.setLayout(layout)
+        # Connection combobox text to settings
+        self.widgets["combobox"].currentTextChanged.connect(
+            lambda text, setting=self.setting_name: mu_settings.change_setting(setting, text)
+        )
 
 
 # --- All settings ---
 
 
 class MUSettingsWidget(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, mu_settings: EMGAnalysisMotorUnitSettingsModel, parent=None):
         super().__init__(parent)
 
         # Create widgets
+
+        mu_sensitivity_w = MUSettingComboboxWidget(
+            mu_settings,
+            setting_name="sensitivity",
+            label="Detection sensitivity",
+            explanation="Increasing the sensitivity threshold captures more "
+            + "motor units, but may increase false positives.",
+            parent=self,
+        )
+
+        mu_similarity_w = MUSettingComboboxWidget(
+            mu_settings,
+            setting_name="similarity",
+            label="Motor unit similarity",
+            explanation="Increasing the similarity threshold means potentials "
+            + "assigned to the same motor unit must be more similar.",
+            parent=self,
+        )
+
         self.widgets: dict[str, Any] = {
             "title": SubsectionTitle("Settings"),
-            "sensitivity": MUSensitivityWidget(parent=self),
-            "similarity": MUSimilarityWidget(parent=self),
+            "sensitivity": mu_sensitivity_w,
+            "similarity": mu_similarity_w,
         }
 
         # Add to layout
