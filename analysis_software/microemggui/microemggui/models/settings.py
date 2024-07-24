@@ -40,7 +40,7 @@ class EMGSettingsModel:
         mu_str = self.get_formatted_mu_settings_text()
 
         # TODO: add remaining settings
-        settings_text = f"{preprocess_str}<br>{mu_str}"
+        settings_text = f"{preprocess_str}<br><br>{mu_str}"
         return settings_text
 
     def get_formatted_preprocess_settings_text(self) -> str:

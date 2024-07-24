@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
 from PySide6.QtCore import Signal
 
 from pymicroemg.emg_preproc_settings import EMGPreprocSettings
+from pymicroemg.emg_reconstruct_settings import EMGAnalysisMotorUnitSettings
 
 from microemggui.models.settings import EMGSettingsModel
 
@@ -96,14 +97,20 @@ class LoadSettingsSection(QWidget):
         else:  # Settings selected
             match settings_name:
                 case "Default":
+                    # Preprocessing settings
                     preprocess_settings = EMGPreprocSettings()
                     preprocess_settings.add_butterworth_filter(
                         cutoff_freq=[100, 2000], order=6, filter_type="bandpass"
                     )
                     preprocess_settings.add_remove_mains()
 
+                    # Motor unit settings
+                    mu_settings = EMGAnalysisMotorUnitSettings()
+
             # TODO: update to all settings
-            self.settings_model = EMGSettingsModel(preprocess_settings=preprocess_settings)
+            self.settings_model = EMGSettingsModel(
+                preprocess_settings=preprocess_settings, mu_settings=mu_settings
+            )
             self.settings_changed.emit(self.settings_model)  # Must emit first
             self.settings_loaded.emit(True)
 

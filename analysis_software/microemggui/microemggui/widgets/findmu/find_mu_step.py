@@ -9,6 +9,7 @@ from typing import Any
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QGridLayout
 from PySide6.QtCore import Qt
 
+from microemggui.models.emg import EMGAnalysisReconstructModel
 from microemggui.models.settings import EMGAnalysisMotorUnitSettingsModel
 from microemggui.widgets.findmu.mu_settings import MUSettingsWidget
 from microemggui.widgets.base import LargePushButton, SectionTitle
@@ -83,8 +84,17 @@ class MainButtons(QWidget):
 class FindMUWidget(QWidget):
     # Widget for find motor units step
 
-    def __init__(self, mu_settings: EMGAnalysisMotorUnitSettingsModel, parent=None):
+    def __init__(
+        self,
+        mu_settings: EMGAnalysisMotorUnitSettingsModel,
+        reconstruct_model: EMGAnalysisReconstructModel,
+        parent=None,
+    ):
         super().__init__(parent)
+
+        # EMG reconstruction analysis object and settings for finding motor units
+        self.reconstruct_model = reconstruct_model
+        self.mu_settings = mu_settings  # settings model: settings stored in mu_settings.settings
 
         # Create widgets
         self.widgets: dict[str, Any] = {
@@ -102,3 +112,24 @@ class FindMUWidget(QWidget):
             row += 1
         layout.setContentsMargins(20, 20, 20, 20)
         self.setLayout(layout)
+
+        # Connect apply button to find_motor_units
+        self.widgets["buttons"].widgets["apply"].clicked.connect(self.find_motor_units)
+
+        # For showing next button
+        # TODO: only show if motor units found! should move to find_motor_units
+        self.widgets["buttons"].widgets["apply"].clicked.connect(
+            self.widgets["buttons"].widgets["next"].show_button
+        )
+
+    def find_motor_units(self):
+        """
+        Find motor units using specified settings.
+        """
+
+        # Update settings
+        self.reconstruct_model.reconstruct.mu_settings = self.mu_settings.settings
+        print(self.reconstruct_model.reconstruct.mu_settings)
+
+        # Find motor units
+        self.reconstruct_model.find_motor_units()
