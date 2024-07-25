@@ -60,7 +60,7 @@ class MainWindow(QMainWindow):
         reconstruct_model = EMGAnalysisReconstructModel(reconstruct)
 
         # MU widdget
-        self.widget = FindMUWidget(mu_settings_model, reconstruct_model, parent=self)
+        self.widget = FindMUWidget(reconstruct_model, mu_settings_model, parent=self)
 
         # layout and size
         self.setCentralWidget(self.widget)

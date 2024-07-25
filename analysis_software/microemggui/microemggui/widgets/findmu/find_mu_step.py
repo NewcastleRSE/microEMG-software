@@ -97,8 +97,8 @@ class FindMUWidget(QWidget):
 
     def __init__(
         self,
-        mu_settings: EMGAnalysisMotorUnitSettingsModel,
         reconstruct_model: EMGAnalysisReconstructModel,
+        mu_settings: EMGAnalysisMotorUnitSettingsModel,
         parent=None,
     ):
         super().__init__(parent)

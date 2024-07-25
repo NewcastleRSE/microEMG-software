@@ -171,8 +171,7 @@ class ChannelsWidget(QWidget):
     # Widgets for channels to include in the analysis
 
     # Signal for sending updated indices of bad channels
-    # TODO: remove if not needed
-    bad_chan_updated = Signal(list[int])
+    bad_chan_updated = Signal(list)
 
     def __init__(
         self,
@@ -233,6 +232,9 @@ class ChannelsWidget(QWidget):
         self.widgets["channels"].widgets["checkboxes"].chan_toggled.connect(
             self.update_chan_checked
         )
+
+        # Emit channels when next button is clicked
+        self.widgets["next"].clicked.connect(self.next_clicked)
 
     def selected_min_channels(self) -> bool:
         # Compute whether min number of channels are selected
@@ -299,6 +301,8 @@ class ChannelsWidget(QWidget):
         # Set text
         self.widgets["exclude"].setText(text)
 
-
-# TODO:
-# add list of bad channels to preprocessed data (probably in main window)
+    def next_clicked(self):
+        # Slot for next button
+        # Emits bad channel indices when next button clicked
+        print("channels widget next clicked")
+        self.bad_chan_updated.emit(self.bad_chan_idx)

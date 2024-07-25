@@ -16,6 +16,8 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt
 
+from pymicroemg.emg_reconstruct import EMGAnalysisReconstruct
+
 from microemggui.widgets.base import (
     SectionTitle,
     ExpandingVSpacer,
@@ -28,10 +30,19 @@ from microemggui.widgets.main.toolbars import AnalysisToolbar, TopToolbar
 from microemggui.widgets.load.load_step import LoadWidget
 from microemggui.widgets.preproc.preproc_step import PreprocWidget
 from microemggui.widgets.channels.channels_step import ChannelsWidget
+from microemggui.widgets.findmu.find_mu_step import FindMUWidget
 
 # Models
-from microemggui.models.settings import EMGSettingsModel, EMGPreprocSettingsModel
-from microemggui.models.emg import EMGDataRawModel, EMGDataPreprocModel
+from microemggui.models.settings import (
+    EMGSettingsModel,
+    EMGPreprocSettingsModel,
+    EMGAnalysisMotorUnitSettingsModel,
+)
+from microemggui.models.emg import (
+    EMGDataRawModel,
+    EMGDataPreprocModel,
+    EMGAnalysisReconstructModel,
+)
 
 
 # --- Widgets to put within main window ---
@@ -99,6 +110,8 @@ class MicroEMGMain(QMainWindow):
         # Initialise attributes for storing data needed for analysis
         self.emg_model = {}
         self.settings_model = None
+        self.bad_chan_idx = []  # List of indices of bad channels
+        self.reconstruct_model = None
 
         # Colours for EMG recordings
         # TODO: make configurable?
@@ -145,6 +158,8 @@ class MicroEMGMain(QMainWindow):
         # trigger a reset.
         # TODO: remove print statements or add to logger
         # TODO: behaviour if reset settings or (once implemented) trimming
+        # TODO: generalise to partial resets (e.g., if change preprocessed data)
+        #       if preprocess data again, definitely need to manually reset self.bad_chan_idx
 
         print("Resetting GUI")
 
@@ -174,6 +189,8 @@ class MicroEMGMain(QMainWindow):
         # approach will not delete any newly loaded data.
         self.emg_model = {}
         self.settings_model = None
+        self.bad_chan_idx = []
+        self.reconstruct_model = None
 
     def add_load_connections(self):
         # Connections to add from load step widget
@@ -215,12 +232,24 @@ class MicroEMGMain(QMainWindow):
             self.update_preproc_emg_model_and_preprocess_settings
         )
 
+    def add_channels_connections(self):
+        # Connections for channels widget - update list of bad channels when click next.
+        # If channels have changed, update_bad_chan_idx will also trigger the
+        # re-creation of the findmu widget.
+
+        channels_w = self.widgets["analysis"].widgets["channels"]
+        channels_w.bad_chan_updated.connect(self.update_bad_chan_idx)
+
+        # Also connect next step in toolbar to next_clicked method of channels widget
+        # so same signal is emitted when navigate via toolbar instead of the next button
+        self.widgets["analysistoolbar"].widgets["findmu"].clicked.connect(channels_w.next_clicked)
+
     def update_toolbar_connections(self):
         # Connects toolbar buttons to analysis widgets
         # Will need to call repeatedly as add more analysis widgets
 
         print("Updating toolbar connections")
-        for w_name, _ in self.widgets["analysis"].widgets.items():
+        for w_name in self.widgets["analysis"].widgets.keys():
             self.widgets["analysistoolbar"].widgets[w_name].clicked.connect(
                 lambda checked=None, w_name=w_name: self.widgets["analysis"].show_widget(w_name)
             )
@@ -254,6 +283,27 @@ class MicroEMGMain(QMainWindow):
 
         # Use data to make channels widget
         self.add_channels_widget()
+
+    def update_bad_chan_idx(self, bad_chan_idx):
+        # If indices are the same, do not update and do not make new find MU widget
+        if self.bad_chan_idx == bad_chan_idx:
+            return
+        else:
+            # Update bad channels
+            self.bad_chan_idx = bad_chan_idx
+            print(self.bad_chan_idx)
+
+            # Update in preprocessed and reconstruct data
+            self.emg_model["preproc"].emg_data.set_bad_chan(self.bad_chan_idx)
+            reconstruct = EMGAnalysisReconstruct(
+                self.emg_model["preproc"].emg_data,
+                self.settings_model.mu_settings,
+                self.settings_model.recon_settings,
+            )
+            self.reconstruct_model = EMGAnalysisReconstructModel(reconstruct)
+
+            # Update find MU widget
+            self.add_findmu_widget()
 
     def connect_next_button_to_analysis_widget(self, next_button, w_name: str):
         # Connect the next button on an analysis step to the corresponding widget for
@@ -311,6 +361,8 @@ class MicroEMGMain(QMainWindow):
 
     def add_channels_widget(self):
         # Add widget for channel selection once preprocessing is finished/updated
+        # Also triggers initial creation of the findmu widget since there is no analysis
+        # that needs t be applied in the channels widget.
 
         # Create widget and add to stack of analysis step widgets
         w_name = "channels"
@@ -330,4 +382,44 @@ class MicroEMGMain(QMainWindow):
         next_button = (
             self.widgets["analysis"].widgets["preprocess"].widgets["buttons"].widgets["next"]
         )
+        self.connect_next_button_to_analysis_widget(next_button, w_name)
+
+        # Add connection for next button (to update bad channels)
+        self.add_channels_connections()
+
+        # Create reconstruction analysis data
+        reconstruct = EMGAnalysisReconstruct(
+            self.emg_model["preproc"].emg_data,
+            self.settings_model.mu_settings,
+            self.settings_model.recon_settings,
+        )
+        self.reconstruct_model = EMGAnalysisReconstructModel(reconstruct)
+
+        # Add find MU widget
+        self.add_findmu_widget()
+
+    def add_findmu_widget(self):
+        # Add widget for finding motor units
+
+        # Create widget and add to stack of analysis step widgets
+        w_name = "findmu"
+        analysis_w = self.widgets["analysis"]
+
+        # Create MU settings model to access methods needed by GUI
+        mu_settings_model = EMGAnalysisMotorUnitSettingsModel(self.settings_model.mu_settings)
+        analysis_w.widgets[w_name] = FindMUWidget(self.reconstruct_model, mu_settings_model)
+        analysis_w.layout.addWidget(analysis_w.widgets[w_name])
+
+        print("Channels to analyse: ")
+        reconstruct = analysis_w.widgets[w_name].reconstruct_model.reconstruct
+        print(reconstruct.emg_data_preproc.chan.analyse_chan)
+
+        # Update toolbar connections
+        self.update_toolbar_connections()
+
+        # Enable toolbar button
+        self.enable_analysis_toolbar_button(True, "findmu")
+
+        # Add connection to next button
+        next_button = self.widgets["analysis"].widgets["channels"].widgets["next"]
         self.connect_next_button_to_analysis_widget(next_button, w_name)

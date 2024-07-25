@@ -15,7 +15,10 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from pymicroemg.emg_preproc_settings import EMGPreprocSettings
-    from pymicroemg.emg_reconstruct_settings import EMGAnalysisMotorUnitSettings
+    from pymicroemg.emg_reconstruct_settings import (
+        EMGAnalysisMotorUnitSettings,
+        EMGAnalysisReconstructSettings,
+    )
 
 
 class EMGSettingsModel:
@@ -27,14 +30,19 @@ class EMGSettingsModel:
     # groups of settings.
 
     def __init__(
-        self, preprocess_settings: EMGPreprocSettings, mu_settings: EMGAnalysisMotorUnitSettings
+        self,
+        preprocess_settings: EMGPreprocSettings,
+        recon_settings: EMGAnalysisReconstructSettings,
+        mu_settings: EMGAnalysisMotorUnitSettings,
     ):
         self.preprocess_settings = preprocess_settings
+        self.recon_settings = recon_settings
         self.mu_settings = mu_settings
 
     def get_formatted_settings_text(self) -> str:
         # Formatted settings text with breaks and bold section headers, for display in
-        # GUI
+        # GUI.
+        # Only settings that can be modified by the user are shown.
 
         preprocess_str = self.get_formatted_preprocess_settings_text()
         mu_str = self.get_formatted_mu_settings_text()

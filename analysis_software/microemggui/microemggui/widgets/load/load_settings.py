@@ -9,7 +9,10 @@ from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
 from PySide6.QtCore import Signal
 
 from pymicroemg.emg_preproc_settings import EMGPreprocSettings
-from pymicroemg.emg_reconstruct_settings import EMGAnalysisMotorUnitSettings
+from pymicroemg.emg_reconstruct_settings import (
+    EMGAnalysisMotorUnitSettings,
+    EMGAnalysisReconstructSettings,
+)
 
 from microemggui.models.settings import EMGSettingsModel
 
@@ -104,12 +107,17 @@ class LoadSettingsSection(QWidget):
                     )
                     preprocess_settings.add_remove_mains()
 
+                    # Fibre reconstruction settings
+                    recon_settings = EMGAnalysisReconstructSettings()
+
                     # Motor unit settings
                     mu_settings = EMGAnalysisMotorUnitSettings()
 
             # TODO: update to all settings
             self.settings_model = EMGSettingsModel(
-                preprocess_settings=preprocess_settings, mu_settings=mu_settings
+                preprocess_settings=preprocess_settings,
+                recon_settings=recon_settings,
+                mu_settings=mu_settings,
             )
             self.settings_changed.emit(self.settings_model)  # Must emit first
             self.settings_loaded.emit(True)
