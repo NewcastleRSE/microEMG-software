@@ -16,6 +16,9 @@ from PySide6.QtWidgets import (
     QSizePolicy,
 )
 
+from matplotlib.backends.backend_qtagg import NavigationToolbar2QT
+
+
 # --- Settings input ---
 
 
@@ -185,3 +188,12 @@ class ExpandingHSpacer(QSpacerItem):
     # Used to keep other widgets a fixed size.
     def __init__(self):
         super().__init__(0, 0, QSizePolicy.Expanding, QSizePolicy.Fixed)
+
+
+# --- Matplotlib widgets ---
+
+
+class MatplotlibToolbar(NavigationToolbar2QT):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # self.setStyleSheet("background-color:white;")

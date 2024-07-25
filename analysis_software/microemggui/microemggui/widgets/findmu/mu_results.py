@@ -12,7 +12,7 @@ from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QSizePolicy
 from microemggui.models.emg import EMGAnalysisReconstructModel
-from microemggui.widgets.base import SubsectionTitle
+from microemggui.widgets.base import SubsectionTitle, MatplotlibToolbar
 
 
 # --- Plot widget ---
@@ -24,14 +24,19 @@ class MURasterWidget(QWidget):
 
         # Initialise blank plot
         self.fig, self.ax = plt.subplots()
-        self.plot = FigureCanvasQTAgg(self.fig)
+        canvas = FigureCanvasQTAgg(self.fig)
+        self.widgets: dict[str, Any] = {
+            "toolbar": MatplotlibToolbar(canvas, parent=self),
+            "canvas": canvas,
+        }
 
         # Update plot using MU data (or hide plot if no MU)
         self.update_reconstruct(reconstruct_model)
 
         # Add plot to layout and set to expand to fill the available space
         layout = QVBoxLayout()
-        layout.addWidget(self.plot)
+        for w in self.widgets.values():
+            layout.addWidget(w)
         self.setLayout(layout)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
@@ -72,11 +77,12 @@ class MUResultsWidget(QWidget):
             "plot": MURasterWidget(reconstruct_model, parent=self),
         }
 
-        # Layout - store so can add raster plot widget
-        self.layout = QVBoxLayout()
+        # Layout
+        layout = QVBoxLayout()
         for w in self.widgets.values():
-            self.layout.addWidget(w)
-        self.setLayout(self.layout)
+            layout.addWidget(w)
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(layout)
 
         # Expand to fill available space
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
