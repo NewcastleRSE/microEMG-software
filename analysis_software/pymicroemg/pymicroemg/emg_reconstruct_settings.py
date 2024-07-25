@@ -45,7 +45,7 @@ class EMGAnalysisReconstructSettings:
         self.find_peaks_2d_min_peaks = 1
         self.find_peaks_2d_max_peaks = 5
         self.find_peaks_2d_neighbour_chns = 5
-        self.find_peaks_2d_neighbour_time = 5
+        self.find_peaks_2d_neighbour_time = 10
 
     def get_settings_dict(self):
         """
@@ -165,7 +165,7 @@ class EMGAnalysisReconstructSettings:
         ans += str(self.find_peaks_2d_min_peaks)
         ans += "\nMaximum number of peaks: "
         ans += str(self.find_peaks_2d_max_peaks)
-        ans += "\nNeighbourhood size, MUPs: "
+        ans += "\nNeighbourhood size, channels: "
         ans += str(self.find_peaks_2d_neighbour_chns)
         ans += "\nNeighbourhood size, time (indices): "
         ans += str(self.find_peaks_2d_neighbour_time)
