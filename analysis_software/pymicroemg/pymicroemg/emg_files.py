@@ -75,8 +75,7 @@ class EMGFiles:
         #        "No Intan amplifier channels found in the specified directory."
         #    )
 
-        # Determine number of channels from number of files
-        self.n_chan = len(self.chan_fnames)
+
 
     def check_if_header_file(self) -> bool:
         # Full path to header file
@@ -141,6 +140,9 @@ class EMGFiles:
         with open(header_path, "rb") as fid:
             emg_header = intan_header.read_header(fid)
 
+            # Get the number of channels from the header file
+            self.n_chan = emg_header['num_amplifier_channels']
+
             data_present, filesize, num_blocks, num_samples = (
                 intan_data.calculate_data_size(emg_header, header_path, fid))
 
@@ -160,15 +162,20 @@ class EMGFiles:
             EMG time series and corresponding attributes.
 
         """
+        # Multiplier to convert from Intan units to microvolts
+        INTAN2uV = 0.195
+
         # Load header for additional attributes to save with time series data
         # (e.g., sampling frequency)
         data, emg_header = self.read_header()
 
         if data:
-            print()
+            # If it's a single file format then just get the data directly
+            emg_ts = np.array(data['amplifier_data'], dtype=np.int16)
+            intan_chan_names = [x['custom_channel_name'] for x in emg_header['amplifier_channels']]
+
         else:
-            # Multiplier to convert from Intan units to microvolts
-            INTAN2uV = 0.195
+            # Otherwise need to load the recording files themselves
 
             # Get number of samples (assume same across all channels)
             # TODO: consider adding check that number of samples is the same for all files
@@ -184,22 +191,21 @@ class EMGFiles:
                 chan_path = os.path.join(self.emg_dir, self.chan_fnames[i])
                 emg_ts[i, :] = np.fromfile(chan_path, dtype=np.int16, count=n_samples)
 
-            # Convert to microvolts
-            emg_ts *= INTAN2uV
-
-
-
             # Get Intan channel names by removing file extensions from chan_fnames
             intan_chan_names = [os.path.splitext(f)[0] for f in self.chan_fnames]
 
-        # Reorder channels (in emg_ts and intan_chan_names) based on electrode
-        # design; will make it easier to set x,y coordinates
-        sort_idx = self._reorder_chan_idx()
-        emg_ts = emg_ts[sort_idx, :]
-        intan_chan_names = [intan_chan_names[i] for i in sort_idx]
 
-        # Create channels object for storing channel info
+            # Reorder channels (in emg_ts and intan_chan_names) based on electrode
+            # design; will make it easier to set x,y coordinates
+            sort_idx = self._reorder_chan_idx()
+            emg_ts = emg_ts[sort_idx, :]
+            intan_chan_names = [intan_chan_names[i] for i in sort_idx]
+            # Create channels object for storing channel info
         chan = EMGChannels(intan_chan_names)
+
+        # Convert to microvolts
+        emg_ts = emg_ts * INTAN2uV
+
 
         # Label segment of original recording that the time series comes from.
         # (-inf, inf) indicates that the time series corresponds to the entire
