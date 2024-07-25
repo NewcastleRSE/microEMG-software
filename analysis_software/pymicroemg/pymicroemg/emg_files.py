@@ -133,6 +133,8 @@ class EMGFiles:
 
         """
 
+        data = False
+
         # Full path to header file
         header_path = os.path.join(self.emg_dir, self.header_fname)
 
@@ -171,9 +173,9 @@ class EMGFiles:
 
         if data:
             # If it's a single file format then just get the data directly
-            emg_ts = np.array(data['amplifier_data'], dtype=np.int16)
+            emg_ts = np.array(data['amplifier_data'], dtype=np.int64)
             intan_chan_names = [x['custom_channel_name'] for x in emg_header['amplifier_channels']]
-
+            emg_ts = emg_ts-32000 #Fixing for data offset issue in a quick and dirty way here
         else:
             # Otherwise need to load the recording files themselves
 
