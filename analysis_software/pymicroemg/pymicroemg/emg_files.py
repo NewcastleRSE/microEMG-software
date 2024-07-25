@@ -10,10 +10,12 @@ Each instance corresponds to the files of one EMG recording.
 from __future__ import annotations
 
 import os
+import glob
 import numpy as np
 import numpy.typing as npt
 
 import intanutil.header as intan_header
+import intanutil.data as intan_data
 from pymicroemg.emg_data_raw import EMGDataRaw
 from pymicroemg.emg_channels import EMGChannels
 
@@ -50,7 +52,7 @@ class EMGFiles:
         """
 
         self.emg_dir = emg_dir
-        self.header_fname = "info.rhd"
+        self.header_fname = self.set_header_fname()
 
         # Check that director exists before proceeding; if not, throw error
         if not os.path.isdir(self.emg_dir):
@@ -68,10 +70,10 @@ class EMGFiles:
         self.chan_fnames = self._get_chan_fnames()
 
         # If no amplifier channels in directory (self.chan_fnames is empty list), throw an error
-        if not self.chan_fnames:
-            raise FileNotFoundError(
-                "No Intan amplifier channels found in the specified directory."
-            )
+        # if not self.chan_fnames:
+        #    raise FileNotFoundError(
+        #        "No Intan amplifier channels found in the specified directory."
+        #    )
 
         # Determine number of channels from number of files
         self.n_chan = len(self.chan_fnames)
@@ -84,6 +86,19 @@ class EMGFiles:
         is_header_file = os.path.isfile(header_path)
 
         return is_header_file
+
+    def set_header_fname(self)->str:
+
+            # Use glob to find all files with .rhd extension in the directory
+            rhd_files = glob.glob(os.path.join(self.emg_dir, "*.rhd"))
+
+            # Check if there are any .rhd files
+            if rhd_files:
+                # Return the first .rhd file
+                return os.path.basename(rhd_files[0])
+            else:
+                # If no .rhd files are found, return None or suitable message
+                return None
 
     def _get_chan_fnames(self) -> list[str]:
         """
@@ -107,7 +122,7 @@ class EMGFiles:
 
         return chan_fnames
 
-    def read_header(self) -> dict:
+    def read_header(self) -> [bool, dict]:
         """
         Reads the Intan header file 'info.rhd' using the intanutil package
         provided by Intan.
@@ -126,7 +141,13 @@ class EMGFiles:
         with open(header_path, "rb") as fid:
             emg_header = intan_header.read_header(fid)
 
-        return emg_header
+            data_present, filesize, num_blocks, num_samples = (
+                intan_data.calculate_data_size(emg_header, header_path, fid))
+
+            if data_present:
+                data = intan_data.read_all_data_blocks(emg_header, num_samples, num_blocks, fid)
+
+        return data, emg_header
 
     def load_emg_data(self) -> EMGDataRaw:
         """
@@ -139,33 +160,37 @@ class EMGFiles:
             EMG time series and corresponding attributes.
 
         """
-
-        # Multiplier to convert from Intan units to microvolts
-        INTAN2uV = 0.195
-
-        # Get number of samples (assume same across all channels)
-        # TODO: consider adding check that number of samples is the same for all files
-        chan_path = os.path.join(self.emg_dir, self.chan_fnames[0])
-        finfo = os.stat(chan_path)
-        n_samples = finfo.st_size // 2  # int16 data --> 2 bytes per sample
-
-        # Create n_chan x n_samples numpy array for storing channel time series
-        emg_ts = np.zeros((self.n_chan, n_samples))
-
-        # Load data
-        for i in range(self.n_chan):
-            chan_path = os.path.join(self.emg_dir, self.chan_fnames[i])
-            emg_ts[i, :] = np.fromfile(chan_path, dtype=np.int16, count=n_samples)
-
-        # Convert to microvolts
-        emg_ts *= INTAN2uV
-
         # Load header for additional attributes to save with time series data
         # (e.g., sampling frequency)
-        emg_header = self.read_header()
+        data, emg_header = self.read_header()
 
-        # Get Intan channel names by removing file extensions from chan_fnames
-        intan_chan_names = [os.path.splitext(f)[0] for f in self.chan_fnames]
+        if data:
+            print()
+        else:
+            # Multiplier to convert from Intan units to microvolts
+            INTAN2uV = 0.195
+
+            # Get number of samples (assume same across all channels)
+            # TODO: consider adding check that number of samples is the same for all files
+            chan_path = os.path.join(self.emg_dir, self.chan_fnames[0])
+            finfo = os.stat(chan_path)
+            n_samples = finfo.st_size // 2  # int16 data --> 2 bytes per sample
+
+            # Create n_chan x n_samples numpy array for storing channel time series
+            emg_ts = np.zeros((self.n_chan, n_samples))
+
+            # Load data
+            for i in range(self.n_chan):
+                chan_path = os.path.join(self.emg_dir, self.chan_fnames[i])
+                emg_ts[i, :] = np.fromfile(chan_path, dtype=np.int16, count=n_samples)
+
+            # Convert to microvolts
+            emg_ts *= INTAN2uV
+
+
+
+            # Get Intan channel names by removing file extensions from chan_fnames
+            intan_chan_names = [os.path.splitext(f)[0] for f in self.chan_fnames]
 
         # Reorder channels (in emg_ts and intan_chan_names) based on electrode
         # design; will make it easier to set x,y coordinates
