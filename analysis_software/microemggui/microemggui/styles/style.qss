@@ -11,6 +11,7 @@ SectionTitle{
 SubsectionTitle{
     font-weight: bold;
     font-size: 16pt;
+    qproperty-alignment: 'AlignTop | AlignLeft';
 }
 
 /* Buttons */

@@ -149,7 +149,12 @@ class EMGAnalysisMotorUnitSettingsModel:
         sensitivity_text2values = {"low": 0.05, "medium (default)": 0.1, "high": 0.15}
         sensitivity_values2text = {v: k for k, v in sensitivity_text2values.items()}
 
-        similarity_text2values = {"low": 0.05, "medium (default)": 0.1, "high": 0.15}
+        similarity_text2values = {
+            "low": 0.05,
+            "medium (default)": 0.1,
+            "high": 0.15,
+            "testveryhigh": 1,
+        }
         similarity_values2text = {v: k for k, v in similarity_text2values.items()}
 
         # Store mapping by GUI setting name so easier to request each setting's mapping
