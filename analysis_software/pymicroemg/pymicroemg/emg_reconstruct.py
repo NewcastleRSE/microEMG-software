@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING
 import json
 import warnings
 
-from pymicroemg.emg_reconstruct_settings import EMGAnalysisMotorUnitSettings
 from pymicroemg.emg_reconstruct_settings import EMGAnalysisMotorUnitClusterSettings
 from pymicroemg.emg_reconstruct_settings import EMGAnalysisMotorUnitJitterSettings
 
@@ -197,9 +196,7 @@ class EMGAnalysisReconstruct:
         # Create motor unit objects for each motor unit
         all_motor_units = []
         for i in range(np.max(mu_numbers) + 1):
-            motor_unit = EMGMotorUnit(
-                i, mup_t_idx[mu_numbers == i], self.emg_data_preproc.fs
-            )
+            motor_unit = EMGMotorUnit(i, mup_t_idx[mu_numbers == i], self.emg_data_preproc.fs)
             all_motor_units.append(motor_unit)
 
         self.found_motor_units = EMGMotorUnits(
@@ -286,7 +283,7 @@ class EMGAnalysisReconstruct:
             all_motor_units, chan_xy=self.emg_data_preproc.chan.chan_xy
         )
 
-    def save_mu_fibre_localisations(self, filename, save_all_spikes = False):
+    def save_mu_fibre_localisations(self, filename, save_all_spikes=False):
         """
         Saves fibre_localisations for every motor unit
 
@@ -296,7 +293,7 @@ class EMGAnalysisReconstruct:
             Name of file to save in
         save_all_spikes : bool
             Whether to save all_spikes. Uses a lot of data and is not necessary.
-            
+
         Returns
         -------
         None
@@ -389,7 +386,7 @@ class EMGAnalysisReconstruct:
         for mu in self.found_motor_units.motor_units:
             dict_name = "motor_unit_" + str(mu.motor_unit_number)
             mu.set_fibre_clusters_from_dict(fibre_clustering_dict[dict_name])
-     
+
     def save_mu_fibre_jitter(self, filename):
         """
         Saves fibre jitter analysis results for every motor unit
@@ -440,8 +437,13 @@ class EMGAnalysisReconstruct:
         for mu in self.found_motor_units.motor_units:
             dict_name = "motor_unit_" + str(mu.motor_unit_number)
             mu.set_fibre_jitter_from_dict(fibre_jitter_dict[dict_name])
-            
-    def save_settings(self, filename, mu_cluster_settings : EMGAnalysisMotorUnitClusterSettings, mu_jitter_settings : EMGAnalysisMotorUnitJitterSettings):
+
+    def save_settings(
+        self,
+        filename,
+        mu_cluster_settings: EMGAnalysisMotorUnitClusterSettings,
+        mu_jitter_settings: EMGAnalysisMotorUnitJitterSettings,
+    ):
         """
         Saves settings for analysis
 
@@ -453,7 +455,7 @@ class EMGAnalysisReconstruct:
             Settings for performing cluster analysis
         mu_jitter_settings : EMGAnalysisMotorUnitJitterSettings
             Settings for performing jitter analysis
-            
+
         Returns
         -------
         None
@@ -496,13 +498,13 @@ class EMGAnalysisReconstruct:
 
         self.mu_settings.set_settings_from_dict(all_settings_dict["mu_settings"])
         self.recon_settings.set_settings_from_dict(all_settings_dict["recon_settings"])
-        
+
         mu_cluster_settings = EMGAnalysisMotorUnitClusterSettings()
         mu_jitter_settings = EMGAnalysisMotorUnitJitterSettings()
-        
+
         mu_cluster_settings.set_settings_from_dict(all_settings_dict["mu_cluster_settings"])
         mu_jitter_settings.set_settings_from_dict(all_settings_dict["mu_jitter_settings"])
-    
+
         return mu_cluster_settings, mu_jitter_settings
 
     def plot_motor_units_raster(
@@ -1143,7 +1145,7 @@ class EMGAnalysisReconstruct:
             im2 = morphology.white_tophat(
                 im2, morphology.disk(self.recon_settings.find_peaks_2d_tophat_disk_radius)
             )
-      
+
         # Extract each blob
         locs = np.array([])
         found = False

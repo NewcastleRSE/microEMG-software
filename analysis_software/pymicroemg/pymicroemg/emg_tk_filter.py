@@ -40,7 +40,7 @@ def round_int(val):
 
     """
 
-    #return round_int_nonbanker(val)
+    # return round_int_nonbanker(val)
     return int(np.round(val))
 
 
@@ -59,7 +59,7 @@ def round_ints(vals):
 
     """
 
-    #return round_ints_nonbanker(vals)
+    # return round_ints_nonbanker(vals)
     return np.round(vals)
 
 

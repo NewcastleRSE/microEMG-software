@@ -181,7 +181,7 @@ class EMGAnalysisMotorUnitSettings:
 
     def __init__(self):
         """
-       
+
         Returns
         -------
         None.
@@ -210,7 +210,7 @@ class EMGAnalysisMotorUnitSettings:
         # Define settings dictionary
         settings_dict = {
             "tk_filt_thres_spike": self.tk_filt_thres_spike,
-            "tk_filt_thres_PsC": self.tk_filt_thres_PsC           
+            "tk_filt_thres_PsC": self.tk_filt_thres_PsC,
         }
 
         return settings_dict
@@ -251,6 +251,7 @@ class EMGAnalysisMotorUnitSettings:
 
         return ans
 
+
 class EMGAnalysisMotorUnitClusterSettings:
     """
     Class for storing settings for motor unit cluster analysis.
@@ -289,8 +290,8 @@ class EMGAnalysisMotorUnitClusterSettings:
         self.k_means_k = 0
         self.dbscan_eps = 0.1
         self.dbscan_min_samples = 10
-        # Covariance type for GMM clustering, options are: "spherical", "tied", "diag" and "full"        
-        self.gmm_covariance_type = "tied"        
+        # Covariance type for GMM clustering, options are: "spherical", "tied", "diag" and "full"
+        self.gmm_covariance_type = "tied"
 
     def get_settings_dict(self):
         """
@@ -307,14 +308,14 @@ class EMGAnalysisMotorUnitClusterSettings:
         """
 
         # Define settings dictionary
-        settings_dict = {           
+        settings_dict = {
             "clustering_method": self.clustering_method,
             "time_scale": self.time_scale,
             "k_means_random_state": self.k_means_random_state,
             "k_means_k": self.k_means_k,
             "dbscan_eps": self.dbscan_eps,
             "dbscan_min_samples": self.dbscan_min_samples,
-            "gmm_covariance_type": self.gmm_covariance_type            
+            "gmm_covariance_type": self.gmm_covariance_type,
         }
 
         return settings_dict
@@ -340,7 +341,7 @@ class EMGAnalysisMotorUnitClusterSettings:
         self.k_means_k = settings_dict["k_means_k"]
         self.dbscan_eps = settings_dict["dbscan_eps"]
         self.dbscan_min_samples = settings_dict["dbscan_min_samples"]
-        self.gmm_covariance_type = settings_dict["gmm_covariance_type"]        
+        self.gmm_covariance_type = settings_dict["gmm_covariance_type"]
 
     def __str__(self):
         """
@@ -373,10 +374,11 @@ class EMGAnalysisMotorUnitClusterSettings:
             ans += str(self.dbscan_min_samples)
         elif self.clustering_method == "gmm":
             ans += "\nGMM, GMM covariance type: "
-            ans += str(self.gmm_covariance_type)        
+            ans += str(self.gmm_covariance_type)
 
         return ans
-    
+
+
 class EMGAnalysisMotorUnitJitterSettings:
     """
     Class for storing settings for motor unit jitter analysis.
@@ -385,7 +387,7 @@ class EMGAnalysisMotorUnitJitterSettings:
 
     def __init__(self):
         """
-       
+
         Returns
         -------
         None.
