@@ -40,9 +40,9 @@ class EMGMotorUnit:
 
     def __init__(
         self,
-        number : int,
+        number: int,
         potentials_t_idx: npt.NDArray[np.int64],
-        fs : float,
+        fs: float,
     ):
         """
         Initialise EMGMotorUnit object.
@@ -145,7 +145,12 @@ class EMGMotorUnit:
         return ans
 
     def add_fibre_localisation(
-        self, fibre_centres : npt.NDArray[np.float64], mup_onsets : npt.NDArray[np.int64], fibre_potential_times : npt.NDArray[np.int64], all_spikes : npt.NDArray[np.float64], generator_potential : npt.NDArray[np.float64]
+        self,
+        fibre_centres: npt.NDArray[np.float64],
+        mup_onsets: npt.NDArray[np.int64],
+        fibre_potential_times: npt.NDArray[np.int64],
+        all_spikes: npt.NDArray[np.float64],
+        generator_potential: npt.NDArray[np.float64],
     ):
         """
         Add results of the fibre localisation step to the motor unit object. Computes
@@ -186,7 +191,7 @@ class EMGMotorUnit:
         self.all_spikes = all_spikes
         self.generator_potential = generator_potential
 
-    def get_fibre_localisation_dict(self, save_all_spikes : bool) -> dict:
+    def get_fibre_localisation_dict(self, save_all_spikes: bool) -> dict:
         """
         Returns dictionary of fibre localisation so that it can be saved
 
@@ -216,7 +221,7 @@ class EMGMotorUnit:
 
         return fibre_local_dict
 
-    def set_fibre_localisation_from_dict(self, fibre_local_dict : dict):
+    def set_fibre_localisation_from_dict(self, fibre_local_dict: dict):
         """
         Sets fibre localisation results from loaded dictionary.
 
@@ -243,15 +248,15 @@ class EMGMotorUnit:
         if self.n_fibre_potentials is not None and len(self.fibre_centres) > 0:
             self.analysis_performed["fibres_localised"] = True
 
-    def cluster_silhouette_score(self, estimator, X : npt.NDArray[np.float64]) -> float:
+    def cluster_silhouette_score(self, estimator, X: npt.NDArray[np.float64]) -> float:
         """
         Callable to pass to GridSearchCV that will use the silhouette score.
-        
+
         Parameters
         ----------
         estimator: Any
             Estimator class, which will include a "predict" method.
-        
+
         X : npt.NDArray[np.float64]
             Array of fibre potential data to assign to clusters.
 
@@ -260,22 +265,24 @@ class EMGMotorUnit:
         float
 
         """
-        
+
         return silhouette_score(X, estimator.predict(X))
 
-    def gmm_selection(self, X : npt.NDArray[np.float64], min_n_clusters : int, max_n_clusters : int) -> GridSearchCV:
+    def gmm_selection(
+        self, X: npt.NDArray[np.float64], min_n_clusters: int, max_n_clusters: int
+    ) -> GridSearchCV:
         """
         Gaussian Mixture Model Selection.
         https://scikit-learn.org/stable/auto_examples/mixture/plot_gmm_selection.html#sphx-glr-auto-examples-mixture-plot-gmm-selection-py
         Fit data to clusters from the minimum number of clusters to the maximum number of clusters.
-        
+
         Parameters
         ----------
         X : npt.NDArray[np.float64]
             Array of fibre potential data to assign to clusters.
         min_n_clusters : int
             Minimum number of clusters to try.
-        max_n_clusters : int    
+        max_n_clusters : int
             Maximum number of clusters to try.
 
         Returns
@@ -296,11 +303,13 @@ class EMGMotorUnit:
 
         return grid_search
 
-    def k_means_selection(self, X : npt.NDArray[np.float64], min_n_clusters : int, max_n_clusters : int) -> GridSearchCV:
+    def k_means_selection(
+        self, X: npt.NDArray[np.float64], min_n_clusters: int, max_n_clusters: int
+    ) -> GridSearchCV:
         """
         Try out k-means clustering for different numbers of clusters.
         Fit data to clusters from the minimum number of clusters to the maximum number of clusters.
-             
+
         """
 
         param_grid = {
@@ -309,7 +318,9 @@ class EMGMotorUnit:
             "n_init": ["auto"],
         }
 
-        grid_search = GridSearchCV(KMeans(), param_grid=param_grid, scoring=self.cluster_silhouette_score)
+        grid_search = GridSearchCV(
+            KMeans(), param_grid=param_grid, scoring=self.cluster_silhouette_score
+        )
 
         grid_search.fit(X)
 
@@ -351,7 +362,7 @@ class EMGMotorUnit:
         Parameters
         ----------
         mu_cluster_settings: EMGAnalysisMotorUnitClusterSettings
-            Contains all settings for clustering.        
+            Contains all settings for clustering.
 
         Raises
         ------
@@ -719,7 +730,7 @@ class EMGMotorUnit:
         ax.tick_params(axis="y", which="major", labelsize=tick_label_size)
 
         if threeD:
-            ax.set_zlabel(u"Time (\u03bc seconds)", fontsize=axis_label_size, labelpad=8.0)
+            ax.set_zlabel("Time (\u03bc seconds)", fontsize=axis_label_size, labelpad=8.0)
             ax.tick_params(axis="z", which="major", labelsize=tick_label_size)
 
         plt.title(f"Motor Unit {self.motor_unit_number+1}")
@@ -1563,7 +1574,10 @@ class EMGMotorUnit:
         mean = np.nanmean(fibre_pot_diffs)
         st_dev = np.nanstd(fibre_pot_diffs, ddof=1)
         textstr = "\n".join(
-            (r"Mean $= %.0f$ " % (mean * 1e6,) + u"\u03bcs" , r"St. dev. $=%.0f$ "  % (st_dev * 1e6,) + u"\u03bcs")
+            (
+                r"Mean $= %.0f$ " % (mean * 1e6,) + "\u03bcs",
+                r"St. dev. $=%.0f$ " % (st_dev * 1e6,) + "\u03bcs",
+            )
         )
 
         # these are matplotlib.patch.Patch properties
@@ -1647,9 +1661,7 @@ class EMGMotorUnit:
             return
 
         # Get consecutive_diffs and convert to time in seconds
-        consecutive_diffs = (
-            self.fibre_jitter_results["consecutive_diffs"][res_idx, :] / self.fs
-        )
+        consecutive_diffs = self.fibre_jitter_results["consecutive_diffs"][res_idx, :] / self.fs
         consecutive_diffs = consecutive_diffs.flatten()
 
         fig, ax = plt.subplots()
@@ -1672,7 +1684,10 @@ class EMGMotorUnit:
         mean = np.nanmean(consecutive_diffs)
         st_dev = np.nanstd(consecutive_diffs, ddof=1)
         textstr = "\n".join(
-            (r"Mean $= %.0f$ " % (mean * 1e6,) + u"\u03bcs", r"St. dev. $=%.0f$ " % (st_dev * 1e6,) + u"\u03bcs")
+            (
+                r"Mean $= %.0f$ " % (mean * 1e6,) + "\u03bcs",
+                r"St. dev. $=%.0f$ " % (st_dev * 1e6,) + "\u03bcs",
+            )
         )
 
         # these are matplotlib.patch.Patch properties
@@ -1765,7 +1780,7 @@ class EMGMotorUnit:
             annot=True,
             xticklabels=str_fibres,
             yticklabels=str_fibres,
-            cbar_kws={"label": u"\u03bc seconds"},
+            cbar_kws={"label": "\u03bc seconds"},
             fmt="g",
         )
 
