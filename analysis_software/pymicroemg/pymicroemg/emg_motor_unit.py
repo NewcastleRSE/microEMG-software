@@ -9,10 +9,8 @@ For use with preprocessed EMG data.
 
 from __future__ import annotations
 
-# from tkinter import N  # for type hints - must be at beginning of file
-
+import numpy.typing as npt
 import numpy as np
-import numpy.typing as npt  # for type hints
 
 import matplotlib.pyplot as plt
 from matplotlib import colormaps
@@ -32,16 +30,6 @@ from sklearn.cluster import DBSCAN
 from pymicroemg.emg_reconstruct_settings import EMGAnalysisMotorUnitClusterSettings
 from pymicroemg.emg_reconstruct_settings import EMGAnalysisMotorUnitJitterSettings
 
-# TODO: add csv and cv2 to poetry dependency management
-# Need to remove try/except block - temporary fix since functions not needed for
-# example pipeline
-# try:
-#    import csv
-#    import cv2
-# except Exception as e:
-#    print(e)
-# import os
-
 
 class EMGMotorUnit:
     """
@@ -52,9 +40,9 @@ class EMGMotorUnit:
 
     def __init__(
         self,
-        number,
+        number : int,
         potentials_t_idx: npt.NDArray[np.int64],
-        sampling_freq,
+        fs : float,
     ):
         """
         Initialise EMGMotorUnit object.
@@ -62,26 +50,21 @@ class EMGMotorUnit:
         Parameters
         ----------
         number: int
-                This is the motor unit index (0, 1, 2, ...), returned from TK_filter,
-                which corresponds to the index position of
-                "motor_units" in the EMGMotorUnits class. When displayed to the user
-                the motor unit label
-                is displayed which is +1 this number, e.g. motor_unit_number 0 is the
-                motor unit labelled as "1"
+            This is the motor unit index (0, 1, 2, ...), returned from TK_filter,
+            which corresponds to the index position of "motor_units" in the
+            EMGMotorUnits class. When displayed to the user the motor unit label
+            is displayed which is +1 this number, e.g. motor_unit_number 0 is the
+            motor unit labelled as "1".
 
         potentials_t_idx: npt.NDArray[np.int64]
-                Time indices of the motor unit's potentials in the EMG recording
+            Time indices of the motor unit's potentials in the EMG recording.
 
-        mu_settings : EMGAnalysisMotorUnitSettings
-                Settings for finding the motor units (already used at this point)
-                and setting for clustering, which are needed
-
-        sampling_freq : float
-                The sampling frquency of the data.
+        fs : float
+            Sampling frequency (Hz) of the data.
 
         Returns
         -------
-        None
+        None.
 
         """
 
@@ -92,7 +75,7 @@ class EMGMotorUnit:
         # Time indices of potentials in EMG
         self.potentials_t_idx = potentials_t_idx
 
-        self.sampling_freq = sampling_freq
+        self.fs = fs
 
         # Store information about analysis that has been performed for this MU
         # Note: even if true, may not be results if data was not suitable for analysis
@@ -102,37 +85,32 @@ class EMGMotorUnit:
             "fibres_jitter_computed": False,  # jitter analysis step
         }
 
-        # TODO: check understanding of each attribute
-        # TODO: clean comments and move to docstring for class
-        # TODO: update __str__ method once attributes are finalised
-
-        # Localisation attributes
-
-        # Number of fibre potentials (peaks) found across all MUPs
+        # Localisation attributes.
+        # Number of fibre potentials (peaks) found across all MUPs.
         self.n_fibre_potentials = None
 
-        # Estimated fibre x, y coordinate at each time (size n peaks x 2)
+        # Estimated fibre x, y coordinate at each time (size n peaks x 2).
         self.fibre_centres = np.array([])
 
-        # Onset indices of MUPs that each fibre potential (peak) belongs to
-        # One for each fibre potential
+        # Onset indices of MUPs that each fibre potential (peak) belongs to.
+        # One for each fibre potential.
         self.mup_onsets = np.array([])
 
         # Fibre potential peak times relative to the onset time
-        # of the corresponding MUP that it belongs to (in indices units, not seconds)
+        # of the corresponding MUP that it belongs to (in indices units, not seconds).
         self.fibre_potential_times = np.array([])
 
         # Time series for each MUP and channel
-        # (size: n MU potentials x n chan x time)
+        # (size: n MU potentials x n chan x time).
         self.all_spikes = np.array([])
 
-        # Generator potential, represents true underlying potential
+        # Generator potential, represents true underlying potential.
         self.generator_potential = np.array([])
 
-        # Results for comparing number of clusters for GMM
+        # Results for comparing number of clusters for GMM or k-means.
         self.cluster_scores = None
 
-        # Dictionaries for storing results of clustering and jitter analysis
+        # Dictionaries for storing results of clustering and jitter analysis.
         self.fibre_clustering_results = {}
         self.fibre_jitter_results = {}
 
@@ -153,7 +131,7 @@ class EMGMotorUnit:
         ans += str(self.n_potentials)
         ans += "\nFibre centres dimensions: "
         ans += str(self.fibre_centres.shape)
-        ans += "\nmup_onsets dimensions: "
+        ans += "\nMUP onsets dimensions: "
         ans += str(self.mup_onsets.shape)
         ans += "\nFibre potential times dimensions: "
         ans += str(self.fibre_potential_times.shape)
@@ -167,7 +145,7 @@ class EMGMotorUnit:
         return ans
 
     def add_fibre_localisation(
-        self, fibre_centres, mup_onsets, fibre_potential_times, all_spikes, generator_potential
+        self, fibre_centres : npt.NDArray[np.float64], mup_onsets : npt.NDArray[np.int64], fibre_potential_times : npt.NDArray[np.int64], all_spikes : npt.NDArray[np.float64], generator_potential : npt.NDArray[np.float64]
     ):
         """
         Add results of the fibre localisation step to the motor unit object. Computes
@@ -177,17 +155,17 @@ class EMGMotorUnit:
 
         Parameters
         ----------
-        fibre_centres : TYPE
-            DESCRIPTION.
+        fibre_centres : npt.NDArray[np.float64]
+            Estimated location of fibres.
         mup_onsets : npt.NDArray[np.int64]
             Onset indices of the MUPs (firings) relative to the overall time
         fibre_potential_times : npt.NDArray[np.int64]
             Fibre potential peak times relative to the onset (overall) time
             of the corresponding MUP (listed above in mup_onsets)
-        all_spikes : TYPE
-            DESCRIPTION.
-        generator_potential : TYPE
-            DESCRIPTION.
+        all_spikes : npt.NDArray[np.float64]
+            All peaks from surrounding channels.
+        generator_potential : npt.NDArray[np.float64]
+            Represents true underlying potential. Used to find MUPs.
 
         Returns
         -------
@@ -195,20 +173,20 @@ class EMGMotorUnit:
 
         """
 
-        # Note analysis performed
+        # Note analysis performed.
         self.analysis_performed["fibres_localised"] = True
 
-        # Store number of fibre potentials (i.e., peaks in the MUPs) found
+        # Store number of fibre potentials (i.e., peaks in the MUPs) found.
         self.n_fibre_potentials = fibre_centres.shape[0]
 
-        # Store provided attributes
+        # Store provided attributes.
         self.fibre_centres = fibre_centres
         self.mup_onsets = mup_onsets
         self.fibre_potential_times = fibre_potential_times
         self.all_spikes = all_spikes
         self.generator_potential = generator_potential
 
-    def get_fibre_localisation_dict(self, save_all_spikes):
+    def get_fibre_localisation_dict(self, save_all_spikes : bool) -> dict:
         """
         Returns dictionary of fibre localisation so that it can be saved
 
@@ -223,6 +201,7 @@ class EMGMotorUnit:
 
         """
 
+        # Convert to lists to store as dictionary.
         fibre_local_dict = {
             "n_fibre_potentials": self.n_fibre_potentials,
             "fibre_centres": self.fibre_centres.tolist(),
@@ -237,14 +216,14 @@ class EMGMotorUnit:
 
         return fibre_local_dict
 
-    def set_fibre_localisation_from_dict(self, fibre_local_dict):
+    def set_fibre_localisation_from_dict(self, fibre_local_dict : dict):
         """
-        Sets fibre localisation results from loaded dictionary
+        Sets fibre localisation results from loaded dictionary.
 
         Parameters
         ----------
-        fibre_local_dict : Dictionary
-            Dictionary containing saved results of clustering
+        fibre_local_dict : dict
+            Dictionary containing saved results of clustering.
 
         Returns
         -------
@@ -252,6 +231,7 @@ class EMGMotorUnit:
 
         """
 
+        # Convert data back to arrays.
         self.n_fibre_potentials = fibre_local_dict["n_fibre_potentials"]
         self.fibre_centres = np.array(fibre_local_dict["fibre_centres"])
         self.mup_onsets = np.array(fibre_local_dict["mup_onsets"])
@@ -259,19 +239,48 @@ class EMGMotorUnit:
         self.all_spikes = np.array(fibre_local_dict["all_spikes"])
         # self.generator_potential = np.array(fibre_local_dict["generator_potential"])
 
-        # Note analysis performed
+        # Note analysis performed.
         if self.n_fibre_potentials is not None and len(self.fibre_centres) > 0:
             self.analysis_performed["fibres_localised"] = True
 
-    def silhouette_score(self, estimator, X):
-        """Callable to pass to GridSearchCV that will use the silhouette score."""
-        #
+    def cluster_silhouette_score(self, estimator, X : npt.NDArray[np.float64]) -> float:
+        """
+        Callable to pass to GridSearchCV that will use the silhouette score.
+        
+        Parameters
+        ----------
+        estimator: Any
+            Estimator class, which will include a "predict" method.
+        
+        X : npt.NDArray[np.float64]
+            Array of fibre potential data to assign to clusters.
+
+        Returns
+        -------
+        float
+
+        """
+        
         return silhouette_score(X, estimator.predict(X))
 
-    def gmm_selection(self, X, min_n_clusters, max_n_clusters):
+    def gmm_selection(self, X : npt.NDArray[np.float64], min_n_clusters : int, max_n_clusters : int) -> GridSearchCV:
         """
-        Gaussian Mixture Model Selection
+        Gaussian Mixture Model Selection.
         https://scikit-learn.org/stable/auto_examples/mixture/plot_gmm_selection.html#sphx-glr-auto-examples-mixture-plot-gmm-selection-py
+        Fit data to clusters from the minimum number of clusters to the maximum number of clusters.
+        
+        Parameters
+        ----------
+        X : npt.NDArray[np.float64]
+            Array of fibre potential data to assign to clusters.
+        min_n_clusters : int
+            Minimum number of clusters to try.
+        max_n_clusters : int    
+            Maximum number of clusters to try.
+
+        Returns
+        -------
+        float
         """
 
         param_grid = {
@@ -280,15 +289,19 @@ class EMGMotorUnit:
         }
 
         grid_search = GridSearchCV(
-            GaussianMixture(), param_grid=param_grid, scoring=self.silhouette_score
+            GaussianMixture(), param_grid=param_grid, scoring=self.cluster_silhouette_score
         )
 
         grid_search.fit(X)
 
         return grid_search
 
-    def k_means_selection(self, X, min_n_clusters, max_n_clusters):
-        """ """
+    def k_means_selection(self, X : npt.NDArray[np.float64], min_n_clusters : int, max_n_clusters : int) -> GridSearchCV:
+        """
+        Try out k-means clustering for different numbers of clusters.
+        Fit data to clusters from the minimum number of clusters to the maximum number of clusters.
+             
+        """
 
         param_grid = {
             "n_clusters": range(min_n_clusters, max_n_clusters + 1),
@@ -296,7 +309,7 @@ class EMGMotorUnit:
             "n_init": ["auto"],
         }
 
-        grid_search = GridSearchCV(KMeans(), param_grid=param_grid, scoring=self.silhouette_score)
+        grid_search = GridSearchCV(KMeans(), param_grid=param_grid, scoring=self.cluster_silhouette_score)
 
         grid_search.fit(X)
 
@@ -337,8 +350,8 @@ class EMGMotorUnit:
 
         Parameters
         ----------
-        None. Settings for clustering are set in the EMGAnalysisMotorUnitSettings object,
-        mu_settings.
+        mu_cluster_settings: EMGAnalysisMotorUnitClusterSettings
+            Contains all settings for clustering.        
 
         Raises
         ------
@@ -359,30 +372,31 @@ class EMGMotorUnit:
 
         """
 
-        # Set settings for cluster analysis
+        # Set settings for cluster analysis.
         self.mu_cluster_settings = mu_cluster_settings
 
-        # Check that localisation has been run
+        # Check that localisation has been run.
         if not self.analysis_performed["fibres_localised"]:
             raise RuntimeError(
                 "Localisation analysis has not been performed; cannot cluster fibres."
             )
 
+        fibre_centres_median = np.array([])
         fibre_centres_gmm_mean = np.array([])
         fibre_centres_gmm_covariance = np.array([])
 
-        # Onset indices of all MUPs that have fibre potentials
+        # Onset indices of all MUPs that have fibre potentials.
         unique_mup_onsets = np.unique(self.mup_onsets)
         n_unique_mup_onsets = len(unique_mup_onsets)
         mean_n_fps = round(len(self.mup_onsets) / n_unique_mup_onsets)
 
-        # Set up data to use to fit
+        # Set up data to use to fit.
         if self.mu_cluster_settings.time_scale > 0:
-            # scale time column
-            # do not scale fibre locations as they are in the same units (mm)
+            # Scale time column.
+            # Do not scale fibre locations as they are in the same units (mm).
             time_min = np.min(self.fibre_potential_times)
             time_max = np.max(self.fibre_potential_times)
-            # Choose a value that is about half the length of the needle
+            # Choose a value that is about half the length of the needle.
 
             data_to_cluster = np.hstack(
                 (
@@ -705,7 +719,7 @@ class EMGMotorUnit:
         ax.tick_params(axis="y", which="major", labelsize=tick_label_size)
 
         if threeD:
-            ax.set_zlabel(r"Time ($\mu$ seconds)", fontsize=axis_label_size, labelpad=8.0)
+            ax.set_zlabel(u"Time (\u03bc seconds)", fontsize=axis_label_size, labelpad=8.0)
             ax.tick_params(axis="z", which="major", labelsize=tick_label_size)
 
         plt.title(f"Motor Unit {self.motor_unit_number+1}")
@@ -927,7 +941,7 @@ class EMGMotorUnit:
                 self.fibre_potential_times[
                     (self.fibre_clustering_results["fibre_clusters"] == cluster_no)
                 ]
-                / self.sampling_freq
+                / self.fs
             ) * 1e6
 
         # Get colour of points
@@ -1526,7 +1540,7 @@ class EMGMotorUnit:
             return
 
         # Get fibre differences and convert to time in seconds
-        fibre_pot_diffs = self.fibre_jitter_results["differences"][res_idx, :] / self.sampling_freq
+        fibre_pot_diffs = self.fibre_jitter_results["differences"][res_idx, :] / self.fs
         fibre_pot_diffs = fibre_pot_diffs.flatten()
 
         fig, ax = plt.subplots()
@@ -1549,7 +1563,7 @@ class EMGMotorUnit:
         mean = np.nanmean(fibre_pot_diffs)
         st_dev = np.nanstd(fibre_pot_diffs, ddof=1)
         textstr = "\n".join(
-            (r"Mean $= %.0f \mu$s" % (mean * 1e6,), r"St. dev. $=%.0f \mu$s" % (st_dev * 1e6,))
+            (r"Mean $= %.0f$ " % (mean * 1e6,) + u"\u03bcs" , r"St. dev. $=%.0f$ "  % (st_dev * 1e6,) + u"\u03bcs")
         )
 
         # these are matplotlib.patch.Patch properties
@@ -1634,7 +1648,7 @@ class EMGMotorUnit:
 
         # Get consecutive_diffs and convert to time in seconds
         consecutive_diffs = (
-            self.fibre_jitter_results["consecutive_diffs"][res_idx, :] / self.sampling_freq
+            self.fibre_jitter_results["consecutive_diffs"][res_idx, :] / self.fs
         )
         consecutive_diffs = consecutive_diffs.flatten()
 
@@ -1658,7 +1672,7 @@ class EMGMotorUnit:
         mean = np.nanmean(consecutive_diffs)
         st_dev = np.nanstd(consecutive_diffs, ddof=1)
         textstr = "\n".join(
-            (r"Mean $= %.0f \mu$s" % (mean * 1e6,), r"St. dev. $=%.0f \mu$s" % (st_dev * 1e6,))
+            (r"Mean $= %.0f$ " % (mean * 1e6,) + u"\u03bcs", r"St. dev. $=%.0f$ " % (st_dev * 1e6,) + u"\u03bcs")
         )
 
         # these are matplotlib.patch.Patch properties
@@ -1738,7 +1752,7 @@ class EMGMotorUnit:
                 val = self.fibre_jitter_results["mean_consecutive_diffs"][i]
 
             if not np.isnan(val):
-                val = int((val / self.sampling_freq) * 1e6 + 0.5)
+                val = int((val / self.fs) * 1e6 + 0.5)
 
             data[fib1, fib2] = val
             data[fib2, fib1] = val
@@ -1751,7 +1765,7 @@ class EMGMotorUnit:
             annot=True,
             xticklabels=str_fibres,
             yticklabels=str_fibres,
-            cbar_kws={"label": r"$\mu$ seconds"},
+            cbar_kws={"label": u"\u03bc seconds"},
             fmt="g",
         )
 
@@ -1803,7 +1817,7 @@ class EMGMotorUnit:
             return
 
         # Get fibre differences
-        fibre_pot_diffs = self.fibre_jitter_results["differences"][res_idx, :] / self.sampling_freq
+        fibre_pot_diffs = self.fibre_jitter_results["differences"][res_idx, :] / self.fs
         fibre_pot_diffs = fibre_pot_diffs.flatten()
 
         total_diffs = len(fibre_pot_diffs)

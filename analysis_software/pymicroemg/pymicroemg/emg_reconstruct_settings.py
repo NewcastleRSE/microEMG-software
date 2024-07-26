@@ -263,16 +263,16 @@ class EMGAnalysisMotorUnitClusterSettings:
         Initialise settings.
 
         clustering_method : string
-            Options are 'k_means', 'gmm' and 'dbscan'
+            Options are 'k_means', 'gmm' and 'dbscan'.
         time_scale : float
             if greater than 0 then time is used as a 3rd dimension to cluster the points and
-            is scaled by this amount
+            is scaled by this amount.
         k_means_random_state : int
             Determines random number generation for centroid initialization; passed to
-            k-means algorithm
+            k-means algorithm.
         k_means_k : int
-            the of clusters to fit, if set to 0 uses default of (rounded) mean number of fibre
-            potentials (FPs) per motor unit potential
+            the number of clusters to fit, if set to 0 uses default of (rounded) mean number of fibre
+            potentials (FPs) per motor unit potential.
 
         Returns
         -------
