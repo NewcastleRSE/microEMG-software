@@ -75,8 +75,6 @@ class EMGFiles:
         #        "No Intan amplifier channels found in the specified directory."
         #    )
 
-
-
     def check_if_header_file(self) -> bool:
         # Full path to header file
         header_path = os.path.join(self.emg_dir, self.header_fname)
@@ -86,21 +84,21 @@ class EMGFiles:
 
         return is_header_file
 
-    def set_header_fname(self)->str:
+    def set_header_fname(self) -> str:
 
-            # Use glob to find all files with .rhd extension in the directory
-            rhd_files = glob.glob(os.path.join(self.emg_dir, "*.rhd"))
+        # Use glob to find all files with .rhd extension in the directory
+        rhd_files = glob.glob(os.path.join(self.emg_dir, "*.rhd"))
 
-            # Check if there are any .rhd files
-            if rhd_files:
-                # Return the first .rhd file
-                return os.path.basename(rhd_files[0])
-            else:
-                # If no .rhd files are found, return None or suitable message
-                raise FileNotFoundError(
-                        "No Intan header file found in directory"
-                    )
-                return None
+        # Check if there are any .rhd files
+        if rhd_files:
+            # Return the first .rhd file
+            return os.path.basename(rhd_files[0])
+        else:
+            # If no .rhd files are found, return None or suitable message
+            raise FileNotFoundError(
+                "No Intan header file found in directory"
+            )
+            return None
 
     def _get_chan_fnames(self) -> list[str]:
         """
@@ -178,7 +176,7 @@ class EMGFiles:
             # If it's a single file format then just get the data directly
             emg_ts = np.array(data['amplifier_data'], dtype=np.int64)
             intan_chan_names = [x['custom_channel_name'] for x in emg_header['amplifier_channels']]
-            emg_ts = emg_ts-32000 #Fixing for data offset issue in a quick and dirty way here
+            emg_ts = emg_ts - 32000  # Fixing for data offset issue in a quick and dirty way here
         else:
             # Otherwise need to load the recording files themselves
 
@@ -199,7 +197,6 @@ class EMGFiles:
             # Get Intan channel names by removing file extensions from chan_fnames
             intan_chan_names = [os.path.splitext(f)[0] for f in self.chan_fnames]
 
-
             # Reorder channels (in emg_ts and intan_chan_names) based on electrode
             # design; will make it easier to set x,y coordinates
             sort_idx = self._reorder_chan_idx()
@@ -210,7 +207,6 @@ class EMGFiles:
 
         # Convert to microvolts
         emg_ts = emg_ts * INTAN2uV
-
 
         # Label segment of original recording that the time series comes from.
         # (-inf, inf) indicates that the time series corresponds to the entire
