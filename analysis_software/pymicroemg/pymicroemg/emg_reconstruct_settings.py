@@ -271,8 +271,8 @@ class EMGAnalysisMotorUnitClusterSettings:
             Determines random number generation for centroid initialization; passed to
             k-means algorithm.
         k_means_k : int
-            the number of clusters to fit, if set to 0 uses default of (rounded) mean number of fibre
-            potentials (FPs) per motor unit potential.
+            the number of clusters to fit, if set to 0 uses default of (rounded) mean number
+            of fibre potentials (FPs) per motor unit potential.
 
         Returns
         -------
