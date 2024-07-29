@@ -97,6 +97,9 @@ class EMGFiles:
                 return os.path.basename(rhd_files[0])
             else:
                 # If no .rhd files are found, return None or suitable message
+                raise FileNotFoundError(
+                        "No Intan header file found in directory"
+                    )
                 return None
 
     def _get_chan_fnames(self) -> list[str]:
