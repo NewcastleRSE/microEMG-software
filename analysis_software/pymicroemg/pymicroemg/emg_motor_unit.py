@@ -24,7 +24,6 @@ import matplotlib.transforms as transforms
 from sklearn.mixture import GaussianMixture
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import silhouette_score
-import pandas as pd
 from sklearn.cluster import DBSCAN
 
 from pymicroemg.emg_reconstruct_settings import EMGAnalysisMotorUnitClusterSettings
@@ -34,7 +33,7 @@ from pymicroemg.emg_reconstruct_settings import EMGAnalysisMotorUnitJitterSettin
 class EMGMotorUnit:
     """
     Class for storing data for one motor unit
-    returned from reconstruction analysis
+    returned from reconstruction analysis.
 
     """
 
@@ -120,10 +119,14 @@ class EMGMotorUnit:
         self.fibre_clustering_results = {}
         self.fibre_jitter_results = {}
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Return a string for the object
 
+        Parameters
+        ----------
+        None.
+        
         Returns
         -------
         String
@@ -197,7 +200,7 @@ class EMGMotorUnit:
         self.all_spikes = all_spikes
         self.generator_potential = generator_potential
 
-    def get_fibre_localisation_dict(self, save_all_spikes: bool) -> dict:
+    def get_fibre_localisation_dict(self, save_all_spikes: bool = False) -> dict:
         """
         Returns dictionary of fibre localisation so that it can be saved
 
@@ -391,6 +394,7 @@ class EMGMotorUnit:
                 "Localisation analysis has not been performed; cannot cluster fibres."
             )
 
+        # Arrays to store results for median and GMM clustering.
         fibre_centres_median = np.array([])
         fibre_centres_gmm_mean = np.array([])
         fibre_centres_gmm_covariance = np.array([])
@@ -400,7 +404,7 @@ class EMGMotorUnit:
         n_unique_mup_onsets = len(unique_mup_onsets)
         mean_n_fps = round(len(self.mup_onsets) / n_unique_mup_onsets)
 
-        # Set up data to use to fit.
+        # Set up data to use for clustering.
         if self.mu_cluster_settings.time_scale > 0:
             # Scale time column.
             # Values in (0, 20] for self.mu_cluster_settings.time_scale
@@ -477,7 +481,7 @@ class EMGMotorUnit:
                 "Clustering method,"
                 + str(self.mu_cluster_settings.clustering_method)
                 + ", not found!"
-                + "Valis options are: dbscan, k-means or gmm."
+                + "Valid options are: dbscan, k-means or gmm."
             )
 
         # Initialise arrays for storing results.
@@ -542,7 +546,7 @@ class EMGMotorUnit:
         }
         self.analysis_performed["fibres_clustered"] = True
 
-    def get_fibre_clusters_dict(self):
+    def get_fibre_clusters_dict(self) -> dict:
         """
         Returns dictionary of fibre clusters so that it can be saved.
 
@@ -552,10 +556,13 @@ class EMGMotorUnit:
 
         Returns
         -------
-        Dictionary
+        dict
+            Dictionary containing clustering results.
 
         """
 
+        # Get clustering results if they exist and put in a dictionary
+        # with arrays stored as lists so they can be save in a json format file.
         if self.analysis_performed["fibres_clustered"]:
             fibre_clusters_dict = {
                 "clustering_method": self.mu_cluster_settings.clustering_method,
@@ -581,13 +588,13 @@ class EMGMotorUnit:
 
         return fibre_clusters_dict
 
-    def set_fibre_clusters_from_dict(self, fibre_clusters_dict):
+    def set_fibre_clusters_from_dict(self, fibre_clusters_dict : dict):
         """
-        Sets fibre localisation results from loaded dictionary
+        Sets fibre localisation results from loaded dictionary.
 
         Parameters
         ----------
-        fibre_clusters_dict : Dictionary
+        fibre_clusters_dict : dict
             Dictionary containing saved results of clustering
 
         Returns
@@ -596,10 +603,11 @@ class EMGMotorUnit:
 
         """
 
-        # If clustering not done for this MU then do not set anything
+        # If clustering not done for this MU then do not set anything.
         if fibre_clusters_dict:
             self.mu_cluster_settings.clustering_method = fibre_clusters_dict["clustering_method"]
 
+            # Convert lists back to arrays to store results.
             self.fibre_clustering_results = {
                 "mean_n_fps": fibre_clusters_dict["mean_n_fps"],
                 "n_fibre_clusters": fibre_clusters_dict["n_fibre_clusters"],
@@ -615,10 +623,10 @@ class EMGMotorUnit:
                 ),
             }
 
-            # Note analysis performed
+            # Note analysis performed.
             self.analysis_performed["fibres_clustered"] = True
 
-    def plot_gmm_compare_cluster_scores(self):
+    def plot_compare_cluster_scores(self) -> sns.FacetGrid:
         """
 
         Parameters
@@ -627,103 +635,68 @@ class EMGMotorUnit:
 
         Returns
         -------
-        FacetGrid
+        sns.FacetGrid
             Returns the FacetGrid object with the plot on it for further tweaking.
 
         """
-
-        df = pd.DataFrame(self.cluster_scores)[
-            ["param_n_components", "param_covariance_type", "mean_test_score"]
-        ]
-
-        # df["mean_test_score"] = -df["mean_test_score"]
-
-        df = df.rename(
-            columns={
-                "param_n_components": "Number of components",
-                "param_covariance_type": "Type of covariance",
-                # "mean_test_score": "BIC score",
-                "mean_test_score": "silhouette score",
-            }
-        )
-
-        grid = sns.catplot(
-            data=df,
+   
+        # Set variable name of data to retrieve.
+        if self.mu_cluster_settings.clustering_method == "gmm":
+            cluster_str = "param_n_components"
+        elif self.mu_cluster_settings.clustering_method == "k-means":
+            cluster_str = "param_n_clusters"
+        else:
+            cluster_str = ""
+             
+        # Return blank plot if no data.
+        if cluster_str == "" or self.cluster_scores is None:
+            return sns.catplot(kind="bar")
+                       
+        # Create bar plot.
+        grid = sns.catplot(          
             kind="bar",
-            x="Number of components",
-            y="silhouette score",
-            hue="Type of covariance",
+            x=self.cluster_scores[cluster_str],      
+            y=self.cluster_scores["mean_test_score"],                
+            legend_out=False
         )
+        
+        # Set limits and layout.   
         plt.ylim((0, 1))
-
-        return grid
-
-    def plot_k_means_compare_cluster_scores(self):
-        """
-
-        Parameters
-        ----------
-        None.
-
-        Returns
-        -------
-        FacetGrid
-            Returns the FacetGrid object with the plot on it for further tweaking.
-
-        """
-
-        df = pd.DataFrame(self.cluster_scores)[["param_n_clusters", "mean_test_score"]]
-
-        # df["mean_test_score"] = -df["mean_test_score"]
-
-        df = df.rename(
-            columns={
-                "param_n_clusters": "Number of clusters",
-                # "mean_test_score": "BIC score",
-                "mean_test_score": "silhouette score",
-            }
-        )
-
-        grid = sns.catplot(data=df, kind="bar", x="Number of clusters", y="silhouette score")
-        plt.ylim((0, 1))
-
+        plt.tight_layout(pad=5.0)
+        
+        grid.set_axis_labels("number of clusters", "silhouette score")
+      
         return grid
 
     def plot_fibre_locations_setup(
-        self, figsize=(10, 5), axis_label_size=14, tick_label_size=12, dpi=100, threeD=False
-    ):
+        self, figsize : tuple[int, int]=(10, 5), axis_label_size : int = 14, tick_label_size : int =12, dpi : int =100, threeD : bool =False
+    )  -> tuple[plt.figure, plt.Axes]:
         """
-        Plot electrode locations using their (x,y) coordinates.
-
-        Electrodes are symbolised by grey squares by default.
+        Sets up plot for showing fibre locations, possibly from different motor units.
 
         Parameters
         ----------
-        marker : TYPE, optional
-            DESCRIPTION. The default is "s".
-        clr : TYPE, optional
-            DESCRIPTION. The default is "silver".
-        figsize : TYPE, optional
-            DESCRIPTION. The default is (10, 5).
-        axis_label_size : TYPE, optional
-            DESCRIPTION. The default is 14.
-        tick_label_size : TYPE, optional
-            DESCRIPTION. The default is 12.
-        dpi : TYPE, optional
-            DESCRIPTION. The default is 100.
-        threeD : boolean
+        figsize : tuple[int, int], optional
+            Size of the figure. The default is (10, 5).
+        axis_label_size : int, optional
+            Size of axis labels. The default is 14.
+        tick_label_size : int, optional
+            Size of the tick labels. The default is 12.
+        dpi : int, optional
+            Dots per inch. The default is 100.
+        threeD : bool
             Create 3D plot if true
 
         Returns
         -------
-        None.
-
-        TODO: finish docstring once vis is finalised
-        TODO: consider adding outline for needle
+        fig : plt.figure
+            The figure to which the plot belongs.
+        ax : plt.Axes
+            The axes to which the plot belongs.
 
         """
 
-        # Create new figure with specified size
+        # Create new figure with specified size.
         if threeD:
             fig = plt.figure(figsize=figsize)
             ax = fig.add_subplot(projection="3d")
@@ -732,12 +705,13 @@ class EMGMotorUnit:
 
         fig.dpi = dpi
 
-        # Axis and tick labels
+        # Add axis and tick labels.
         ax.set_xlabel("position (mm)", fontsize=axis_label_size)
         ax.set_ylabel("position (mm)", fontsize=axis_label_size)
         ax.tick_params(axis="x", which="major", labelsize=tick_label_size)
         ax.tick_params(axis="y", which="major", labelsize=tick_label_size)
 
+        # Add time axis if 3D plot.
         if threeD:
             ax.set_zlabel("Time (\u03bc seconds)", fontsize=axis_label_size, labelpad=8.0)
             ax.tick_params(axis="z", which="major", labelsize=tick_label_size)
@@ -746,7 +720,7 @@ class EMGMotorUnit:
 
         return fig, ax
 
-    def plot_electrodes(self, ax, marker="s", clr="silver", z=None):
+    def plot_electrodes(self, ax : plt.Axes, marker : str ="s", clr : str ="silver", z : float =None):
         """
         Plot electrode locations using their (x,y) coordinates.
 
@@ -754,20 +728,18 @@ class EMGMotorUnit:
 
         Parameters
         ----------
-        ax : TYPE, optional
-            DESCRIPTION. The default is None.
-        marker : TYPE, optional
-            DESCRIPTION. The default is "s".
-        clr : TYPE, optional
+        ax : plt.Axes
+            Axes to plot the electrodes onto.
+        marker : str, optional
+            The kind of marker to use. The default is "s", square.
+        clr : str, optional
+            The colour of the electrodes. Default is "silver".
         z : float
-            z value for 3D plot
+            z value of electrodes for 3D plot.
 
         Returns
         -------
         None.
-
-        TODO: finish docstring once vis is finalised
-        TODO: consider adding outline for needle
 
         """
 
@@ -786,24 +758,24 @@ class EMGMotorUnit:
 
     def plot_fibre_potential_clustering(
         self,
-        plot_electrodes=True,
-        pt_potentials_size=10,
-        pt_potentials_alpha=0.4,
-        pt_mean_size=50,
-        n_sigma=2,
-        axis_equal=True,
-        ax=None,
-        lw=0.5,
-        figsize=(10.2, 5),
-        axis_label_size=14,
-        tick_label_size=12,
-        dpi=100,
-        cmap=None,
-        max_x=22,
-        max_y=1,
-        plot_legend=True,
-        legend_pt_size=50,
-        legend_label_size=12,
+        plot_electrodes : bool = True,
+        pt_potentials_size : float = 10,
+        pt_potentials_alpha : float = 0.4,
+        pt_mean_size : float = 50,
+        n_sigma : int = 2,
+        axis_equal : bool = True,
+        ax : plt.Axes = None,
+        lw : float = 0.5,
+        figsize : tuple[np.float64, np.float64] = (10.2, 5),
+        axis_label_size : float = 14,
+        tick_label_size : float = 12,
+        dpi : int = 100,
+        cmap = None,
+        max_x : float = 22,
+        max_y : float = 1,
+        plot_legend : bool = True,
+        legend_pt_size : int= 50,
+        legend_label_size : int = 12,
     ):
         """
         Create scatter plot of fibre localisations estimated from all fibre potentials
@@ -815,37 +787,37 @@ class EMGMotorUnit:
 
         Parameters
         ----------
-        plot_electrodes : TYPE, optional
-            DESCRIPTION. The default is True.
-        pt_potentials_size : TYPE, optional
-            DESCRIPTION. The default is 10.
-        pt_potentials_alpha : TYPE, optional
-            DESCRIPTION. The default is 0.5.
-        pt_mean_size : TYPE, optional
-            DESCRIPTION. The default is 50.
+        plot_electrodes : bool, optional
+            Whether to plot electrodes or not. The default is True.
+        pt_potentials_size : float, optional
+            Size of the points for the fibre potentials. The default is 10.
+        pt_potentials_alpha : float, optional
+            Alpha value for the points, [0, 1] (transparency). The default is 0.4.
+        pt_mean_size : float, optional
+            Size of points for means. The fibre centres. The default is 50.
         nsigma : float
             Number of St. Dev. to plot around the fibre centres
-        axis_equal : TYPE, optional
-            DESCRIPTION. The default is True.
-        ax : TYPE, optional
-            DESCRIPTION. The default is None.
-        lw : TYPE, optional
-            DESCRIPTION. The default is 0.5.
-        figsize : TYPE, optional
-            DESCRIPTION. The default is (10, 5).
-        axis_label_size : TYPE, optional
-            DESCRIPTION. The default is 14.
-        tick_label_size : TYPE, optional
-            DESCRIPTION. The default is 12.
-        dpi : TYPE, optional
-            DESCRIPTION. The default is 100.
-        cmap : TYPE, optional
-            DESCRIPTION. The default is None.
+        axis_equal : bool, optional
+            Whether aspect ratio should be plotted equal. The default is True.
+        ax : plt.Axes, optional
+            The axis to add plot to. The default is None.
+        lw : float, optional
+            Line weight. The default is 0.5.
+        figsize tuple[np.float64, np.float64], optional
+            Size of figure. The default is (10, 5).
+        axis_label_size : float, optional
+            size of axis label. The default is 14.
+        tick_label_size : float, optional
+            Size of tick labels. The default is 12.
+        dpi : int, optional
+            Dots per inch. The default is 100.
+        cmap : Any, optional
+            Colour map to use. The default is None.
         max_x : float
             Maximum of x axis
         max_y : float
             Maximum of y axis
-        plot_legend : boolean
+        plot_legend : bool
             Plot the legend or not
         legend_pt_size : float
             Size of points in legend
@@ -855,9 +827,6 @@ class EMGMotorUnit:
         Returns
         -------
         None.
-
-        TODO: finish docstring
-        TODO: add option for fixing axis limits across different motor units.
 
         """
 
@@ -887,7 +856,7 @@ class EMGMotorUnit:
                 lw=lw,
             )
 
-        # Plot centres and covariance regions (if not GMM)
+        # Plot centres and covariance regions (if not GMM).
         for cluster_no in range(n_clusters):
             self._plot_fibre_location(
                 cluster_no,
@@ -898,21 +867,11 @@ class EMGMotorUnit:
                 n_sigma,
             )
 
+        # Plot fitted covariance regions for GMM.
         if self.mu_cluster_settings.clustering_method == "gmm":
             self._plot_fitted_gmms(ax, n_sigma)
 
-        # Plot larger markers for median fibre locations, Not much difference to medians
-        # ax.scatter(
-        #    self.fibre_clustering_results["fibre_centres_median"][:, 0],
-        #    self.fibre_clustering_results["fibre_centres_median"][:, 1],
-        #    50,
-        #    marker='*',
-        #    facecolors='k',
-        #    edgecolors='k',
-        #    linewidths=1,
-        # )
-
-        # Legend
+        # Plot legend.
         if plot_legend:
             lgnd = ax.legend(
                 bbox_to_anchor=(1, 1),
@@ -924,17 +883,35 @@ class EMGMotorUnit:
             for h in lgnd.legend_handles:
                 h._sizes = [legend_pt_size]
 
-        # y axis limits
+        # Set y axis limits.
         ax.set_ylim(-max_y, max_y)
 
-        # Set x axis limits
+        # Set x axis limits.
         ax.set_xlim(-1, max_x)
 
-        # Equal aspect ratio, (this can mess up the axis limits)
+        # Equal aspect ratio, (this can mess up the axis limits in Windows)
         if axis_equal:
             ax.axis("equal")
 
-    def get_cluster_colour(self, cluster_no, n_clusters, cmap=None):
+    def get_cluster_colour(self, cluster_no : int, n_clusters : int, cmap=None):
+        """
+        Return the colour of a cluster depending on the cluster number and
+        how many total clusters.
+
+        Parameters
+        ----------
+        cluster_no : int
+            Number of the cluster.
+        n_clusters : int
+            Total number of clusters.
+        cmap : Colourmap, optional
+            Use this colour map if given.
+        
+        Returns
+        -------
+        Colour
+        
+        """
         if cmap is None:
             if n_clusters <= 10:
                 cmap = colormaps["tab10"].colors
@@ -946,12 +923,39 @@ class EMGMotorUnit:
         return cmap[cluster_no]
 
     def _plot_cluster_points(
-        self, cluster_no, n_clusters, ax, pt_size, pt_alpha, cmap=None, lw=0, threeD=False
+        self, cluster_no : int, n_clusters : int, ax : plt.Axes, pt_size : float, pt_alpha : float, cmap=None, lw : float =0, threeD : bool =False
     ):
+        """
+        Plot all the points for fibre potentials beloging to the same cluster.
 
+        Parameters
+        ----------
+        cluster_no : int
+            Number of the cluster.
+        n_clusters : int
+            Total number of clusters.
+        ax : plt.Axes, optional
+            Plot to add to. The default is None.    
+        pt_alpha : float, optional
+            Alpha value for the points, [0, 1] (transparency). The default is 0.4.    
+        cmap : Colourmap, optional
+            Use this colour map if given.
+        lw : float, optional
+            Line weight. The default is 0.5.
+        threeD : bool, optional
+            If points are plotted on a 3D axis or not.
+            
+        Returns
+        -------
+        None.
+        
+        """
+        
+        # Get x and y coords to plot.
         x = self.fibre_centres[(self.fibre_clustering_results["fibre_clusters"] == cluster_no), 0]
         y = self.fibre_centres[(self.fibre_clustering_results["fibre_clusters"] == cluster_no), 1]
 
+        # Get z coords to plot if a 3D plot.
         if threeD:
             z = (
                 self.fibre_potential_times[
@@ -960,10 +964,10 @@ class EMGMotorUnit:
                 / self.fs
             ) * 1e6
 
-        # Get colour of points
+        # Get colour of points.
         pt_facecolor = self.get_cluster_colour(cluster_no, n_clusters, cmap)
 
-        # Plot points for this cluster
+        # Plot points for this cluster.
         if threeD:
             ax.scatter(
                 x,
@@ -978,19 +982,33 @@ class EMGMotorUnit:
         else:
             ax.scatter(x, y, pt_size, alpha=pt_alpha, facecolors=pt_facecolor, linewidth=lw)
 
-    def _plot_fitted_gmms(self, ax, n_sigma):
+    def _plot_fitted_gmms(self, ax : plt.Axes, n_sigma : float):
+        """
+        Plot all the points for fibre potentials beloging to the same cluster.
 
-        # Set up covariance matrix depending on which coveriance model was used.
+        Parameters
+        ----------      
+        ax : plt.Axes
+            Plot to add to. The default is None.    
+        n_sigma : float
+            Number of standard deviations to plot confidence ellipses.
+            
+        Returns
+        -------
+        None.
+        
+        """
+        
+        # Set up covariance matrix depending on which covariance model was used.
         cv = self.fibre_clustering_results["fibre_centres_gmm_covariance"]
 
-        print(cv)
-
-        # Covariance trhe same for every cluster
+        # Covariance the same for every cluster if "tied".
         if self.mu_cluster_settings.gmm_covariance_type == "tied":
             cov = np.array([[cv[0, 0], cv[0, 1]], [cv[1, 0], cv[1, 1]]])
 
         for i, mean in enumerate(self.fibre_clustering_results["fibre_centres_gmm_mean"]):
 
+            # Set covariance matrix from fitted GMM.
             if self.mu_cluster_settings.gmm_covariance_type == "diag":
                 cov = np.array([[cv[i, 0], 0], [0, cv[i, 1]]])
             elif self.mu_cluster_settings.gmm_covariance_type == "spherical":
@@ -1001,9 +1019,11 @@ class EMGMotorUnit:
             v, w = np.linalg.eigh(cov)
 
             angle = np.arctan2(w[0][1], w[0][0])
-            angle = 180.0 * angle / np.pi  # convert to degrees
-            # Radius so times by 2 for diameter
+            # Convert to degrees
+            angle = 180.0 * angle / np.pi  
+            # Multiply radius by 2 to get diameter.
             v = n_sigma * 2 * np.sqrt(v)
+            # Define the ellipse and plot it.
             ellipse = Ellipse(
                 mean, v[0], v[1], angle=180.0 + angle, edgecolor="black", facecolor="none"
             )

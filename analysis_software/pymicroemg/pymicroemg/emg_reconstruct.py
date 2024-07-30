@@ -524,7 +524,7 @@ class EMGAnalysisReconstruct:
         xtick_label_size: float = 12,
         ytick_label_size: float = 12,
         sort_by: str = "default",
-    ):
+    ) -> tuple[plt.figure, plt.Axes]:
         """
         Create a raster plot of the potentials of each motor unit in the recording.
         Each motor unit is a row in the visualisation, and vertical lines are drawn at
