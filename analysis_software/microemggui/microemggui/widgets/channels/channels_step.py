@@ -151,6 +151,9 @@ class ChannelsWidget(QWidget):
     # Signal for sending updated indices of bad channels
     bad_chan_updated = Signal(list)
 
+    # Signal for indicating whether minimum number of channels have been selected
+    min_chan_selected = Signal(bool)
+
     def __init__(
         self,
         raw_emg_model: EMGDataRawModel,
@@ -216,8 +219,11 @@ class ChannelsWidget(QWidget):
 
     def selected_min_channels(self) -> bool:
         # Compute whether min number of channels are selected
+        # Also emit signal indicating whether min number of channels have been selected
+        # to disable/enable downstream steps in GUI.
 
         min_selected = self.n_chan - len(self.bad_chan_idx) >= self.min_chan
+        self.min_chan_selected.emit(min_selected)
         return min_selected
 
     def update_chan_checked(self, checked: bool, idx: int):

@@ -229,9 +229,11 @@ class MicroEMGMain(QMainWindow):
         )
 
     def add_channels_connections(self):
-        # Connections for channels widget - update list of bad channels when click next.
-        # If channels have changed, update_bad_chan_idx will also trigger the
-        # re-creation of the findmu widget.
+        # Connections for channels widget:
+        #   - Update list of bad channels when click next. (If channels have changed,
+        #   update_bad_chan_idx will also trigger the re-creation of the findmu widget.)
+        #   - Disable/enable toolbar button for next step depending on whether min number
+        #   of channels have been selected.
 
         channels_w = self.widgets["analysis"].widgets["channels"]
         channels_w.bad_chan_updated.connect(self.update_bad_chan_idx)
@@ -239,6 +241,14 @@ class MicroEMGMain(QMainWindow):
         # Also connect next step in toolbar to next_clicked method of channels widget
         # so same signal is emitted when navigate via toolbar instead of the next button
         self.widgets["analysistoolbar"].widgets["findmu"].clicked.connect(channels_w.next_clicked)
+
+        # Disable/enable toolbar button for next step depending on whether min number
+        # of channels have been selected.
+        self.widgets["analysis"].widgets["channels"].min_chan_selected.connect(
+            lambda min_selected, w_name="findmu": self.enable_analysis_toolbar_button(
+                min_selected, w_name
+            )
+        )
 
     def update_toolbar_connections(self):
         # Connects toolbar buttons to analysis widgets
