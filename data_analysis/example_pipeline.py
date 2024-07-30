@@ -15,6 +15,8 @@ import pymicroemg.helper_config as cfg
 from pymicroemg.emg_reconstruct_settings import (
     EMGAnalysisReconstructSettings,
     EMGAnalysisMotorUnitSettings,
+    EMGAnalysisMotorUnitClusterSettings,
+    EMGAnalysisMotorUnitJitterSettings,
 )
 
 # increase figure resolution (needed for Spyder IDE)
@@ -121,9 +123,14 @@ emg_data_preproc.set_bad_chan(bad_chan)
 # Create settings for this part of the analysis
 mu_settings = EMGAnalysisMotorUnitSettings()
 recon_settings = EMGAnalysisReconstructSettings()
+# Create cluster settings and jitter analysis settings needed later
+mu_cluster_settings = EMGAnalysisMotorUnitClusterSettings()
+mu_jitter_settings = EMGAnalysisMotorUnitJitterSettings()
 
 # Find motor units
-reconstruct = emg_data_preproc.set_up_reconstruct_analysis(mu_settings, recon_settings)
+reconstruct = emg_data_preproc.set_up_reconstruct_analysis(
+    mu_settings, recon_settings, mu_cluster_settings, mu_jitter_settings
+)
 reconstruct.find_motor_units()
 
 # %% Visualise/analyse the motor units
@@ -183,10 +190,24 @@ for mu_num in motor_units_for_fibre_localisation:
         f"{recording_id}: motor unit {mu_num + 1}" + " fibre localisations (all fibre potentials)"
     )
 
-# %% Cluster fibre potentials and plot median locations
+# Cluster fibre potentials and plot estimated locations
 for mu_num in motor_units_for_fibre_localisation:
     print(f"Clustering fibres in motor unit {mu_num + 1}")
-    reconstruct.found_motor_units.cluster_fibre_potentials(mu_num)
+    reconstruct.mu_cluster_fibre_potentials(mu_num)
+
     mu = reconstruct.found_motor_units.motor_units[mu_num]
     print(f"{mu.fibre_clustering_results['n_fibre_clusters']} clusters")
-    reconstruct.found_motor_units.plot_fibre_potential_clustering_one_motor_unit(mu_num)
+    mu.plot_fibre_potential_clustering()
+
+    clustering_results = mu.fibre_clustering_results
+
+# Perform jitter analyses.
+for mu_num in motor_units_for_fibre_localisation:
+    # Do jitter analysis
+    reconstruct.mu_jitter_analysis(mu_num)
+
+    # Plot heat plot of mean consectutive differences (MCDs).
+    mu = reconstruct.found_motor_units.motor_units[mu_num]
+    mu.plot_jitter_heat_plot()
+
+    jitter_results = mu.fibre_jitter_results
