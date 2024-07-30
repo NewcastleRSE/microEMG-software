@@ -301,14 +301,20 @@ class MicroEMGMain(QMainWindow):
 
             # Update in preprocessed data and reconstruction analysis object
             self.emg_model["preproc"].emg_data.set_bad_chan(self.bad_chan_idx)
-            reconstruct = EMGAnalysisReconstruct(
-                emg_data_preproc=self.emg_model["preproc"].emg_data,
-                mu_settings=self.settings_model.mu_settings,
-                recon_settings=self.settings_model.recon_settings,
-                mu_cluster_settings=self.settings_model.mu_cluster_settings,
-                mu_jitter_settings=self.settings_model.mu_jitter_settings,
-            )
-            self.reconstruct_model = EMGAnalysisReconstructModel(reconstruct)
+            if self.settings_model:
+                reconstruct = EMGAnalysisReconstruct(
+                    emg_data_preproc=self.emg_model["preproc"].emg_data,
+                    mu_settings=self.settings_model.mu_settings,
+                    recon_settings=self.settings_model.recon_settings,
+                    mu_cluster_settings=self.settings_model.mu_cluster_settings,
+                    mu_jitter_settings=self.settings_model.mu_jitter_settings,
+                )
+                self.reconstruct_model = EMGAnalysisReconstructModel(reconstruct)
+            else:
+                raise ValueError(
+                    "settings_model must be added to main window before"
+                    + " fibre reconstruction analysis."
+                )
 
             # Update find MU widget
             self.add_findmu_widget()
@@ -396,14 +402,20 @@ class MicroEMGMain(QMainWindow):
         self.add_channels_connections()
 
         # Create reconstruction analysis data
-        reconstruct = EMGAnalysisReconstruct(
-            emg_data_preproc=self.emg_model["preproc"].emg_data,
-            mu_settings=self.settings_model.mu_settings,
-            recon_settings=self.settings_model.recon_settings,
-            mu_cluster_settings=self.settings_model.mu_cluster_settings,
-            mu_jitter_settings=self.settings_model.mu_jitter_settings,
-        )
-        self.reconstruct_model = EMGAnalysisReconstructModel(reconstruct)
+        if self.settings_model:
+            reconstruct = EMGAnalysisReconstruct(
+                emg_data_preproc=self.emg_model["preproc"].emg_data,
+                mu_settings=self.settings_model.mu_settings,
+                recon_settings=self.settings_model.recon_settings,
+                mu_cluster_settings=self.settings_model.mu_cluster_settings,
+                mu_jitter_settings=self.settings_model.mu_jitter_settings,
+            )
+            self.reconstruct_model = EMGAnalysisReconstructModel(reconstruct)
+        else:
+            raise ValueError(
+                "settings_model must be added to main window before"
+                + " fibre reconstruction analysis."
+            )
 
         # Add find MU widget
         self.add_findmu_widget()
@@ -414,7 +426,13 @@ class MicroEMGMain(QMainWindow):
         # Create widget and add to stack of analysis step widgets
         w_name = "findmu"
         analysis_w = self.widgets["analysis"]
-        analysis_w.widgets[w_name] = FindMUWidget(self.reconstruct_model)
+        if self.reconstruct_model:
+            analysis_w.widgets[w_name] = FindMUWidget(self.reconstruct_model)
+        else:
+            raise ValueError(
+                "GUI model for fibre reconstruction analysis must be created before "
+                + "creating widgets for this analysis."
+            )
         analysis_w.layout.addWidget(analysis_w.widgets[w_name])
 
         print("Channels to analyse: ")
