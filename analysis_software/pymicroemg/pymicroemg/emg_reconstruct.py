@@ -54,6 +54,8 @@ class EMGAnalysisReconstruct:
         emg_data_preproc: EMGDataPreproc,
         mu_settings: EMGAnalysisMotorUnitSettings,
         recon_settings: EMGAnalysisReconstructSettings,
+        mu_cluster_settings: EMGAnalysisMotorUnitClusterSettings,
+        mu_jitter_settings: EMGAnalysisMotorUnitJitterSettings,
     ):
         """
         Initialise EMGAnalysisReconstruct object.
@@ -66,6 +68,11 @@ class EMGAnalysisReconstruct:
             Settings for motor unit identification.
         recon_settings: EMGAnalysisReconstructSettings
             Settings for reconstruting fibre potential locations.
+        mu_cluster_settings: EMGAnalysisMotorUnitClusterSettings
+            Settings used to perform cluster analysis of fibre potentials, to estimate
+            fibre positions.
+        mu_jitter_settings: EMGAnalysisMotorUnitJitterSettings
+            Setting used to perform jitter analysis.
 
         Returns
         -------
@@ -77,6 +84,8 @@ class EMGAnalysisReconstruct:
         self.emg_data_preproc = emg_data_preproc
         self.mu_settings = mu_settings
         self.recon_settings = recon_settings
+        self.mu_cluster_settings = mu_cluster_settings
+        self.mu_jitter_settings = mu_jitter_settings
         self.n_chan = self.emg_data_preproc.n_chan
 
         # Needle model pos in mm.
@@ -199,12 +208,15 @@ class EMGAnalysisReconstruct:
         # Motor unit numbers are used as a labels.
         all_motor_units = []
         for i in range(np.max(mu_numbers) + 1):
-            motor_unit = EMGMotorUnit(i, mup_t_idx[mu_numbers == i], self.emg_data_preproc.fs)
+            motor_unit = EMGMotorUnit(
+                i,
+                mup_t_idx[mu_numbers == i],
+                self.emg_data_preproc.fs,
+                self.emg_data_preproc.chan.chan_xy,
+            )
             all_motor_units.append(motor_unit)
 
-        self.found_motor_units = EMGMotorUnits(
-            all_motor_units, chan_xy=self.emg_data_preproc.chan.chan_xy
-        )
+        self.found_motor_units = EMGMotorUnits(all_motor_units)
 
     def save_motor_units(self, filename: str, include_settings: bool = False):
         """
@@ -282,7 +294,6 @@ class EMGAnalysisReconstruct:
             motor_unit = EMGMotorUnit(
                 numbers_motor_units[i],
                 np.array(mup_potentials_t_idx_all_motor_units[i]),
-                self.mu_settings,
                 self.emg_data_preproc.fs,
             )
             all_motor_units.append(motor_unit)
@@ -446,12 +457,7 @@ class EMGAnalysisReconstruct:
             dict_name = "motor_unit_" + str(mu.motor_unit_number)
             mu.set_fibre_jitter_from_dict(fibre_jitter_dict[dict_name])
 
-    def save_settings(
-        self,
-        filename: str,
-        mu_cluster_settings: EMGAnalysisMotorUnitClusterSettings,
-        mu_jitter_settings: EMGAnalysisMotorUnitJitterSettings,
-    ):
+    def save_settings(self, filename: str):
         """
         Saves settings for analysis.
 
@@ -459,10 +465,6 @@ class EMGAnalysisReconstruct:
         ----------
         filename: string
             Name of file to save in
-        mu_cluster_settings : EMGAnalysisMotorUnitClusterSettings
-            Settings for performing cluster analysis.
-        mu_jitter_settings : EMGAnalysisMotorUnitJitterSettings
-            Settings for performing jitter analysis.
 
         Returns
         -------
@@ -473,9 +475,9 @@ class EMGAnalysisReconstruct:
         # Define settings dictionary.
         all_settings_dict = {
             "mu_settings": self.mu_settings.get_settings_dict(),
-            "mu_cluster_settings": mu_cluster_settings.get_settings_dict(),
-            "mu_jitter_settings": mu_jitter_settings.get_settings_dict(),
             "recon_settings": self.recon_settings.get_settings_dict(),
+            "mu_cluster_settings": self.mu_cluster_settings.get_settings_dict(),
+            "mu_jitter_settings": self.mu_jitter_settings.get_settings_dict(),
         }
 
         # Convert and write JSON object to file.
@@ -495,10 +497,7 @@ class EMGAnalysisReconstruct:
 
         Returns
         -------
-        mu_cluster_settings : EMGAnalysisMotorUnitClusterSettings
-            Settings for performing cluster analysis.
-        mu_jitter_settings : EMGAnalysisMotorUnitJitterSettings
-            Settings for performing jitter analysis.
+        None.
 
         """
 
@@ -510,15 +509,9 @@ class EMGAnalysisReconstruct:
         self.mu_settings.set_settings_from_dict(all_settings_dict["mu_settings"])
         self.recon_settings.set_settings_from_dict(all_settings_dict["recon_settings"])
 
-        # Create clustering and jitter settings objects.
-        mu_cluster_settings = EMGAnalysisMotorUnitClusterSettings()
-        mu_jitter_settings = EMGAnalysisMotorUnitJitterSettings()
-
-        # Load settings into newly created settings objects and return.
-        mu_cluster_settings.set_settings_from_dict(all_settings_dict["mu_cluster_settings"])
-        mu_jitter_settings.set_settings_from_dict(all_settings_dict["mu_jitter_settings"])
-
-        return mu_cluster_settings, mu_jitter_settings
+        # Set cluster and jitter settings.
+        self.mu_cluster_settings.set_settings_from_dict(all_settings_dict["mu_cluster_settings"])
+        self.mu_jitter_settings.set_settings_from_dict(all_settings_dict["mu_jitter_settings"])
 
     def plot_motor_units_raster(
         self,
@@ -1371,3 +1364,85 @@ class EMGAnalysisReconstruct:
         rsl = (np.linalg.lstsq(tpl, wsig, rcond=None))[0]
 
         return rsl
+
+    def mu_cluster_fibre_potentials(self, motor_unit_idx: int):
+        """
+        Perform fibre potential clustering for the given motor unit.
+
+        Parameters
+        ----------
+        motor_unit_idx : int
+            Index of motor unit in EMGMotorUnits class for the
+            motor unit to do clustering.
+
+        Returns
+        -------
+        None.
+
+        """
+
+        # Find motor unit for given index.
+        mu = self.found_motor_units.motor_units[motor_unit_idx]
+
+        # Perform cluster analysis using cluster settings.
+        mu.cluster_fibre_potentials(self.mu_cluster_settings)
+
+    def all_mu_cluster_fibre_potentials(self):
+        """
+        Perform fibre potential clustering for all motor units.
+
+        Parameters
+        ----------
+        None.
+
+        Returns
+        -------
+        None.
+
+        """
+
+        # Loop thro' motor units.
+        for mu in self.found_motor_units:
+            # Perform cluster analysis using cluster settings.
+            mu.cluster_fibre_potentials(self.mu_cluster_settings)
+
+    def mu_jitter_analysis(self, motor_unit_idx: int):
+        """
+        Perform jitter analysis for the given motor unit.
+
+        Parameters
+        ----------
+        motor_unit_idx : int
+            Index of motor unit in EMGMotorUnits class for the
+            motor unit to do jitter analysis.
+
+        Returns
+        -------
+        None.
+
+        """
+
+        # Find motor unit for given index.
+        mu = self.found_motor_units.motor_units[motor_unit_idx]
+
+        # Perform jitter analysis using jitter settings.
+        mu.jitter_analysis(self.mu_jitter_settings)
+
+    def all_mu_jitter_analysis(self):
+        """
+        Perform jitter analysis for all motor units.
+
+        Parameters
+        ----------
+        None.
+
+        Returns
+        -------
+        None.
+
+        """
+
+        # Loop thro' motor units.
+        for mu in self.found_motor_units:
+            # Perform jitter analysis using jitter settings.
+            mu.jitter_analysis(self.mu_jitter_settings)
