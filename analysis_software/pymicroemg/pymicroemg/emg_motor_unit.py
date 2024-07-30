@@ -374,13 +374,6 @@ class EMGMotorUnit:
         -------
         None.
 
-
-        TODO: add additional measures needed for downstream analysis/reports/vis - check
-        with SM before implementing to determine what is needed.
-         - position changes (based on position change between consecutive MUPs) to get a
-         measure of variability in location estimate (will need to remove nan positions
-        in mup_fibre_pos before computing)
-
         """
 
         # Set settings for cluster analysis.
@@ -404,10 +397,11 @@ class EMGMotorUnit:
         # Set up data to use to fit.
         if self.mu_cluster_settings.time_scale > 0:
             # Scale time column.
+            # Values in (0, 20] for self.mu_cluster_settings.time_scale
+            # are suitable for scaling.
             # Do not scale fibre locations as they are in the same units (mm).
             time_min = np.min(self.fibre_potential_times)
             time_max = np.max(self.fibre_potential_times)
-            # Choose a value that is about half the length of the needle.
 
             data_to_cluster = np.hstack(
                 (
@@ -423,9 +417,9 @@ class EMGMotorUnit:
         else:
             data_to_cluster = self.fibre_centres
 
-        # Choose clustering method
+        # Choose clustering method.
         if self.mu_cluster_settings.clustering_method == "dbscan":
-            # Use Density-based spatial clustering of applications with noise (DBSCAN)
+            # Use Density-based spatial clustering of applications with noise (DBSCAN).
             clustering = DBSCAN(
                 eps=self.mu_cluster_settings.dbscan_eps,
                 min_samples=self.mu_cluster_settings.dbscan_min_samples,
@@ -434,7 +428,7 @@ class EMGMotorUnit:
             fibre_clusters = clustering.labels_
 
         elif self.mu_cluster_settings.clustering_method == "k-means":
-            # k for clustering
+            # k for clustering.
             k = self.mu_cluster_settings.k_means_k
 
             # Use a range if no values of k if not given
@@ -454,7 +448,7 @@ class EMGMotorUnit:
             # Record results for graph plotting
             self.cluster_scores = grid_search.cv_results_
 
-        else:
+        elif self.mu_cluster_settings.clustering_method == "gmm":
             # Use Gaussian Mixture Model Selection
             min_n_clusters = np.max([2, mean_n_fps - 2])
             max_n_clusters = mean_n_fps + 2
@@ -471,18 +465,27 @@ class EMGMotorUnit:
             fibre_centres_gmm_mean = grid_search.best_estimator_.means_
             fibre_centres_gmm_covariance = grid_search.best_estimator_.covariances_
 
-        # Initialise arrays for storing results
+        else:
+            # If no valid clustering method given.
+            raise Exception(
+                "Clustering method,"
+                + str(self.mu_cluster_settings.clustering_method)
+                + ", not found!"
+                + "Valis options are: dbscan, k-means or gmm."
+            )
+
+        # Initialise arrays for storing results.
 
         # Number of fibre potentials (FPs) in each MUP that belong to the same
-        # cluster
+        # cluster.
         n_fps_per_mup_and_cluster = np.zeros((self.n_potentials, n_fibre_clusters))
 
-        # Location estimates of each fibre based on each MUP
+        # Location estimates of each fibre based on each MUP.
         # Note: unlike original code, data stored so indices match the
-        # self.potentials_t_idx array
+        # self.potentials_t_idx array.
         mup_fibre_pos = np.full((self.n_potentials, 2, n_fibre_clusters), np.nan)
 
-        # Find median location of each fibre
+        # Find median location of each fibre.
         for cluster_num in np.arange(n_fibre_clusters):
             # Sometimes multiple fibre potentials in the same MUP are assigned to
             # the same fibre clusters. Therefore, first compute average (mean)
@@ -490,7 +493,7 @@ class EMGMotorUnit:
             # If no fibres with that cluster num appear in the MUP, position is
             # stored as np.nan.
 
-            # Note: unlike original code, iterate through all MUPs (not just ones
+            # Iterate through all MUPs (not just ones
             # present in "mup_onsets") so dimensions align to other MUP features.
             for mup_num in np.arange(self.n_potentials):
                 mup_onset = self.potentials_t_idx[mup_num]
@@ -506,21 +509,21 @@ class EMGMotorUnit:
                     )
                 )
 
-                # Store number of fibre potentials found
+                # Store number of fibre potentials found.
                 n_idx = len(idx)
                 n_fps_per_mup_and_cluster[mup_num, cluster_num] = n_idx
 
-                # Compute average position of the fibre based on the specified MUP
+                # Compute average position of the fibre based on the specified MUP.
                 if n_idx > 0:
                     pos = self.fibre_centres[idx, :]
                     mup_fibre_pos[mup_num, :, cluster_num] = np.mean(pos, axis=0)
 
-            # Compute median fibre positions
+            # Compute median fibre positions.
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", category=RuntimeWarning)
                 fibre_centres_median = np.transpose(np.nanmedian(mup_fibre_pos, axis=0))
 
-        # Store results as dictionary
+        # Store results as dictionary.
         self.fibre_clustering_results = {
             "mean_n_fps": mean_n_fps,
             "n_fibre_clusters": n_fibre_clusters,
@@ -1346,7 +1349,7 @@ class EMGMotorUnit:
             )
 
             if len(fibre1_potentials_idx) > 0 and len(fibre2_potentials_idx) > 0:
-                # Pick fibre potentials closest to the median
+                # Pick fibre potentials closest to the median.
                 fibre1_potential_to_use = np.argmin(
                     np.abs(median_time1 - self.fibre_potential_times[fibre1_potentials_idx])
                 )
@@ -1354,7 +1357,7 @@ class EMGMotorUnit:
                     np.abs(median_time2 - self.fibre_potential_times[fibre2_potentials_idx])
                 )
 
-                # Get time difference for this MUP between fibre potentials
+                # Get time difference for this MUP between fibre potentials.
                 fib_pot_pos1 = fibre1_potentials_idx[fibre1_potential_to_use]
                 fib_pot_pos2 = fibre2_potentials_idx[fibre2_potential_to_use]
                 fibre_potential_time_diffs[mup_num] = self._calculate_fibre_potentials_time_diff(
