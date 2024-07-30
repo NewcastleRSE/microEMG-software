@@ -10,7 +10,6 @@ from PySide6.QtWidgets import (
     QWidget,
     QCheckBox,
     QGridLayout,
-    QHBoxLayout,
     QVBoxLayout,
     QSizePolicy,
 )
@@ -20,33 +19,12 @@ from microemggui.widgets.preproc.preproc_step import EMGViewerTabbedWidget
 from microemggui.models.emg import EMGDataRawModel, EMGDataPreprocModel
 from microemggui.widgets.base import (
     CheckBoxChannel,
-    CheckBoxChannelLabel,
     HighlightedLabel,
     SectionTitle,
     LargePushButton,
 )
 
 # --- Component widgets ---
-
-
-class ColourfulChannelCheckBox(QWidget):
-    # Option for adding checkbox text that is not coloured to match emg viewer
-    # TODO: remove if not used
-    def __init__(self, chan_name: str, chan_clr: str, parent=None):
-        super().__init__(parent)
-
-        self.checkbox = CheckBoxChannel("channel", parent=self)
-        label = CheckBoxChannelLabel(chan_name, parent=self)
-        label.setStyleSheet("color: " + chan_clr)
-
-        layout = QHBoxLayout()
-        layout.addWidget(self.checkbox)
-        layout.addWidget(label)
-        layout.setContentsMargins(0, 0, 0, 0)
-        self.setLayout(layout)
-
-    def setChecked(self, is_checked: bool):
-        self.checkbox.setChecked(is_checked)
 
 
 class ChannelsCheckBoxes(QWidget):

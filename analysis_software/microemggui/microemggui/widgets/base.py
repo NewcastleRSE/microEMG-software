@@ -120,14 +120,6 @@ class AnalysisToolbarLabel(QLabel):
         super().__init__(*args, **kwargs)
 
 
-class CheckBoxChannelLabel(QLabel):
-    # Label for channel checkbox
-    # (separate so can set colour)
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-
 class HighlightedLabel(QLabel):
     # Label highlighted in a different colour to make more prominent
 
