@@ -3,7 +3,7 @@
 """
 Widgets for running analysis in load step.
 """
-
+from typing import Any
 from PySide6.QtWidgets import QWidget, QVBoxLayout
 
 from microemggui.widgets.base import (
@@ -32,7 +32,7 @@ class RunAnalysisSection(QWidget):
         super().__init__(parent)
 
         # Create widgets
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "title": SubsectionTitle("Run microEMG analysis", self),
             "next": NextButton(parent=self),
         }

@@ -3,7 +3,7 @@
 """
 Widget for the preprocessing step in the EMG data analysis pipeline.
 """
-
+from typing import Any
 import logging
 
 from PySide6.QtWidgets import (
@@ -17,6 +17,8 @@ from PySide6.QtWidgets import (
     QTabBar,
 )
 from PySide6.QtCore import Qt, Signal
+
+from pymicroemg.emg_data_raw import EMGDataRawLoggerAdapter
 
 from microemggui.widgets.preproc.preproc_settings import PreprocSettingsWidget
 from microemggui.widgets.emg_viewer import EMGViewerWidget
@@ -51,7 +53,7 @@ class ApplyPreprocButton(LargePushButton):
         self.setText("Re-apply")
         self.setEnabled(False)
 
-    def change_enabled(self, settings_valid):
+    def change_enabled(self, settings_valid: bool):
         # Slot for enable/disabling button based on whether settings are valid.
         # This approach is also used to re-enable the button if the preprocessing
         # settings are changed after the initial preprocessing.
@@ -82,7 +84,10 @@ class MainButtons(QWidget):
         super().__init__(parent)
 
         # Create widgets
-        self.widgets = {"apply": ApplyPreprocButton(self), "next": NextButton(self)}
+        self.widgets: dict[str, Any] = {
+            "apply": ApplyPreprocButton(self),
+            "next": NextButton(self),
+        }
 
         # Add to layout
         layout = QHBoxLayout()
@@ -106,7 +111,7 @@ class EMGViewerTabbedWidget(QWidget):
     ):
         super().__init__(parent)
 
-        self.emg_model = {"raw": raw_emg_model}
+        self.emg_model: dict[str, Any] = {"raw": raw_emg_model}
 
         self.emg_clrs = emg_clrs
 
@@ -115,7 +120,7 @@ class EMGViewerTabbedWidget(QWidget):
         self.tab_data = ["raw", "preproc"]  # so can convert between tab indices and data
 
         # All widgets - start viewer with raw EMG data
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "tabs": QTabBar(parent=self),
             "viewer": EMGViewerWidget(self.emg_model["raw"], self.emg_clrs),
         }
@@ -139,11 +144,11 @@ class EMGViewerTabbedWidget(QWidget):
         layout.setSpacing(0)
         self.setLayout(layout)
 
-        # Hide preproc tab until preprocessing and set current tab to raw tab
-        self.widgets["tabs"].setTabVisible(self.tab_data.index("preproc"), False)
+        # Set current tab to raw EMG tab and disable preproc EMG tab until preprocessing
         self.widgets["tabs"].setCurrentIndex(self.tab_data.index("raw"))
+        self.widgets["tabs"].setTabEnabled(self.tab_data.index("preproc"), False)
 
-        # Connection tab clicks to changing data
+        # Connect tab clicks to changing data
         self.widgets["tabs"].currentChanged.connect(self.switch_emg_model)
 
     def add_preproc_emg_model(self, preproc_emg_model: EMGDataPreprocModel):
@@ -151,7 +156,7 @@ class EMGViewerTabbedWidget(QWidget):
 
         data = "preproc"
         self.emg_model[data] = preproc_emg_model
-        self.widgets["tabs"].setTabVisible(self.tab_data.index(data), True)
+        self.widgets["tabs"].setTabEnabled(self.tab_data.index(data), True)
         self.switch_emg_model(self.tab_data.index(data))
 
     def switch_emg_model(self, tab_idx: int):
@@ -188,12 +193,12 @@ class PreprocWidget(QWidget):
     ):
         super().__init__(parent)
 
-        self.emg_model = {"raw": raw_emg_model}
+        self.emg_model: dict[str, Any] = {"raw": raw_emg_model}
         self.settings_model = settings_model
         self.emg_clrs = emg_clrs
 
         # Create widgets
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "title": SectionTitle("Preprocessing", self),
             "settings": PreprocSettingsWidget(self.settings_model, parent=self),
             "tabbedviewer": EMGViewerTabbedWidget(
@@ -233,11 +238,14 @@ class PreprocWidget(QWidget):
         # Check if initial settings are valid
         self.widgets["settings"].settings_changed()
 
+        # Set the focus of the EMG viewer so it is the default processer of arrow key presses
+        self.widgets["tabbedviewer"].setFocus()
+        self.setFocusPolicy(Qt.StrongFocus)  # results in focus returning to EMG viewer by default
+
     def apply_preproc(self):
         # Apply preprocessing settings to raw data to generate preprocessed data.
         # Add preprocessed data to viewer.
         # Will overwrite any previously computed preprocessed data.
-        # TODO: also send preprocessed data to main window for downstream steps
         # TODO: figure out how to nicely cancel preprocessing using dialog window
         # TODO: create variable/config for logger name
 
@@ -269,7 +277,7 @@ class PreprocWidget(QWidget):
         # Emit signal with preprocessed data
         self.preproc_data_changed.emit(self.emg_model["preproc"], self.settings_model)
 
-    def update_progress_bar_from_log(self, record):
+    def update_progress_bar_from_log(self, record: EMGDataRawLoggerAdapter):
         # Slot for logs from EMGDataRaw; used to update progress bar for preprocessing
         # steps.
 

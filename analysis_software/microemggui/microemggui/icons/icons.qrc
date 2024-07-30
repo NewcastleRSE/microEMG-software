@@ -13,4 +13,7 @@
         <file alias="question-circle">bootstrap-icons-1.11.3/question-circle.svg</file>
         <file alias="info-circle">bootstrap-icons-1.11.3/info-circle.svg</file>
     </qresource>
+    <qresource prefix="amplitude">
+        <file alias="amp1">amplitude-icons/amp1.svg</file>
+    </qresource>
 </RCC>

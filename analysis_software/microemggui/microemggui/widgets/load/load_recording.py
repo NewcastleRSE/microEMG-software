@@ -3,7 +3,7 @@
 """
 Widgets for selecting and loading recording in load step.
 """
-
+from typing import Any
 import re
 
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QFileDialog
@@ -26,6 +26,7 @@ from microemggui.widgets.base import (
     ExpandingHSpacer,
 )
 
+
 # --- Widgets for selecting and loading a recording ---
 
 
@@ -40,7 +41,7 @@ class SelectRecordingWidget(QWidget):
         super().__init__(parent)
 
         # Create widgets
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "button": SmallPushButton(self),
             "label": InputInlineLabel("or select demo recording:"),
             "combobox": InputComboBox(parent=self),
@@ -100,10 +101,13 @@ class SelectRecordingWidget(QWidget):
         # Emit new recording path
         self.recording_path_changed.emit(recording_path)
 
-        # Get label based on file name and emit
+        # Get label based on file name (last folder) and emit
         if recording_path:
             recording_label_match = re.search(r"/[^/]*$", recording_path)
-            recording_label = recording_path[recording_label_match.start() + 1 :]
+            if recording_label_match:
+                recording_label = recording_path[recording_label_match.start() + 1:]
+            else:
+                recording_label = recording_path
         else:  # If no file name (empty path), send empty string for label
             recording_label = ""
         self.recording_label_changed.emit(recording_label)
@@ -116,7 +120,7 @@ class RecordingLabel(QWidget):
         super().__init__(parent)
 
         # Create widgets
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "label": InputInlineLabel("Recording: ", self),
             "recording": InputInlineText("", self),
         }
@@ -160,7 +164,7 @@ class LoadRecordingSection(QWidget):
         self.emg_label = ""
 
         # Create widgets
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "title": SubsectionTitle("Load recording", self),
             "selectrecording": SelectRecordingWidget(parent=self),
             "label": RecordingLabel(parent=self),
@@ -237,6 +241,7 @@ class LoadRecordingSection(QWidget):
             n_chan = self.emg_model.emg_data.n_chan
             emg_dur = self.emg_model.emg_data.emg_dur
             self.widgets["message"].setText(
-                "Recording loaded! "
-                + f"The recording has {n_chan} channels and is {round(emg_dur/60, 2)} minutes."
+                "Recording loaded:\n"
+                + f"Channels: {n_chan}\n"
+                + f"Duration: {int(emg_dur) // 60:02d}:{int(emg_dur) % 60:02d}"
             )

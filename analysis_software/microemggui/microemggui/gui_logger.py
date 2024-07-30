@@ -8,12 +8,13 @@ Based on https://docs.python.org/3/howto/logging-cookbook.html
 
 import logging
 from PySide6.QtCore import Signal, QObject
+from pymicroemg.emg_data_raw import EMGDataRawLoggerAdapter
 
 
 class LogRecordSignaller(QObject):
     # QObject for passing log record signal
 
-    signal = Signal(logging.LogRecord)
+    signal = Signal(EMGDataRawLoggerAdapter)
 
 
 class QtHandler(logging.Handler):
@@ -28,6 +29,6 @@ class QtHandler(logging.Handler):
         # Connect to slot
         self.signaller.signal.connect(slot_func)
 
-    def emit(self, record):
+    def emit(self, record: EMGDataRawLoggerAdapter):
         # Emit log record
         self.signaller.signal.emit(record)

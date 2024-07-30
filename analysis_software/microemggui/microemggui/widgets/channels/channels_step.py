@@ -3,7 +3,7 @@
 """
 Widget for selecting channels to use for analysis.
 """
-
+from typing import Any
 from pymicroemg.emg_channels import EMGChannels
 
 from PySide6.QtWidgets import (
@@ -45,7 +45,7 @@ class ColourfulChannelCheckBox(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
-    def setChecked(self, is_checked):
+    def setChecked(self, is_checked: bool):
         self.checkbox.setChecked(is_checked)
 
 
@@ -67,7 +67,7 @@ class ChannelsCheckBoxes(QWidget):
         n_chan = len(chan_names)
 
         # Make checkbox for each channel
-        self.widgets = {"checkboxes": dict()}
+        self.widgets: dict[str, dict[int, Any]] = {"checkboxes": dict()}
         for i in range(n_chan):
             w = CheckBoxChannel(chan_names[i], parent=self)
             w.setStyleSheet("color: " + chan_clrs[i])
@@ -110,7 +110,7 @@ class SelectChannels(QWidget):
         super().__init__(parent)
 
         # Create widgets
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "all": QCheckBox("Select all", parent=self),
             "checkboxes": ChannelsCheckBoxes(chan, chan_clrs, parent=self),
         }
@@ -179,7 +179,7 @@ class ChannelsWidget(QWidget):
         raw_emg_model: EMGDataRawModel,
         preproc_emg_model: EMGDataPreprocModel,
         emg_clrs: list[str],
-        min_chan=1,
+        min_chan: int = 1,
         parent=None,
     ):
         # min_chan = minimum number of channels needed to proceed with the analysis
@@ -192,13 +192,13 @@ class ChannelsWidget(QWidget):
 
         # Boolean list to store whether each channel is checked (all initially selected)
         self.chan_checked = [True for i in range(self.n_chan)]
-        self.bad_chan_idx = []  # Indices of bad channels
+        self.bad_chan_idx: list[int] = []  # Indices of bad channels
 
         # Create widgets
         # Make viewer first so its full colour array (with repeated colours) can be
         # passed to the channel checkboxes
         viewer = EMGViewerTabbedWidget(raw_emg_model, emg_clrs)  # make viewer first
-        self.widgets = {
+        self.widgets: dict[str, Any] = {
             "title": SectionTitle("Select channels", parent=self),
             "channels": SelectChannels(
                 chan=raw_emg_model.emg_data.chan, chan_clrs=viewer.emg_clrs, parent=self
