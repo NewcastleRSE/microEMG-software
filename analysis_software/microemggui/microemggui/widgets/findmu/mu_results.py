@@ -97,7 +97,11 @@ class MUResultsWidget(QWidget):
         n_mu = reconstruct_model.reconstruct.found_motor_units.n_motor_units
 
         # Update title text
-        self.widgets["title"].setText(f"Found {n_mu} motor units.")
+        if n_mu == 1:
+            text = f"Found {n_mu} motor unit."
+        else:
+            text = f"Found {n_mu} motor units."
+        self.widgets["title"].setText(text)
 
         # Update plot
         self.widgets["plot"].update_reconstruct(reconstruct_model)
