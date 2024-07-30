@@ -10,6 +10,10 @@ import numpy as np
 
 from pymicroemg.emg_files import EMGFiles
 from pymicroemg.emg_preproc_settings import EMGPreprocSettings
+from pymicroemg.emg_reconstruct_settings import (
+    EMGAnalysisMotorUnitClusterSettings,
+    EMGAnalysisMotorUnitJitterSettings,
+)
 import pymicroemg.helper_config as cfg
 
 from pymicroemg.emg_reconstruct_settings import (
@@ -193,6 +197,9 @@ for mu_num in motor_units_for_fibre_localisation:
 for mu_num in motor_units_for_fibre_localisation:
     print(f"Clustering fibres in motor unit {mu_num + 1}")    
     reconstruct.mu_cluster_fibre_potentials(mu_num)
+    
+    clustering_results = mu.fibre_clustering_results
+    
     mu = reconstruct.found_motor_units.motor_units[mu_num]
     print(f"{mu.fibre_clustering_results['n_fibre_clusters']} clusters")    
     mu.plot_fibre_potential_clustering()
@@ -201,6 +208,8 @@ for mu_num in motor_units_for_fibre_localisation:
 for mu_num in motor_units_for_fibre_localisation:         
     # Do jitter analysis
     reconstruct.mu_jitter_analysis(mu_num)
+    
+    jitter_results = mu.fibre_jitter_results
     
     # Plot heat plot of mean consectutive differences (MCDs).
     mu = reconstruct.found_motor_units.motor_units[mu_num]
