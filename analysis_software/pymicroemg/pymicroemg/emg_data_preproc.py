@@ -11,6 +11,9 @@ Use for downstream analysis of the preprocessed EMG data.
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
+from pymicroemg.emg_reconstruct_settings import EMGAnalysisMotorUnitClusterSettings
+from pymicroemg.emg_reconstruct_settings import EMGAnalysisMotorUnitJitterSettings
+
 import numpy as np
 import numpy.typing as npt
 
@@ -144,6 +147,8 @@ class EMGDataPreproc(EMGData):
         self,
         mu_settings: EMGAnalysisMotorUnitSettings,
         recon_settings: EMGAnalysisReconstructSettings,
+        mu_cluster_settings: EMGAnalysisMotorUnitClusterSettings,
+        mu_jitter_settings: EMGAnalysisMotorUnitJitterSettings,
     ) -> EMGAnalysisReconstruct:
         """
         Set up fibre reconstruction (i.e., localisation) analysis. The preprocessed EMG
@@ -155,6 +160,11 @@ class EMGDataPreproc(EMGData):
             Settings to use for motor unit identification.
         recon_settings : EMGAnalysisReconstructSettings
             Settings to use for fibre reconstruction.
+        mu_cluster_settings: EMGAnalysisMotorUnitClusterSettings
+            Settings used to perform cluster analysis of fibre potentials, to estimate
+            fibre positions.
+        mu_jitter_settings: EMGAnalysisMotorUnitJitterSettings
+            Setting used to perform jitter analysis.
 
         Returns
         -------
@@ -164,7 +174,11 @@ class EMGDataPreproc(EMGData):
         """
 
         reconstruct = EMGAnalysisReconstruct(
-            emg_data_preproc=self, mu_settings=mu_settings, recon_settings=recon_settings
+            emg_data_preproc=self,
+            mu_settings=mu_settings,
+            recon_settings=recon_settings,
+            mu_cluster_settings=mu_cluster_settings,
+            mu_jitter_settings=mu_jitter_settings,
         )
 
         return reconstruct

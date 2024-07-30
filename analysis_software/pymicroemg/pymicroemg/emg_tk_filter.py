@@ -21,8 +21,6 @@ Please cite the paper if any of the methods were helpful
 import numpy as np
 import scipy.signal as sg
 import warnings
-from pymicroemg.detect_peaks import detect_peaks
-from pymicroemg.emg_constants import QUICK_VERSION
 
 
 def round_int(val):
@@ -40,8 +38,8 @@ def round_int(val):
 
     """
 
-    return round_int_nonbanker(val)
-    # return int(np.round(val))
+    # return round_int_nonbanker(val)
+    return int(np.round(val))
 
 
 def round_ints(vals):
@@ -59,8 +57,8 @@ def round_ints(vals):
 
     """
 
-    return round_ints_nonbanker(vals)
-    # return np.round(vals)
+    # return round_ints_nonbanker(vals)
+    return np.round(vals)
 
 
 def round_int_nonbanker(val):
@@ -121,11 +119,8 @@ def find_peaks(data, distance=1):
     Try to return as near as possible the same answer as findpeaks in MatLab
     """
 
-    if QUICK_VERSION:
-        peaks, _ = sg.find_peaks(data, distance=distance)
-        return peaks
-    else:
-        return detect_peaks(data, mpd=distance)
+    peaks, _ = sg.find_peaks(data, distance=distance)
+    return peaks
 
 
 def running_TEO(raw_signal, k=1):
@@ -1120,18 +1115,9 @@ def TK_filter(sig, sampling_freq, C=0.1, threshold_PsC=0.1, init=True, wind=0.00
             original_range[0] = np.nanmin(features[:, i])
             original_range[1] = np.nanmax(features[:, i])
 
-        if QUICK_VERSION:
-            features[:, i] = linear_map2(
-                features[:, i], original_range, map_range, [1, 4]
-            )  # idea for speed up for clustering, change below also.
-            # Does work a bit, but more MUs
-        else:
-            features[:, i] = linear_map(features[:, i], original_range, map_range)
+        features[:, i] = linear_map(features[:, i], original_range, map_range)
 
-    if QUICK_VERSION:
-        titles = generate_titles2(features, map_range)
-    else:
-        titles = generate_titles(features, map_range)
+    titles = generate_titles(features, map_range)
 
     uniq_c = merge_clusters(template, titles, threshold_PsC, sampling_freq, len(sig))
 
