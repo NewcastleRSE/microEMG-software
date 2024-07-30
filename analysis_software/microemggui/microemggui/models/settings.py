@@ -1,13 +1,16 @@
 """
-Models for settings for EMG data analysis.
+Models (i.e., interfaces) for settings for EMG data analysis.
 
-Note: does not use Qt classes for model/view framework. Purpose is to provide an
-interface to pymicroemg data classes for settings:
-    - EMGPreprocSettings
-    - EMGAnalysisMotorUnitSettings
+This code does not use Qt classes for the model/view framework.
+Instead, we use custom classes to provide an interface to these pymicroemg data classes
+that store analysis settings:
+    - EMGPreprocSettings (model: EMGPreprocSettingsModel)
+    - EMGAnalysisMotorUnitSettings (model: EMGAnalysisMotorUnitSettingsModel)
 
 EMGSettingsModel also stores all settings as attributes (without the interface for each
-settings - the interface is created as needed to interact with the settings)
+settings - the interface is created as needed to interact with the settings).
+
+This approach helps separate the GUI logic from the underlying analysis code.
 """
 
 from __future__ import annotations
@@ -18,6 +21,8 @@ if TYPE_CHECKING:
     from pymicroemg.emg_reconstruct_settings import (
         EMGAnalysisMotorUnitSettings,
         EMGAnalysisReconstructSettings,
+        EMGAnalysisMotorUnitClusterSettings,
+        EMGAnalysisMotorUnitJitterSettings,
     )
 
 
@@ -32,12 +37,16 @@ class EMGSettingsModel:
     def __init__(
         self,
         preprocess_settings: EMGPreprocSettings,
-        recon_settings: EMGAnalysisReconstructSettings,
         mu_settings: EMGAnalysisMotorUnitSettings,
+        recon_settings: EMGAnalysisReconstructSettings,
+        mu_cluster_settings: EMGAnalysisMotorUnitClusterSettings,
+        mu_jitter_settings: EMGAnalysisMotorUnitJitterSettings,
     ):
         self.preprocess_settings = preprocess_settings
-        self.recon_settings = recon_settings
         self.mu_settings = mu_settings
+        self.recon_settings = recon_settings
+        self.mu_cluster_settings = mu_cluster_settings
+        self.mu_jitter_settings = mu_jitter_settings
 
     def get_formatted_settings_text(self) -> str:
         # Formatted settings text with breaks and bold section headers, for display in
@@ -52,7 +61,8 @@ class EMGSettingsModel:
         return settings_text
 
     def get_formatted_preprocess_settings_text(self) -> str:
-        # Preprocessing
+        # Preprocessing settings text for display in GUI
+
         remove_mains_str = f"Remove mains: {self.preprocess_settings.remove_mains}"
         filter_str = f"Filter: {self.preprocess_settings.butterworth_filter}"
         if self.preprocess_settings.butterworth_filter:
@@ -73,10 +83,27 @@ class EMGSettingsModel:
         return preprocess_str
 
     def get_formatted_mu_settings_text(self) -> str:
-        # Motor unit identification
+        # Motor unit identification settings text for display in GUI
         # TODO: add text aliases; create model to access value/text conversion methods
-        sensitivity_str = f"Detection sensitivity: {self.mu_settings.tk_filt_thres_spike}"
-        similarity_str = f"Motor unit similarity: {self.mu_settings.tk_filt_thres_PsC}"
+
+        # Create model
+        mu_settings_model = EMGAnalysisMotorUnitSettingsModel(self.mu_settings)
+
+        # Get text versions of each setting
+        sensitivity_text = mu_settings_model.get_setting_current_text("sensitivity")
+        similarity_text = mu_settings_model.get_setting_current_text("similarity")
+
+        # Create strings
+        sensitivity_str = (
+            "Detection sensitivity: "
+            + sensitivity_text
+            + f" ({self.mu_settings.tk_filt_thres_spike})"
+        )
+        similarity_str = (
+            "Motor unit similarity: "
+            + similarity_text
+            + f" ({self.mu_settings.tk_filt_thres_PsC})"
+        )
         mu_str = (
             f"<b>Settings for finding motor units</b><br>{sensitivity_str}<br>{similarity_str}"
         )

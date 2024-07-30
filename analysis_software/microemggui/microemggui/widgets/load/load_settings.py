@@ -12,6 +12,8 @@ from pymicroemg.emg_preproc_settings import EMGPreprocSettings
 from pymicroemg.emg_reconstruct_settings import (
     EMGAnalysisMotorUnitSettings,
     EMGAnalysisReconstructSettings,
+    EMGAnalysisMotorUnitClusterSettings,
+    EMGAnalysisMotorUnitJitterSettings,
 )
 
 from microemggui.models.settings import EMGSettingsModel
@@ -101,23 +103,34 @@ class LoadSettingsSection(QWidget):
             match settings_name:
                 case "Default":
                     # Preprocessing settings
+                    # TODO: set filter based on defaults instead?
                     preprocess_settings = EMGPreprocSettings()
                     preprocess_settings.add_butterworth_filter(
                         cutoff_freq=[100, 2000], order=6, filter_type="bandpass"
                     )
                     preprocess_settings.add_remove_mains()
 
-                    # Fibre reconstruction settings
-                    recon_settings = EMGAnalysisReconstructSettings()
+                    # Remaining settings will depend on default values of these
+                    # settings classes
 
                     # Motor unit settings
                     mu_settings = EMGAnalysisMotorUnitSettings()
 
-            # TODO: update to all settings
+                    # Fibre reconstruction settings
+                    recon_settings = EMGAnalysisReconstructSettings()
+
+                    # Clustering
+                    mu_cluster_settings = EMGAnalysisMotorUnitClusterSettings()
+
+                    # Jitter
+                    mu_jitter_settings = EMGAnalysisMotorUnitJitterSettings()
+
             self.settings_model = EMGSettingsModel(
                 preprocess_settings=preprocess_settings,
-                recon_settings=recon_settings,
                 mu_settings=mu_settings,
+                recon_settings=recon_settings,
+                mu_cluster_settings=mu_cluster_settings,
+                mu_jitter_settings=mu_jitter_settings,
             )
             self.settings_changed.emit(self.settings_model)  # Must emit first
             self.settings_loaded.emit(True)

@@ -98,19 +98,22 @@ class FindMUWidget(QWidget):
     def __init__(
         self,
         reconstruct_model: EMGAnalysisReconstructModel,
-        mu_settings: EMGAnalysisMotorUnitSettingsModel,
         parent=None,
     ):
         super().__init__(parent)
 
-        # EMG reconstruction analysis object and settings for finding motor units
+        # EMG reconstruction analysis object
         self.reconstruct_model = reconstruct_model
-        self.mu_settings = mu_settings  # settings model: settings stored in mu_settings.settings
+
+        # Motor units settings model (settings stored in mu_settings_model.settings)
+        self.mu_settings_model = EMGAnalysisMotorUnitSettingsModel(
+            reconstruct_model.reconstruct.mu_settings
+        )
 
         # Create widgets in first column
         self.widgets: dict[str, Any] = {
             "title": SectionTitle("Find motor units", self),
-            "settings": MUSettingsWidget(mu_settings, parent=self),
+            "settings": MUSettingsWidget(self.mu_settings_model, parent=self),
             "buttons": MainButtons(self),
         }
 
@@ -149,7 +152,7 @@ class FindMUWidget(QWidget):
         """
 
         # Update settings
-        self.reconstruct_model.reconstruct.mu_settings = self.mu_settings.settings
+        self.reconstruct_model.reconstruct.mu_settings = self.mu_settings_model.settings
         print(self.reconstruct_model.reconstruct.mu_settings)
 
         # Find motor units

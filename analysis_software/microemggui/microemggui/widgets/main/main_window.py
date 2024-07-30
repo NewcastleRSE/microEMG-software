@@ -33,11 +33,7 @@ from microemggui.widgets.channels.channels_step import ChannelsWidget
 from microemggui.widgets.findmu.find_mu_step import FindMUWidget
 
 # Models
-from microemggui.models.settings import (
-    EMGSettingsModel,
-    EMGPreprocSettingsModel,
-    EMGAnalysisMotorUnitSettingsModel,
-)
+from microemggui.models.settings import EMGSettingsModel, EMGPreprocSettingsModel
 from microemggui.models.emg import (
     EMGDataRawModel,
     EMGDataPreprocModel,
@@ -293,12 +289,14 @@ class MicroEMGMain(QMainWindow):
             self.bad_chan_idx = bad_chan_idx
             print(self.bad_chan_idx)
 
-            # Update in preprocessed and reconstruct data
+            # Update in preprocessed data and reconstruction analysis object
             self.emg_model["preproc"].emg_data.set_bad_chan(self.bad_chan_idx)
             reconstruct = EMGAnalysisReconstruct(
-                self.emg_model["preproc"].emg_data,
-                self.settings_model.mu_settings,
-                self.settings_model.recon_settings,
+                emg_data_preproc=self.emg_model["preproc"].emg_data,
+                mu_settings=self.settings_model.mu_settings,
+                recon_settings=self.settings_model.recon_settings,
+                mu_cluster_settings=self.settings_model.mu_cluster_settings,
+                mu_jitter_settings=self.settings_model.mu_jitter_settings,
             )
             self.reconstruct_model = EMGAnalysisReconstructModel(reconstruct)
 
@@ -362,7 +360,7 @@ class MicroEMGMain(QMainWindow):
     def add_channels_widget(self):
         # Add widget for channel selection once preprocessing is finished/updated
         # Also triggers initial creation of the findmu widget since there is no analysis
-        # that needs t be applied in the channels widget.
+        # that needs to be applied in the channels widget.
 
         # Create widget and add to stack of analysis step widgets
         w_name = "channels"
@@ -389,9 +387,11 @@ class MicroEMGMain(QMainWindow):
 
         # Create reconstruction analysis data
         reconstruct = EMGAnalysisReconstruct(
-            self.emg_model["preproc"].emg_data,
-            self.settings_model.mu_settings,
-            self.settings_model.recon_settings,
+            emg_data_preproc=self.emg_model["preproc"].emg_data,
+            mu_settings=self.settings_model.mu_settings,
+            recon_settings=self.settings_model.recon_settings,
+            mu_cluster_settings=self.settings_model.mu_cluster_settings,
+            mu_jitter_settings=self.settings_model.mu_jitter_settings,
         )
         self.reconstruct_model = EMGAnalysisReconstructModel(reconstruct)
 
@@ -404,10 +404,7 @@ class MicroEMGMain(QMainWindow):
         # Create widget and add to stack of analysis step widgets
         w_name = "findmu"
         analysis_w = self.widgets["analysis"]
-
-        # Create MU settings model to access methods needed by GUI
-        mu_settings_model = EMGAnalysisMotorUnitSettingsModel(self.settings_model.mu_settings)
-        analysis_w.widgets[w_name] = FindMUWidget(self.reconstruct_model, mu_settings_model)
+        analysis_w.widgets[w_name] = FindMUWidget(self.reconstruct_model)
         analysis_w.layout.addWidget(analysis_w.widgets[w_name])
 
         print("Channels to analyse: ")
