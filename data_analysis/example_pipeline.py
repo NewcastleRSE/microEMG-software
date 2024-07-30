@@ -10,6 +10,10 @@ import numpy as np
 
 from pymicroemg.emg_files import EMGFiles
 from pymicroemg.emg_preproc_settings import EMGPreprocSettings
+from pymicroemg.emg_reconstruct_settings import (
+    EMGAnalysisMotorUnitClusterSettings,
+    EMGAnalysisMotorUnitJitterSettings,
+)
 import pymicroemg.helper_config as cfg
 
 from pymicroemg.emg_reconstruct_settings import (
@@ -22,7 +26,7 @@ plt.rcParams["figure.dpi"] = 600
 
 # %% Choose recording (0 - 5) and set recording-specific properties
 
-recording_num = 3
+recording_num = 1
 
 match recording_num:
     case 1:
@@ -158,7 +162,7 @@ for i in np.arange(reconstruct.found_motor_units.n_motor_units):
 
 match recording_num:
     case 1:
-        motor_units_for_fibre_localisation = [0, 1, 2, 3]
+        motor_units_for_fibre_localisation = [1]
     case 3:
         motor_units_for_fibre_localisation = [0, 1, 2]
 
@@ -184,9 +188,23 @@ for mu_num in motor_units_for_fibre_localisation:
     )
 
 # %% Cluster fibre potentials and plot median locations
+mu_cluster_settings = EMGAnalysisMotorUnitClusterSettings()
 for mu_num in motor_units_for_fibre_localisation:
     print(f"Clustering fibres in motor unit {mu_num + 1}")
-    reconstruct.found_motor_units.cluster_fibre_potentials(mu_num)
     mu = reconstruct.found_motor_units.motor_units[mu_num]
+    mu.cluster_fibre_potentials(mu_cluster_settings)
     print(f"{mu.fibre_clustering_results['n_fibre_clusters']} clusters")
-    reconstruct.found_motor_units.plot_fibre_potential_clustering_one_motor_unit(mu_num)
+    mu.plot_fibre_potential_clustering(reconstruct.found_motor_units)
+    # reconstruct.found_motor_units.plot_fibre_potential_clustering_one_motor_unit(mu_num)
+    clustering_results = mu.fibre_clustering_results
+
+# %% compute jitter
+
+mu_jitter_settings = EMGAnalysisMotorUnitJitterSettings()
+
+for mu_num in motor_units_for_fibre_localisation:
+    print(f"Computing jitter of fibres in motor unit {mu_num + 1}")
+    mu = reconstruct.found_motor_units.motor_units[mu_num]
+    mu.jitter_analysis(mu_jitter_settings)
+
+    jitter_results = mu.fibre_jitter_results
