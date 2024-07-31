@@ -155,6 +155,13 @@ class WidgetControlButton(QToolButton):
         super().__init__(*args, **kwargs)
 
 
+class MotorUnitButton(QPushButton):
+    # Button for motor units in selectmu widget
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
 # --- Spacers ---
 
 

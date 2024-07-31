@@ -56,7 +56,6 @@ class NextButton(LargePushButton):
 
         # Retain size if hidden
         size_policy = self.sizePolicy()
-        # size_policy.setHorizontalPolicy(QSizePolicy.Maximum)
         size_policy.setRetainSizeWhenHidden(True)
         self.setSizePolicy(size_policy)
 

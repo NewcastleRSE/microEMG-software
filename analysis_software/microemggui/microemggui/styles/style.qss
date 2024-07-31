@@ -86,6 +86,29 @@ WidgetControlButton:disabled {
     background-color: #D9D9D9;
 }
 
+MotorUnitButton {
+    font-size: 12pt;
+    background-color: 'white';
+    border-style: solid;
+    border-width: 1px;
+    border-color: #D9D9D9;
+    padding: 4;
+    width: 100px;
+    border-radius: 2;
+}
+
+MotorUnitButton:pressed {
+    background-color: #D9D9D9;
+}
+
+MotorUnitButton:hover {
+    background-color: #D9D9D9;
+}
+
+MotorUnitButton:checked {
+    background-color: "light blue";
+}
+
 /* Toolbars and toolbar widgets */
 
 TopToolbar {
@@ -275,6 +298,8 @@ QPushButton {
     max-width: 50;
 }
 
+/* Misc settings for specific widgets */
+
 /* EMG viewer */
 
 EMGViewerWidget {
@@ -290,8 +315,15 @@ QLabel#amp{
     max-width: 25;
 }
 
-/* Preprocessing settings - ste width */
+/* Preprocessing settings - set width */
 PreprocSettingsWidget {
     min-width: 250;
     max-width: 250;
+}
+
+QTabWidget#muvistab::pane {
+    background: white;
+    padding: 10px;
+    border: 1px solid grey;
+    border-radius: 4px;
 }
