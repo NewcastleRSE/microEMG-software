@@ -15,13 +15,13 @@ from PySide6.QtCore import QFile
 import microemggui
 
 from microemggui.widgets.findmu.find_mu_step import FindMUWidget
-from microemggui.models.settings import EMGAnalysisMotorUnitSettingsModel
 from microemggui.models.emg import EMGAnalysisReconstructModel
 
-from pymicroemg.emg_reconstruct import EMGAnalysisReconstruct
 from pymicroemg.emg_reconstruct_settings import (
     EMGAnalysisMotorUnitSettings,
     EMGAnalysisReconstructSettings,
+    EMGAnalysisMotorUnitJitterSettings,
+    EMGAnalysisMotorUnitClusterSettings,
 )
 from pymicroemg.emg_preproc_settings import EMGPreprocSettings
 from pymicroemg.emg_files import EMGFiles
@@ -52,15 +52,21 @@ class MainWindow(QMainWindow):
         mu_settings = EMGAnalysisMotorUnitSettings()
         mu_settings.tk_filt_thres_PsC = 0.05
         mu_settings.tk_filt_thres_spike = 0.15
-        mu_settings_model = EMGAnalysisMotorUnitSettingsModel(mu_settings)
 
         # prep reconstruction analysis
         recon_settings = EMGAnalysisReconstructSettings()
-        reconstruct = EMGAnalysisReconstruct(preproc_emg_data, mu_settings, recon_settings)
+        mu_cluster_settings = EMGAnalysisMotorUnitClusterSettings()
+        mu_jitter_settings = EMGAnalysisMotorUnitJitterSettings()
+        reconstruct = preproc_emg_data.set_up_reconstruct_analysis(
+            mu_settings=mu_settings,
+            recon_settings=recon_settings,
+            mu_cluster_settings=mu_cluster_settings,
+            mu_jitter_settings=mu_jitter_settings,
+        )
         reconstruct_model = EMGAnalysisReconstructModel(reconstruct)
 
         # MU widdget
-        self.widget = FindMUWidget(reconstruct_model, mu_settings_model, parent=self)
+        self.widget = FindMUWidget(reconstruct_model, parent=self)
 
         # layout and size
         self.setCentralWidget(self.widget)
