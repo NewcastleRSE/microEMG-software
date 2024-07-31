@@ -564,8 +564,7 @@ class EMGMotorUnit:
         # Get clustering results if they exist and put in a dictionary
         # with arrays stored as lists so they can be save in a json format file.
         if self.analysis_performed["fibres_clustered"]:
-            fibre_clusters_dict = {
-                "clustering_method": self.mu_cluster_settings.clustering_method,
+            fibre_clusters_dict = {                
                 "mean_n_fps": int(self.fibre_clustering_results["mean_n_fps"]),
                 "n_fibre_clusters": int(self.fibre_clustering_results["n_fibre_clusters"]),
                 "fibre_clusters": self.fibre_clustering_results["fibre_clusters"].tolist(),
@@ -605,8 +604,7 @@ class EMGMotorUnit:
 
         # If clustering not done for this MU then do not set anything.
         if fibre_clusters_dict:
-            self.mu_cluster_settings.clustering_method = fibre_clusters_dict["clustering_method"]
-
+            
             # Convert lists back to arrays to store results.
             self.fibre_clustering_results = {
                 "mean_n_fps": fibre_clusters_dict["mean_n_fps"],
@@ -670,7 +668,7 @@ class EMGMotorUnit:
 
     def plot_fibre_locations_setup(
         self, figsize : tuple[int, int]=(10, 5), axis_label_size : int = 14, tick_label_size : int =12, dpi : int =100, threeD : bool =False
-    )  -> tuple[plt.figure, plt.Axes]:
+    )  -> tuple[plt.figure, plt.axes.Axes]: 
         """
         Sets up plot for showing fibre locations, possibly from different motor units.
 
@@ -691,7 +689,7 @@ class EMGMotorUnit:
         -------
         fig : plt.figure
             The figure to which the plot belongs.
-        ax : plt.Axes
+        ax : plt.axes.Axes
             The axes to which the plot belongs.
 
         """
@@ -720,7 +718,7 @@ class EMGMotorUnit:
 
         return fig, ax
 
-    def plot_electrodes(self, ax : plt.Axes, marker : str ="s", clr : str ="silver", z : float =None):
+    def plot_electrodes(self, ax : plt.axes.Axes, marker : str ="s", clr : str ="silver", z : float =None):
         """
         Plot electrode locations using their (x,y) coordinates.
 
@@ -728,7 +726,7 @@ class EMGMotorUnit:
 
         Parameters
         ----------
-        ax : plt.Axes
+        ax : plt.axes.Axes
             Axes to plot the electrodes onto.
         marker : str, optional
             The kind of marker to use. The default is "s", square.
@@ -764,7 +762,7 @@ class EMGMotorUnit:
         pt_mean_size : float = 50,
         n_sigma : int = 2,
         axis_equal : bool = True,
-        ax : plt.Axes = None,
+        ax : plt.axes.Axes = None,
         lw : float = 0.5,
         figsize : tuple[np.float64, np.float64] = (10.2, 5),
         axis_label_size : float = 14,
@@ -799,7 +797,7 @@ class EMGMotorUnit:
             Number of St. Dev. to plot around the fibre centres
         axis_equal : bool, optional
             Whether aspect ratio should be plotted equal. The default is True.
-        ax : plt.Axes, optional
+        ax : plt.axes.Axes, optional
             The axis to add plot to. The default is None.
         lw : float, optional
             Line weight. The default is 0.5.
@@ -882,6 +880,7 @@ class EMGMotorUnit:
             )
             for h in lgnd.legend_handles:
                 h._sizes = [legend_pt_size]
+                h.set_alpha(1)
 
         # Set y axis limits.
         ax.set_ylim(-max_y, max_y)
@@ -912,6 +911,7 @@ class EMGMotorUnit:
         Colour
         
         """
+        
         if cmap is None:
             if n_clusters <= 10:
                 cmap = colormaps["tab10"].colors
@@ -923,7 +923,7 @@ class EMGMotorUnit:
         return cmap[cluster_no]
 
     def _plot_cluster_points(
-        self, cluster_no : int, n_clusters : int, ax : plt.Axes, pt_size : float, pt_alpha : float, cmap=None, lw : float =0, threeD : bool =False
+        self, cluster_no : int, n_clusters : int, ax : plt.axes.Axes, pt_size : float, pt_alpha : float, cmap=None, lw : float =0, threeD : bool =False
     ):
         """
         Plot all the points for fibre potentials beloging to the same cluster.
@@ -934,7 +934,7 @@ class EMGMotorUnit:
             Number of the cluster.
         n_clusters : int
             Total number of clusters.
-        ax : plt.Axes, optional
+        ax : plt.axes.Axes, optional
             Plot to add to. The default is None.    
         pt_alpha : float, optional
             Alpha value for the points, [0, 1] (transparency). The default is 0.4.    
@@ -982,14 +982,14 @@ class EMGMotorUnit:
         else:
             ax.scatter(x, y, pt_size, alpha=pt_alpha, facecolors=pt_facecolor, linewidth=lw)
 
-    def _plot_fitted_gmms(self, ax : plt.Axes, n_sigma : float):
+    def _plot_fitted_gmms(self, ax : plt.axes.Axes, n_sigma : float):
         """
         Plot all the points for fibre potentials beloging to the same cluster.
 
         Parameters
         ----------      
-        ax : plt.Axes
-            Plot to add to. The default is None.    
+        ax : plt.axes.Axes
+            Plot to add to.   
         n_sigma : float
             Number of standard deviations to plot confidence ellipses.
             
@@ -1029,7 +1029,7 @@ class EMGMotorUnit:
             )
             ax.add_artist(ellipse)
 
-    def confidence_ellipse(self, x, y, ax, n_std=3.0, facecolor="none", **kwargs):
+    def confidence_ellipse(self, x : npt.NDArray[np.float64], y : npt.NDArray[np.float64], ax : plt.axes.Axes, n_std : float = 3.0, facecolor="none", **kwargs) -> plt.patches.Ellipse:
         """
         Taken from matplotlib documentation
         https://matplotlib.org/stable/gallery/statistics/confidence_ellipse.html
@@ -1038,15 +1038,14 @@ class EMGMotorUnit:
 
         Parameters
         ----------
-        x, y : array-like, shape (n, )
+        x, y : npt.NDArray[np.float64], shape (n, )
             Input data.
-
-        ax : matplotlib.axes.Axes
+        ax : plt.axes.Axes
             The Axes object to draw the ellipse into.
-
         n_std : float
             The number of standard deviations to determine the ellipse's radiuses.
-
+        facecolor : Any
+            Face color of ellipse.
         **kwargs
             Forwarded to `~matplotlib.patches.Ellipse`
 
@@ -1054,10 +1053,11 @@ class EMGMotorUnit:
         -------
         matplotlib.patches.Ellipse
         """
+        
         if x.size != y.size:
             raise ValueError("x and y must be the same size")
 
-        # No data to do anythinmg with!
+        # No data to do anything with so return!
         if len(x) == 0:
             return
 
@@ -1071,13 +1071,13 @@ class EMGMotorUnit:
             (0, 0), width=ell_radius_x * 2, height=ell_radius_y * 2, facecolor=facecolor, **kwargs
         )
 
-        # Calculating the standard deviation of x from
-        # the squareroot of the variance and multiplying
+        # Calculate the scale of x from
+        # the standard deviation and multiply
         # with the given number of standard deviations.
         scale_x = np.sqrt(cov[0, 0]) * n_std
         mean_x = np.mean(x)
-
-        # calculating the standard deviation of y ...
+        
+        # Calculate the scale of y.
         scale_y = np.sqrt(cov[1, 1]) * n_std
         mean_y = np.mean(y)
 
@@ -1085,13 +1085,39 @@ class EMGMotorUnit:
             transforms.Affine2D().rotate_deg(45).scale(scale_x, scale_y).translate(mean_x, mean_y)
         )
 
+        # Return the Axes object with the ellipse drawn on it.
         ellipse.set_transform(transf + ax.transData)
         return ax.add_patch(ellipse)
 
     def _plot_fibre_location(
-        self, cluster_no, n_clusters, ax, gmm, pt_mean_size=10, n_sigma=1, pt_facecolor=None
+        self, cluster_no : int, n_clusters : int, ax : plt.axes.Axes, gmm : bool, pt_mean_size : float = 10, n_sigma : float = 1, pt_facecolor=None
     ):
+        """
+        Plots estimated fibre location and confidence ellipse.
 
+        Parameters
+        ----------
+        cluster_no : int
+            Number of the cluster.
+        n_clusters : int
+            Total number of clusters.
+        ax : plt.axes.Axes
+            Plot to add to.   
+        gmm : bool
+            True if clustering method is GMM.
+        pt_mean_size : float
+            Size of mean points.
+        n_sigma : float
+            Number of standard deviations for confidence ellipse.
+        pt_facecolor : Any
+            Face colour of points
+            
+        Returns
+        -------
+        None.
+        
+        """
+        
         if gmm:
             center = self.fibre_clustering_results["fibre_centres_gmm_mean"][cluster_no]
         else:
@@ -1124,24 +1150,22 @@ class EMGMotorUnit:
 
     def plot_3D_fibre_potential_clustering(
         self,
-        plot_electrodes=True,
-        pt_potentials_size=10,
-        pt_potentials_alpha=0.4,
-        pt_mean_size=50,
-        nsigma=2,
-        axis_equal=True,
-        ax=None,
-        lw=0.5,
-        figsize=(10, 5),
-        axis_label_size=14,
-        tick_label_size=12,
-        dpi=100,
-        cmap=None,
-        max_x=22,
-        max_y=1,
-        plot_legend=True,
-        legend_pt_size=50,
-        legend_label_size=12,
+        plot_electrodes : bool = True,
+        pt_potentials_size : float = 10,
+        pt_potentials_alpha : float = 0.4,       
+        axis_equal : bool = True,
+        ax : plt.axes.Axes = None,
+        lw : float = 0.5,
+        figsize : tuple[np.float64, np.float64] = (10, 5),
+        axis_label_size : float = 14,
+        tick_label_size : float = 12,
+        dpi : int = 100,
+        cmap = None,
+        max_x : float = 22,
+        max_y : float = 1,
+        plot_legend : bool = True,
+        legend_pt_size : int= 50,
+        legend_label_size : int = 12,
     ):
         """
         Create scatter plot of fibre localisations estimated from all fibre potentials
@@ -1153,53 +1177,46 @@ class EMGMotorUnit:
 
         Parameters
         ----------
-        plot_electrodes : TYPE, optional
-            DESCRIPTION. The default is True.
-        pt_potentials_size : TYPE, optional
-            DESCRIPTION. The default is 10.
-        pt_potentials_alpha : TYPE, optional
-            DESCRIPTION. The default is 0.5.
-        pt_mean_size : TYPE, optional
-            DESCRIPTION. The default is 50.
-        nsigma : float
-            Number of St. Dev. to plot around the fibre centres
-        axis_equal : TYPE, optional
-            DESCRIPTION. The default is True.
-        ax : TYPE, optional
-            DESCRIPTION. The default is None.
-        lw : TYPE, optional
-            DESCRIPTION. The default is 0.5.
-        figsize : TYPE, optional
-            DESCRIPTION. The default is (10, 5).
-        axis_label_size : TYPE, optional
-            DESCRIPTION. The default is 14.
-        tick_label_size : TYPE, optional
-            DESCRIPTION. The default is 12.
-        dpi : TYPE, optional
-            DESCRIPTION. The default is 100.
-        cmap : TYPE, optional
-            DESCRIPTION. The default is None.
+        plot_electrodes : bool, optional
+            Whether to plot electrodes or not. The default is True.
+        pt_potentials_size : float, optional
+            Size of the points for the fibre potentials. The default is 10.
+        pt_potentials_alpha : float, optional
+            Alpha value for the points, [0, 1] (transparency). The default is 0.4.       
+        axis_equal : bool, optional
+            Whether aspect ratio should be plotted equal. The default is True.
+        ax : plt.axes.Axes, optional
+            The axis to add plot to. The default is None.
+        lw : float, optional
+            Line weight. The default is 0.5.
+        figsize tuple[np.float64, np.float64], optional
+            Size of figure. The default is (10, 5).
+        axis_label_size : float, optional
+            size of axis label. The default is 14.
+        tick_label_size : float, optional
+            Size of tick labels. The default is 12.
+        dpi : int, optional
+            Dots per inch. The default is 100.
+        cmap : Any, optional
+            Colour map to use. The default is None.
         max_x : float
             Maximum of x axis
         max_y : float
             Maximum of y axis
-        plot_legend : boolean
-            Plot the legend or not
+        plot_legend : bool
+            Plot the legend or not.
         legend_pt_size : float
-            Size of points in legend
+            Size of points in legend.
         legend_label_size: float
-            Size of labels in legend
+            Size of labels in legend.
 
         Returns
         -------
         None.
 
-        TODO: finish docstring
-        TODO: add option for fixing axis limits across different motor units.
-
         """
 
-        # Setup plot
+        # Setup plot.
         fig, ax = self.plot_fibre_locations_setup(
             figsize=figsize,
             axis_label_size=axis_label_size,
@@ -1214,7 +1231,7 @@ class EMGMotorUnit:
 
         n_clusters = self.fibre_clustering_results["n_fibre_clusters"]
 
-        # Plot clusters
+        # Plot each cluster.
         for cluster_no in range(n_clusters):
             self._plot_cluster_points(
                 cluster_no,
@@ -1226,27 +1243,24 @@ class EMGMotorUnit:
                 lw=lw,
                 threeD=True,
             )
-
-        # Plot centres and covariance regions
-        # for cluster_no in range(n_clusters):
-        #    self._plot_covariance_region(cluster_no, n_clusters, ax, pt_mean_size, nsigma)
-
-        # Legend
+            
+        # Add legend.
         if plot_legend:
             lgnd = ax.legend(
                 bbox_to_anchor=(1.2, 1.0),
                 loc="upper left",
                 frameon=False,
                 handletextpad=0.25,
-                fontsize=legend_label_size,
+                fontsize=legend_label_size                
             )
             for h in lgnd.legend_handles:
                 h._sizes = [legend_pt_size]
+                h.set_alpha(1)
 
-        # y axis limits
+        # Set y axis limits.
         ax.set_ylim(-max_y, max_y)
 
-        # Set x axis limits
+        # Set x axis limits.
         ax.set_xlim(-1, max_x)
 
         # Equal aspect ratio, (this can mess up the axis limits if true when
@@ -1254,48 +1268,48 @@ class EMGMotorUnit:
         if axis_equal:
             ax.axis("equal")
 
-    def remove_outliers_iqr(self, intervals) -> tuple[npt.NDArray[np.float64], int]:
+    def remove_outliers_iqr(self, intervals : npt.NDArray[npt.int]) -> tuple[npt.NDArray[np.float64], int]:
         """
         Parameters
         ----------
         intervals: npt.NDArray[npt.int]
-            array of time intervals
+            Array of time intervals.
 
         Returns
         -------
         npt.NDArray[npt.int]
-            array of time intervals with outliears removed
+            Array of time intervals with outliers removed.
 
         """
 
-        # calculate interquartile range
+        # Calculate interquartile range.
         q25, q75 = np.nanpercentile(intervals, 25), np.nanpercentile(intervals, 75)
         iqr = q75 - q25
 
-        # calculate the outlier cutoff
+        # Calculate the outlier cutoff.
         cut_off = iqr * 1.5
         lower, upper = q25 - cut_off, q75 + cut_off
 
-        # Replace outliers with nan
+        # Replace outliers with nan.
         ans = [np.nan if x < lower or x > upper else x for x in intervals]
         num_of_outliers = np.count_nonzero(((intervals < lower) | (intervals > upper)))
 
         return ans, num_of_outliers
 
-    def _calculate_fibre_potentials_time_diff(self, fib_pot_pos1, fib_pot_pos2):
+    def _calculate_fibre_potentials_time_diff(self, fib_pot_pos1 : int, fib_pot_pos2 : int) -> int:
         """
         Parameters
         ----------
         fib_pot_pos1: int
-            index of the first fibre potential in fibre_potential_times
+            Index of the first fibre potential in fibre_potential_times.
         fib_pot_pos2: int
-            index of the second fibre potential in fibre_potential_times
+            Index of the second fibre potential in fibre_potential_times.
 
         Returns
         -------
         int
-            length of time interval between the two fibre potentials
-            return as a multiple of the number of time steps i.e. indices
+            Length of time interval between the two fibre potentials
+            returned as a multiple of the number of time steps i.e. indices.
 
         """
 
@@ -1303,7 +1317,15 @@ class EMGMotorUnit:
             self.fibre_potential_times[fib_pot_pos2] - self.fibre_potential_times[fib_pot_pos1]
         )
 
-    def jitter_analysis_between_two_fibres(self, fibre1_num, fibre2_num):
+    def _jitter_analysis_between_two_fibres(self, fibre1_num : int, fibre2_num : int) -> tuple[float,
+            float,
+            npt.NDArray[np.int64],
+            npt.NDArray[np.int64],
+            int,
+            int,
+            npt.NDArray[np.int64],
+            npt.NDArray[np.int64]]:
+        
         """
         Performs jitter analysis for this motor unit (MU). For the identified
         fibres computes the mean consecutive difference (MCD) between each pair
@@ -1322,19 +1344,26 @@ class EMGMotorUnit:
         Parameters
         ----------
         fibre1_num : int
-            Fibre number for the first fibre, given previously from cluster analysis (0,1,2,...)
+            Fibre number for the first fibre, given previously from cluster analysis (0,1,2,...).
         fibre2_num : int
-            Fibre number for the second fibre
-        remove_outliers: boolean
+            Fibre number for the second fibre.
+        remove_outliers: bool
             Remove outliers in fibre potential times to avoid probable miss-classifications
 
         Returns
         -------
-        None.
+        tuple[float,
+            float,
+            npt.NDArray[np.int64],
+            npt.NDArray[np.int64],
+            int,
+            int,
+            npt.NDArray[np.int64],
+            npt.NDArray[np.int64]]
 
         """
 
-        # Calculate medians of all the fibre potentials for fibre 1 and fibre 2
+        # Calculate medians of all the fibre potentials for fibre 1 and fibre 2.
         all_fibre1_potentials_idx = np.flatnonzero(
             (self.fibre_clustering_results["fibre_clusters"] == fibre1_num)
         )
@@ -1345,7 +1374,7 @@ class EMGMotorUnit:
         )
         median_time2 = np.median(self.fibre_potential_times[all_fibre2_potentials_idx])
 
-        # Length of time intervals between fibre potentials in the two different fibres
+        # Length of time intervals between fibre potentials in the two different fibres.
         fibre_potential_time_diffs = np.full(self.n_potentials, np.nan)
 
         # Taken note of how many outliers there are and which fibre potentials
@@ -1355,7 +1384,7 @@ class EMGMotorUnit:
         fibre1_pots_used_idx = np.full(self.n_potentials, np.nan)
         fibre2_pots_used_idx = np.full(self.n_potentials, np.nan)
 
-        # Compute length of time intervals between fibre potentials
+        # Compute length of time intervals between fibre potentials.
         for mup_num in range(self.n_potentials):
             mup_onset_idx = self.potentials_t_idx[mup_num]
 
@@ -1381,7 +1410,7 @@ class EMGMotorUnit:
             )
 
             if len(fibre1_potentials_idx) > 0 and len(fibre2_potentials_idx) > 0:
-                # Pick fibre potentials closest to the median.
+                # Pick fibre potentials closest to the medians.
                 fibre1_potential_to_use = np.argmin(
                     np.abs(median_time1 - self.fibre_potential_times[fibre1_potentials_idx])
                 )
@@ -1396,19 +1425,20 @@ class EMGMotorUnit:
                     fib_pot_pos1, fib_pot_pos2
                 )
 
-                # Record which fibre potentials were used to look into later, maybe
+                # Record which fibre potentials were used to look into later, if desired.
                 fibre1_pots_used_idx[mup_num] = fibre1_potential_to_use
                 fibre2_pots_used_idx[mup_num] = fibre2_potential_to_use
 
-        # Remove outliers in time intervals
+        # Remove outliers in time intervals.
         if self.mu_jitter_settings.remove_outliers:
             fibre_potential_time_diffs, number_of_differences_outliers = self.remove_outliers_iqr(
                 fibre_potential_time_diffs
             )
 
-        # Compute consecutive differences
+        # Compute consecutive differences.
         consecutive_diffs = np.full((self.n_potentials - 1), np.nan)
 
+        # Loop thro' MUPs.
         for mup_num in range(self.n_potentials - 1):
             if not np.isnan(fibre_potential_time_diffs[mup_num]) and not np.isnan(
                 fibre_potential_time_diffs[mup_num + 1]
@@ -1417,17 +1447,19 @@ class EMGMotorUnit:
                     fibre_potential_time_diffs[mup_num] - fibre_potential_time_diffs[mup_num + 1]
                 )
 
+        # Remove outliers.
         if self.mu_jitter_settings.remove_outliers:
             consecutive_diffs, number_of_cons_diffs_outliers = self.remove_outliers_iqr(
                 consecutive_diffs
             )
 
-        # Compute mean consecutive difference
+        # Compute mean consecutive difference.
         mean_consecutive_diff = np.nanmean(consecutive_diffs)
 
-        # Compute mean consecutive difference
+        # Compute median of consecutive differences.
         median_consecutive_diff = np.nanmedian(consecutive_diffs)
 
+        # Return many results for the jitter analysis.
         return (
             mean_consecutive_diff,
             median_consecutive_diff,
@@ -1458,7 +1490,8 @@ class EMGMotorUnit:
 
         Parameters
         ----------
-        None.
+        mu_jitter_settings: EMGAnalysisMotorUnitJitterSettings
+            The setting to use for the jitter analysis.
 
         Returns
         -------
@@ -1483,9 +1516,10 @@ class EMGMotorUnit:
         if self.n_potentials < 2:
             raise RuntimeError("Not enough MUPs to perform jitter analysis!")
 
-        # Get number of clusters.
+        # Get the number of clusters.
         n_fibre_clusters = self.fibre_clustering_results["n_fibre_clusters"]
 
+        # The number of jitter calculations to do between fibres.
         number_of_jitter_calcs = int(n_fibre_clusters * (n_fibre_clusters - 1) / 2)
 
         # Calculations to report.
@@ -1507,6 +1541,7 @@ class EMGMotorUnit:
         count = 0
         for fibre1_num in range(n_fibre_clusters - 1):
             for fibre2_num in np.arange(fibre1_num + 1, n_fibre_clusters):
+                # Do jitter analysis between fibre1 and fibre2.
                 (
                     mean_consecutive_diffs[count],
                     median_consecutive_diffs[count],
@@ -1516,7 +1551,9 @@ class EMGMotorUnit:
                     number_of_cons_diffs_outliers[count],
                     fibre1_pots_used_idx[count, :],
                     fibre2_pots_used_idx[count, :],
-                ) = self.jitter_analysis_between_two_fibres(fibre1_num, fibre2_num)
+                ) = self._jitter_analysis_between_two_fibres(fibre1_num, fibre2_num)
+                
+                # Record fibres analysed and some data counts.
                 fibre1_numbers[count] = fibre1_num
                 fibre2_numbers[count] = fibre2_num
                 number_of_differences[count] = np.count_nonzero(
@@ -1527,6 +1564,7 @@ class EMGMotorUnit:
                 )
                 count += 1
 
+        # Record final jitter analysis results in dictionary.
         self.fibre_jitter_results = {
             "fibre1_numbers": fibre1_numbers,
             "fibre2_numbers": fibre2_numbers,
@@ -1542,11 +1580,12 @@ class EMGMotorUnit:
             "fibre2_pot_used_idx": fibre2_pots_used_idx,
         }
 
+        # Record that the jitter analysis has been performed for this motor unit.
         self.analysis_performed["fibres_jitter_computed"] = True
 
-    def get_fibre_jitter_dict(self):
+    def get_fibre_jitter_dict(self) -> dict:
         """
-        Returns dictionary of fibre jitter results so that it can be saved
+        Returns dictionary of fibre jitter results so that it can be saved.
 
         Parameters
         ----------
@@ -1554,11 +1593,11 @@ class EMGMotorUnit:
 
         Returns
         -------
-        Dictionary
+        dict
 
         """
 
-        # If jitter analysis is not done then return empty dictionary
+        # If jitter analysis is not done then return empty dictionary.
         if self.analysis_performed["fibres_jitter_computed"]:
             fibre_jitter_dict = {
                 "fibre1_numbers": self.fibre_jitter_results["fibre1_numbers"].tolist(),
@@ -1577,14 +1616,14 @@ class EMGMotorUnit:
 
         return fibre_jitter_dict
 
-    def set_fibre_jitter_from_dict(self, fibre_jitter_dict):
+    def set_fibre_jitter_from_dict(self, fibre_jitter_dict : dict):
         """
-        Sets fibre jitter results from loaded jitter results
+        Sets fibre jitter results from loaded jitter results.
 
         Parameters
         ----------
-        fibre_jitter_dict : Dictionary
-            Dictionary containing saved results of clustering
+        fibre_jitter_dict : dict
+            Dictionary containing saved results of clustering.
 
         Returns
         -------
@@ -1592,7 +1631,7 @@ class EMGMotorUnit:
 
         """
 
-        # Check jitter analysis results are saved
+        # Check jitter analysis results are saved.
         if fibre_jitter_dict:
             self.fibre_jitter_results = {
                 "fibre1_numbers": np.array(fibre_jitter_dict["fibre1_numbers"]),
@@ -1605,28 +1644,32 @@ class EMGMotorUnit:
                 "consecutive_diffs": np.array(fibre_jitter_dict["consecutive_diffs"]),
             }
 
-            # Note analysis performed
+            # Note analysis performed.
             self.analysis_performed["fibres_jitter_computed"] = True
 
-    def plot_fibre_potential_time_diffs(self, fibre1_num, fibre2_num, display_counts=True):
+    def plot_fibre_potential_time_diffs(self, fibre1_num : int, fibre2_num : int, display_counts : bool = True) -> tuple[plt.figure, plt.axes.Axes]:
         """
-        Plot a histogram for time differences between fibre potentials
+        Plot a histogram for time differences between fibre potentials.
 
         Parameters
         ----------
         fibre1_num : int
-            Fibre number for the first fibre, given previously from cluster analysis (0,1,2,...)
+            Fibre number for the first fibre, given previously from cluster analysis (0,1,2,...).
         fibre2_num : int
-            Fibre number for the second fibre
+            Fibre number for the second fibre.
+        display_counts : int
+            Display amount of non nan data used in histograms on plot.
 
         Returns
         -------
-        fig : Figure
-        ax : Axes
+        fig : plt.figure
+            The figure to which the plot belongs.
+        ax : plt.axes.Axes
+            The axes to which the plot belongs.
 
         """
 
-        # Get index for this pair of fibres so that the results can be retreived
+        # Get index for this pair of fibres so that the results can be retreived.
         res_idx = np.where(
             np.all(
                 (
@@ -1643,12 +1686,14 @@ class EMGMotorUnit:
             print(f"Jitter results not found for fibres {fibre1_num + 1} and {fibre2_num + 1}!")
             return
 
-        # Get fibre differences and convert to time in seconds
+        # Get fibre differences and convert to time in seconds.
         fibre_pot_diffs = self.fibre_jitter_results["differences"][res_idx, :] / self.fs
         fibre_pot_diffs = fibre_pot_diffs.flatten()
 
+        # Create plot.
         fig, ax = plt.subplots()
 
+        # Plot histogram.
         if not np.isnan(fibre_pot_diffs).all():
             ax.hist(
                 fibre_pot_diffs,
@@ -1664,6 +1709,7 @@ class EMGMotorUnit:
             + f", Fibres {fibre1_num+1} and {fibre2_num+1})"
         )
 
+        # Add mean and standard deviation info to plot.
         mean = np.nanmean(fibre_pot_diffs)
         st_dev = np.nanstd(fibre_pot_diffs, ddof=1)
         textstr = "\n".join(
@@ -1673,10 +1719,10 @@ class EMGMotorUnit:
             )
         )
 
-        # these are matplotlib.patch.Patch properties
+        # These are matplotlib.patch.Patch properties.
         props = dict(boxstyle="round", facecolor="wheat", alpha=0.5)
 
-        # place a text box in upper left in axes coords
+        # Place a text box in upper left in axes coords.
         ax.text(
             0.05,
             0.95,
@@ -1687,7 +1733,7 @@ class EMGMotorUnit:
             bbox=props,
         )
 
-        # display counts and percent
+        # Display counts and percent.
         if display_counts:
             total_diffs = len(fibre_pot_diffs)
             total_non_nan_diffs = np.count_nonzero(~np.isnan(fibre_pot_diffs))
@@ -1703,7 +1749,7 @@ class EMGMotorUnit:
                 + r"$\%$)"
             )
 
-            # place a text box in upper left in axes coords
+            # Place a text box in upper right in axes coords.
             ax.text(
                 0.95,
                 0.95,
@@ -1717,26 +1763,30 @@ class EMGMotorUnit:
 
         return fig, ax
 
-    def plot_fibre_consecutive_diffs(self, fibre1_num, fibre2_num, display_counts=True):
+    def plot_fibre_consecutive_diffs(self,  fibre1_num : int, fibre2_num : int, display_counts : bool = True) -> tuple[plt.figure, plt.axes.Axes]:
         """
         Plot a histogram for the consecutive differences (from one MUP to the next)
-        between the length of time intervals of timings between fibre potentials
+        between the length of time intervals of timings between fibre potentials.
 
         Parameters
         ----------
         fibre1_num : int
-            Fibre number for the first fibre, given previously from cluster analysis (0,1,2,...)
+            Fibre number for the first fibre, given previously from cluster analysis (0,1,2,...).
         fibre2_num : int
-            Fibre number for the second fibre
+            Fibre number for the second fibre.
+        display_counts : int
+            Display amount of non nan data used in histograms on plot.
 
         Returns
         -------
-        fig : Figure
-        ax : Axes
+        fig : plt.figure
+            The figure to which the plot belongs.
+        ax : plt.axes.Axes
+            The axes to which the plot belongs.
 
         """
 
-        # Get index for this pair of fibres so that the results can be retreived
+        # Get index for this pair of fibres so that the results can be retreived.
         res_idx = np.where(
             np.all(
                 (
@@ -1753,12 +1803,14 @@ class EMGMotorUnit:
             print(f"Jitter results not found for fibres {fibre1_num + 1} and {fibre2_num + 1}!")
             return
 
-        # Get consecutive_diffs and convert to time in seconds
+        # Get consecutive_diffs and convert to time in seconds.
         consecutive_diffs = self.fibre_jitter_results["consecutive_diffs"][res_idx, :] / self.fs
         consecutive_diffs = consecutive_diffs.flatten()
 
+        # Create plot.
         fig, ax = plt.subplots()
 
+        # Plot histogram of consecutive differences.
         if not np.isnan(consecutive_diffs).all():
             ax.hist(
                 consecutive_diffs,
@@ -1774,6 +1826,7 @@ class EMGMotorUnit:
             + f", Fibres {fibre1_num+1} and {fibre2_num+1})"
         )
 
+        # Add mean and standard deviation info to plot.
         mean = np.nanmean(consecutive_diffs)
         st_dev = np.nanstd(consecutive_diffs, ddof=1)
         textstr = "\n".join(
@@ -1783,10 +1836,10 @@ class EMGMotorUnit:
             )
         )
 
-        # these are matplotlib.patch.Patch properties
+        # These are matplotlib.patch.Patch properties.
         props = dict(boxstyle="round", facecolor="wheat", alpha=0.5)
 
-        # place a text box in upper left in axes coords
+        # Place a text box in upper left in axes coords.
         ax.text(
             0.05,
             0.95,
@@ -1797,7 +1850,7 @@ class EMGMotorUnit:
             bbox=props,
         )
 
-        # display counts and percent
+        # Display counts and percent.
         if display_counts:
             con_diffs = len(consecutive_diffs)
             total_non_nan_diffs = np.count_nonzero(~np.isnan(consecutive_diffs))
@@ -1813,7 +1866,7 @@ class EMGMotorUnit:
                 + r"$\%$)"
             )
 
-            # place a text box in upper left in axes coords
+            # Place a text box in upper right in axes coords.
             ax.text(
                 0.95,
                 0.95,
@@ -1827,14 +1880,15 @@ class EMGMotorUnit:
 
         return fig, ax
 
-    def plot_jitter_heat_plot(self, median=False):
+    def plot_jitter_heat_plot(self, median : bool = False) -> plt.axes.Axes:
         """
-        Plot a heat map of MCDs between fibres
-
+        Plot a heat map of mean consecutive differences (MCDs) between fibres.
+        (Or medians of consecutive differences)
+        
         Parameters
         ----------
-        median : bool
-            Plot median instead of mean consecutive differences
+        median : bool, optional
+            Plot medians instead of mean consecutive differences.
 
         Returns
         -------
@@ -1842,12 +1896,15 @@ class EMGMotorUnit:
             Axes object with the heatmap.
 
         """
+        
+        # Get number of fibre pairs, return if none.
         n_fibre_pairs = len(self.fibre_jitter_results["fibre2_numbers"])
         if n_fibre_pairs == 0:
             return
 
         n_fibres = int(np.max(self.fibre_jitter_results["fibre2_numbers"]) + 1)
 
+        # Create data array for the heat plot.
         data = np.full((n_fibres, n_fibres), np.nan)
 
         for i in range(n_fibre_pairs):
@@ -1859,13 +1916,15 @@ class EMGMotorUnit:
             else:
                 val = self.fibre_jitter_results["mean_consecutive_diffs"][i]
 
+            # Convert indices to micro seconds.
             if not np.isnan(val):
                 val = int((val / self.fs) * 1e6 + 0.5)
 
+            # Make heat plot symetrical.
             data[fib1, fib2] = val
             data[fib2, fib1] = val
 
-        # plotting the heatmap
+        # Plotting the heatmap.
         str_fibres = [str(x) for x in np.arange(1, n_fibres + 1)]
 
         hm = sns.heatmap(
@@ -1889,25 +1948,25 @@ class EMGMotorUnit:
 
         return hm
 
-    def get_jitter_totals_str(self, fibre1, fibre2):
+    def _get_jitter_totals(self, fibre1 : int, fibre2 : int) -> tuple[int, int, int, int]:
         """
-        Gets string of the counts (and percentage) of non nan
-        consecutive differences between fibres fibre1 and fibre2
+        Gets counts (and percentage) of non nan time intervals (between fibre potentials)
+        and consecutive differences between fibres fibre1 and fibre2
 
         Parameters
         ----------
         fibre1 : int
-            Index of fibre1
+            Index of fibre1.
         fibre2 : int
-            Index of fibre2
+            Index of fibre2.
 
         Returns
         -------
-        string
+        tuple[int, int, int, int]
 
         """
 
-        # Get index for this pair of fibres so that the results can be retreived
+        # Get index for this pair of fibres so that the results can be retreived.
         res_idx = np.where(
             np.all(
                 (
@@ -1922,17 +1981,17 @@ class EMGMotorUnit:
             res_idx = res_idx[0]
         else:
             print(f"Jitter results not found for fibres {fibre1 + 1} and {fibre2 + 1}!")
-            return
+            return ""
 
-        # Get fibre differences
-        fibre_pot_diffs = self.fibre_jitter_results["differences"][res_idx, :] / self.fs
+        # Get fibre differences.
+        fibre_pot_diffs = self.fibre_jitter_results["differences"][res_idx, :]
         fibre_pot_diffs = fibre_pot_diffs.flatten()
 
         total_diffs = len(fibre_pot_diffs)
         total_non_nan_diffs = np.count_nonzero(~np.isnan(fibre_pot_diffs))
         percent_df = round((total_non_nan_diffs / total_diffs) * 100, 2)
 
-        # Get consecutive_diffs
+        # Get consecutive differences.
         consecutive_diffs = self.fibre_jitter_results["consecutive_diffs"][res_idx, :]
         consecutive_diffs = consecutive_diffs.flatten()
 
@@ -1942,28 +2001,30 @@ class EMGMotorUnit:
 
         return total_non_nan_diffs, percent_df, total_non_nan_cd, percent_cd
 
-    def plot_jitter_totals_heat_plot(self, percent=False):
+    def plot_jitter_totals_heat_plot(self, percent : bool = False) -> plt.axes.Axes:
         """
         Plot a heat map of counts used for jitter analysis.
 
         Parameters
         ----------
         percent: bool
-            Plot pecentage of non-nan counts of intervals and consecutive_diffs
-            otherwise plot the counts
+            Plot percentage of non-nan counts of intervals and consecutive
+            differences, otherwise plot the counts.
 
         Returns
         -------
-        ax : matplotlib Axes
+        ax : plt.axes.Axes
             Axes object with the heatmap.
 
         """
+        
         n_fibre_pairs = len(self.fibre_jitter_results["fibre2_numbers"])
         if n_fibre_pairs == 0:
             return
 
         n_fibres = int(np.max(self.fibre_jitter_results["fibre2_numbers"]) + 1)
-
+        
+        # Create array for heat plot.
         data = np.full((n_fibres, n_fibres), np.nan)
 
         for i in range(n_fibre_pairs):
@@ -1971,9 +2032,10 @@ class EMGMotorUnit:
             fib2 = int(self.fibre_jitter_results["fibre2_numbers"][i])
 
             total_non_nan_diffs, percent_df, total_non_nan_cd, percent_cd = (
-                self.get_jitter_totals_str(fib1, fib2)
+                self._get_jitter_totals(fib1, fib2)
             )
 
+            # Set values for heat plot symetrically.
             if percent:
                 data[fib1, fib2] = percent_df
                 data[fib2, fib1] = percent_cd
@@ -1981,7 +2043,7 @@ class EMGMotorUnit:
                 data[fib1, fib2] = total_non_nan_diffs
                 data[fib2, fib1] = total_non_nan_cd
 
-        # plotting the heatmap
+        # Plotting the heatmap.
         str_fibres = [str(x) for x in np.arange(1, n_fibres + 1)]
 
         if percent:
@@ -2206,6 +2268,7 @@ class EMGMotorUnits:
             )
             for h in lgnd.legend_handles:
                 h._sizes = [legend_pt_size]
+                h.set_alpha(1)
 
         # Axis and tick labels
         ax.set_xlabel("position (mm)", fontsize=axis_label_size)

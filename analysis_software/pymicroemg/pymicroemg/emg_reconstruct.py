@@ -517,14 +517,14 @@ class EMGAnalysisReconstruct:
         self,
         linelengths: float = 0.9,
         linewidths: float = 0.75,
-        ax: plt.Axes = None,
+        ax: plt.axes.Axes = None,
         figsize: tuple[float, float] = (10, 5),
         dpi: int = 100,
         axis_label_size: float = 14,
         xtick_label_size: float = 12,
         ytick_label_size: float = 12,
         sort_by: str = "default",
-    ) -> tuple[plt.figure, plt.Axes]:
+    ) -> tuple[plt.figure, plt.axes.Axes]:
         """
         Create a raster plot of the potentials of each motor unit in the recording.
         Each motor unit is a row in the visualisation, and vertical lines are drawn at
@@ -536,7 +536,7 @@ class EMGAnalysisReconstruct:
             Length of lines. The default is 0.9.
         linewidths : float, optional
             Width of lines. The default is 0.75.
-        ax : plt.Axes, optional
+        ax : plt.axes.Axes, optional
             Plot to add to. The default is None.
         figsize : tuple[float, float], optional
             Size of figure. The default is (10, 5).
@@ -561,7 +561,7 @@ class EMGAnalysisReconstruct:
         -------
         fig : plt.figure
             The figure to which the plot belongs.
-        ax : plt.Axes
+        ax : plt.axes.Axes
             The axes to which the plot belongs.
 
         """
@@ -687,14 +687,14 @@ class EMGAnalysisReconstruct:
         motor_unit_idx: int,
         n_ms: int = 20,
         offset: float = 500,
-        ax: plt.Axes = None,
+        ax: plt.axes.Axes = None,
         lw: float = 0.5,
         figsize: tuple[float, float] = (7, 7),
         axis_label_size: float = 10,
         ytick_label_size: float = 6,
         xtick_label_size: float = 8,
         dpi: int = 100,
-    ) -> tuple[plt.figure, plt.Axes]:
+    ) -> tuple[plt.figure, plt.axes.Axes]:
         """
         Plot the average (mean) time series of the motor unit's potential.
 
@@ -708,7 +708,7 @@ class EMGAnalysisReconstruct:
             motor unit potential's onset. The default is 20.
         offset : float, optional
             The vertical spacing, offset, between channels. The default is 500.
-        ax : plt.Axes, optional
+        ax : plt.axes.Axes, optional
             Plot to add to. The default is None.
         lw : float, optional
             Line width. The default is 0.5.
@@ -732,7 +732,7 @@ class EMGAnalysisReconstruct:
         -------
         fig : plt.figure
             The figure to which the plot belongs.
-        ax : plt.Axes
+        ax : plt.axes.Axes
             The axes to which the plot belongs.
 
         """
@@ -782,7 +782,7 @@ class EMGAnalysisReconstruct:
         motor_unit_idx: int,
         chan_idx: int = None,
         n_ms: int = 20,
-        ax: plt.Axes = None,
+        ax: plt.axes.Axes = None,
         lw: float = 0.2,
         lw_mean: float = 0.5,
         figsize: tuple[float, float] = (7, 7),
@@ -790,7 +790,7 @@ class EMGAnalysisReconstruct:
         xtick_label_size: float = 10,
         ytick_label_size: float = 10,
         dpi: int = 100,
-    ) -> tuple[plt.figure, plt.Axes, np.int64]:
+    ) -> tuple[plt.figure, plt.axes.Axes, int]:
         """
 
         Plots the time series of all motor unit potentials of one motor unit in one
@@ -813,7 +813,7 @@ class EMGAnalysisReconstruct:
         n_ms : int, optional
             Number of milliseconds of data to extract. The data will be centered on the
             motor unit potential's onset. The default is 20.
-        ax : plt.Axes, optional
+        ax : plt.axes.Axes, optional
             Plot to add to. The default is None.
         lw : float, optional
             Line width. The default is 0.2.
@@ -839,7 +839,7 @@ class EMGAnalysisReconstruct:
         -------
         fig : plt.figure
             The figure to which the plot belongs.
-        ax : plt.Axes
+        ax : plt.axes.Axes
             The axes to which the plot belongs.
         chan_idx : int
             Channel used to plot the fibre potentials.

@@ -33,7 +33,7 @@ class EMGAnalysisReconstructSettings:
         self.max_opt_iterations = 200
         self.xtol = 0.01
         self.ftol = 1
-        self.y_scaling_factor = 1.0
+        self.y_scaling_factor = 2.0
 
         # 2D peak finding options for localisation
         self.find_peaks_2d_sigma_chns = 2
@@ -284,8 +284,8 @@ class EMGAnalysisMotorUnitClusterSettings:
         # Clustering options, k-means, dbscan or gmm
         self.clustering_method = "dbscan"
         # If time_scale > 0 then time is included as a 3rd dimension and scaled as given
-        # between 0 and 20 is probably suitable
-        self.time_scale = 0
+        # between 0 and 20 is probably suitable. About 2.5 seems good.
+        self.time_scale = 2.5
         self.k_means_random_state = 0
         self.k_means_k = 0
         self.dbscan_eps = 0.1
