@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QGridLayout, QB
 from PySide6.QtCore import Qt
 
 from microemggui.models.emg import EMGAnalysisReconstructModel
-from microemggui.widgets.selectmu.mu_emg import MUEMGViewerWidget
+from microemggui.widgets.selectmu.mu_vis import MUEMGViewerWidget
 from microemggui.widgets.base import (
     CheckBoxMain,
     MotorUnitButton,
