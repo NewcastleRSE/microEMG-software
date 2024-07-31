@@ -81,6 +81,15 @@ class MotorUnitCheckBoxes(QWidget):
         layout.addItem(ExpandingVSpacer())  # vertical spacer to fill space beneath
         self.setLayout(layout)
 
+    def check_button(self, motor_unit_idx):
+        """
+        Slot for checking (= highlighting) button that matches motor unit index.
+        Used when displayed motor unit is changed using another widget.
+
+        """
+
+        self.widgets[motor_unit_idx].widgets["button"].setChecked(True)
+
 
 class NextButton(LargePushButton):
     """
@@ -119,7 +128,7 @@ class SelectMUWidget(QWidget):
         self.n_motor_units = reconstruct_model.reconstruct.found_motor_units.n_motor_units
 
         # Visualised motor unit at start
-        self.mu_vis_num = 0
+        motor_unit_idx = 0
 
         # Create widgets for first column
         self.widgets: dict[str, Any] = {
@@ -144,7 +153,23 @@ class SelectMUWidget(QWidget):
         self.setLayout(layout)
 
         # Add motor unit visualisations in second column
-        self.widgets["vis"] = MUEMGViewerWidget(reconstruct_model, self.mu_vis_num, parent=self)
+        self.widgets["vis"] = MUEMGViewerWidget(reconstruct_model, motor_unit_idx, parent=self)
         layout.addWidget(self.widgets["vis"], 0, 1, 3, 1)  # span 3 rows
 
         # Connections
+
+        # Connect motor unit buttons to vis displayed
+        for i in range(self.n_motor_units):
+            self.widgets["checkboxes"].widgets[i].widgets["button"].clicked.connect(
+                lambda checked=None, motor_unit_idx=i: self.widgets["vis"].update_motor_unit_idx(
+                    motor_unit_idx
+                )
+            )
+
+        # Connect changes in motor unit arrow keys to which motor unit button is selected
+        self.widgets["vis"].motor_unit_idx_changed_from_increment.connect(
+            self.widgets["checkboxes"].check_button
+        )
+
+        # Select starting motor unit
+        self.widgets["checkboxes"].widgets[motor_unit_idx].widgets["button"].setChecked(True)
