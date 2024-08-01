@@ -230,7 +230,8 @@ class MUEMGViewerWidget(QWidget):
     ):
         super().__init__(parent)
 
-        # Number of motor unit
+        # Reconstruction data and number of motor units
+        self.reconstruct_model = reconstruct_model
         self.motor_unit_idx = motor_unit_idx
         self.n_motor_units = reconstruct_model.reconstruct.found_motor_units.n_motor_units
 
@@ -292,5 +293,14 @@ class MUEMGViewerWidget(QWidget):
 
         """
 
-        self.widgets["title"].setText(f"Motor unit {self.motor_unit_idx + 1}")
+        # Number of potentials
+        mu = self.reconstruct_model.reconstruct.found_motor_units.motor_units[self.motor_unit_idx]
+        n_potentials = mu.n_potentials
+
+        # Update title with number of motor units and potentials
+        self.widgets["title"].setText(
+            f"Motor unit {self.motor_unit_idx + 1} " + f"({n_potentials} potentials)"
+        )
+
+        # Update visualisations
         self.widgets["vis"].update_motor_unit(self.motor_unit_idx)
