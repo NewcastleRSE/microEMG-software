@@ -6,7 +6,7 @@ Widget for selecting motor units to further analyse.
 
 from typing import Any
 
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QGridLayout, QButtonGroup
+from PySide6.QtWidgets import QWidget, QHBoxLayout, QGridLayout, QButtonGroup
 from PySide6.QtCore import Qt
 
 from microemggui.models.emg import EMGAnalysisReconstructModel
@@ -48,7 +48,7 @@ class MotorUnitCheckBox(QWidget):
         for w in self.widgets.values():
             layout.addWidget(w)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
+        layout.setSpacing(10)
         self.setLayout(layout)
 
 
@@ -66,18 +66,27 @@ class MotorUnitCheckBoxes(QWidget):
         # Create widgets (checkboxes)
         # Key for each motor unit is its index (counting from 0), but one will be added
         # by MotorUnitCheckBox for the button's label
-        self.widgets = {i: MotorUnitCheckBox(i, parent=self) for i in range(n_motor_units)}
+        self.widgets = {i: MotorUnitCheckBox(i, parent=self) for i in range(self.n_motor_units)}
 
         # Add all buttons to button group
         button_group = QButtonGroup(parent=self)
-        for i in range(n_motor_units):
+        for i in range(self.n_motor_units):
             button_group.addButton(self.widgets[i].widgets["button"])
 
         # Add to layout
-        layout = QVBoxLayout()
+        layout = QGridLayout()
+        row = 0
+        max_row = 15
+        col = 0
         for w in self.widgets.values():
-            layout.addWidget(w)
+            layout.addWidget(w, row, col, alignment=Qt.AlignLeft | Qt.AlignCenter)
+            row += 1
+            if row == max_row:  # start new column if reach max number of rows
+                row = 0
+                col += 1
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setHorizontalSpacing(20)
+        layout.setVerticalSpacing(0)
         layout.addItem(ExpandingVSpacer())  # vertical spacer to fill space beneath
         self.setLayout(layout)
 
