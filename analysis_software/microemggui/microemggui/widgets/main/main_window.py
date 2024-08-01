@@ -455,14 +455,8 @@ class MicroEMGMain(QMainWindow):
 
         # Create widget and add to stack of analysis step widgets
         w_name = "preprocess"
-        analysis_w = self.widgets["analysis"]
-        analysis_w.widgets[w_name] = PreprocWidget(
-            self.emg_model["raw"], preprocess_settings_model, self.emg_clrs
-        )
-        analysis_w.layout.addWidget(analysis_w.widgets[w_name])
-
-        # Update toolbar connections
-        self.update_toolbar_connections()
+        w = PreprocWidget(self.emg_model["raw"], preprocess_settings_model, self.emg_clrs)
+        self.add_widget_to_analysis_steps(w, w_name)
 
         # Add connection to load step next button of previous step
         next_button = self.widgets["analysis"].widgets["load"].widgets["run"].widgets["next"]
@@ -480,14 +474,8 @@ class MicroEMGMain(QMainWindow):
 
         # Create widget and add to stack of analysis step widgets
         w_name = "channels"
-        analysis_w = self.widgets["analysis"]
-        analysis_w.widgets[w_name] = ChannelsWidget(
-            self.emg_model["raw"], self.emg_model["preproc"], self.emg_clrs
-        )
-        analysis_w.layout.addWidget(analysis_w.widgets[w_name])
-
-        # Update toolbar connections
-        self.update_toolbar_connections()
+        w = ChannelsWidget(self.emg_model["raw"], self.emg_model["preproc"], self.emg_clrs)
+        self.add_widget_to_analysis_steps(w, w_name)
 
         # Enable toolbar button
         self.enable_analysis_toolbar_button(True, "channels")
@@ -527,22 +515,18 @@ class MicroEMGMain(QMainWindow):
 
         # Create widget and add to stack of analysis step widgets
         w_name = "findmu"
-        analysis_w = self.widgets["analysis"]
         if self.reconstruct_model:
-            analysis_w.widgets[w_name] = FindMUWidget(self.reconstruct_model)
+            w = FindMUWidget(self.reconstruct_model)
         else:
             raise ValueError(
                 "GUI model for fibre reconstruction analysis must be created before "
                 + "creating widgets for this analysis."
             )
-        analysis_w.layout.addWidget(analysis_w.widgets[w_name])
+        self.add_widget_to_analysis_steps(w, w_name)
 
         print("Channels to analyse: ")
-        reconstruct = analysis_w.widgets[w_name].reconstruct_model.reconstruct
+        reconstruct = w.reconstruct_model.reconstruct
         print(reconstruct.emg_data_preproc.chan.analyse_chan)
-
-        # Update toolbar connections
-        self.update_toolbar_connections()
 
         # Enable toolbar button
         self.enable_analysis_toolbar_button(True, w_name)
@@ -585,7 +569,7 @@ class MicroEMGMain(QMainWindow):
             )
             self.connect_next_button_to_analysis_widget(next_button, w_name)
 
-        else:  # otherwise, delete widget if it exists
+        else:  # Otherwise, delete widget if it exists
             print("deleting select mu widget")
             w = self.widgets["analysis"].widgets.pop(w_name, None)
             if w:
