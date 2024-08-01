@@ -123,14 +123,6 @@ class NextButton(LargePushButton):
         self.setText("Next")
         self.setToolTip("Proceed to next step")
 
-    def change_enabled(self, enabled: bool):
-        """
-        Method for enable/disabling button based on whether at least one motor unit
-        is selected.
-        """
-
-        self.setEnabled(enabled)
-
 
 # --- Motor unit selection widget ---
 
@@ -177,6 +169,9 @@ class SelectMUWidget(QWidget):
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setHorizontalSpacing(50)
         self.setLayout(layout)
+
+        # Next button is initially disabled since no motor units selected
+        self.widgets["next"].setEnabled(False)
 
         # Update message and set properties - word wrap, fixed height
         self.widgets["message"].setWordWrap(True)
