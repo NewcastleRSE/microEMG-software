@@ -46,7 +46,9 @@ from microemggui.models.emg import (
 
 
 class WelcomeWidget(QWidget):
-    # Widget for welcome page
+    """
+    Widget for welcome (home) page.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -66,8 +68,10 @@ class WelcomeWidget(QWidget):
 
 
 class AnalysisStepsWidget(QWidget):
-    # Stacked widgets for the different steps of the analysis
-    # Also includes Welcome page
+    """
+    Stacked widgets for the different steps of the analysis.
+    Also includes the Welcome (home) page.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -93,14 +97,10 @@ class AnalysisStepsWidget(QWidget):
 
 # --- Main window ---
 
-# Next steps:
-# Add recording to label
-# text field for recording label?
-
 
 class MicroEMGMain(QMainWindow):
     """
-    # Main window for microEMG GUI
+    Main window for microEMG GUI
 
     Types of methods:
         - resetting the analysis
@@ -205,9 +205,11 @@ class MicroEMGMain(QMainWindow):
                 delete_w = True
 
     def add_load_connections(self):
-        # Connections to add from load step widget
-        # Connections enable/disable preprocess toolbar button and updates data stored
-        # in main window
+        """
+        Connections to add for the load step widget.
+        Connections enable/disable the preprocess toolbar button and update the data
+        stored in the main window.
+        """
 
         # Load widget
         load_w = self.widgets["analysis"].widgets["load"]
@@ -229,6 +231,7 @@ class MicroEMGMain(QMainWindow):
                 last_w_name
             )
         )
+        # TODO: also need to link to settings changed
 
         # Link recording label to top toolbar
         # TODO: consider storing in main window (e.g., for saving/exports)
@@ -238,6 +241,12 @@ class MicroEMGMain(QMainWindow):
         )
 
     def add_preprocess_connections(self):
+        """
+        Add connections for the preprocess widget.
+        Connection updates the preprocessed EMG data and preprocessing settings that are
+        stored in the main window.
+        """
+
         # Preprocess widget
         preprocess_w = self.widgets["analysis"].widgets["preprocess"]
 
@@ -247,11 +256,13 @@ class MicroEMGMain(QMainWindow):
         )
 
     def add_channels_connections(self):
-        # Connections for channels widget:
-        #   - Update list of bad channels when click next. (If channels have changed,
-        #   update_bad_chan_idx will also trigger the re-creation of the findmu widget.)
-        #   - Disable/enable toolbar button for next step depending on whether min number
-        #   of channels have been selected.
+        """
+        Add connections for channels widget:
+          - Update list of bad channels when click next. (If channels have changed,
+          update_bad_chan_idx will also trigger the re-creation of the findmu widget.)
+          - Disable/enable toolbar button for next step depending on whether min number
+          of channels have been selected.
+        """
 
         channels_w = self.widgets["analysis"].widgets["channels"]
         channels_w.bad_chan_updated.connect(self.update_bad_chan_idx)
@@ -269,9 +280,11 @@ class MicroEMGMain(QMainWindow):
         )
 
     def add_findmu_connections(self):
-        # Connections for findmu widget.
-        # Adds/deletes selectmu widget and enables/disables buttons for next step
-        # depending on whether motor units have been found.
+        """
+        Add connections for find motor units (findmu) widget.
+        Adds/deletes the selectmu widget and enables/disables buttons for the next step
+        depending on whether motor units have been found.
+        """
 
         # Find motor units widget
         findmu_w = self.widgets["analysis"].widgets["findmu"]
@@ -291,8 +304,10 @@ class MicroEMGMain(QMainWindow):
         # need to reset before add next widget
 
     def update_toolbar_connections(self):
-        # Connects toolbar buttons to analysis widgets
-        # Will need to call repeatedly as add more analysis widgets
+        """
+        Connects toolbar buttons to analysis widgets
+        This method is called repeatedly as more analysis widgets are added.
+        """
 
         print("Updating toolbar connections")
         for w_name in self.widgets["analysis"].widgets.keys():
@@ -304,8 +319,10 @@ class MicroEMGMain(QMainWindow):
     def update_raw_emg_model_and_settings_model(
         self, raw_emg_model: EMGDataRawModel, settings_model: EMGSettingsModel
     ):
-        # Slot for updating raw EMG model and settings model
-        # Also updates preprocessing widget with this data
+        """
+        Slot for updating raw EMG model and settings model.
+        Also updates the preprocess widget with this data.
+        """
 
         self.emg_model["raw"] = raw_emg_model
         self.settings_model = settings_model
@@ -318,9 +335,11 @@ class MicroEMGMain(QMainWindow):
         preproc_emg_model: EMGDataPreprocModel,
         preprocess_settings_model: EMGPreprocSettingsModel,
     ):
-        # Slot for updating preprocessed EMG model and the applied preprocessing settings.
-        # Also updates channel selection widget with the preprocessed data.
-        # Resets any downstream steps.
+        """
+        Slot for updating preprocessed EMG model and the applied preprocessing settings.
+        Also updates channel selection widget with the preprocessed data.
+        Resets any downstream steps.
+        """
 
         self.emg_model["preproc"] = preproc_emg_model
         if self.settings_model:
@@ -335,6 +354,14 @@ class MicroEMGMain(QMainWindow):
         self.add_channels_widget()
 
     def update_bad_chan_idx(self, bad_chan_idx):
+        """
+        Updates the list of bad channels that should not be included in the analysis.
+        Unlike most other widgets, these changes do not need to be applied before
+        proceeding to next step of the analysis - the next step (find motor units) is
+        already enabled. As such, this method also updates the findmu widget that uses
+        this data.
+        """
+
         # If indices are the same, do not update and do not make new find MU widget
         if self.bad_chan_idx == bad_chan_idx:
             return
@@ -367,9 +394,13 @@ class MicroEMGMain(QMainWindow):
             self.add_findmu_widget()
 
     def connect_next_button_to_analysis_widget(self, next_button, w_name: str):
-        # Connect the next button on an analysis step to the corresponding widget for
-        # the next analysis step.
-        # Also creates connection to update the active button on the analysis toolbar.
+        """
+        Connect the "next" button on an analysis step to the corresponding widget for
+        the next analysis step.
+        Also creates the connection to update the active button on the analysis toolbar
+        so the toolbar state matches the currently displayed widget even if navigate
+        using the "next" buttons.
+        """
 
         next_button.clicked.connect(
             lambda checked=None, w_name=w_name: self.widgets["analysis"].show_widget(w_name)
@@ -379,20 +410,27 @@ class MicroEMGMain(QMainWindow):
         )
 
     def click_analysis_toolbar_button(self, w_name: str):
-        # Clicks on the w_name button in the analysis toolbar to make it the active
-        # button.
-        # Used as a slot for clicking the next buttons on the analysis step widgets (
-        # as an alternative to using the toolbar to navigate)
+        """
+        Clicks on the w_name button in the analysis toolbar to make it the active
+        button.
+        Used as a slot for clicking the "next" buttons on the analysis step widgets
+        (as an alternative to using the toolbar to navigate).
+        """
 
         self.widgets["analysistoolbar"].widgets[w_name].toggle()
 
     def enable_analysis_toolbar_button(self, previous_step_finished: bool, w_name: str):
-        # Enable/disable button in analysis toolbar based on whether previous step is
-        # finished
+        """
+        Enable/disable button in analysis toolbar based on whether the previous step is
+        finished
+        """
         self.widgets["analysistoolbar"].widgets[w_name].setEnabled(previous_step_finished)
 
     def add_widget_to_analysis_steps(self, w, w_name: str):
-        # Add new widget w to stack of analysis step widgets
+        """
+        Add new widget w with name w_name to the stack of analysis step widgets.
+        Update the toolbar connections to include this new widget.
+        """
 
         # Add widget to layout and dictionary of analysis widgets
         analysis_w = self.widgets["analysis"]
@@ -403,7 +441,9 @@ class MicroEMGMain(QMainWindow):
         self.update_toolbar_connections()
 
     def add_preprocess_widget(self):
-        # Add preprocessing widget using data stored in main window
+        """
+        Add preprocessing widget using data stored in the main window.
+        """
 
         # Extract preprocessing settings
         if self.settings_model:
@@ -432,9 +472,11 @@ class MicroEMGMain(QMainWindow):
         self.add_preprocess_connections()
 
     def add_channels_widget(self):
-        # Add widget for channel selection once preprocessing is finished/updated
-        # Also triggers initial creation of the findmu widget since there is no analysis
-        # that needs to be applied in the channels widget.
+        """
+        Add widget for channel selection once preprocessing is finished/updated.
+        Also triggers initial creation of the findmu widget since there is no analysis
+        that needs to be applied in the channels widget.
+        """
 
         # Create widget and add to stack of analysis step widgets
         w_name = "channels"
@@ -479,7 +521,9 @@ class MicroEMGMain(QMainWindow):
         self.add_findmu_widget()
 
     def add_findmu_widget(self):
-        # Add widget for finding motor units
+        """
+        Add widget for finding motor units.
+        """
 
         # Create widget and add to stack of analysis step widgets
         w_name = "findmu"
@@ -511,9 +555,12 @@ class MicroEMGMain(QMainWindow):
         self.add_findmu_connections()
 
     def add_selectmu_widget(self, motor_units_found: bool):
-        # Add widget for selecting motor units for downstream analysis if motor units
-        # have been found (otherwise, delete if exist)
-        # Slot for found_motor_units signal of findmu widget
+        """
+        Add widget for selecting motor units for downstream analysis if motor units
+        have been found (i.e., motor_units_found = True). Otherwise, delete the widget
+        if it exists.
+        Slot for found_motor_units signal of findmu widget.
+        """
 
         w_name = "selectmu"
 
