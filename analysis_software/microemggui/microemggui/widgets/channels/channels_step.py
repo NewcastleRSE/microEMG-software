@@ -203,7 +203,7 @@ class ChannelsWidget(QWidget):
         layout.addWidget(self.widgets["channels"], 1, 0)
         layout.addWidget(self.widgets["viewer"], 0, 1, 4, 1)  # span 2 rows
         layout.addWidget(self.widgets["exclude"], 2, 0)  # span 2 columns
-        layout.addWidget(self.widgets["next"], 3, 0, alignment=Qt.AlignRight | Qt.AlignTop)
+        layout.addWidget(self.widgets["next"], 3, 0)
         layout.setContentsMargins(20, 20, 20, 20)
         self.setLayout(layout)
 

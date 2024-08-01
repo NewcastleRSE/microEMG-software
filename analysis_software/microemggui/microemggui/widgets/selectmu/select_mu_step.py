@@ -48,7 +48,7 @@ class MotorUnitCheckBox(QWidget):
         for w in self.widgets.values():
             layout.addWidget(w)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(10)
+        layout.setSpacing(15)
         self.setLayout(layout)
 
 
@@ -88,7 +88,7 @@ class MotorUnitCheckBoxes(QWidget):
                 row = 0
                 col += 1
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setHorizontalSpacing(20)
+        layout.setHorizontalSpacing(25)
         layout.setVerticalSpacing(0)
         layout.addItem(ExpandingVSpacer())  # vertical spacer to fill space beneath
         self.setLayout(layout)
@@ -162,8 +162,6 @@ class SelectMUWidget(QWidget):
         row = 0
         col = 0
         for k, w in self.widgets.items():
-            if k == "next":
-                layout.addWidget(w, row, col, alignment=Qt.AlignRight | Qt.AlignTop)
             layout.addWidget(w, row, col)
             row += 1
         layout.setContentsMargins(20, 20, 20, 20)
