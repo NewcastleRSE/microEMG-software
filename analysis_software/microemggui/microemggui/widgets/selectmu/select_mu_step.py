@@ -6,8 +6,8 @@ Widget for selecting motor units to further analyse.
 
 from typing import Any
 
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QGridLayout, QButtonGroup
-from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QWidget, QHBoxLayout, QGridLayout, QButtonGroup, QSizePolicy
+from PySide6.QtCore import Qt, Signal
 
 from microemggui.models.emg import EMGAnalysisReconstructModel
 from microemggui.widgets.selectmu.mu_vis import MUEMGViewerWidget
@@ -58,6 +58,9 @@ class MotorUnitCheckBoxes(QWidget):
     navigating to the visualisations of each motor unit.
     """
 
+    # Signal for when motor unit checkbox is toggled
+    motor_unit_toggled = Signal(bool, int)
+
     def __init__(self, n_motor_units: int, parent=None):
         super().__init__(parent)
 
@@ -89,6 +92,15 @@ class MotorUnitCheckBoxes(QWidget):
         layout.setVerticalSpacing(0)
         layout.addItem(ExpandingVSpacer())  # vertical spacer to fill space beneath
         self.setLayout(layout)
+
+        # Connections
+
+        # Send index of motor unit with check state when its checkbox is toggled
+        for idx, w in self.widgets.items():
+            w_checkbox = w.widgets["checkbox"]
+            w_checkbox.toggled.connect(
+                lambda checked, idx=idx: self.motor_unit_toggled.emit(checked, idx)
+            )
 
     def check_button(self, motor_unit_idx):
         """
@@ -136,6 +148,11 @@ class SelectMUWidget(QWidget):
         self.reconstruct_model = reconstruct_model
         self.n_motor_units = reconstruct_model.reconstruct.found_motor_units.n_motor_units
 
+        # Boolean and indices of which motor units are checked (none initially)
+        # Specifies motor units to analyse
+        self.motor_units_checked = [False for i in range(self.n_motor_units)]  # bool
+        self.motor_units_checked_idx: list[int] = []
+
         # Visualised motor unit at start
         motor_unit_idx = 0
 
@@ -161,9 +178,18 @@ class SelectMUWidget(QWidget):
         layout.setHorizontalSpacing(50)
         self.setLayout(layout)
 
+        # Update message and set properties - word wrap, fixed height
+        self.widgets["message"].setWordWrap(True)
+        self.widgets["message"].setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.widgets["message"].setObjectName("select_mu_widget_message")
+        self.update_message()  # based on number of motor units checked (initially none)
+
         # Add motor unit visualisations in second column
         self.widgets["vis"] = MUEMGViewerWidget(reconstruct_model, motor_unit_idx, parent=self)
         layout.addWidget(self.widgets["vis"], 0, 1, 3, 1)  # span 3 rows
+
+        # Select motor unit that is initially visualised
+        self.widgets["checkboxes"].widgets[motor_unit_idx].widgets["button"].setChecked(True)
 
         # Connections
 
@@ -180,5 +206,47 @@ class SelectMUWidget(QWidget):
             self.widgets["checkboxes"].check_button
         )
 
-        # Select starting motor unit
-        self.widgets["checkboxes"].widgets[motor_unit_idx].widgets["button"].setChecked(True)
+        # Connect checkboxes to list of checked motor units
+        self.widgets["checkboxes"].motor_unit_toggled.connect(self.update_motor_units_checked)
+
+    def update_motor_units_checked(self, checked: bool, idx: int):
+        """
+        Update boolean and indices of motor units that are checked.
+        Also trigger downstream updates of message text (which motor units will be
+        analysed) and enable/disable next button (enable if at least one motor unit).
+        Slot for motor_unit_toggled.
+        """
+
+        # Update motor units that will be analysed
+        self.motor_units_checked[idx] = checked
+        self.motor_units_checked_idx = [
+            i for i in range(self.n_motor_units) if self.motor_units_checked[i]
+        ]
+
+        # Update message text
+        self.update_message()
+
+        # Only enable next button if at least one motor unit is checked
+        self.widgets["next"].setEnabled(len(self.motor_units_checked_idx) > 0)
+
+    def update_message(self):
+        """
+        Update displayed message based on the selected (checked) motor units.
+
+        """
+
+        # Determine message text based on number of motor units checked
+        n_checked = len(self.motor_units_checked_idx)
+        if n_checked > 0:
+            # Labels for checked motor units (+1 from index)
+            motor_units_labels = [str(i + 1) for i in self.motor_units_checked_idx]
+
+            if n_checked == 1:
+                text = "Will analyse motor unit " + motor_units_labels[0] + "."
+            else:
+                text = "Will analyse motor units " + ", ".join(motor_units_labels) + "."
+        else:
+            text = "Select (check) at least one motor unit."
+
+        # Set text
+        self.widgets["message"].setText(text)
