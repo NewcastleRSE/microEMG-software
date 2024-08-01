@@ -7,7 +7,7 @@ Widget for finding motor units
 from typing import Any
 
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QGridLayout
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 
 from microemggui.models.emg import EMGAnalysisReconstructModel
 from microemggui.models.settings import EMGAnalysisMotorUnitSettingsModel
@@ -94,6 +94,9 @@ class MainButtons(QWidget):
 class FindMUWidget(QWidget):
     # Widget for find motor units step
 
+    # Signal for whether motor units have been found
+    motor_units_found = Signal(bool)
+
     def __init__(
         self,
         reconstruct_model: EMGAnalysisReconstructModel,
@@ -161,6 +164,8 @@ class FindMUWidget(QWidget):
         self.widgets["results"].update_reconstruct(self.reconstruct_model)
 
         # Only show next button if MU found
-        # TODO: probably change to signal since also need to disable next step on toolbar
         n_mu = self.reconstruct_model.reconstruct.found_motor_units.n_motor_units
         self.widgets["buttons"].widgets["next"].show_button(n_mu > 0)
+        self.motor_units_found.emit(
+            n_mu > 0
+        )  # emit signal to enable/disable next steps in main GUI

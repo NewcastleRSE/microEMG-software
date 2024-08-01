@@ -31,6 +31,7 @@ from microemggui.widgets.load.load_step import LoadWidget
 from microemggui.widgets.preproc.preproc_step import PreprocWidget
 from microemggui.widgets.channels.channels_step import ChannelsWidget
 from microemggui.widgets.findmu.find_mu_step import FindMUWidget
+from microemggui.widgets.selectmu.select_mu_step import SelectMUWidget
 
 # Models
 from microemggui.models.settings import EMGSettingsModel, EMGPreprocSettingsModel
@@ -98,7 +99,16 @@ class AnalysisStepsWidget(QWidget):
 
 
 class MicroEMGMain(QMainWindow):
+    """
     # Main window for microEMG GUI
+
+    Types of methods:
+        - resetting the analysis
+        - adding connections
+        - updating data/settings
+        - adding widget for each analysis step
+
+    """
 
     def __init__(self):
         super().__init__()
@@ -250,6 +260,25 @@ class MicroEMGMain(QMainWindow):
             )
         )
 
+    def add_findmu_connections(self):
+        # Connections for findmu widget.
+        # Adds/deletes selectmu widget and enables/disables buttons for next step
+        # depending on whether motor units have been found.
+
+        # Find motor units  widget
+        findmu_w = self.widgets["analysis"].widgets["findmu"]
+
+        # Connection for adding/deleting next step (select motor units widget)
+        next_w_name = "selectmu"
+        findmu_w.motor_units_found.connect(self.add_selectmu_widget)
+
+        # Connection for enabling/disabling next step (select motor units)
+        findmu_w.motor_units_found.connect(
+            lambda motor_units_found, w_name=next_w_name: self.enable_analysis_toolbar_button(
+                motor_units_found, w_name
+            )
+        )
+
     def update_toolbar_connections(self):
         # Connects toolbar buttons to analysis widgets
         # Will need to call repeatedly as add more analysis widgets
@@ -344,6 +373,17 @@ class MicroEMGMain(QMainWindow):
         # finished
         self.widgets["analysistoolbar"].widgets[w_name].setEnabled(previous_step_finished)
 
+    def add_widget_to_analysis_steps(self, w, w_name: str):
+        # Add new widget w to stack of analysis step widgets
+
+        # Add widget to layout and dictionary of analysis widgets
+        analysis_w = self.widgets["analysis"]
+        analysis_w.widgets[w_name] = w
+        analysis_w.layout.addWidget(analysis_w.widgets[w_name])
+
+        # Update toolbar connections
+        self.update_toolbar_connections()
+
     def add_preprocess_widget(self):
         # Add preprocessing widget using data stored in main window
 
@@ -366,7 +406,7 @@ class MicroEMGMain(QMainWindow):
         # Update toolbar connections
         self.update_toolbar_connections()
 
-        # Add connection to load step next button
+        # Add connection to load step next button of previous step
         next_button = self.widgets["analysis"].widgets["load"].widgets["run"].widgets["next"]
         self.connect_next_button_to_analysis_widget(next_button, w_name)
 
@@ -392,7 +432,7 @@ class MicroEMGMain(QMainWindow):
         # Enable toolbar button
         self.enable_analysis_toolbar_button(True, "channels")
 
-        # Add connection to next button
+        # Add connection to next button of previous step
         next_button = (
             self.widgets["analysis"].widgets["preprocess"].widgets["buttons"].widgets["next"]
         )
@@ -443,8 +483,46 @@ class MicroEMGMain(QMainWindow):
         self.update_toolbar_connections()
 
         # Enable toolbar button
-        self.enable_analysis_toolbar_button(True, "findmu")
+        self.enable_analysis_toolbar_button(True, w_name)
 
-        # Add connection to next button
+        # Add connection to next button of previous step
         next_button = self.widgets["analysis"].widgets["channels"].widgets["next"]
         self.connect_next_button_to_analysis_widget(next_button, w_name)
+
+        # Connections to next widget
+        self.add_findmu_connections()
+
+    def add_selectmu_widget(self, motor_units_found: bool):
+        # Add widget for selecting motor units for downstream analysis if motor units
+        # have been found (otherwise, delete if exist)
+        # Slot for found_motor_units signal of findmu widget
+
+        w_name = "selectmu"
+
+        if motor_units_found:  # if motor units found, create widget
+            print("creating selectmu widget")
+            # Create widget and add to stack of analysis step widgets with toolbar connections
+            if self.reconstruct_model:
+                w = SelectMUWidget(self.reconstruct_model, parent=self)
+            else:
+                raise ValueError(
+                    "GUI model for fibre reconstruction analysis must be created before "
+                    + "creating widgets for this analysis."
+                )
+            self.add_widget_to_analysis_steps(w, w_name)
+
+            # Enable toolbar button
+            self.enable_analysis_toolbar_button(True, w_name)
+
+            # Add connection to next button of previous step
+            next_button = (
+                self.widgets["analysis"].widgets["findmu"].widgets["buttons"].widgets["next"]
+            )
+            self.connect_next_button_to_analysis_widget(next_button, w_name)
+
+        else:  # otherwise, delete widget if it exists
+            print("deleting select mu widget")
+            w = self.widgets["analysis"].widgets.pop(w_name, None)
+            if w:
+                w.deleteLater()
+                print(f"Deleted {w_name} widget")
