@@ -156,47 +156,53 @@ class MicroEMGMain(QMainWindow):
         # Connections to signals from loading data
         self.add_load_connections()
 
-    def reset_gui(self):
-        # Remove any existing data, widgets with data, and later toolbar activations
-        # Should only be able to use home page and load step widget.
-        # TODO: remove data added later in the pipeline
-        # TODO: add dialog box for confirmation when click on button that would
-        # trigger a reset.
-        # TODO: remove print statements or add to logger
-        # TODO: behaviour if reset settings or (once implemented) trimming
-        # TODO: generalise to partial resets (e.g., if change preprocessed data)
-        #       if preprocess data again, definitely need to manually reset self.bad_chan_idx
+    def reset_downstream_steps_of_gui(self, last_w_name: str):
+        """
+        Reset steps and data that occur after analysis step last_w_name.
+        TODO: store original settings and return to original if corresponding widget deleted
+        """
 
-        print("Resetting GUI")
+        print(f"Resetting part of GUI analysis (downstream of {last_w_name})")
 
-        # Widgets to keep enabled and widgets to remove
-        # Only include widgets that have been added so far to avoid key erros
-        keep_w = ["home", "load"]
-        remove_w = [i for i in self.widgets["analysis"].widgets.keys() if i not in keep_w]
-        print(f"Remove widgets {remove_w}")
+        # All analysis steps that have been added
+        analysis_w_names = list(self.widgets["analysis"].widgets.keys())
 
-        for w_name in remove_w:
-            # Remove widgets
-            # Also delete key in analysis widgets dictionary so do not try to reference
-            # deleted widget
-            w = self.widgets["analysis"].widgets.pop(w_name, None)
-            if w:
-                w.deleteLater()
+        # Delete steps after w_name
+        # Also delete data added by that step
+        # TODO: delete parts of the reconstruct analyses/reset settings
+        delete_w = False
+        for w_name in analysis_w_names:
+            if delete_w:
+                w = self.widgets["analysis"].widgets.pop(w_name, None)  # also removes from dict
+                w.deleteLater()  # delete
                 print(f"Deleted {w_name} widget")
 
-            # Disable toolbar buttons
-            self.widgets["analysistoolbar"].widgets[w_name].setEnabled(False)
+                # Disable toolbar buttons
+                self.widgets["analysistoolbar"].widgets[w_name].setEnabled(False)
 
-            # Can leave connections since will not be able to click on buttons until
-            # new widgets are added
+                # Remove data if delete certain points of the analysis
+                if w_name == "preprocess":
+                    print("Deleting EMG model and settings model")
+                    self.emg_model = {}
+                    self.settings_model = None
 
-        # Remove data (precaution - should be overwritten regardless)
-        # EMG data is not sent from load widget until settings are added, so this
-        # approach will not delete any newly loaded data.
-        self.emg_model = {}
-        self.settings_model = None
-        self.bad_chan_idx = []
-        self.reconstruct_model = None
+                if w_name == "channels":
+                    print("Removing bad channels")
+                    self.bad_chan_idx = []  # bad channels
+                    if self.emg_model:  # also remove bad channels from EMG model if still present
+                        print("Also removing bad channels from EMG model")
+                        self.emg_model["preproc"].emg_data.set_bad_chan(self.bad_chan_idx)
+                    print("Removing reconstruct model")
+                    self.reconstruct_model = None
+
+                if w_name == "findmu":
+                    print("Removing motor units")
+                    if self.reconstruct_model:
+                        self.reconstruct_model.found_motor_units = None
+
+            # Change delete_w to True after pass last_w_name; will delete downstream widgets
+            if w_name == last_w_name:
+                delete_w = True
 
     def add_load_connections(self):
         # Connections to add from load step widget
@@ -219,7 +225,9 @@ class MicroEMGMain(QMainWindow):
         # When load buttons are interacted with, reset GUI (regardless of whether
         # load was successful)
         load_w.widgets["recording"].recording_loaded.connect(
-            lambda recording_loaded: self.reset_gui()
+            lambda recording_loaded, last_w_name="load": self.reset_downstream_steps_of_gui(
+                last_w_name
+            )
         )
 
         # Link recording label to top toolbar
@@ -265,7 +273,7 @@ class MicroEMGMain(QMainWindow):
         # Adds/deletes selectmu widget and enables/disables buttons for next step
         # depending on whether motor units have been found.
 
-        # Find motor units  widget
+        # Find motor units widget
         findmu_w = self.widgets["analysis"].widgets["findmu"]
 
         # Connection for adding/deleting next step (select motor units widget)
@@ -278,6 +286,9 @@ class MicroEMGMain(QMainWindow):
                 motor_units_found, w_name
             )
         )
+
+        # TODO: connect motor_units_found to resetting GUI
+        # need to reset before add next widget
 
     def update_toolbar_connections(self):
         # Connects toolbar buttons to analysis widgets
@@ -307,14 +318,18 @@ class MicroEMGMain(QMainWindow):
         preproc_emg_model: EMGDataPreprocModel,
         preprocess_settings_model: EMGPreprocSettingsModel,
     ):
-        # Slot for updating preprocessed EMG model and the applied preprocessing settings
-        # Also updates and channel selection widget with the preprocessed data
+        # Slot for updating preprocessed EMG model and the applied preprocessing settings.
+        # Also updates channel selection widget with the preprocessed data.
+        # Resets any downstream steps.
 
         self.emg_model["preproc"] = preproc_emg_model
         if self.settings_model:
             self.settings_model.preprocess_settings = preprocess_settings_model.settings
         else:
             raise ValueError("settings_model must be added to main window before preprocessing")
+
+        # Remove any downstream widgets
+        self.reset_downstream_steps_of_gui("preprocess")
 
         # Use data to make channels widget
         self.add_channels_widget()
@@ -324,6 +339,9 @@ class MicroEMGMain(QMainWindow):
         if self.bad_chan_idx == bad_chan_idx:
             return
         else:
+            # Reset downstream steps of GUI
+            self.reset_downstream_steps_of_gui("channels")
+
             # Update bad channels
             self.bad_chan_idx = bad_chan_idx
             print(self.bad_chan_idx)
