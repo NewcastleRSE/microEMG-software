@@ -17,7 +17,10 @@ from pymicroemg.emg_reconstruct_settings import EMGAnalysisMotorUnitClusterSetti
 from pymicroemg.emg_reconstruct_settings import EMGAnalysisMotorUnitJitterSettings
 
 import numpy as np
-import numpy.typing as npt  # for type hints
+import numpy.typing as npt
+from typing import Optional
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 import scipy.signal as sg
 import scipy.optimize as opt
 from scipy.linalg import toeplitz
@@ -99,14 +102,14 @@ class EMGAnalysisReconstruct:
         # Space for motor unit results.
         # Initialise in find_motor_units.
         # Fill in additional motor unit data by running fibre_reconstruction.
-        self.found_motor_units = None
-        self.chan_for_find_motor_units = None
+        self.found_motor_units = EMGMotorUnits([])
+        self.chan_for_find_motor_units = -1
 
         # Initial threshold for 2D peak detection,
         # when detecting multiple peaks.
         self.threshold = 0.15
 
-    def calculate_SNR_ranks(self):
+    def _calculate_SNR_ranks(self):
         """
         Calculate the signal to noise ratios and rank them
 
@@ -153,7 +156,7 @@ class EMGAnalysisReconstruct:
         """
 
         # Order by highest Signal to Noise Ratio.
-        self.calculate_SNR_ranks()
+        self._calculate_SNR_ranks()
 
         fs = self.emg_data_preproc.fs
 
@@ -184,9 +187,11 @@ class EMGAnalysisReconstruct:
         )
 
         # Add motor unit objects.
-        self.add_motor_units(mup_t_idx, mu_numbers)
+        self._add_motor_units(mup_t_idx, mu_numbers)
 
-    def add_motor_units(self, mup_t_idx: npt.NDArray[np.int64], mu_numbers: npt.NDArray[np.int64]):
+    def _add_motor_units(
+        self, mup_t_idx: npt.NDArray[np.int64], mu_numbers: npt.NDArray[np.int64]
+    ):
         """
         Adds the motor units as stored objects.
 
@@ -226,8 +231,8 @@ class EMGAnalysisReconstruct:
         ----------
         filename: string
             Name of file to save in.
-        include_settings: bool
-            Whether to include motor unit settings or not.
+        include_settings: bool, optional
+            Whether to include motor unit settings or not. The default is False.
 
         Returns
         -------
@@ -295,12 +300,11 @@ class EMGAnalysisReconstruct:
                 numbers_motor_units[i],
                 np.array(mup_potentials_t_idx_all_motor_units[i]),
                 self.emg_data_preproc.fs,
+                self.emg_data_preproc.chan.chan_xy,
             )
             all_motor_units.append(motor_unit)
 
-        self.found_motor_units = EMGMotorUnits(
-            all_motor_units, chan_xy=self.emg_data_preproc.chan.chan_xy
-        )
+        self.found_motor_units = EMGMotorUnits(all_motor_units)
 
     def save_mu_fibre_localisations(self, filename: str, save_all_spikes: bool = False):
         """
@@ -310,8 +314,9 @@ class EMGAnalysisReconstruct:
         ----------
         filename: string
             Name of file to save in.
-        save_all_spikes : bool
+        save_all_spikes : bool, optional
             Whether to save all_spikes. Uses a lot of data and is not necessary.
+            The default is False.
 
         Returns
         -------
@@ -337,7 +342,7 @@ class EMGAnalysisReconstruct:
 
         Parameters
         ----------
-        filename: string
+        filename: str
             Name of file to load data from.
 
         Returns
@@ -361,7 +366,7 @@ class EMGAnalysisReconstruct:
 
         Parameters
         ----------
-        filename: string
+        filename: str
             Name of file to save in.
 
         Returns
@@ -388,7 +393,7 @@ class EMGAnalysisReconstruct:
 
         Parameters
         ----------
-        filename: string
+        filename: str
             Name of file to load results from.
 
         Returns
@@ -412,8 +417,8 @@ class EMGAnalysisReconstruct:
 
         Parameters
         ----------
-        filename: string
-            Name of file to save in
+        filename: str
+            Name of file to save in.
 
         Returns
         -------
@@ -439,7 +444,7 @@ class EMGAnalysisReconstruct:
 
         Parameters
         ----------
-        filename: string
+        filename: str
             Name of file to load results from.
 
         Returns
@@ -463,7 +468,7 @@ class EMGAnalysisReconstruct:
 
         Parameters
         ----------
-        filename: string
+        filename: str
             Name of file to save in
 
         Returns
@@ -484,15 +489,13 @@ class EMGAnalysisReconstruct:
         with open(filename, "w") as outfile:
             json.dump(all_settings_dict, outfile)
 
-    def load_settings(
-        self, filename: str
-    ) -> tuple[EMGAnalysisMotorUnitClusterSettings, EMGAnalysisMotorUnitJitterSettings]:
+    def load_settings(self, filename: str):
         """
         Loads settings for analysis.
 
         Parameters
         ----------
-        filename: string
+        filename: str
             Name of file to load.
 
         Returns
@@ -517,14 +520,14 @@ class EMGAnalysisReconstruct:
         self,
         linelengths: float = 0.9,
         linewidths: float = 0.75,
-        ax: plt.Axes = None,
+        ax: Optional[Axes] = None,
         figsize: tuple[float, float] = (10, 5),
         dpi: int = 100,
         axis_label_size: float = 14,
         xtick_label_size: float = 12,
         ytick_label_size: float = 12,
         sort_by: str = "default",
-    ):
+    ) -> tuple[Optional[Figure], Axes]:
         """
         Create a raster plot of the potentials of each motor unit in the recording.
         Each motor unit is a row in the visualisation, and vertical lines are drawn at
@@ -536,8 +539,6 @@ class EMGAnalysisReconstruct:
             Length of lines. The default is 0.9.
         linewidths : float, optional
             Width of lines. The default is 0.75.
-        ax : plt.Axes, optional
-            Plot to add to. The default is None.
         figsize : tuple[float, float], optional
             Size of figure. The default is (10, 5).
         dpi : int, optional
@@ -559,9 +560,9 @@ class EMGAnalysisReconstruct:
 
         Returns
         -------
-        fig : plt.figure
+        fig : Figure
             The figure to which the plot belongs.
-        ax : plt.Axes
+        ax : Axes
             The axes to which the plot belongs.
 
         """
@@ -607,7 +608,7 @@ class EMGAnalysisReconstruct:
         # Axis ticks and labels
         # y axis
         ax.set_yticks(np.arange(self.found_motor_units.n_motor_units))
-        ax.set_yticklabels(motor_units_numbers)
+        ax.set_yticklabels(str(motor_units_numbers))
         ax.tick_params(axis="y", which="major", labelsize=ytick_label_size)
         ax.set_ylabel("motor unit", fontsize=axis_label_size)
         # x axis
@@ -617,7 +618,7 @@ class EMGAnalysisReconstruct:
 
         return fig, ax
 
-    def get_potentials_data_of_one_motor_unit(
+    def _get_potentials_data_of_one_motor_unit(
         self, motor_unit_idx: int, n_ms: int = 20
     ) -> npt.NDArray[np.float64]:
         """
@@ -687,14 +688,13 @@ class EMGAnalysisReconstruct:
         motor_unit_idx: int,
         n_ms: int = 20,
         offset: float = 500,
-        ax: plt.Axes = None,
         lw: float = 0.5,
         figsize: tuple[float, float] = (7, 7),
         axis_label_size: float = 10,
         ytick_label_size: float = 6,
         xtick_label_size: float = 8,
         dpi: int = 100,
-    ) -> tuple[plt.figure, plt.Axes]:
+    ) -> tuple[Figure, Axes]:
         """
         Plot the average (mean) time series of the motor unit's potential.
 
@@ -708,8 +708,6 @@ class EMGAnalysisReconstruct:
             motor unit potential's onset. The default is 20.
         offset : float, optional
             The vertical spacing, offset, between channels. The default is 500.
-        ax : plt.Axes, optional
-            Plot to add to. The default is None.
         lw : float, optional
             Line width. The default is 0.5.
         figsize : tuple[float, float], optional
@@ -726,13 +724,13 @@ class EMGAnalysisReconstruct:
         Raises
         ------
         ValueError
-            Checks motor units exist and vertical apacing is positive
+            Checks motor units exist and vertical apacing is positive.
 
         Returns
         -------
-        fig : plt.figure
+        fig : Figure
             The figure to which the plot belongs.
-        ax : plt.Axes
+        ax : Axes
             The axes to which the plot belongs.
 
         """
@@ -744,15 +742,12 @@ class EMGAnalysisReconstruct:
         if offset < 0:
             raise ValueError("The vertical spacing, offset, must be positive")
 
-        # Create new figure with specified size if no axis provided.
-        if ax is None:
-            fig, ax = plt.subplots(figsize=figsize)
-            fig.dpi = dpi
-        else:
-            fig = None
+        # Create new figure with specified size.
+        fig, ax = plt.subplots(figsize=figsize)
+        fig.dpi = dpi
 
         # Get motor unit potentials and average (mean).
-        potentials_data = self.get_potentials_data_of_one_motor_unit(motor_unit_idx, n_ms)
+        potentials_data = self._get_potentials_data_of_one_motor_unit(motor_unit_idx, n_ms)
         potentials_avg = np.nanmean(potentials_data, axis=2)
         n_samples = potentials_avg.shape[1]
 
@@ -780,9 +775,8 @@ class EMGAnalysisReconstruct:
     def plot_all_potentials_one_channel(
         self,
         motor_unit_idx: int,
-        chan_idx: int = None,
+        chan_idx: int = -1,
         n_ms: int = 20,
-        ax: plt.Axes = None,
         lw: float = 0.2,
         lw_mean: float = 0.5,
         figsize: tuple[float, float] = (7, 7),
@@ -790,7 +784,7 @@ class EMGAnalysisReconstruct:
         xtick_label_size: float = 10,
         ytick_label_size: float = 10,
         dpi: int = 100,
-    ) -> tuple[plt.figure, plt.Axes, np.int64]:
+    ) -> tuple[Figure, Axes, int]:
         """
 
         Plots the time series of all motor unit potentials of one motor unit in one
@@ -813,8 +807,6 @@ class EMGAnalysisReconstruct:
         n_ms : int, optional
             Number of milliseconds of data to extract. The data will be centered on the
             motor unit potential's onset. The default is 20.
-        ax : plt.Axes, optional
-            Plot to add to. The default is None.
         lw : float, optional
             Line width. The default is 0.2.
         lw_mean : float, optional
@@ -837,9 +829,9 @@ class EMGAnalysisReconstruct:
 
         Returns
         -------
-        fig : plt.figure
+        fig : Figure
             The figure to which the plot belongs.
-        ax : plt.Axes
+        ax : Axes
             The axes to which the plot belongs.
         chan_idx : int
             Channel used to plot the fibre potentials.
@@ -849,18 +841,15 @@ class EMGAnalysisReconstruct:
         if not self.found_motor_units:
             raise ValueError("No motor units identified - confirm that analysis has been run.")
 
-        if not chan_idx:
+        if chan_idx < 0:
             chan_idx = self.chan_for_find_motor_units
 
-        # Create new figure with specified size if no axis provided.
-        if ax is None:
-            fig, ax = plt.subplots(figsize=figsize)
-            fig.dpi = dpi
-        else:
-            fig = None
+        # Create new figure with specified size.
+        fig, ax = plt.subplots(figsize=figsize)
+        fig.dpi = dpi
 
         # Get motor unit potentials and average (mean).
-        potentials_data = self.get_potentials_data_of_one_motor_unit(motor_unit_idx, n_ms)
+        potentials_data = self._get_potentials_data_of_one_motor_unit(motor_unit_idx, n_ms)
         potentials_avg = np.nanmean(potentials_data, axis=2)
         n_samples = potentials_avg.shape[1]
 
@@ -976,7 +965,7 @@ class EMGAnalysisReconstruct:
             )
 
             # Find peaks in 2D array, channels x time.
-            sub_clusters = self.find_peaks_2d(sig)
+            sub_clusters = self._find_peaks_2d(sig)
 
             if sub_clusters.shape[0] == 0:
                 continue
@@ -1035,7 +1024,7 @@ class EMGAnalysisReconstruct:
 
                 # Non-linear optimisation algorithm for fibre positioning.
                 opt_paras = opt.fmin(
-                    self.deconv_wrapper,
+                    self._deconv_wrapper,
                     x0=x0,
                     maxiter=self.recon_settings.max_opt_iterations,
                     full_output=False,
@@ -1070,8 +1059,11 @@ class EMGAnalysisReconstruct:
         # Restore needle to full needle, rather than subset of the needle.
         self.needle = self.emg_data_preproc.chan.chan_xy
 
-    def find_peaks(
-        self, data: npt.NDArray[np.float64], distance: int = 1, min_peak_height: float = None
+    def _find_peaks(
+        self,
+        data: npt.NDArray[np.float64],
+        distance: int = 1,
+        min_peak_height: Optional[float] = None,
     ):
         """
         Finds peaks in an 1D array.
@@ -1083,11 +1075,12 @@ class EMGAnalysisReconstruct:
         ----------
         data: NDArray[np.float64]
             Data to find peaks from
-        distance: int
+        distance: int, optional
             Detect peaks that are at least separated by minimum peak distance
-            (in indices).
-        min_peak_height : float
+            (in indices). The default is 1.
+        min_peak_height : float, optional
             Detect peaks that are greater than minimum peak height.
+            The default is None.
 
         Returns
         -------
@@ -1098,43 +1091,9 @@ class EMGAnalysisReconstruct:
 
         peaks, _ = sg.find_peaks(data, height=min_peak_height, distance=distance)
         return peaks
-
         # return tk.detect_peaks(data, mph=min_peak_height, mpd=distance)
 
-    def peak_group(self, signal: npt.NDArray[np.float64]) -> npt.NDArray[np.int64]:
-        """
-        Function to group electrodes by related signal.
-        Identifies peaks in the signal, and then adjacent rows are assigned into
-        groups related to that signal.
-
-        Parameters
-        ----------
-        signal: NDArray[np.float64]
-            For example the SNRs across the electrodes.
-
-        Returns
-        -------
-        groups: NDArray[np.int64]
-            Array of integers & zeros reflecting the signal groups that
-            the electrodes are placed into.
-
-        """
-
-        locs = self.find_peaks(signal, 4, np.max(signal) / 3)
-
-        # Create list of empty lists.
-        groups = [[] for _ in range(len(signal))]
-
-        for peak in range(len(locs)):
-            left_index = np.max([0, locs[peak] - 3])
-            right_index = np.min([len(signal) - 1, locs[peak] + 3])
-
-            for index in range(left_index, (right_index + 1)):
-                groups[index].append(peak)
-
-        return groups
-
-    def find_peaks_2d(self, sig: npt.NDArray[np.float64]) -> npt.NDArray[np.int64]:
+    def _find_peaks_2d(self, sig: npt.NDArray[np.float64]) -> npt.NDArray[np.int64]:
         """
         Finds local maxima of a 2-dimensional image area
         Dependent on findpeaks algorithm from findpeaks package.
@@ -1239,7 +1198,7 @@ class EMGAnalysisReconstruct:
 
         return locs
 
-    def deconv_wrapper(self, loc: npt.NDArray[np.float64]) -> float:
+    def _deconv_wrapper(self, loc: npt.NDArray[np.float64]) -> float:
         """
         Deconvolution
         Now reconstruct without using gn!
@@ -1264,10 +1223,10 @@ class EMGAnalysisReconstruct:
 
         self.no_needle_channels = self.needle.shape[0]
 
-        cn = self.calc_cn(loc[0], loc[1], self.recon_settings.half_subsample_size * 2)
+        cn = self._calc_cn(loc[0], loc[1], self.recon_settings.half_subsample_size * 2)
 
         iterable = (
-            self.tconv(cn[:, k], self.sn[:, k], self.recon_settings.spike_dur * 2 + 1)
+            self._tconv(cn[:, k], self.sn[:, k], self.recon_settings.spike_dur * 2 + 1)
             for k in range(self.no_needle_channels)
         )
         self.opr = np.fromiter(iterable, dtype=np.ndarray)
@@ -1276,7 +1235,7 @@ class EMGAnalysisReconstruct:
 
         return total_var
 
-    def cn_element(self, z: float, channel: int) -> float:
+    def _cn_element(self, z: float, channel: int) -> float:
         """
         Generate element of the cn matrix, row 'z', column 'channel'.
 
@@ -1301,7 +1260,7 @@ class EMGAnalysisReconstruct:
             warnings.simplefilter("ignore", category=RuntimeWarning)
             return np.reciprocal(np.sqrt(dx * dx + dy * dy + dz * dz))
 
-    def calc_cn(self, fbx: float, fby: float, isz: int) -> npt.NDArray[np.float64]:
+    def _calc_cn(self, fbx: float, fby: float, isz: int) -> npt.NDArray[np.float64]:
         """
         Channel functions.
         Generate 1/r conv functions for coords fbx, fby for each channel.
@@ -1325,14 +1284,16 @@ class EMGAnalysisReconstruct:
         self.fbx = fbx
         self.fby = fby
         cn = np.fromfunction(
-            lambda i, j: self.cn_element(i, j),
+            lambda i, j: self._cn_element(i, j),
             (isz, self.no_needle_channels),
             dtype=int,
         )
 
         return cn
 
-    def tconv(self, ifn: npt.NDArray[np.float64], sig: npt.NDArray[np.float64], isz: int) -> float:
+    def _tconv(
+        self, ifn: npt.NDArray[np.float64], sig: npt.NDArray[np.float64], isz: int
+    ) -> float:
         """
         Deconvolution method function
         Create a Toeplitz matrix using the trailing 200 samples of cn

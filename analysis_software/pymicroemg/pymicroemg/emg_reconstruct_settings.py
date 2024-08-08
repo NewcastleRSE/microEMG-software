@@ -24,7 +24,7 @@ class EMGAnalysisReconstructSettings:
 
         """
 
-        # Default settings
+        # Default settings for fibre localisation.
         self.n_electrodes = 64
         self.mavg_length = 1
         self.mavg_all = False
@@ -33,23 +33,23 @@ class EMGAnalysisReconstructSettings:
         self.max_opt_iterations = 200
         self.xtol = 0.01
         self.ftol = 1
-        self.y_scaling_factor = 1.0
+        self.y_scaling_factor = 2.0
 
-        # 2D peak finding options for localisation
+        # 2D peak finding options for localisation.
         self.find_peaks_2d_sigma_chns = 2
         self.find_peaks_2d_sigma_time = 2
         self.find_peaks_2d_truncate = 2
         self.find_peaks_2d_use_tophat = False
-        # Integer
+        # Integer for disk radius.
         self.find_peaks_2d_tophat_disk_radius = 1
         self.find_peaks_2d_min_peaks = 1
         self.find_peaks_2d_max_peaks = 5
         self.find_peaks_2d_neighbour_chns = 5
         self.find_peaks_2d_neighbour_time = 10
 
-    def get_settings_dict(self):
+    def get_settings_dict(self) -> dict:
         """
-        Saves settings for analysis
+        Saves settings for analysis.
 
         Parameters
         ----------
@@ -57,11 +57,11 @@ class EMGAnalysisReconstructSettings:
 
         Returns
         -------
-        None
+        dict
 
         """
 
-        # Define settings dictionary
+        # Define settings dictionary.
         settings_dict = {
             "n_electrodes": self.n_electrodes,
             "mavg_length": self.mavg_length,
@@ -85,14 +85,14 @@ class EMGAnalysisReconstructSettings:
 
         return settings_dict
 
-    def set_settings_from_dict(self, settings_dict):
+    def set_settings_from_dict(self, settings_dict: dict):
         """
-        Saves settings for analysis
+        Saves settings for analysis.
 
         Parameters
         ----------
-        settings_dict: Dictionary
-            Dictionary with all the settings save in it
+        settings_dict: dict
+            Dictionary with all the settings save in it.
 
         Returns
         -------
@@ -100,6 +100,7 @@ class EMGAnalysisReconstructSettings:
 
         """
 
+        # Set each value from dictionary.
         self.n_electrodes = settings_dict["n_electrodes"]
         self.mavg_length = settings_dict["mavg_length"]
         self.mavg_all = settings_dict["mavg_all"]
@@ -119,13 +120,13 @@ class EMGAnalysisReconstructSettings:
         self.find_peaks_2d_neighbour_chns = settings_dict["find_peaks_2d_neighbour_chns"]
         self.find_peaks_2d_neighbour_time = settings_dict["find_peaks_2d_neighbour_time"]
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
-        Return a string for the object
+        Return a string for the object.
 
         Returns
         -------
-        String
+        str
 
         """
 
@@ -188,14 +189,13 @@ class EMGAnalysisMotorUnitSettings:
 
         """
 
-        # Default settings
-        # TK Filter options
+        # Default settings for TK Filter options.
         self.tk_filt_thres_spike = 0.1
         self.tk_filt_thres_PsC = 0.1
 
-    def get_settings_dict(self):
+    def get_settings_dict(self) -> dict:
         """
-        Saves settings for analysis
+        Saves settings for analysis.
 
         Parameters
         ----------
@@ -203,11 +203,11 @@ class EMGAnalysisMotorUnitSettings:
 
         Returns
         -------
-        None
+        dict
 
         """
 
-        # Define settings dictionary
+        # Define settings dictionary.
         settings_dict = {
             "tk_filt_thres_spike": self.tk_filt_thres_spike,
             "tk_filt_thres_PsC": self.tk_filt_thres_PsC,
@@ -215,14 +215,14 @@ class EMGAnalysisMotorUnitSettings:
 
         return settings_dict
 
-    def set_settings_from_dict(self, settings_dict):
+    def set_settings_from_dict(self, settings_dict: dict):
         """
-        Saves settings for analysis
+        Saves settings for analysis.
 
         Parameters
         ----------
-        settings_dict: Dictionary
-            Dictionary with all the settings save in it
+        settings_dict: dict
+            Dictionary with all the settings save in it.
 
         Returns
         -------
@@ -233,13 +233,13 @@ class EMGAnalysisMotorUnitSettings:
         self.tk_filt_thres_spike = settings_dict["tk_filt_thres_spike"]
         self.tk_filt_thres_PsC = settings_dict["tk_filt_thres_PsC"]
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
-        Return a string for the object
+        Return a string for the object.
 
         Returns
         -------
-        String
+        str
 
         """
 
@@ -280,22 +280,22 @@ class EMGAnalysisMotorUnitClusterSettings:
 
         """
 
-        # Default settings
-        # Clustering options, k-means, dbscan or gmm
+        # Default settings.
+        # Clustering options, k-means, dbscan or gmm.
         self.clustering_method = "dbscan"
         # If time_scale > 0 then time is included as a 3rd dimension and scaled as given
-        # between 0 and 20 is probably suitable
-        self.time_scale = 0
+        # between 0 and 20 is probably suitable. About 2.5 seems good.
+        self.time_scale = 2.5
         self.k_means_random_state = 0
         self.k_means_k = 0
         self.dbscan_eps = 0.1
         self.dbscan_min_samples = 10
-        # Covariance type for GMM clustering, options are: "spherical", "tied", "diag" and "full"
+        # Covariance type for GMM clustering, options are: "spherical", "tied", "diag" and "full".
         self.gmm_covariance_type = "tied"
 
-    def get_settings_dict(self):
+    def get_settings_dict(self) -> dict:
         """
-        Saves settings for analysis
+        Saves settings for analysis.
 
         Parameters
         ----------
@@ -303,11 +303,11 @@ class EMGAnalysisMotorUnitClusterSettings:
 
         Returns
         -------
-        None
+        dict
 
         """
 
-        # Define settings dictionary
+        # Define settings dictionary.
         settings_dict = {
             "clustering_method": self.clustering_method,
             "time_scale": self.time_scale,
@@ -320,14 +320,14 @@ class EMGAnalysisMotorUnitClusterSettings:
 
         return settings_dict
 
-    def set_settings_from_dict(self, settings_dict):
+    def set_settings_from_dict(self, settings_dict: dict):
         """
-        Saves settings for analysis
+        Saves settings for analysis.
 
         Parameters
         ----------
-        settings_dict: Dictionary
-            Dictionary with all the settings save in it
+        settings_dict: dict
+            Dictionary with all the settings save in it.
 
         Returns
         -------
@@ -343,13 +343,13 @@ class EMGAnalysisMotorUnitClusterSettings:
         self.dbscan_min_samples = settings_dict["dbscan_min_samples"]
         self.gmm_covariance_type = settings_dict["gmm_covariance_type"]
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
-        Return a string for the object
+        Return a string for the object.
 
         Returns
         -------
-        String
+        str
 
         """
 
@@ -394,12 +394,12 @@ class EMGAnalysisMotorUnitJitterSettings:
 
         """
 
-        # Default settings
+        # Default settings.
         self.remove_outliers = True
 
-    def get_settings_dict(self):
+    def get_settings_dict(self) -> dict:
         """
-        Saves settings for analysis
+        Saves settings for analysis.
 
         Parameters
         ----------
@@ -407,25 +407,25 @@ class EMGAnalysisMotorUnitJitterSettings:
 
         Returns
         -------
-        None
+        dict
 
         """
 
-        # Define settings dictionary
+        # Define settings dictionary.
         settings_dict = {
             "remove_outliers": self.remove_outliers,
         }
 
         return settings_dict
 
-    def set_settings_from_dict(self, settings_dict):
+    def set_settings_from_dict(self, settings_dict: dict):
         """
-        Saves settings for analysis
+        Saves settings for analysis.
 
         Parameters
         ----------
         settings_dict: Dictionary
-            Dictionary with all the settings save in it
+            Dictionary with all the settings save in it.
 
         Returns
         -------
@@ -435,13 +435,13 @@ class EMGAnalysisMotorUnitJitterSettings:
 
         self.remove_outliers = settings_dict["remove_outliers"]
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
-        Return a string for the object
+        Return a string for the object.
 
         Returns
         -------
-        String
+        str
 
         """
 
