@@ -62,7 +62,7 @@ class AnalysisToolbar(QToolBar):
             "analysetext": "Analyse EMG",
             "findmu": "4. Find motor units",
             "selectmu": "5. Select motor units",
-            "fibres": "6. Localise fibres",
+            "localise": "6. Localise fibres",
             "jitter": "7. Compute jitter",
             "exporttext": "Export results",
             "export": "Export",
