@@ -58,7 +58,7 @@ class MUSettingComboboxWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
-        # Connection combobox text to settings
+        # Connect combobox text to settings
         self.widgets["combobox"].currentTextChanged.connect(
             lambda text, setting=self.setting_name: mu_settings.change_setting(setting, text)
         )
