@@ -117,6 +117,7 @@ def round_ints_nonbanker(vals):
 def find_peaks(data, distance=1):
     """
     Try to return as near as possible the same answer as findpeaks in MatLab
+    if detect_peaks.py is used.
     """
 
     peaks, _ = sg.find_peaks(data, distance=distance)
