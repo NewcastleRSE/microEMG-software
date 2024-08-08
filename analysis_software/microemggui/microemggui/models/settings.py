@@ -90,7 +90,7 @@ class EMGSettingsModel:
                 filter_str + f" ({filter_type} Butterworth filter, {cutoff_str}, order: {order})"
             )
 
-        preprocess_str = f"<b>Preprocessing settings</b><br>{remove_mains_str}<br>{filter_str}"
+        preprocess_str = f"<b>Preprocessing</b><br>{remove_mains_str}<br>{filter_str}"
 
         return preprocess_str
 
@@ -118,9 +118,7 @@ class EMGSettingsModel:
             + similarity_text
             + f" ({self.mu_settings.tk_filt_thres_PsC})"
         )
-        mu_str = (
-            f"<b>Settings for finding motor units</b><br>{sensitivity_str}<br>{similarity_str}"
-        )
+        mu_str = f"<b>Finding motor units</b><br>{sensitivity_str}<br>{similarity_str}"
 
         return mu_str
 
@@ -137,7 +135,7 @@ class EMGSettingsModel:
         time_weighting_str = f"Time weighting: {self.mu_cluster_settings.time_scale}"
 
         # All settings
-        localise_str = f"<b>Settings for localising fibres</b><br>{time_weighting_str}"
+        localise_str = f"<b>Localising fibres</b><br>{time_weighting_str}"
 
         return localise_str
 
@@ -255,10 +253,7 @@ class EMGAnalysisMotorUnitSettingsModel:
         settings_names = ["sensitivity", "similarity"]
         for name in settings_names:
             value = self.get_setting_current_value(name)
-            text = self.map_values2text(name, value)
-            alias = self.mapping[name]["alias"]
-            if not text:
-                raise ValueError(f"Value for {name} ({alias}) is not a valid GUI option")
+            _ = self.map_values2text(name, value)  # will raise error if no matching GUI option
 
     def map_text2values(self, setting: str, text: str) -> float:
         """
@@ -272,7 +267,7 @@ class EMGAnalysisMotorUnitSettingsModel:
 
     def map_values2text(self, setting: str, value: float) -> str:
         """
-        Get text that corresponds to settings value.
+        Get GUI text that corresponds to settings value.
         """
 
         text = self.mapping[setting]["values2text"].get(value)
@@ -343,6 +338,14 @@ class EMGAnalysisMotorUnitClusterSettingsModel:
         # Options for settings that have GUI comboboxes
         # Must include default value for each setting
         self.options["time_scale"] = [0.0, 1.0, 2.5]  # all float for consistency
+
+        # Check that current value is a valid option
+        self.settings.time_scale = float(self.settings.time_scale)  # ensure float
+        if self.settings.time_scale not in self.options:
+            raise ValueError(
+                f"time_scale value of {self.settings.time_scale} "
+                + "does not have a matching GUI option."
+            )
 
     def change_setting(self, setting: str, combobox_text: str):
         """
