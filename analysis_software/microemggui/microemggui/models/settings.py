@@ -337,11 +337,14 @@ class EMGAnalysisMotorUnitClusterSettingsModel:
 
         # Options for settings that have GUI comboboxes
         # Must include default value for each setting
-        self.options["time_scale"] = [0.0, 1.0, 2.5]  # all float for consistency
+        self.options = {
+            # all float to avoid float/int mismatches with string conversions
+            "time_scale": [0.0, 1.0, 2.5]
+        }
 
         # Check that current value is a valid option
         self.settings.time_scale = float(self.settings.time_scale)  # ensure float
-        if self.settings.time_scale not in self.options:
+        if self.settings.time_scale not in self.options["time_scale"]:
             raise ValueError(
                 f"time_scale value of {self.settings.time_scale} "
                 + "does not have a matching GUI option."

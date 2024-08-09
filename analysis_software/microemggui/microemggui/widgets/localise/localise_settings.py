@@ -30,7 +30,9 @@ class TimeWeightingCombobox(QWidget):
     EMGAnalysisMotorUnitSettingsModel classes for a more generic approach.
     """
 
-    def __init__(self, cluster_settings: EMGAnalysisMotorUnitClusterSettingsModel, parent=None):
+    def __init__(
+        self, cluster_settings_model: EMGAnalysisMotorUnitClusterSettingsModel, parent=None
+    ):
         super().__init__(parent)
 
         self.setting_name = "time_scale"  # name of setting in cluster settings class
@@ -39,7 +41,7 @@ class TimeWeightingCombobox(QWidget):
         self.widgets: dict[str, Any] = {
             "label": InputLabel("Time weighting", self),
             "explanation": InputExplanationLabel(
-                "How much fibre potential timing (in addition to estimate locations) "
+                "How much fibre potential timing (in addition to estimated locations) "
                 + "contributes to identifying different fibres",
                 self,
             ),
@@ -47,9 +49,9 @@ class TimeWeightingCombobox(QWidget):
         }
 
         # Get combobox options from settings model and set to current value
-        self.combobox_values = cluster_settings.options[self.setting_name]
+        self.combobox_values = [str(i) for i in cluster_settings_model.options[self.setting_name]]
         self.widgets["combobox"].addItems(self.combobox_values)
-        current_value = getattr(cluster_settings.settings, self.setting_name)
+        current_value = str(getattr(cluster_settings_model.settings, self.setting_name))
         self.widgets["combobox"].setCurrentText(current_value)
 
         # TODO: set to current settings value
@@ -63,7 +65,9 @@ class TimeWeightingCombobox(QWidget):
 
         # Connect combobox text to corresponding setting
         self.widgets["combobox"].currentTextChanged.connect(
-            lambda text, setting=self.setting_name: cluster_settings.change_setting(setting, text)
+            lambda text, setting=self.setting_name: cluster_settings_model.change_setting(
+                setting, text
+            )
         )
 
 
@@ -82,13 +86,15 @@ class LocaliseSettingsWidget(QWidget):
 
     """
 
-    def __init__(self, cluster_settings: EMGAnalysisMotorUnitClusterSettingsModel, parent=None):
+    def __init__(
+        self, cluster_settings_model: EMGAnalysisMotorUnitClusterSettingsModel, parent=None
+    ):
         super().__init__(parent)
 
         # Create widgets
         self.widgets: dict[str, Any] = {
             "title": SubsectionTitle("Settings", parent=self),
-            "timeweighting": TimeWeightingCombobox(cluster_settings, parent=self),
+            "timeweighting": TimeWeightingCombobox(cluster_settings_model, parent=self),
         }
 
         # Layout
