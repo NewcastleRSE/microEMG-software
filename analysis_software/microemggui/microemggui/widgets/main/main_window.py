@@ -118,6 +118,7 @@ class MicroEMGMain(QMainWindow):
         self.settings_model = None
         self.bad_chan_idx = []  # List of indices of bad channels
         self.reconstruct_model = None
+        self.motor_units_to_analyse = []  # List of motor units to analyse
 
         # Colours for EMG recordings
         # TODO: make configurable?
@@ -199,6 +200,10 @@ class MicroEMGMain(QMainWindow):
                     print("Removing motor units")
                     if self.reconstruct_model:
                         self.reconstruct_model.found_motor_units = None
+
+                if w_name == "selectmu":
+                    print("Removing list of motor units to analyse")
+                    self.motor_units_to_analyse = []
 
             # Change delete_w to True after pass last_w_name; will delete downstream widgets
             if w_name == last_w_name:
@@ -303,6 +308,25 @@ class MicroEMGMain(QMainWindow):
         # TODO: connect motor_units_found to resetting GUI
         # need to reset before add next widget
 
+    def add_selectmu_connections(self):
+        """
+        Add connections for select motor units (selectmu) widget.
+            - Update list of motor units to analyse when click next or toolbar button
+            of the next step.
+
+        TODO: Disable/enable toolbar button for next step depending on whether at least
+            one motor unit has been selected
+        """
+
+        selectmu_w = self.widgets["analysis"].widgets["selectmu"]
+        selectmu_w.motor_units_updated.connect(self.update_motor_units_to_analyse)
+
+        # Also connect next step in toolbar to next_clicked method of selectmu widget
+        # so same signal is emitted when navigate via toolbar instead of the next button
+        self.widgets["analysistoolbar"].widgets["localise"].clicked.connect(
+            selectmu_w.next_clicked
+        )
+
     def update_toolbar_connections(self):
         """
         Connects toolbar buttons to analysis widgets
@@ -392,6 +416,22 @@ class MicroEMGMain(QMainWindow):
 
             # Update find MU widget
             self.add_findmu_widget()
+
+    def update_motor_units_to_analyse(self, motor_units_idx):
+        """
+        Updates the list of motor units that should be further analysed in the localise
+        fibres and jitter analyse widgets.
+
+        TODO: trigger creation of localise widget, which will use this data
+        """
+
+        # If indices are the same, do not need to update
+        if self.motor_units_to_analyse == motor_units_idx:
+            return
+        else:
+            # Update list of motor units
+            self.motor_units_to_analyse = motor_units_idx
+            print(f"Motor units to analyse updated: {self.motor_units_to_analyse}")
 
     def connect_next_button_to_analysis_widget(self, next_button, w_name: str):
         """
@@ -568,6 +608,9 @@ class MicroEMGMain(QMainWindow):
                 self.widgets["analysis"].widgets["findmu"].widgets["buttons"].widgets["next"]
             )
             self.connect_next_button_to_analysis_widget(next_button, w_name)
+
+            # Add connections
+            self.add_selectmu_connections()
 
         else:  # Otherwise, delete widget if it exists
             print("deleting select mu widget")

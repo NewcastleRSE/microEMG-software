@@ -133,6 +133,9 @@ class SelectMUWidget(QWidget):
     displays visualisations of individual motor units.
     """
 
+    # Signal for sending updated list of motor units to analyse
+    motor_units_updated = Signal(list)
+
     def __init__(self, reconstruct_model: EMGAnalysisReconstructModel, parent=None):
         super().__init__(parent)
 
@@ -202,6 +205,9 @@ class SelectMUWidget(QWidget):
         # Connect checkboxes to list of checked motor units
         self.widgets["checkboxes"].motor_unit_toggled.connect(self.update_motor_units_checked)
 
+        # Emit motor units to analyse when next button is clicked
+        self.widgets["next"].clicked.connect(self.next_clicked)
+
     def update_motor_units_checked(self, checked: bool, idx: int):
         """
         Update boolean and indices of motor units that are checked.
@@ -243,3 +249,11 @@ class SelectMUWidget(QWidget):
 
         # Set text
         self.widgets["message"].setText(text)
+
+    def next_clicked(self):
+        """
+        Slot for next button. Emits motor unit indices when next button is clicked.
+
+        """
+        print("select MU next button clicked")
+        self.motor_units_updated.emit(self.motor_units_checked_idx)
