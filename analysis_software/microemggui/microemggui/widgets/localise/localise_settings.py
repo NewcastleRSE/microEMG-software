@@ -46,9 +46,11 @@ class TimeWeightingCombobox(QWidget):
             "combobox": InputComboBox(self),
         }
 
-        # Get combobox options from settings model
+        # Get combobox options from settings model and set to current value
         self.combobox_values = cluster_settings.options[self.setting_name]
         self.widgets["combobox"].addItems(self.combobox_values)
+        current_value = getattr(cluster_settings.settings, self.setting_name)
+        self.widgets["combobox"].setCurrentText(current_value)
 
         # TODO: set to current settings value
 
@@ -59,7 +61,10 @@ class TimeWeightingCombobox(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
-        # TODO: Connect combobox text to settings
+        # Connect combobox text to corresponding setting
+        self.widgets["combobox"].currentTextChanged.connect(
+            lambda text, setting=self.setting_name: cluster_settings.change_setting(setting, text)
+        )
 
 
 # --- All settings ---
