@@ -608,7 +608,7 @@ class EMGAnalysisReconstruct:
         # Axis ticks and labels
         # y axis
         ax.set_yticks(np.arange(self.found_motor_units.n_motor_units))
-        ax.set_yticklabels(str(motor_units_numbers))
+        ax.set_yticklabels([str(i) for i in motor_units_numbers])
         ax.tick_params(axis="y", which="major", labelsize=ytick_label_size)
         ax.set_ylabel("motor unit", fontsize=axis_label_size)
         # x axis
@@ -694,6 +694,7 @@ class EMGAnalysisReconstruct:
         ytick_label_size: float = 6,
         xtick_label_size: float = 8,
         dpi: int = 100,
+        ax: plt.axes.Axes = None,
     ) -> tuple[Figure, Axes]:
         """
         Plot the average (mean) time series of the motor unit's potential.
@@ -720,6 +721,8 @@ class EMGAnalysisReconstruct:
             Size of y tick labels. The default is 8.
         dpi : int, optional
             Dots per Inch. The default is 100.
+        ax : plt.axes.Axes, optional
+            Plot to add to. The default is None.
 
         Raises
         ------
@@ -742,9 +745,12 @@ class EMGAnalysisReconstruct:
         if offset < 0:
             raise ValueError("The vertical spacing, offset, must be positive")
 
-        # Create new figure with specified size.
-        fig, ax = plt.subplots(figsize=figsize)
-        fig.dpi = dpi
+        # Create new figure with specified size if no axis provided.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+            fig.dpi = dpi
+        else:
+            fig = None
 
         # Get motor unit potentials and average (mean).
         potentials_data = self._get_potentials_data_of_one_motor_unit(motor_unit_idx, n_ms)
@@ -784,6 +790,7 @@ class EMGAnalysisReconstruct:
         xtick_label_size: float = 10,
         ytick_label_size: float = 10,
         dpi: int = 100,
+        ax: plt.axes.Axes = None,
     ) -> tuple[Figure, Axes, int]:
         """
 
@@ -821,6 +828,8 @@ class EMGAnalysisReconstruct:
             Size of y tick labels. The default is 10.
         dpi : int, optional
             Dots per Inch. The default is 100.
+        ax : plt.axes.Axes, optional
+            Plot to add to. The default is None.
 
         Raises
         ------
@@ -844,9 +853,12 @@ class EMGAnalysisReconstruct:
         if chan_idx < 0:
             chan_idx = self.chan_for_find_motor_units
 
-        # Create new figure with specified size.
-        fig, ax = plt.subplots(figsize=figsize)
-        fig.dpi = dpi
+        # Create new figure with specified size if no axis provided.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+            fig.dpi = dpi
+        else:
+            fig = None
 
         # Get motor unit potentials and average (mean).
         potentials_data = self._get_potentials_data_of_one_motor_unit(motor_unit_idx, n_ms)
@@ -868,7 +880,6 @@ class EMGAnalysisReconstruct:
         # Labels
         ax.tick_params(axis="y", which="major", labelsize=ytick_label_size)
         ax.set_ylabel("\u03bcV", fontsize=axis_label_size)
-        # TODO: check that label should be uV.
 
         # x-axis labels and font size.
         ax.set_xlabel("time (ms)", fontsize=axis_label_size)
