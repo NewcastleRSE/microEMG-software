@@ -1461,8 +1461,10 @@ class EMGMotorUnit:
                 )
 
                 # Record which fibre potentials were used to look into later, if desired.
-                fibre1_pots_used_idx[mup_num] = fibre1_potential_to_use
-                fibre2_pots_used_idx[mup_num] = fibre2_potential_to_use
+                # TODO: check GS changed to index relative to fibre_potential_times array
+                # TODO: need to remove outliers
+                fibre1_pots_used_idx[mup_num] = fib_pot_pos1  # fibre1_potential_to_use
+                fibre2_pots_used_idx[mup_num] = fib_pot_pos2  # fibre2_potential_to_use
 
         # Remove outliers in time intervals.
         if self.mu_jitter_settings.remove_outliers:
@@ -1621,6 +1623,7 @@ class EMGMotorUnit:
     def get_fibre_jitter_dict(self) -> dict:
         """
         Returns dictionary of fibre jitter results so that it can be saved.
+        TODO: update to include additional results
 
         Parameters
         ----------
