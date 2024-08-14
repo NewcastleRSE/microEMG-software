@@ -165,7 +165,7 @@ for i in np.arange(reconstruct.found_motor_units.n_motor_units):
 
 match recording_num:
     case 1:
-        motor_units_for_fibre_localisation = [1]
+        motor_units_for_fibre_localisation = [0, 1]
     case 3:
         motor_units_for_fibre_localisation = [0, 1, 2]
 
@@ -176,15 +176,19 @@ for mu in motor_units_for_fibre_localisation:
 # %% Plot fibre localisations (all fibre potentials)
 
 # All motor units
-fig, ax = reconstruct.found_motor_units.plot_fibre_potential_locations(
+
+# Potentials
+fig, ax = reconstruct.found_motor_units.plot_fibre_locations(
+    "potentials",
     motor_unit_idx=None,
 )
 ax.set_title(f"{recording_id}: fibre localisations (all fibre potentials)")
 
+
 # Individual motor units
 for mu_num in motor_units_for_fibre_localisation:
-    fig, ax = reconstruct.found_motor_units.plot_fibre_potential_locations(
-        motor_unit_idx=mu_num, plot_legend=False
+    fig, ax = reconstruct.found_motor_units.plot_fibre_locations(
+        "potentials", motor_unit_idx=mu_num, plot_legend=False
     )
     ax.set_title(
         f"{recording_id}: motor unit {mu_num + 1}" + " fibre localisations (all fibre potentials)"
@@ -200,6 +204,12 @@ for mu_num in motor_units_for_fibre_localisation:
     mu.plot_fibre_potential_clustering()
 
     clustering_results = mu.fibre_clustering_results
+
+# Estimated fibre locations of all motor units (median only)
+fig, ax = reconstruct.found_motor_units.plot_fibre_locations("fibres", motor_unit_idx=None)
+ax.set_title("Fibre locations of all motor units")
+
+# %% TODO: need to start new plot for jitter
 
 # Perform jitter analyses.
 for mu_num in motor_units_for_fibre_localisation:

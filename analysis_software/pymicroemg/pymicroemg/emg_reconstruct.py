@@ -520,13 +520,13 @@ class EMGAnalysisReconstruct:
         self,
         linelengths: float = 0.9,
         linewidths: float = 0.75,
-        ax: Optional[Axes] = None,
         figsize: tuple[float, float] = (10, 5),
         dpi: int = 100,
         axis_label_size: float = 14,
         xtick_label_size: float = 12,
         ytick_label_size: float = 12,
         sort_by: str = "default",
+        ax: plt.axes.Axes | None = None,
     ) -> tuple[Optional[Figure], Axes]:
         """
         Create a raster plot of the potentials of each motor unit in the recording.
@@ -552,6 +552,8 @@ class EMGAnalysisReconstruct:
         sort_by : str, optional
             How motor units should be ordered.
             The default is "default". Options are "default" and "n_potentials".
+        ax : plt.axes.Axes, optional
+            Plot to add to. The default is None, in which case new axes are created.
 
         Raises
         ------
@@ -694,7 +696,7 @@ class EMGAnalysisReconstruct:
         ytick_label_size: float = 6,
         xtick_label_size: float = 8,
         dpi: int = 100,
-        ax: plt.axes.Axes = None,
+        ax: plt.axes.Axes | None = None,
     ) -> tuple[Figure, Axes]:
         """
         Plot the average (mean) time series of the motor unit's potential.
@@ -722,7 +724,7 @@ class EMGAnalysisReconstruct:
         dpi : int, optional
             Dots per Inch. The default is 100.
         ax : plt.axes.Axes, optional
-            Plot to add to. The default is None.
+            Plot to add to. The default is None, in which case new axes are created.
 
         Raises
         ------
@@ -790,7 +792,7 @@ class EMGAnalysisReconstruct:
         xtick_label_size: float = 10,
         ytick_label_size: float = 10,
         dpi: int = 100,
-        ax: plt.axes.Axes = None,
+        ax: plt.axes.Axes | None = None,
     ) -> tuple[Figure, Axes, int]:
         """
 
@@ -829,7 +831,7 @@ class EMGAnalysisReconstruct:
         dpi : int, optional
             Dots per Inch. The default is 100.
         ax : plt.axes.Axes, optional
-            Plot to add to. The default is None.
+            Plot to add to. The default is None, in which case new axes are created.
 
         Raises
         ------

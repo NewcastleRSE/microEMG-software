@@ -608,7 +608,6 @@ class EMGMotorUnit:
 
         # If clustering not done for this MU then do not set anything.
         if fibre_clusters_dict:
-
             # Convert lists back to arrays to store results.
             self.fibre_clustering_results = {
                 "mean_n_fps": fibre_clusters_dict["mean_n_fps"],
@@ -1022,7 +1021,6 @@ class EMGMotorUnit:
             cov = np.array([[cv[0, 0], cv[0, 1]], [cv[1, 0], cv[1, 1]]])
 
         for i, mean in enumerate(self.fibre_clustering_results["fibre_centres_gmm_mean"]):
-
             # Set covariance matrix from fitted GMM.
             if self.mu_cluster_settings.gmm_covariance_type == "diag":
                 cov = np.array([[cv[i, 0], 0], [0, cv[i, 1]]])
@@ -1347,7 +1345,9 @@ class EMGMotorUnit:
             self.fibre_potential_times[fib_pot_pos2] - self.fibre_potential_times[fib_pot_pos1]
         )
 
-    def _jitter_analysis_between_two_fibres(self, fibre1_num: int, fibre2_num: int) -> tuple[
+    def _jitter_analysis_between_two_fibres(
+        self, fibre1_num: int, fibre2_num: int
+    ) -> tuple[
         float,
         float,
         npt.NDArray[np.int64],
@@ -2068,9 +2068,12 @@ class EMGMotorUnit:
             fib1 = int(self.fibre_jitter_results["fibre1_numbers"][i])
             fib2 = int(self.fibre_jitter_results["fibre2_numbers"][i])
 
-            total_non_nan_diffs, percent_df, total_non_nan_cd, percent_cd = (
-                self._get_jitter_totals(fib1, fib2)
-            )
+            (
+                total_non_nan_diffs,
+                percent_df,
+                total_non_nan_cd,
+                percent_cd,
+            ) = self._get_jitter_totals(fib1, fib2)
 
             # Set values for heat plot symetrically.
             if percent:
@@ -2172,28 +2175,46 @@ class EMGMotorUnits:
         """
         return self.n_motor_units
 
-    def plot_fibre_potential_locations(
+    def plot_fibre_locations(
         self,
+        location_type: str,
         motor_unit_idx: Optional[int] = None,
         plot_electrodes: bool = True,
-        pt_size=10,
-        pt_alpha: float = 0.5,
+        pt_size: float | None = None,
+        pt_alpha: float | None = None,
         pt_facecolor=None,
+        pt_edgecolor=None,
+        pt_linewidth: float = 3,
         axis_equal: bool = True,
         figsize: tuple[float, float] = (10.0, 5.0),
         axis_label_size: float = 14,
         tick_label_size: float = 12,
         plot_legend: bool = True,
-        legend_pt_size: float = 30,
+        min_legend_pt_size: float = 30,
         legend_label_size: float = 12,
-        dpi: int = 100,
+        dpi: int = 300,
         cmap=None,
         max_y: float = 1,
+        y_buff: float = 1.75,
+        ax: plt.axes.Axes | None = None,
     ) -> tuple[Figure, Axes]:
         """
-        Create scatter plot of fibre localisations estimated from all fibre potentials
-        (i.e., before clustering step). Can either plot fibre locations of all motor
-        unit potentials or one, specified motor unit potential.
+        Create 2D scatter plot of either
+
+        1) fibre localisations estimated from all fibre potentials (i.e., before
+        clustering step).
+
+        or
+
+        2) fibre locations (median locations determined by clustering step, with one
+        location per fibre).
+
+        The data plotted is determined by location_type: location_type = "potentials"
+        returns the fibre potential localisations, while location_type = "fibres"
+        returns the final estimated location of each fibre.
+
+        Can either plot fibre locations of all motor units or one, specified motor unit
+        potential.
 
         Default point colour depends on the motor unit number.
 
@@ -2204,12 +2225,20 @@ class EMGMotorUnits:
         plot_electrodes : bool, optional
             Whether to plot electrodes or not. The default is True.
         pt_size : float, optional
-            Size of the points for the fibre potentials. The default is 10.
+            Size of the points for the fibre locations. The default is 10 for potentials
+            and 75 for fibres.
         pt_alpha : float, optional
-            Alpha value for the points, [0, 1] (transparency). The default is 0.5.
+            Alpha value for the points, [0, 1] (transparency). The default is 0.5 for
+            potentials and 1 for fibres.
         pt_facecolor : Any, optional
-            Colour of points. The default is None, which uses default colour scheme
-            or given cmap.
+            Colour of point centres. The default is None. If fibre potential locations
+            are plotted, the default colour scheme or given cmap is used.
+        pt_edgecolor : Any, optional
+            Colour of point outlines. The default is None. If fibre locations are
+            plotted, the default colour scheme or given cmap is used.
+        pt_linewidth : float, optional
+            Linewidth of points. Only used if pt_edgecolor is not None. The default is
+            3.
         axis_equal : bool, optional
             Whether aspect ratio should be plotted equal. The default is True.
         figsize tuple[float, float], optional
@@ -2220,16 +2249,26 @@ class EMGMotorUnits:
             Size of tick labels. The default is 12.
         plot_legend : bool, optional
             Plot the legend or not. The default is True.
-        legend_pt_size : float, optional
-            Size of points in legend. The default is 30.
+        min_legend_pt_size : float, optional
+            Minimum size of points in legend - if pt_size is less
+            than min_legend_pt_size, this value will be used for the legend point size.
+            The default is 30.
         legend_label_size: float, optional
             Size of labels in legend. The default is 12.
         dpi : int, optional, optional
-            Dots per inch. The default is 100.
+            Dots per inch. The default is 300.
         cmap : Any, optional, optional
             Colour map to use. The default is None.
         max_y : float, optional
-            Positive and negative limits for the y-axis. The default is 1.
+            The minimum positive and negative limits for the y-axis. The max absolute
+            y axis location * y_buff is used instead if it exceeds this value to ensure
+            that data points are not cut out of the plot. The default is 1.
+        y_buff: float, optional
+            Factor by which to multiple the max absolute y axis location in order to
+            determine y-axis limits (see max_y argument). Controls buffer around points
+            along the y-axis. The default is 1.75, which provides room for larger points.
+        ax : plt.axes.Axes, optional
+            Plot to add to. The default is None, in which case new axes are created.
 
         Returns
         -------
@@ -2240,13 +2279,35 @@ class EMGMotorUnits:
 
         """
 
+        # Check value of location_type is valid
+        if location_type not in ["potentials", "fibres"]:
+            raise ValueError(
+                f"location_type of {location_type} is not valid - must be 'potentials' or 'fibres'"
+            )
+
+        # If not specified, determine point style based on location_type
+        match location_type:
+            case "potentials":
+                if not pt_size:
+                    pt_size = 10
+                if not pt_alpha:
+                    pt_alpha = 0.5
+            case "fibres":
+                if not pt_size:
+                    pt_size = 75
+                if not pt_alpha:
+                    pt_alpha = 1
+
         # Default colormap - will use if colors not specified.
         if cmap is None:
             cmap = colormaps["tab10"].colors
 
-        # Create new figure with specified size.
-        fig, ax = plt.subplots(figsize=figsize)
-        fig.dpi = dpi
+        # Create new figure with specified size if no axis provided.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+            fig.dpi = dpi
+        else:
+            fig = None
 
         # Motor unit(s) to plot.
         if motor_unit_idx is not None:
@@ -2261,30 +2322,65 @@ class EMGMotorUnits:
         if plot_electrodes and len(motor_units) > 0:
             motor_units[0]._plot_electrodes(ax=ax)
 
-        for mu in motor_units:
+        # Keep track of max absolute y position to ensure data is not cut off by axis limits
+        fibre_max_y = 0
 
+        for mu in motor_units:
             # Colour for motor unit - differs depending on motor unit.
-            if pt_facecolor is None:
+            # Face colour: default only used for plotting potentials
+            if (pt_facecolor is None) and (location_type == "potentials"):
                 # Use same colour scheme as cluster colours for motor units.
                 mu_pt_facecolor = mu.get_cluster_colour(
                     mu.motor_unit_number, self.n_motor_units, cmap
                 )
+            elif not pt_facecolor:
+                mu_pt_facecolor = "none"
             else:
                 mu_pt_facecolor = pt_facecolor
 
-            if mu.analysis_performed["fibres_localised"]:
+            # Edge colour: default only used for plotting fibres
+            if (pt_edgecolor is None) and (location_type == "fibres"):
+                # Use same colour scheme as cluster colours for motor units.
+                mu_pt_edgecolor = mu.get_cluster_colour(
+                    mu.motor_unit_number, self.n_motor_units, cmap
+                )
+            elif not pt_facecolor:
+                mu_pt_edgecolor = "none"
+            else:
+                mu_pt_edgecolor = pt_edgecolor
 
+            # Data to plot
+            if (location_type == "potentials") and (mu.analysis_performed["fibres_localised"]):
+                # Use fibre potential locations
+                mu_fibre_locations = mu.fibre_centres
+
+            elif (location_type == "fibres") and (mu.analysis_performed["fibres_clustered"]):
+                # Use fibre locations
+                mu_fibre_locations = mu.fibre_clustering_results["fibre_centres_median"]
+
+            else:
+                # if analyses have not been performed, no fibres locations
+                mu_fibre_locations = None
+
+            # Plot locations and compute max absolute y location
+            if mu_fibre_locations is not None:
                 ax.scatter(
-                    mu.fibre_centres[:, 0],
-                    mu.fibre_centres[:, 1],
+                    mu_fibre_locations[:, 0],
+                    mu_fibre_locations[:, 1],
                     pt_size,
                     alpha=pt_alpha,
-                    linewidth=0,
+                    linewidth=pt_linewidth,
                     facecolor=mu_pt_facecolor,
+                    edgecolor=mu_pt_edgecolor,
                     label=f"motor unit {mu.motor_unit_number + 1}",
                 )
 
-        # Plot legend.
+                # Max absolute y location
+                mu_max_y = np.max(np.abs(mu_fibre_locations[:, 1]))
+                fibre_max_y = max(fibre_max_y, mu_max_y)
+                print(fibre_max_y)
+
+        # Plot legend
         if plot_legend:
             lgnd = ax.legend(
                 bbox_to_anchor=(1, 1),
@@ -2294,7 +2390,7 @@ class EMGMotorUnits:
                 fontsize=legend_label_size,
             )
             for h in lgnd.legend_handles:
-                h._sizes = [legend_pt_size]
+                h._sizes = [max(min_legend_pt_size, pt_size)]
                 h.set_alpha(1)
 
         # Axis and tick labels.
@@ -2302,10 +2398,13 @@ class EMGMotorUnits:
         ax.set_ylabel("position (mm)", fontsize=axis_label_size)
         ax.tick_params(axis="x", which="major", labelsize=tick_label_size)
         ax.tick_params(axis="y", which="major", labelsize=tick_label_size)
+        max_y = max(fibre_max_y * y_buff, max_y)  # Adjust max_y based on data
         ax.set_ylim(-max_y, max_y)
 
         # Equal aspect ratio.
         if axis_equal:
-            ax.axis("equal")
+            ax.set_aspect("equal", adjustable="box")
 
         return fig, ax
+
+    # TODO: axis limits; change point style depending on plot type
