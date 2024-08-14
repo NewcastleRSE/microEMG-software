@@ -7,6 +7,7 @@ Example pipeline for EMG analysis, including motor unit and muscle fibre localis
 
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.stats
 
 from pymicroemg.emg_files import EMGFiles
 from pymicroemg.emg_preproc_settings import EMGPreprocSettings
@@ -165,7 +166,7 @@ for i in np.arange(reconstruct.found_motor_units.n_motor_units):
 
 match recording_num:
     case 1:
-        motor_units_for_fibre_localisation = [0, 1]
+        motor_units_for_fibre_localisation = [0]
     case 3:
         motor_units_for_fibre_localisation = [0, 1, 2]
 
@@ -221,3 +222,119 @@ for mu_num in motor_units_for_fibre_localisation:
     mu.plot_jitter_heat_plot()
 
     jitter_results = mu.fibre_jitter_results
+
+
+# %% develop jitter plot
+
+# 008080,#70a494,#b4c8a8,#f6edbd,#edbb8a,#de8a5a,#ca562c
+mu_idx = 0
+mu = reconstruct.found_motor_units.motor_units[mu_idx]
+
+# inputs
+# no ax input since includes subplots
+fibre1 = 0
+fibre2 = 1
+fibre_clrs = None  # list[Any] | None = None
+
+emg_line_lw = 1
+emg_line_alpha = 0.25
+time_marker_size = 2
+
+axis_label_size = 12
+title_size = 14
+dpi = 300
+downsample_factor = 1
+figsize = (10, 10)
+
+if fibre_clrs is None:
+    fibre_clrs = ["#008080", "#ca562c"]
+fig, axs = plt.subplots(3, 1, figsize=figsize, height_ratios=[1, 1, 4], sharex=True)
+fig.dpi = dpi
+
+jitter_results = mu.fibre_jitter_results
+# determine MUPs used for jitter computation
+analysed_mup = np.full(mu.n_potentials, False)  # initialise
+
+# Need to append and prepend NaN to consecutive differences array to determine which
+# MUPs are used (since each consecutive difference corresponds to two MUPs)
+nan1 = np.isnan(np.append(jitter_results["consecutive_diffs"], np.nan))
+nan2 = np.isnan(np.append(np.array(np.nan), jitter_results["consecutive_diffs"]))
+
+# if not nan in at least one, analysed
+analysed_mup[np.any([~nan1, ~nan2], axis=0)] = True
+
+# Get indices of fibre 1 and fibre 2 (in fibre_potential_times/fibre_potential_peak_chan)
+# for each MUP that was analysed
+analysed_fibres_idx = np.concatenate(
+    (jitter_results["fibre1_pot_used_idx"], jitter_results["fibre2_pot_used_idx"]), axis=0
+)
+analysed_fibres_idx[:, ~analysed_mup] = np.nan  # remove fibres not analysed
+
+# TODO: check that mup_onsets is the same for each pair of indices in analysed_fibre_idx
+# i.e., to confirm the fibres belong to the same MUP
+
+# Get mode of the peak channels of fibre 1 and fibre 2
+n_fibres = 2
+fibres_peak_chan = np.full(n_fibres, 0)
+for i in range(n_fibres):  # for each fibre
+    # int indices without nan
+    idx = analysed_fibres_idx[i, :]
+    idx = idx[~np.isnan(idx)]
+    idx = idx.astype(int)
+
+    chan = mu.fibre_potential_peak_chan[idx]
+    print(chan)
+    mode_i = scipy.stats.mode(chan)
+    print(mode_i)
+    fibres_peak_chan[i] = int(mode_i[0])
+
+# Plot peak chan of fibres 1 and 2
+
+# Time vector for x axis (ms)
+potentials_t = (np.arange(1, mu.all_spikes.shape[2] + 1) / reconstruct.emg_data_preproc.fs) * 1000
+
+# Plot each MUP in specified channel.
+for i in range(n_fibres):
+    axs[i].plot(
+        potentials_t[0::downsample_factor],
+        np.transpose(
+            np.squeeze(mu.all_spikes[analysed_mup, fibres_peak_chan[i], 0::downsample_factor])
+        ),
+        lw=emg_line_lw,
+        color=fibre_clrs[i],
+        alpha=emg_line_alpha,
+    )
+    # Labels
+    # add one to indices so count is from 1 in labels
+    axs[i].set_title(f"fibre {i + 1}, channel {fibres_peak_chan[i] + 1}", fontsize=title_size)
+    axs[i].set_ylabel("\u03bcV", fontsize=axis_label_size)
+    # No x-axis label since shared across all plots
+
+# Plot times
+mup_number = np.arange(mu.n_potentials)  # sets y axis location of each tick
+ax_times = 2  # axis to use for plot
+for i in range(n_fibres):
+    fibre_times = mu.fibre_potential_times
+
+    # int indices without nan
+    idx = analysed_fibres_idx[i, :]
+    idx_no_nan = idx[~np.isnan(idx)]
+    idx_no_nan = idx_no_nan.astype(int)
+
+    # fibre times for each mup if mup was analysed (i.e., idx is not nan)
+    fibre_t = np.full(mu.n_potentials, np.nan)
+    fibre_t[~np.isnan(idx)] = mu.fibre_potential_times[idx_no_nan]
+    fibre_t = (fibre_t / reconstruct.emg_data_preproc.fs) * 1000  # convert to ms
+
+    axs[ax_times].scatter(fibre_t, mup_number, s=time_marker_size, marker="|", color=fibre_clrs[i])
+
+axs[ax_times].invert_yaxis()  # first MUP at the top of the plot
+
+# Labels
+axs[ax_times].set_title("fibre potential times", fontsize=title_size)
+axs[ax_times].set_ylabel("motor unit potential", fontsize=title_size)
+axs[ax_times].set_xlabel("time (ms)", fontsize=axis_label_size)
+axs[ax_times].set_xlim([0, max(potentials_t)])  # keeps x-axis limits tight for all plots
+
+# TODO: need to remove outliers (maybe get threshold for removing outliers so can
+# identify which differences are outliers)
