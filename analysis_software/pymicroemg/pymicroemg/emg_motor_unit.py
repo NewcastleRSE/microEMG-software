@@ -161,6 +161,7 @@ class EMGMotorUnit:
         fibre_centres: npt.NDArray[np.float64],
         mup_onsets: npt.NDArray[np.int64],
         fibre_potential_times: npt.NDArray[np.int64],
+        fibre_potential_peak_chan: npt.NDArray[np.int64],
         all_spikes: npt.NDArray[np.float64],
         generator_potential: npt.NDArray[np.float64],
     ):
@@ -179,6 +180,8 @@ class EMGMotorUnit:
         fibre_potential_times : npt.NDArray[np.int64]
             Fibre potential peak times relative to the onset (overall) time
             of the corresponding MUP (listed above in mup_onsets)
+        fibre_potential_peak_chan : npt.NDArray[np.int64]
+            The channel with the peak amplitude for each fibre potential.
         all_spikes : npt.NDArray[np.float64]
             All peaks from surrounding channels.
         generator_potential : npt.NDArray[np.float64]
@@ -200,6 +203,7 @@ class EMGMotorUnit:
         self.fibre_centres = fibre_centres
         self.mup_onsets = mup_onsets
         self.fibre_potential_times = fibre_potential_times
+        self.fibre_potential_peak_chan = fibre_potential_peak_chan
         self.all_spikes = all_spikes
         self.generator_potential = generator_potential
 
@@ -2378,7 +2382,6 @@ class EMGMotorUnits:
                 # Max absolute y location
                 mu_max_y = np.max(np.abs(mu_fibre_locations[:, 1]))
                 fibre_max_y = max(fibre_max_y, mu_max_y)
-                print(fibre_max_y)
 
         # Plot legend
         if plot_legend:

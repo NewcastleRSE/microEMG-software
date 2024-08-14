@@ -962,6 +962,10 @@ class EMGAnalysisReconstruct:
         # of the corresponding MUP (in indices units).
         fibre_potential_times = np.array([])
 
+        # Fibre potential peak channels
+        # TODO: check that GS has extracted the correct info
+        fibre_potential_peak_chan = np.array([])
+
         max_signal_id = all_spikes.shape[0] - self.recon_settings.mavg_length
 
         # Loop thro' MUPs.
@@ -1054,6 +1058,14 @@ class EMGAnalysisReconstruct:
                 #  and relative to the MUP onset times.
                 fibre_potential_times = np.append(fibre_potential_times, time_peak)
 
+                # Add fibre peak channel
+                # TODO: check GS implementation and determine whether to add check to
+                # avoid including bad channels (should not be peaks since set to 0)
+                # if peak_electrode not in included_electrodes:
+                #     peak_idx = np.argmin(np.abs(peak_electrode - included_electrodes))
+                #     peak_electrode = included_electrodes(peak_idx)
+                fibre_potential_peak_chan = np.append(fibre_potential_peak_chan, peak_electrode)
+
         # End of signal_id loop.
 
         # Scaling factor to account for tissue attenuation differences in y-axis direction.
@@ -1065,6 +1077,7 @@ class EMGAnalysisReconstruct:
                 fibre_centres=pos,
                 mup_onsets=mup_onsets,
                 fibre_potential_times=fibre_potential_times,
+                fibre_potential_peak_chan=fibre_potential_peak_chan,
                 all_spikes=all_spikes,
                 generator_potential=np.array(np.transpose(self.opr)),
             )
