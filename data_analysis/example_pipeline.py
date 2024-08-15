@@ -226,14 +226,13 @@ for mu_num in motor_units_for_fibre_localisation:
 
 # %% develop jitter plot
 
-# 008080,#70a494,#b4c8a8,#f6edbd,#edbb8a,#de8a5a,#ca562c
 mu_idx = 1
 mu = reconstruct.found_motor_units.motor_units[mu_idx]
 
 # inputs
 # no ax input since includes subplots
-fibre1 = 1
-fibre2 = 0
+fibre1 = 2
+fibre2 = 1
 fibre_clrs = None  # list[Any] | None = None
 
 emg_line_lw = 1
@@ -250,6 +249,8 @@ downsample_factor = 1
 
 
 # if fibre1 and 2 have the same value, value error - need two different fibres for jitter
+
+# Default colours
 if fibre_clrs is None:
     fibre_clrs = ["#008080", "#ca562c"]
 
@@ -258,24 +259,12 @@ if fibre_clrs is None:
 # Jitter results
 jitter_results = mu.fibre_jitter_results
 
-# Get indices of fibre 1 and fibre 2 (in fibre_potential_times/fibre_potential_peak_chan)
-# for each MUP that was analysed
-# First need to determine which fields to use for each fibre
-# Lower fibre number is stored in fibre1 results, while higher value is fibre2
 
+# Index of the fibre pair in the jitter results
 fibre_pair_idx = mu.get_jitter_fibre_pair_idx(fibre1, fibre2)
 print(fibre_pair_idx)
 if fibre_pair_idx is None:
     raise ValueError("Requested fibre pair is not an option.")
-
-if fibre1 < fibre2:
-    # Indices in fibre_potential_times
-    fibre1_pot_used_idx_field = "fibre1_pot_used_idx"
-    fibre2_pot_used_idx_field = "fibre2_pot_used_idx"
-else:
-    # Indices in fibre_potential_times
-    fibre2_pot_used_idx_field = "fibre1_pot_used_idx"
-    fibre1_pot_used_idx_field = "fibre2_pot_used_idx"
 
 
 # Get mean consecutive difference of that fibre pair
@@ -284,32 +273,9 @@ mcd = jitter_results["mean_consecutive_diffs"][fibre_pair_idx]
 if np.isnan(mcd):
     raise ValueError("No results for that fibre pair")
 
-# Initialise array for storing which MUPs were analysed
-analysed_mup = np.full(mu.n_potentials, False)
-
-# Need to append and prepend NaN to consecutive differences array to determine which
-# MUPs are used (since each consecutive difference corresponds to two MUPs)
-nan1 = np.isnan(np.append(jitter_results["consecutive_diffs"][fibre_pair_idx, :], np.nan))
-nan2 = np.isnan(
-    np.append(np.array(np.nan), jitter_results["consecutive_diffs"][fibre_pair_idx, :])
-)
-
-# if not nan in at least one, that MUP was analysed analysed
-analysed_mup[np.any([~nan1, ~nan2], axis=0)] = True
-
-# Indices of fibres 1 and 2 in each MUP
-analysed_fibres_idx = np.vstack(
-    (
-        jitter_results[fibre1_pot_used_idx_field][fibre_pair_idx, :],
-        jitter_results[fibre2_pot_used_idx_field][fibre_pair_idx, :],
-    )
-)
-analysed_fibres_idx[:, ~analysed_mup] = np.nan  # nan if fibre not analysed
-
-# TODO: check that mup_onsets is the same for each pair of indices in analysed_fibre_idx
-# i.e., to confirm the fibres belong to the same MUP
-
-# Get fibre information
+# Boolean array of which MUPs were analysed and the indices (in fibre_potential_times)
+# of the corresponding fibre potentials
+analysed_mup, analysed_fibres_idx = mu._get_jitter_analysed_mups_and_fibres(fibre1, fibre2)
 
 # Get
 # 1) mode of the peak channels of fibre 1 and fibre 2 and
@@ -325,13 +291,10 @@ for i in range(n_fibres):  # for each fibre
 
     # Peak channel for each fibre and mode of peak channels
     chan = mu.fibre_potential_peak_chan[idx_no_nan]
-    print(chan)
     mode_i = scipy.stats.mode(chan)
-    print(mode_i)
     fibres_peak_chan[i] = int(mode_i[0])
 
     # Fibre times for each mup if mup was analysed (i.e., idx is not nan)
-    fibre_t = np.full(mu.n_potentials, np.nan)
     analysed_fibre_t[~np.isnan(idx), i] = mu.fibre_potential_times[idx_no_nan]
 
 # Convert fibre times to ms
@@ -408,10 +371,10 @@ axs[ax_times].set_title("fibre potential times", fontsize=title_size)
 axs[ax_times].set_ylabel("motor unit potential", fontsize=title_size)
 if align_times_to_fibre1:
     axs[ax_times].set_xlabel(
-        f"time (ms) relative to fibre {fibre_labels[0]} peak", fontsize=axis_label_size
+        f"time (ms) relative to time of fibre {fibre_labels[0]}", fontsize=axis_label_size
     )
 else:
-    axs[ax_times].set_xlabel("time (ms)", fontsize=axis_label_size)
+    axs[ax_times].set_xlabel("time (ms) in motor unit potential", fontsize=axis_label_size)
 axs[ax_times].set_xlim(
     [np.nanmin(mup_t), np.nanmax(mup_t)]
 )  # keeps x-axis limits tight for all plots

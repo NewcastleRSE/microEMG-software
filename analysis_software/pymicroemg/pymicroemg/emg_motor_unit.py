@@ -2185,6 +2185,98 @@ class EMGMotorUnit:
         # Return fibre pair index
         return fibre_pair_idx
 
+    def _get_jitter_analysed_mups_and_fibres(
+        self, fibre1: int, fibre2: int
+    ) -> (npt.NDArray[np.bool_], npt.NDArray[np.float64]):
+        """
+        Returns
+
+        1) boolean array of which motor unit potentials were included in the jitter
+           computation for the specified fibre pair
+
+        and
+
+        2) float array of the indices (in self.fibre_potential_times)
+           of the fibre potentials in each motor unit that were used to compute the
+           jitter of that fibre pair. Float array is used so the indices are nan if that
+           motor unit potential was not analysed.
+
+        Note that MUPs that may have been removed by outlier detection are still marked
+        as True (= analysed).
+
+        Fibre1 and fibre2 do not need to be in ascending order.
+
+        Parameters
+        ----------
+        fibre1 : int
+            Number of the first fibre (counting from 0).
+        fibre2 : int
+            Number of the second fibre (counting from 0).
+
+        Raises
+        ------
+        ValueError
+            Raised if jitter analysis has not yet been performed for this motor unit.
+
+        Returns
+        -------
+        analysed_mup : npt.NDArray[np.bool_]
+            Boolean numpy array of which motor unit potentials were included in the
+            jitter analysis for this fibre pair. MUPs that produced outlier values are
+            still included. Shape is (self.n_potentials,).
+
+        analysed_fibres_idx : npt.NDArray[np.float64]
+            Float array of the indices (in self.fibre_potential_times)
+            of the fibre potentials in each motor unit that were used to compute the
+            jitter of that fibre pair. The index is set to nan if that motor unit
+            potential was not analysed. Shape is (2, self.n_potentials), with row 1
+            corresponding to fibre1 and row 2 corresponding to fibre2.
+
+        """
+
+        # First check that jitter analysis has been performed
+        if not self.analysis_performed["fibres_jitter_computed"]:
+            raise ValueError("Jitter has not yet been computed for this motor unit.")
+        else:
+            jitter_results = self.fibre_jitter_results  # jitter results dictionary
+
+        # Get fibre pair index in jitter results
+        fibre_pair_idx = self.get_jitter_fibre_pair_idx(fibre1, fibre2)
+
+        # Initialise array for storing which MUPs were analysed
+        analysed_mup = np.full(self.n_potentials, False)
+
+        # Need to append and prepend NaN to consecutive differences array to determine which
+        # MUPs are used (since each consecutive difference corresponds to two MUPs)
+        nan1 = np.isnan(np.append(jitter_results["consecutive_diffs"][fibre_pair_idx, :], np.nan))
+        nan2 = np.isnan(
+            np.append(np.array(np.nan), jitter_results["consecutive_diffs"][fibre_pair_idx, :])
+        )
+
+        # If not nan in at least one, that MUP was analysed
+        analysed_mup[np.any([~nan1, ~nan2], axis=0)] = True
+
+        # Get indices of fibre 1 and fibre 2 (in fibre_potential_times/fibre_potential_peak_chan)
+        # for each MUP that was analysed.
+        # First need to determine which fields in jitter_results to use for each fibre
+        # Lower fibre number is stored in fibre1 results, while higher value is fibre2
+        if fibre1 < fibre2:
+            fibre1_pot_used_idx_field = "fibre1_pot_used_idx"
+            fibre2_pot_used_idx_field = "fibre2_pot_used_idx"
+        else:
+            fibre2_pot_used_idx_field = "fibre1_pot_used_idx"
+            fibre1_pot_used_idx_field = "fibre2_pot_used_idx"
+
+        analysed_fibres_idx = np.vstack(
+            (
+                jitter_results[fibre1_pot_used_idx_field][fibre_pair_idx, :],
+                jitter_results[fibre2_pot_used_idx_field][fibre_pair_idx, :],
+            )
+        )
+        analysed_fibres_idx[:, ~analysed_mup] = np.nan  # Set to nan if fibre not analysed
+
+        return analysed_mup, analysed_fibres_idx
+
 
 class EMGMotorUnits:
     """
