@@ -166,7 +166,7 @@ for i in np.arange(reconstruct.found_motor_units.n_motor_units):
 
 match recording_num:
     case 1:
-        motor_units_for_fibre_localisation = [0, 1]
+        motor_units_for_fibre_localisation = [1]
     case 3:
         motor_units_for_fibre_localisation = [0, 1, 2]
 
@@ -262,46 +262,21 @@ jitter_results = mu.fibre_jitter_results
 # for each MUP that was analysed
 # First need to determine which fields to use for each fibre
 # Lower fibre number is stored in fibre1 results, while higher value is fibre2
-if fibre1 < fibre2:
-    # Numbers
-    fibre1_numbers_field = "fibre1_numbers"
-    fibre2_numbers_field = "fibre2_numbers"
 
+fibre_pair_idx = mu.get_jitter_fibre_pair_idx(fibre1, fibre2)
+print(fibre_pair_idx)
+if fibre_pair_idx is None:
+    raise ValueError("Requested fibre pair is not an option.")
+
+if fibre1 < fibre2:
     # Indices in fibre_potential_times
     fibre1_pot_used_idx_field = "fibre1_pot_used_idx"
     fibre2_pot_used_idx_field = "fibre2_pot_used_idx"
 else:
-    # Numbers
-    fibre2_numbers_field = "fibre1_numbers"
-    fibre1_numbers_field = "fibre2_numbers"
-
     # Indices in fibre_potential_times
     fibre2_pot_used_idx_field = "fibre1_pot_used_idx"
     fibre1_pot_used_idx_field = "fibre2_pot_used_idx"
 
-# Determine index of results for that fibre pair
-fibre_pair_idx_bool = np.all(
-    [
-        jitter_results[fibre1_numbers_field] == fibre1,
-        jitter_results[fibre2_numbers_field] == fibre2,
-    ],
-    axis=0,
-)
-
-# Check that only one match
-n_fibre_pair_matches = sum(fibre_pair_idx_bool)
-if n_fibre_pair_matches == 0:
-    raise ValueError(
-        "Requested fibre pair did not match any of the available fibre pairs"
-        + "(make sure to count from zero when specifying fibres)"
-    )
-elif n_fibre_pair_matches > 1:
-    raise ValueError(
-        "Multiple fibre pairs matched the available fibre pairs."
-        + "May be an error in the jitter analysis."
-    )
-else:  # Get index of that pair
-    fibre_pair_idx = np.flatnonzero(fibre_pair_idx_bool)[0]
 
 # Get mean consecutive difference of that fibre pair
 # If doesn't exist, return early

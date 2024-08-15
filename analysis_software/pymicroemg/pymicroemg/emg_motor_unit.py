@@ -2121,6 +2121,70 @@ class EMGMotorUnit:
 
         return hm
 
+    def get_jitter_fibre_pair_idx(self, fibre1: int, fibre2: int) -> int | None:
+        """
+        Get index of requested fibre pair in the motor unit's jitter results
+        (fibre_jitter_results attribute). Will return None if the fibre pair is not an
+        option or if there are multiple matches for that fibre pair in the jitter
+        results (which should only arrise if there is an error in the analysis code).
+
+        Fibre1 and fibre2 do not need to be in ascending order.
+
+        Parameters
+        ----------
+        fibre1 : int
+            Number of the first fibre (counting from 0).
+        fibre2 : int
+            Number of the second fibre (counting from 0).
+
+        Raises
+        ------
+        ValueError
+            Raised if jitter analysis has not yet been performed for this motor unit.
+
+        Returns
+        -------
+        fibre_pair_idx : int | None
+            Index of the specified fibre; can use for extracting the corresponding
+            results in the motor unit's jitter analysis results. Is None if fibre pair
+            is not a valid option.
+        """
+
+        # First check that jitter analysis has been performed
+        if not self.analysis_performed["fibres_jitter_computed"]:
+            raise ValueError("Jitter has not yet been computed for this motor unit.")
+
+        # Jitter results
+        jitter_results = self.fibre_jitter_results
+
+        # Determine which fields in jitter_results to use for each fibre
+        # Lower fibre number is stored in fibre1 results, while higher value is fibre2
+        if fibre1 < fibre2:
+            fibre1_numbers_field = "fibre1_numbers"
+            fibre2_numbers_field = "fibre2_numbers"
+        else:
+            fibre2_numbers_field = "fibre1_numbers"
+            fibre1_numbers_field = "fibre2_numbers"
+
+        # Determine index of results for that fibre pair
+        fibre_pair_idx_bool = np.all(
+            [
+                jitter_results[fibre1_numbers_field] == fibre1,
+                jitter_results[fibre2_numbers_field] == fibre2,
+            ],
+            axis=0,
+        )
+
+        # Compute number of matches; if not exactly 1, return None
+        n_fibre_pair_matches = sum(fibre_pair_idx_bool)
+        if n_fibre_pair_matches == 1:
+            fibre_pair_idx = np.flatnonzero(fibre_pair_idx_bool)[0]
+        else:
+            fibre_pair_idx = None
+
+        # Return fibre pair index
+        return fibre_pair_idx
+
 
 class EMGMotorUnits:
     """
