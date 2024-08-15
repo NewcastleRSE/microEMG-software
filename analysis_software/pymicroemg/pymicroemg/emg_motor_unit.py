@@ -1560,8 +1560,8 @@ class EMGMotorUnit:
         number_of_jitter_calcs = int(n_fibre_clusters * (n_fibre_clusters - 1) / 2)
 
         # Calculations to report.
-        fibre1_numbers = np.zeros(number_of_jitter_calcs)
-        fibre2_numbers = np.zeros(number_of_jitter_calcs)
+        fibre1_numbers = np.full(number_of_jitter_calcs, 0)
+        fibre2_numbers = np.full(number_of_jitter_calcs, 0)
         mean_consecutive_diffs = np.zeros(number_of_jitter_calcs)
         median_consecutive_diffs = np.zeros(number_of_jitter_calcs)
         fibre_potential_time_diffs = np.zeros((number_of_jitter_calcs, self.n_potentials))
