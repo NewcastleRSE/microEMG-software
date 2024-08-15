@@ -10,7 +10,7 @@ For use with preprocessed EMG data.
 from __future__ import annotations
 
 import numpy.typing as npt
-from typing import Optional
+from typing import Optional, Any
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
@@ -18,6 +18,7 @@ from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 from matplotlib import colormaps
 from sklearn.cluster import KMeans
+import scipy.stats
 
 import seaborn as sns
 import warnings
@@ -2153,9 +2154,9 @@ class EMGMotorUnit:
         # First check that jitter analysis has been performed
         if not self.analysis_performed["fibres_jitter_computed"]:
             raise ValueError("Jitter has not yet been computed for this motor unit.")
-
-        # Jitter results
-        jitter_results = self.fibre_jitter_results
+        else:
+            # Jitter results
+            jitter_results = self.fibre_jitter_results
 
         # Determine which fields in jitter_results to use for each fibre
         # Lower fibre number is stored in fibre1 results, while higher value is fibre2
@@ -2276,6 +2277,228 @@ class EMGMotorUnit:
         analysed_fibres_idx[:, ~analysed_mup] = np.nan  # Set to nan if fibre not analysed
 
         return analysed_mup, analysed_fibres_idx
+
+    def plot_jitter_fibre_pair_EMG_and_times(
+        self,
+        fibre1: int,
+        fibre2: int,
+        fibre_clrs: list[Any] | None = None,
+        emg_line_lw: float = 1,
+        emg_line_alpha: float = 0.25,
+        time_marker_size: float = 2,
+        align_times_to_fibre1: bool = True,
+        figsize: tuple[float, float] = (10, 10),
+        axis_label_size: float = 12,
+        title_size: float = 14,
+        dpi: int = 300,
+        downsample_factor: int = 1,
+    ) -> tuple[Figure | None, Axes | None]:
+        """
+        Creates a figure that visualises the jitter analysis of the specified fibre
+        pair, fibre1 and fibre2. The figure contains three subplots: the EMG traces of
+        fibre1's and fibre2's potentials (in separate plots) and a raster plot of the
+        times of the potentials in each motor unit potential. The x-axes of the plots
+        are aligned.
+
+        By default, all times are relative to the timing of fibre1's
+        potentials in each motor unit.
+
+        If there are no jitter results for that fibre pair (e.g., if there were no
+        consecutive motor unit potentials containing potentials for both fibres),
+        returns (None, None) instead of the figure and axes.
+
+        Fibre1 and fibre2 do not need to be in ascending order.
+
+        Note that these plots still visualise outlier differences that may be removed
+        from the final mean consecutive difference calculation.
+
+        Parameters
+        ----------
+        fibre1 : int
+            Number of the first fibre (counting from 0).
+        fibre2 : int
+            Number of the second fibre (counting from 0).
+        fibre_clrs : list[Any] | None, optional
+            List, length two, indicate the colour for the EMG traces for each fibre.
+            The default is None, in which case default colours (using CartoColor's
+            "Geyser" palette) are set.
+        emg_line_lw : float, optional
+            Linewidth of the EMG traces. The default is 1.
+        emg_line_alpha : float, optional
+            Alpha of the EMG traces. The default is 0.25.
+        time_marker_size : float, optional
+            Size of the markers for the fibre potential times. The default is 2.
+        align_times_to_fibre1 : bool, optional
+            Whether to re-align the times so fibre1's potentials always occur at 0. If
+            false, times are instead relative to each MUP's onset. The default is True.
+        figsize : tuple[float, float], optional
+            Size of the figure, in inches. The default is (10, 10).
+        axis_label_size : float, optional
+            Font size of the axis labels. The default is 12.
+        title_size : float, optional
+            Font size the titles. The default is 14.
+        dpi : int, optional
+            Plot resolution (dots per inch). The default is 300.
+        downsample_factor : int, optional
+            How much to downsample the EMG traces (recommend max of 2). The default is 1.
+
+        Raises
+        ------
+        ValueError
+            Raised if jitter analysis has not yet been performed for this motor unit or
+            if the requested fibre pair is not a valid option.
+
+        Returns
+        -------
+        fig : Figure | None
+            The figure to which the plot belongs.
+        ax : Axes | None
+            The axes to which the plot belongs.
+
+        """
+
+        # First check that jitter analysis has been performed
+        if not self.analysis_performed["fibres_jitter_computed"]:
+            raise ValueError("Jitter has not yet been computed for this motor unit.")
+        else:
+            jitter_results = self.fibre_jitter_results  # jitter results dictionary
+
+        # Default colours for fibre EMG traces
+        if fibre_clrs is None:
+            fibre_clrs = ["#008080", "#ca562c"]
+
+        # Get index of the fibre pair in the jitter results
+        fibre_pair_idx = self.get_jitter_fibre_pair_idx(fibre1, fibre2)
+        if fibre_pair_idx is None:
+            raise ValueError("Requested fibre pair is not an option.")
+
+        # Get mean consecutive difference of that fibre pair
+        # If doesn't exist, return early with no figure
+        mcd = jitter_results["mean_consecutive_diffs"][fibre_pair_idx]
+        if np.isnan(mcd):
+            return None, None
+        else:  # convert to microseconds
+            # TODO: ask RH why need to add 0.5
+            mcd = int((mcd / self.fs) * 1e6 + 0.5)
+
+        # Boolean array of which MUPs were analysed and the indices (in
+        # fibre_potential_times) of the corresponding fibre potentials
+        analysed_mup, analysed_fibres_idx = self._get_jitter_analysed_mups_and_fibres(
+            fibre1, fibre2
+        )
+
+        # Get
+        # 1) mode of the peak channels of fibre 1 and fibre 2 and
+        # 2) times of the fibre potentials in the each MUP (nan if not analysed)
+        n_fibres = 2
+        fibres_peak_chan = np.full(n_fibres, 0)
+        analysed_fibre_t = np.full((self.n_potentials, n_fibres), np.nan)
+        for i in range(n_fibres):  # for each fibre
+            # int indices of the analysed fibres, without nan (so can use for indexing)
+            idx = analysed_fibres_idx[i, :]
+            idx_no_nan = idx[~np.isnan(idx)]
+            idx_no_nan = idx_no_nan.astype(int)
+
+            # Peak channel for each fibre and mode of peak channels
+            chan = self.fibre_potential_peak_chan[idx_no_nan]
+            mode_i = scipy.stats.mode(chan)
+            fibres_peak_chan[i] = int(mode_i[0])
+
+            # Fibre times for each mup if mup was analysed (i.e., idx is not nan)
+            # Otherwise, set to nan
+            analysed_fibre_t[~np.isnan(idx), i] = self.fibre_potential_times[idx_no_nan]
+
+        # Convert fibre times to ms
+        MS_MULTIPLIER = 1000
+        analysed_fibre_t = (analysed_fibre_t / self.fs) * MS_MULTIPLIER
+
+        # Create time vectors for EMG traces
+
+        # Create time vectors (ms) for x-axis of MUP EMG traces (analysed MUP only)
+        # Will create a separate column for each trace so can align based on fibre potential
+        # times if requested
+        mup_t = (np.arange(1, self.all_spikes.shape[2] + 1) / self.fs) * MS_MULTIPLIER
+        mup_t = np.transpose(
+            np.tile(mup_t, [self.n_potentials, 1])
+        )  # repeat and transpose (column = mup)
+
+        # If requested, re-align times so fibre1 times = 0 ms
+        if align_times_to_fibre1:
+            # Subtract fibre1 times from MUP times
+            n_t = mup_t.shape[0]
+            mup_t = mup_t - np.tile(analysed_fibre_t[:, 0], [n_t, 1])
+
+            # Subtract fibre1 times from analysed fibre times
+            # (must be done second since need original fibres times for changing MUP times)
+            analysed_fibre_t = analysed_fibre_t - np.transpose(
+                np.tile(analysed_fibre_t[:, 0], [n_fibres, 1])
+            )
+
+        # Plot EMG traces
+
+        # Set up plot
+        fig, axs = plt.subplots(3, 1, figsize=figsize, height_ratios=[1, 1, 4], sharex=True)
+        fig.dpi = dpi
+
+        # Labels for fibres (add 1 to count from 1)
+        fibre_labels = [fibre1 + 1, fibre2 + 1]
+
+        # Plot MUPs of each fibre in each fibre's "peak" channel
+        for i in range(n_fibres):
+            axs[i].plot(
+                mup_t[0::downsample_factor, analysed_mup],
+                np.transpose(
+                    np.squeeze(
+                        self.all_spikes[analysed_mup, fibres_peak_chan[i], 0::downsample_factor]
+                    )
+                ),
+                lw=emg_line_lw,
+                color=fibre_clrs[i],
+                alpha=emg_line_alpha,
+            )
+
+            # Title/axis labels (add one to channel indices so count is from 1)
+            # No x-axis label since shared across all plots
+            axs[i].set_title(
+                f"motor unit {self.motor_unit_number + 1}, fibre {fibre_labels[i]}, channel {fibres_peak_chan[i] + 1}",
+                fontsize=title_size,
+            )
+            axs[i].set_ylabel("\u03bcV", fontsize=axis_label_size)
+
+        # Link y-axes of two EMG plots
+        axs[1].sharey(axs[0])
+
+        # Fibre timing
+
+        # Plot times of the two fibre potentials in each MUP
+        mup_number = np.arange(self.n_potentials) + 1  # sets y axis location of each tick
+        ax_times = 2  # axis to use for plot
+        for i in range(n_fibres):
+            axs[ax_times].scatter(
+                analysed_fibre_t[:, i],
+                mup_number,
+                s=time_marker_size,
+                marker="|",
+                color=fibre_clrs[i],
+            )
+
+        # Axes (x-axis changes will apply to all plots)
+        axs[ax_times].set_ylim([1, max(mup_number)])
+        axs[ax_times].invert_yaxis()  # first MUP at the top of the plot
+        axs[ax_times].set_xlim([np.nanmin(mup_t), np.nanmax(mup_t)])  # tight x-axis limits
+
+        # Labels
+        axs[ax_times].set_title(
+            f"fibre potential times (mean consecutive difference: {round(mcd, 2)} \u03bcs)",
+            fontsize=title_size,
+        )
+        axs[ax_times].set_ylabel("motor unit potential", fontsize=axis_label_size)
+        if align_times_to_fibre1:
+            axs[ax_times].set_xlabel(
+                f"time (ms) relative to time of fibre {fibre_labels[0]}", fontsize=axis_label_size
+            )
+        else:
+            axs[ax_times].set_xlabel("time (ms) in motor unit potential", fontsize=axis_label_size)
 
 
 class EMGMotorUnits:
