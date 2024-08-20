@@ -107,7 +107,7 @@ class FindMUWidget(QWidget):
         # EMG reconstruction analysis object
         self.reconstruct_model = reconstruct_model
 
-        # Motor units settings model (settings stored in mu_settings_model.settings)
+        # Motor units settings model (settings will be stored in mu_settings_model.settings)
         self.mu_settings_model = EMGAnalysisMotorUnitSettingsModel(
             reconstruct_model.reconstruct.mu_settings
         )

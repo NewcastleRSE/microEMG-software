@@ -42,7 +42,7 @@ class TimeWeightingCombobox(QWidget):
             "label": InputLabel("Time weighting", self),
             "explanation": InputExplanationLabel(
                 "How much fibre potential timing (in addition to estimated locations) "
-                + "contributes to identifying different fibres",
+                + "contributes to identifying different fibres.",
                 self,
             ),
             "combobox": InputComboBox(self),

@@ -14,9 +14,8 @@ from PySide6.QtCore import QFile
 
 import microemggui
 
-from microemggui.widgets.localise.localise_settings import LocaliseSettingsWidget
+from microemggui.widgets.localise.localise_step import LocaliseFibresWidget
 from microemggui.models.emg import EMGAnalysisReconstructModel
-from microemggui.models.settings import EMGAnalysisMotorUnitClusterSettingsModel
 
 from pymicroemg.emg_reconstruct_settings import (
     EMGAnalysisMotorUnitSettings,
@@ -72,9 +71,8 @@ class MainWindow(QMainWindow):
         # motor units to analyse
         self.analyse_mu = [0, 1]
 
-        # localise widdget
-        cluster_settings_model = EMGAnalysisMotorUnitClusterSettingsModel(mu_cluster_settings)
-        self.widget = LocaliseSettingsWidget(cluster_settings_model, parent=self)
+        # localise widget
+        self.widget = LocaliseFibresWidget(reconstruct_model, self.analyse_mu, parent=self)
 
         # layout and size
         self.setCentralWidget(self.widget)

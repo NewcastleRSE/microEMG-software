@@ -204,6 +204,7 @@ class MicroEMGMain(QMainWindow):
                 if w_name == "selectmu":
                     print("Removing list of motor units to analyse")
                     self.motor_units_to_analyse = []
+                    # TODO: also delete any stored results for each motor unit
 
             # Change delete_w to True after pass last_w_name; will delete downstream widgets
             if w_name == last_w_name:
