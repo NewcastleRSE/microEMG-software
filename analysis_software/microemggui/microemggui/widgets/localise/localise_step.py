@@ -74,7 +74,6 @@ class NextButton(LargePushButton):
     def show_button(self, fibres_found: bool):
         """
         Slot for showing next button depending on whether fibres are found.
-        # TODO: what is the format of the data if no fibres are found?
         """
         if fibres_found:
             self.show()
@@ -182,10 +181,6 @@ class LocaliseFibresWidget(QWidget):
             lambda text: self.widgets["buttons"].widgets["apply"].enable()
         )
 
-        # TODO
-        # connections to update cluster settings
-        # connections to trigger fibre localisation
-
     def localise_fibres(self):
         """
         Localise fibres by running peak finding step (fibre reconstruction) and
@@ -225,6 +220,13 @@ class LocaliseFibresWidget(QWidget):
 
             # Number of fibres found in this motor unit
             n_fibres.append(mu.fibre_clustering_results["n_fibre_clusters"])
+
         print(f"{n_fibres} fibres")
+
+        # Show/hide next button depending on if fibres are found
+        if sum(n_fibres) > 0:
+            self.widgets["buttons"].widgets["next"].show()
+        else:
+            self.widgets["buttons"].widgets["next"].hide()
 
         # TODO: emit signal
