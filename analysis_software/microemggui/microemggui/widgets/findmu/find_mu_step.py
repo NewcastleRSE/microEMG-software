@@ -69,7 +69,6 @@ class NextButton(LargePushButton):
 
 class MainButtons(QWidget):
     # Buttons for applying analysis step and continuing the analysis
-    # TODO: consider making part of base class so reusable
 
     def __init__(self, parent=None):
         super().__init__(parent)

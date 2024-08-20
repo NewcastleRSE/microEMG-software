@@ -54,8 +54,6 @@ class TimeWeightingCombobox(QWidget):
         current_value = str(getattr(cluster_settings_model.settings, self.setting_name))
         self.widgets["combobox"].setCurrentText(current_value)
 
-        # TODO: set to current settings value
-
         # Layout
         layout = QVBoxLayout()
         for w in self.widgets.values():

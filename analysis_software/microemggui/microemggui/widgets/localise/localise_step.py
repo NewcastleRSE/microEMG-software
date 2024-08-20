@@ -21,7 +21,7 @@ from microemggui.widgets.localise.localise_settings import LocaliseSettingsWidge
 # --- Buttons ---
 
 
-class ApplyLocaliseFibressButton(LargePushButton):
+class ApplyLocaliseFibresButton(LargePushButton):
     """
     Button for applying settings settings for localising fibres and triggering this step
     of the analysis.
@@ -92,7 +92,7 @@ class MainButtons(QWidget):
 
         # Create widgets
         self.widgets: dict[str, Any] = {
-            "apply": ApplyLocaliseFibressButton(self),
+            "apply": ApplyLocaliseFibresButton(self),
             "next": NextButton(self),
         }
 
@@ -112,11 +112,12 @@ class LocaliseFibresWidget(QWidget):
     Widgets for localising fibres step.
 
     Note that this step combines the "peak finding" and clustering parts of the fibre
-    reconstruction analysis. While this approach simplifies the GUI, the downside is
-    that trying out different clustering approaches will require re-running the
-    fibre reconstruction step.
-    TODO: could check if the peak finding step has already been performed and only
-    re-run that part if it hasn't?
+    reconstruction analysis. Only (one of) the clustering settings can be modified in
+    by the GUI user. As such, results of the first step (fibre reconstruction) are not
+    changed if the clustering settings are changed. To reduce the analysis runtime, this
+    widget therefore skips the fibre reconstruction step if it has already been
+    performed. This approach allows the user to change the clustering settings without
+    having to re-run the entire localisation analysis.
     """
 
     # Signal for whether fibres have been found
@@ -172,6 +173,15 @@ class LocaliseFibresWidget(QWidget):
 
         # Connections
 
+        # Connect apply button to localise_fibres
+        self.widgets["buttons"].widgets["apply"].clicked.connect(self.localise_fibres)
+
+        # Enable re-apply if settings changed
+        w = self.widgets["settings"].widgets["timeweighting"].widgets["combobox"]
+        w.currentTextChanged.connect(
+            lambda text: self.widgets["buttons"].widgets["apply"].enable()
+        )
+
         # TODO
         # connections to update cluster settings
         # connections to trigger fibre localisation
@@ -191,15 +201,30 @@ class LocaliseFibresWidget(QWidget):
             self.cluster_settings_model.settings
         )
 
+        # Store number of fibres found
+        n_fibres: list[int] = []
+
         # Run analysis for each motor unit
         for mu_idx in self.motor_units_to_analyse:
+            # Motor unit
+            mu = self.reconstruct_model.reconstruct.found_motor_units.motor_units[mu_idx]
+
             # Fibre reconstruction (= peak finding)
-            # TODO: first check if this analysis has already been performed
-            self.reconstruct_model.reconstruct.reconstruct_fibres(mu_idx)
+            # Only run if this analysis has not already been performed (since these
+            # settings cannot be modified in the GUI, the results will not change).
+            if not mu.analysis_performed["fibres_localised"]:
+                print("reconstructing fibres")
+                self.reconstruct_model.reconstruct.reconstruct_fibres(mu_idx)
+            else:
+                print("fibres already reconstructed - skipping")
 
             # Clustering
-            # TODO: check that existing clustering results will be overwritten by
-            # re-running the analysis. If not, need to manually delete first.
+            # The implementation of this analysis means that any earlier results will
+            # be over-written - do not need to manually delete.
             self.reconstruct_model.reconstruct.mu_cluster_fibre_potentials(mu_idx)
 
-            # TODO: check number of fibres found for each MU
+            # Number of fibres found in this motor unit
+            n_fibres.append(mu.fibre_clustering_results["n_fibre_clusters"])
+        print(f"{n_fibres} fibres")
+
+        # TODO: emit signal
