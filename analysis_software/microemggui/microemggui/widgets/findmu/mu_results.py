@@ -3,6 +3,10 @@
 """
 Widget for plot of results of the find motor units analysis step.
 Analysis results in a raster plot of the MUP times for each found MU.
+
+For matplotlib figures: note that changing the dpi will distort the plot rather than
+simply changing the plot's resolution (e.g., plot markers and font sizes will greatly
+change). These plots are all designed for dpi = 100.
 """
 
 from typing import Any
@@ -58,7 +62,9 @@ class MURasterWidget(QWidget):
                 self.ax.cla()  # clear axes
 
                 # Make new plot
-                _, self.ax = reconstruct_model.reconstruct.plot_motor_units_raster(ax=self.ax)
+                _, self.ax = reconstruct_model.reconstruct.plot_motor_units_raster(
+                    ax=self.ax, dpi=100
+                )
 
                 self.fig.canvas.draw_idle()  # redraw
         else:

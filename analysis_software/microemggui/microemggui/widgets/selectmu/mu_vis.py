@@ -2,6 +2,10 @@
 # -*- coding: utf-8 -*-
 """
 Widgets for visualising motor unit EMG traces.
+
+For matplotlib figures: note that changing the dpi will distort the plot rather than
+simply changing the plot's resolution (e.g., plot markers and font sizes will greatly
+change). These plots are all designed for dpi = 100.
 """
 
 from typing import Any
@@ -68,7 +72,7 @@ class MUEMGOneChannelWidget(QWidget):
         # Create plot and replace existing axes
         self.ax.cla()  # clear axes
         _, self.ax, _ = self.reconstruct_model.reconstruct.plot_all_potentials_one_channel(
-            motor_unit_idx, ax=self.ax
+            motor_unit_idx, ax=self.ax, dpi=100
         )
         self.fig.canvas.draw_idle()  # redraw
 
@@ -114,7 +118,7 @@ class MUEMGAllChannelsWidget(QWidget):
         # Create plot and replace existing axes
         self.ax.cla()  # clear axes
         _, self.ax = self.reconstruct_model.reconstruct.plot_average_motor_unit_potential(
-            motor_unit_idx, ax=self.ax
+            motor_unit_idx, ax=self.ax, dpi=100
         )
         self.fig.canvas.draw_idle()  # redraw
 
