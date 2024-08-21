@@ -14,6 +14,7 @@ from microemggui.models.emg import EMGAnalysisReconstructModel
 from microemggui.models.settings import EMGAnalysisMotorUnitClusterSettingsModel
 from microemggui.widgets.base import LargePushButton, SectionTitle
 from microemggui.widgets.localise.localise_settings import LocaliseSettingsWidget
+from microemggui.widgets.localise.localise_results import AllFibreLocationsWidgets
 
 # TODO: add results widget
 
@@ -156,19 +157,16 @@ class LocaliseFibresWidget(QWidget):
         }
 
         # Add to layout
-        # Use grid layout with results to right
-        layout = QGridLayout()
+        # Use grid layout; results will be added to the right
+        self.layout = QGridLayout()
         row = 0
         col = 0
         for w in self.widgets.values():
-            layout.addWidget(w, row, col)
+            self.layout.addWidget(w, row, col)
             row += 1
 
-        # Add results widget in second column
-        # TODO
-
-        layout.setContentsMargins(20, 20, 20, 20)
-        self.setLayout(layout)
+        self.layout.setContentsMargins(20, 20, 20, 20)
+        self.setLayout(self.layout)
 
         # Connections
 
@@ -197,7 +195,7 @@ class LocaliseFibresWidget(QWidget):
         )
 
         # Store number of fibres found
-        n_fibres: list[int] = []
+        self.n_fibres: list[int] = []
 
         # Run analysis for each motor unit
         for mu_idx in self.motor_units_to_analyse:
@@ -219,14 +217,36 @@ class LocaliseFibresWidget(QWidget):
             self.reconstruct_model.reconstruct.mu_cluster_fibre_potentials(mu_idx)
 
             # Number of fibres found in this motor unit
-            n_fibres.append(mu.fibre_clustering_results["n_fibre_clusters"])
+            self.n_fibres.append(mu.fibre_clustering_results["n_fibre_clusters"])
 
-        print(f"{n_fibres} fibres")
+        print(f"{self.n_fibres} fibres")
+
+        # Update results
+        self.update_results()
 
         # Show/hide next button depending on if fibres are found
-        if sum(n_fibres) > 0:
+        if sum(self.n_fibres) > 0:
             self.widgets["buttons"].widgets["next"].show()
         else:
             self.widgets["buttons"].widgets["next"].hide()
 
         # TODO: emit signal
+
+    def update_results(self):
+        """
+        Add widgets for displaying results of fibre localisation step.
+
+        """
+
+        # Delete if already present
+        w = self.widgets.pop("results", None)
+        if w:
+            w.deleteLater()
+
+        # If fibres found, add new vis
+        if sum(self.n_fibres) > 0:
+            # Add results widget (including vis)
+            self.widgets["results"] = AllFibreLocationsWidgets(self.reconstruct_model, parent=self)
+
+            # Add to layout
+            self.layout.addWidget(self.widgets["results"], 0, 1, 3, 1)  # span 3 rows
