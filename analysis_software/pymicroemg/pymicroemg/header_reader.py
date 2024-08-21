@@ -4,6 +4,7 @@
 # It will return the sample rate
 # The function will throw an error if the file passed is the wrong type (expect .rdh)
 # It will also check that the header ID is as expected and throw a warning if it is not.
+# Callable from another file/ cmdline as import analysis
 #
 # FT 2024
 
@@ -49,11 +50,8 @@ def header_reader(header_file):
     header = np.fromfile(header_file, dt, count=1)
 
     # check header ID
-    if header["header_id"] == 3331401474:
-        pass
-    else:
-        print(["Warning! The header ID is not correct for ", header_file])
-        # or should this be a straight up error? Need to check if there are cases this might be valid.
+    if header["header_id"] != 3331401474:
+        raise Exception(["Warning! The header ID is not correct for ", header_file])
 
-    # return all the things
+    # return all the things, currently as numpy array
     return header
