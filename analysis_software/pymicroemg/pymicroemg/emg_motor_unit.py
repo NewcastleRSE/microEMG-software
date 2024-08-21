@@ -2290,7 +2290,7 @@ class EMGMotorUnit:
         figsize: tuple[float, float] = (10, 10),
         axis_label_size: float = 12,
         title_size: float = 14,
-        dpi: int = 300,
+        dpi: int = 100,
         downsample_factor: int = 1,
     ) -> tuple[Figure | None, Axes | None]:
         """
@@ -2578,7 +2578,7 @@ class EMGMotorUnits:
         plot_legend: bool = True,
         min_legend_pt_size: float = 30,
         legend_label_size: float = 12,
-        dpi: int = 300,
+        dpi: int = 100,
         cmap=None,
         max_y: float = 1,
         y_buff: float = 1.75,
