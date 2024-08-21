@@ -13,20 +13,50 @@ import numpy as np
 
 def header_reader(header_file):
     """
-    Function for reading intan header files.
+    Function for parsing intan header files.
+
     This function expects a binary file input of format .rhd
     It will check the header id is as expected and will return
     header information, including the header ID, version number and sample rate.
 
-    example:
+    Parameters
+    ----------
+    header_file : string
+                  The file path to a binary intan header file with a .rhd format.
 
-    header = header_reader('header_file.rhd')
+    Returns
+    -------
+    numpy array
 
-    Where the returned 'header' is a numpy array with elements:
+    The returned 'header' is a numpy array with elements:
             ("header_id", np.uint32),
             ("vnum1", np.int16),
             ("vnum2", np.int16),
             ("samprate", np.float32)
+
+    These can be accessed as array['key_value'] e.g. header['header_id']
+
+    The different key values are as follows:
+
+    header_id : uint32
+                An ID number which should always be equal to 3331401474.
+                This is in order to confirm that this is a valid intan file.
+
+    vnum1     : int16
+                The first part of the version number i.e the 1 in 1.4
+
+    vnum2     : int16
+                The second part of the version number, i.e the 4 in 1.4
+
+    samprate  : float32
+                The amplifier rate in samples/s.
+                The sampling frequency of the data the file contains.
+
+
+    Raises
+    ------
+    Excepton
+        If the header ID does not match the default intan ID number.
 
     """
     # check file type
