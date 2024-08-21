@@ -26,6 +26,7 @@ from microemggui.widgets.base import (
     ExpandingHSpacer,
 )
 
+
 # --- Widgets for selecting and loading a recording ---
 
 
@@ -104,7 +105,7 @@ class SelectRecordingWidget(QWidget):
         if recording_path:
             recording_label_match = re.search(r"/[^/]*$", recording_path)
             if recording_label_match:
-                recording_label = recording_path[recording_label_match.start() + 1 :]
+                recording_label = recording_path[recording_label_match.start() + 1:]
             else:
                 recording_label = recording_path
         else:  # If no file name (empty path), send empty string for label
@@ -240,6 +241,7 @@ class LoadRecordingSection(QWidget):
             n_chan = self.emg_model.emg_data.n_chan
             emg_dur = self.emg_model.emg_data.emg_dur
             self.widgets["message"].setText(
-                "Recording loaded! "
-                + f"The recording has {n_chan} channels and is {round(emg_dur/60, 2)} minutes."
+                "Recording loaded:\n"
+                + f"Channels: {n_chan}\n"
+                + f"Duration: {int(emg_dur) // 60:02d}:{int(emg_dur) % 60:02d}"
             )
