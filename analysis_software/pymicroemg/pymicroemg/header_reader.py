@@ -31,10 +31,15 @@ def header_reader(header_file):
 
     """
     # check file type
-    # try:
-    #    header_file == .rdh # needs to be the last 4 characters not equal to
-    # except:
-    #    print('File format appears to be incorrect, have you submitted a .rdh intan header file?')
+
+    if header_file.lower().endswith(".rhd"):
+        pass
+    else:
+        print(
+            "WARNING: File path does not appear to have an rhd extension, have you selected the correct file?"
+        )
+    # Not throwing an error here as I am unsure whether there are occasianally valid header files with a different extension
+    # and if they are invalid then this will be picked up with the header check or with a failed file read.
 
     # set the data type as per our expectations of the header file:
     dt = np.dtype(
