@@ -4,7 +4,6 @@
 # It will return the sample rate
 # The function will throw an error if the file passed is the wrong type (expect .rdh)
 # It will also check that the header ID is as expected and throw a warning if it is not.
-# Callable from another file/ cmdline as import analysis
 #
 # FT 2024
 
