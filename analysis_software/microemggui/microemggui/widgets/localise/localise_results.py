@@ -26,7 +26,7 @@ from microemggui.models.emg import EMGAnalysisReconstructModel
 from microemggui.widgets.base import MatplotlibToolbar  # , SubsectionTitle
 
 
-# --- Plot widgets ---
+# --- Plot widgets for results across all motor units ---
 
 
 class AllFibreLocationsWidgets(QWidget):
@@ -36,7 +36,7 @@ class AllFibreLocationsWidgets(QWidget):
 
     def __init__(self, reconstruct_model: EMGAnalysisReconstructModel, parent=None):
         super().__init__(parent)
-        # TODO: fix size issue (too big)
+
         self.reconstruct_model = reconstruct_model
 
         # Create plot and corresponding canvas
@@ -45,6 +45,7 @@ class AllFibreLocationsWidgets(QWidget):
             "fibres", motor_unit_idx=None, dpi=100
         )
         self.fig.set_tight_layout(True)  # Prevents window from cutting off legend
+        self.ax.set_title("Fibre locations in all motor units", fontsize=14, fontweight="bold")
         canvas = FigureCanvasQTAgg(self.fig)
 
         # Create widgets: toolbar and canvas
@@ -60,3 +61,14 @@ class AllFibreLocationsWidgets(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+
+# --- Plot and statistics widgets for results within each motor unit ---
+
+# summary stats
+
+# all fibre locations
+
+# 3d: clustered potentials
+
+# 3d: all potentials
