@@ -127,6 +127,15 @@ class HighlightedLabel(QLabel):
         super().__init__(*args, **kwargs)
 
 
+class ResultsLabel(QLabel):
+    """
+    Label for displaying results (e.g., summary statistics)
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
 # --- Buttons ---
 
 

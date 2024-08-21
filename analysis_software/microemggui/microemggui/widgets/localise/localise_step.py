@@ -14,7 +14,7 @@ from microemggui.models.emg import EMGAnalysisReconstructModel
 from microemggui.models.settings import EMGAnalysisMotorUnitClusterSettingsModel
 from microemggui.widgets.base import LargePushButton, SectionTitle
 from microemggui.widgets.localise.localise_settings import LocaliseSettingsWidget
-from microemggui.widgets.localise.localise_results import AllFibreLocationsWidgets
+from microemggui.widgets.localise.localise_results import FibreLocalisationResultsWidget
 
 # TODO: add results widget
 
@@ -246,7 +246,10 @@ class LocaliseFibresWidget(QWidget):
         # If fibres found, add new vis
         if sum(self.n_fibres) > 0:
             # Add results widget (including vis)
-            self.widgets["results"] = AllFibreLocationsWidgets(self.reconstruct_model, parent=self)
+            # Start by displaying first motor unit that was analysed
+            self.widgets["results"] = FibreLocalisationResultsWidget(
+                self.reconstruct_model, motor_unit_idx=self.motor_units_to_analyse[0], parent=self
+            )
 
             # Add to layout
             self.layout.addWidget(self.widgets["results"], 0, 1, 3, 1)  # span 3 rows
