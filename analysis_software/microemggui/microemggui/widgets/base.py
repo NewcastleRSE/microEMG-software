@@ -136,6 +136,15 @@ class ResultsLabel(QLabel):
         super().__init__(*args, **kwargs)
 
 
+class TitleInputLabel(QLabel):
+    """
+    Label for an input field that also serves as a title.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
 # --- Buttons ---
 
 

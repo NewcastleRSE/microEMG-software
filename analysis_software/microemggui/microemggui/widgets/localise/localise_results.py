@@ -25,6 +25,7 @@ from microemggui.models.emg import EMGAnalysisReconstructModel
 from microemggui.widgets.base import (
     MatplotlibToolbar,
     ResultsLabel,
+    TitleInputLabel,
     SubsectionTitle,
     ExpandingVSpacer,
     ExpandingHSpacer,
@@ -235,7 +236,7 @@ class MUComboBox(QWidget):
 
         # Create widgets
         self.widgets: dict[str, Any] = {
-            "label": SubsectionTitle("Motor unit", parent=self),
+            "label": TitleInputLabel("Motor unit", parent=self),
             "combobox": InputComboBox(parent=self),
         }
 
@@ -243,8 +244,6 @@ class MUComboBox(QWidget):
         motor_unit_labels = [str(i + 1) for i in motor_units_to_analyse]  # +1 for labels
         self.widgets["combobox"].addItems(motor_unit_labels)
         self.widgets["combobox"].setCurrentText(motor_unit_labels[0])  # set to first motor unit
-
-        self.widgets["label"].setObjectName("label")  # for style sheet
 
         # Add to layout
         layout = QHBoxLayout()

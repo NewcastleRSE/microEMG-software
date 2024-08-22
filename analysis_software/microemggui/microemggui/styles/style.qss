@@ -14,6 +14,11 @@ SubsectionTitle{
     qproperty-alignment: 'AlignTop | AlignLeft';
 }
 
+TitleInputLabel {
+    font-weight: bold;
+    font-size: 16pt;
+}
+
 /* Buttons */
 
 SmallPushButton {
@@ -344,7 +349,4 @@ QTabWidget#muvistab::pane, QTabWidget#mufibretab::pane {
 }
 
 /* Misc */
-MUComboBox#label {
-    qproperty-alignment: 'AlignBottom | AlignLeft';
-}
 
