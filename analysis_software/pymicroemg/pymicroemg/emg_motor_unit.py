@@ -2285,6 +2285,8 @@ class EMGMotorUnit:
         fibre_clrs: list[Any] | None = None,
         emg_line_lw: float = 1,
         emg_line_alpha: float = 0.25,
+        emg_y_perc: float = 95,
+        emg_y_buff_prop: float = 0.1,
         time_marker_size: float = 2,
         align_times_to_fibre1: bool = True,
         figsize: tuple[float, float] = (10, 10),
@@ -2326,6 +2328,15 @@ class EMGMotorUnit:
             Linewidth of the EMG traces. The default is 1.
         emg_line_alpha : float, optional
             Alpha of the EMG traces. The default is 0.25.
+        emg_y_perc : float, optional
+            The percentile (across MUPs) of the min and max EMG values to use for
+            determining the y-axis range for the EMG plots (so outlier values are
+            ignored). 100 - emg_y_perc is used to find the min value. Must be between
+            0 and 100 inclusive. The default is 95.
+        emg_y_buff_prop : float, optional
+            The buffer to add around the min and max y values computed using emg_y_perc.
+            The final y axis limits for the EMG traces are computed by multiplying the
+            difference of those values by emg_y_buff_prop. The default is 0.1.
         time_marker_size : float, optional
             Size of the markers for the fibre potential times. The default is 2.
         align_times_to_fibre1 : bool, optional
@@ -2443,19 +2454,27 @@ class EMGMotorUnit:
         # Labels for fibres (add 1 to count from 1)
         fibre_labels = [fibre1 + 1, fibre2 + 1]
 
+        # Arrays for storing a percentile of the min max values of each EMG trace in
+        # each fibre
+        perc_of_max_y = np.zeros(n_fibres)
+        perc_of_min_y = np.zeros(n_fibres)
+
         # Plot MUPs of each fibre in each fibre's "peak" channel
         for i in range(n_fibres):
+            fibre_mups = np.squeeze(
+                self.all_spikes[analysed_mup, fibres_peak_chan[i], 0::downsample_factor]
+            )
             axs[i].plot(
                 mup_t[0::downsample_factor, analysed_mup],
-                np.transpose(
-                    np.squeeze(
-                        self.all_spikes[analysed_mup, fibres_peak_chan[i], 0::downsample_factor]
-                    )
-                ),
+                np.transpose(fibre_mups),
                 lw=emg_line_lw,
                 color=fibre_clrs[i],
                 alpha=emg_line_alpha,
             )
+
+            # Compute min and max and the specified percentiles
+            perc_of_max_y[i] = np.percentile(np.max(fibre_mups, axis=1), emg_y_perc)
+            perc_of_min_y[i] = np.percentile(np.min(fibre_mups, axis=1), 100 - emg_y_perc)
 
             # Title/axis labels (add one to channel indices so count is from 1)
             # No x-axis label since shared across all plots
@@ -2467,6 +2486,12 @@ class EMGMotorUnit:
 
         # Link y-axes of two EMG plots
         axs[1].sharey(axs[0])
+
+        # Set limits based on percentiles of min/max
+        emg_y_min = np.min(perc_of_min_y)
+        emg_y_max = np.max(perc_of_max_y)
+        emg_y_buff = (emg_y_max - emg_y_min) * emg_y_buff_prop
+        axs[0].set_ylim([emg_y_min - emg_y_buff, emg_y_max + emg_y_buff])
 
         # Fibre timing
 
