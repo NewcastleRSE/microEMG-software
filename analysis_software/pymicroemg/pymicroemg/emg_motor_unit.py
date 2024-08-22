@@ -109,6 +109,9 @@ class EMGMotorUnit:
         # of the corresponding MUP that it belongs to (in indices units, not seconds).
         self.fibre_potential_times = np.array([])
 
+        # The channel in which each fibre potential has peak amplitude (may be min or max).
+        self.fibre_potential_peak_chan = np.array([])
+
         # Time series for each MUP and channel
         # (size: n MU potentials x n chan x time).
         self.all_spikes = np.array([])
@@ -2578,6 +2581,83 @@ class EMGMotorUnit:
         else:
             axs[ax_times].set_xlabel("time (ms) in motor unit potential", fontsize=axis_label_size)
 
+    def delete_fibre_localisation(self):
+        """
+        Deletes fibre localisation results (added by add_fibre_localisation method) and
+        marks that fibre localisation analysis has not been performed.
+
+        Also removes downstream analysis (fibre clustering and jitter).
+
+        TODO: RH to confirm that this method resets attributes to original state.
+
+        Returns
+        -------
+        None.
+
+        """
+        print("Removing localisation results")
+
+        # Note analysis not performed.
+        self.analysis_performed["fibres_localised"] = False
+
+        # Set number of fibre potentials to zero.
+        self.n_fibre_potentials = 0
+
+        # Store provided attributes.
+        self.fibre_centres = np.array([])
+        self.mup_onsets = np.array([])
+        self.fibre_potential_times = np.array([])
+        self.fibre_potential_peak_chan = np.array([])
+        self.all_spikes = np.array([])
+        self.generator_potential = np.array([])
+
+        # Also remove any downstream analysis.
+        self.delete_fibre_clustering()  # will also delete jitter
+
+    def delete_fibre_clustering(self):
+        """
+        Deletes fibre clustering results (added by cluster_fibre_potentials method) and
+        marks that fibre clustering analysis has not been performed.
+
+        Also removes downstream analysis (fibre jitter).
+
+        TODO: RH to confirm that this method resets attributes to original state.
+
+        Returns
+        -------
+        None.
+
+        """
+        print("Removing clustering results")
+
+        # Mark analysis as not performed.
+        self.analysis_performed["fibres_clustered"] = False
+
+        # Delete results.
+        self.fibre_clustering_results: dict = {}
+
+        # Also remove downstream analysis (jitter)
+        self.delete_fibre_jitter()
+
+    def delete_fibre_jitter(self):
+        """
+        Deletes fibre jitter results (added by jitter_analysis method) and
+        marks that fibre jitter analysis has not been performed.
+
+        TODO: RH to confirm that this method resets attributes to original state.
+
+        Returns
+        -------
+        None.
+
+        """
+        print("Removing jitter results")
+
+        # Mark analysis as not performed.
+        self.analysis_performed["fibres_jitter_computed"] = False
+
+        self.fibre_jitter_results: dict = {}
+
 
 class EMGMotorUnits:
     """
@@ -2869,5 +2949,3 @@ class EMGMotorUnits:
             ax.set_aspect("equal", adjustable="box")
 
         return fig, ax
-
-    # TODO: axis limits; change point style depending on plot type

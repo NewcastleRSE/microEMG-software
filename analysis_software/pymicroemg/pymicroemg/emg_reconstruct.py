@@ -1389,7 +1389,7 @@ class EMGAnalysisReconstruct:
         """
 
         # Loop thro' motor units.
-        for mu in self.found_motor_units:
+        for mu in self.found_motor_units.motor_units:
             # Perform cluster analysis using cluster settings.
             mu.cluster_fibre_potentials(self.mu_cluster_settings)
 
@@ -1430,6 +1430,58 @@ class EMGAnalysisReconstruct:
         """
 
         # Loop thro' motor units.
-        for mu in self.found_motor_units:
+        for mu in self.found_motor_units.motor_units:
             # Perform jitter analysis using jitter settings.
             mu.jitter_analysis(self.mu_jitter_settings)
+
+    def delete_all_mu_fibre_localisation(self):
+        """
+        Deletes fibre localisation results in each motor unit.
+
+        Also removes downstream analysis (fibre clustering and jitter).
+
+        TODO: RH to confirm that this method resets attributes to original state.
+
+        Returns
+        -------
+        None.
+
+        """
+
+        # Loop thro' motor units.
+        for mu in self.found_motor_units.motor_units:
+            mu.delete_fibre_localisation()
+
+    def delete_all_mu_fibre_clustering(self):
+        """
+        Deletes fibre cluster results in each motor unit.
+
+        Also removes downstream analysis (fibre jitter).
+
+        TODO: RH to confirm that this method resets attributes to original state.
+
+        Returns
+        -------
+        None.
+
+        """
+
+        # Loop thro' motor units.
+        for mu in self.found_motor_units.motor_units:
+            mu.delete_fibre_clustering()
+
+    def delete_all_mu_fibre_jitter(self):
+        """
+        Deletes fibre jitter results in each motor unit.
+
+        TODO: RH to confirm that this method resets attributes to original state.
+
+        Returns
+        -------
+        None.
+
+        """
+
+        # Loop thro' motor units.
+        for mu in self.found_motor_units.motor_units:
+            mu.delete_fibre_jitter()
