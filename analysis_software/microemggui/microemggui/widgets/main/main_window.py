@@ -6,6 +6,8 @@ Widget for main window with toolbars and other navigation elements.
 """
 from typing import Any
 
+from copy import deepcopy
+
 from palettable.cartocolors.qualitative import Prism_10
 
 from PySide6.QtWidgets import (
@@ -202,10 +204,36 @@ class MicroEMGMain(QMainWindow):
                     if self.reconstruct_model:
                         self.reconstruct_model.found_motor_units = None
 
+                    # Reset motor unit settings (modified in this widget)
+                    print("Resetting motor unit settings")
+                    print(
+                        f"current spike thresh: {self.settings_model.mu_settings.tk_filt_thres_spike}"
+                    )
+                    self.settings_model.mu_settings = deepcopy(
+                        self.settings_model_original.mu_settings
+                    )
+                    print(
+                        f"new spike thresh: {self.settings_model.mu_settings.tk_filt_thres_spike}"
+                    )
+
                 if w_name == "selectmu":
                     print("Removing list of motor units to analyse")
                     self.motor_units_to_analyse = []
-                    # TODO: also delete any stored results for each motor unit
+
+                if w_name == "localise":
+                    # TODO: Delete fibre reconstruction and fibre clustering results
+
+                    # Reset motor unit clustering settings (modified in this widget)
+                    print("Removing cluster settings")
+                    print(
+                        "current time weight: f{self.settings_model.mu_cluster_settings.time_scale}"
+                    )
+                    self.settings_model.mu_cluster_settings = deepcopy(
+                        self.settings_model_original.mu_cluster_settings
+                    )
+                    print("new time weight: f{self.settings_model.mu_cluster_settings.time_scale}")
+
+                # TODO: also delete any stored results for each motor unit
 
             # Change delete_w to True after pass last_w_name; will delete downstream widgets
             if w_name == last_w_name:
@@ -228,9 +256,6 @@ class MicroEMGMain(QMainWindow):
             )
         )
 
-        # Connection for updating raw EMG and settings data in main window
-        load_w.load_data_changed.connect(self.update_raw_emg_model_and_settings_model)
-
         # When load buttons are interacted with, reset GUI (regardless of whether
         # load was successful)
         load_w.widgets["recording"].recording_loaded.connect(
@@ -238,7 +263,14 @@ class MicroEMGMain(QMainWindow):
                 last_w_name
             )
         )
-        # TODO: also need to link to settings changed
+
+        # When settings are interacted with, reset GUI after preprocessing step
+        load_w.widgets["settings"].widgets["load"].widgets["combobox"].currentTextChanged.connect(
+            lambda text, last_w_name="preprocess": self.reset_downstream_steps_of_gui(last_w_name)
+        )
+
+        # Connection for updating raw EMG and settings data in main window
+        load_w.load_data_changed.connect(self.update_raw_emg_model_and_settings_model)
 
         # Link recording label to top toolbar
         # TODO: consider storing in main window (e.g., for saving/exports)
@@ -352,6 +384,11 @@ class MicroEMGMain(QMainWindow):
 
         self.emg_model["raw"] = raw_emg_model
         self.settings_model = settings_model
+
+        # Also save original settings model as a separate variable that will not be
+        # changed (deep copy) - allows resetting of the downstream settings if partially
+        # re-do the analysis
+        self.settings_model_original = deepcopy(settings_model)
 
         # Use data to make preprocessing widget
         self.add_preprocess_widget()
