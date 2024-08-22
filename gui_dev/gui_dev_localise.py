@@ -14,7 +14,7 @@ from PySide6.QtCore import QFile
 
 import microemggui
 
-from microemggui.widgets.localise.localise_step import LocaliseFibresWidget
+from microemggui.widgets.localise.localise_step import LocaliseWidget
 from microemggui.models.emg import EMGAnalysisReconstructModel
 
 from pymicroemg.emg_reconstruct_settings import (
@@ -72,7 +72,7 @@ class MainWindow(QMainWindow):
         self.analyse_mu = [0, 1]
 
         # localise widget
-        self.widget = LocaliseFibresWidget(reconstruct_model, self.analyse_mu, parent=self)
+        self.widget = LocaliseWidget(reconstruct_model, self.analyse_mu, parent=self)
 
         # layout and size
         self.setCentralWidget(self.widget)

@@ -32,6 +32,7 @@ from microemggui.widgets.preproc.preproc_step import PreprocWidget
 from microemggui.widgets.channels.channels_step import ChannelsWidget
 from microemggui.widgets.findmu.find_mu_step import FindMUWidget
 from microemggui.widgets.selectmu.select_mu_step import SelectMUWidget
+from microemggui.widgets.localise.localise_step import LocaliseWidget
 
 # Models
 from microemggui.models.settings import EMGSettingsModel, EMGPreprocSettingsModel
@@ -422,8 +423,6 @@ class MicroEMGMain(QMainWindow):
         """
         Updates the list of motor units that should be further analysed in the localise
         fibres and jitter analyse widgets.
-
-        TODO: trigger creation of localise widget, which will use this data
         """
 
         # If indices are the same, do not need to update
@@ -433,6 +432,9 @@ class MicroEMGMain(QMainWindow):
             # Update list of motor units
             self.motor_units_to_analyse = motor_units_idx
             print(f"Motor units to analyse updated: {self.motor_units_to_analyse}")
+
+            # Create localise widget
+            self.add_localise_widget()
 
     def connect_next_button_to_analysis_widget(self, next_button, w_name: str):
         """
@@ -619,3 +621,36 @@ class MicroEMGMain(QMainWindow):
             if w:
                 w.deleteLater()
                 print(f"Deleted {w_name} widget")
+
+    def add_localise_widget(self):
+        """
+        Add widget for localising fibres in selected motor units.
+
+        """
+
+        w_name = "localise"
+
+        if self.reconstruct_model:
+            # Create widget and add to stack of analysis step widgets with toolbar connections
+            w = LocaliseWidget(self.reconstruct_model, self.motor_units_to_analyse, parent=self)
+        else:
+            raise ValueError(
+                "GUI model for fibre reconstruction analysis must be created before "
+                + "creating widgets for this analysis."
+            )
+        self.add_widget_to_analysis_steps(w, w_name)
+
+        # Enable toolbar button
+        self.enable_analysis_toolbar_button(True, w_name)
+
+        # Add connection to next button of previous step
+        next_button = self.widgets["analysis"].widgets["selectmu"].widgets["next"]
+        self.connect_next_button_to_analysis_widget(next_button, w_name)
+
+        # TODO: Add any connections
+        # self.add_localise_connections()
+
+        # Show widget (widget is created when next button of previous widget is clicked)
+        # Show by clicking to ensure correct button on toolbar is also toggled
+        # self.widgets["analysis"].show_widget(w_name)
+        self.widgets["analysistoolbar"].widgets[w_name].click()

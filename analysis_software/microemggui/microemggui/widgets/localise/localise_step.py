@@ -105,7 +105,7 @@ class MainButtons(QWidget):
 # --- Localise fibres widget ---
 
 
-class LocaliseFibresWidget(QWidget):
+class LocaliseWidget(QWidget):
     """
     Widgets for localising fibres step.
 
