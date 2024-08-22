@@ -518,11 +518,12 @@ class EMGAnalysisReconstruct:
 
     def plot_motor_units_raster(
         self,
-        linelengths: float = 0.9,
-        linewidths: float = 0.75,
+        linelengths: float = 0.75,
+        linewidths: float = 0.25,
         figsize: tuple[float, float] = (10, 5),
         dpi: int = 100,
         axis_label_size: float = 14,
+        title_size: float = 14,
         xtick_label_size: float = 12,
         ytick_label_size: float = 12,
         sort_by: str = "default",
@@ -536,15 +537,17 @@ class EMGAnalysisReconstruct:
         Parameters
         ----------
         linelengths : float, optional
-            Length of lines. The default is 0.9.
+            Length of lines. The default is 0.75.
         linewidths : float, optional
-            Width of lines. The default is 0.75.
+            Width of lines. The default is 0.25.
         figsize : tuple[float, float], optional
             Size of figure. The default is (10, 5).
         dpi : int, optional
             Dots per Inch. The default is 100.
         axis_label_size : float, optional
             Size of axis labels. The default is 14.
+        title_size : float, optional
+            Font size the titles. The default is 14.
         xtick_label_size : float, optional
             size of x tick labels. The default is 12.
         ytick_label_size : float, optional
@@ -593,7 +596,7 @@ class EMGAnalysisReconstruct:
         else:
             fig = None
 
-        # Time vector for x axis.
+        # Time vector for x axis (in seconds).
         emg_t = self.emg_data_preproc.get_emg_t()
 
         # Create list of times of MUPs.
@@ -605,20 +608,63 @@ class EMGAnalysisReconstruct:
         # Raster plot.
         # Places first motor unit at the top of the plot.
         ax.invert_yaxis()
-        ax.eventplot(potential_t, linelengths=linelengths, linewidths=linewidths)
+        ax.eventplot(potential_t, linelengths=linelengths, linewidths=linewidths, colors="black")
 
         # Axis ticks and labels
+
         # y axis
-        ax.set_yticks(np.arange(self.found_motor_units.n_motor_units))
-        ax.set_yticklabels([str(i) for i in motor_units_numbers])
+        n_motor_units = self.found_motor_units.n_motor_units
+        # eventplot starts ticks at 0 if there are multiple motor units, but 1 if there
+        # is only one motor unit - need to adjust tick locations accordingly
+        if n_motor_units == 1:
+            ax.set_yticks(np.arange(n_motor_units) + 1)
+        else:
+            ax.set_yticks(np.arange(n_motor_units))
+        ax.set_yticklabels(["MU " + str(i) for i in motor_units_numbers])
         ax.tick_params(axis="y", which="major", labelsize=ytick_label_size)
-        ax.set_ylabel("motor unit", fontsize=axis_label_size)
+
         # x axis
         ax.tick_params(axis="x", which="major", labelsize=xtick_label_size)
-        ax.set_xlabel("time (seconds)", fontsize=axis_label_size)
+        ax.set_xlabel("time (mm:ss)", fontsize=axis_label_size)
         ax.set_xlim(min(emg_t) - 1 / self.emg_data_preproc.fs, max(emg_t))
 
+        ax.xaxis.set_major_formatter(plt.FuncFormatter(self._seconds_axis_label_formatter))
+
+        # title
+        ax.set_title(
+            "Times of motor unit potentials in the EMG recording",
+            fontsize=title_size,
+            fontweight="bold",
+        )
+
         return fig, ax
+
+    def _seconds_axis_label_formatter(self, time_s, pos) -> str:
+        """
+        Formatter for matplotlib axis tick labels - will convert seconds to display as
+        mm:ss.
+
+        Returns
+        -------
+        str
+            Formatted string for tick labels.
+
+        """
+
+        S_TO_MIN = 60
+
+        # Number of minutes and seconds for label
+        n_min = int(time_s / S_TO_MIN)
+        n_sec = time_s - (n_min * S_TO_MIN)
+
+        # Ignore ms if whole number of seconds
+        # (allow small differences in case of floating point errors)
+        if abs(int(time_s) - time_s) < 1e-10:
+            time_label = f"{n_min:02d}:{int(n_sec):02d}"
+        else:  # include ms
+            time_label = f"{n_min:02d}:{round(n_sec,2):0{2+3}.{2}f}"
+
+        return time_label
 
     def _get_potentials_data_of_one_motor_unit(
         self, motor_unit_idx: int, n_ms: int = 20
