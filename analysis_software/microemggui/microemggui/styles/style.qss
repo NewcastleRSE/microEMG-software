@@ -246,12 +246,18 @@ InputLabel {
     qproperty-alignment: 'AlignBottom | AlignLeft';
     min-height: 20;
     max-height: 20;
+    font-weight: bold;
 }
 
 InputInlineLabel {
+    font-weight: bold;
 }
 
 InputInlineText {
+    color: 'grey';
+}
+
+InputExplanationLabel {
     color: 'grey';
 }
 
@@ -323,15 +329,22 @@ QLabel#amp{
     max-width: 25;
 }
 
-/* Preprocessing settings - set width */
-PreprocSettingsWidget {
+/* Settings - set width */
+PreprocSettingsWidget, LocaliseSettingsWidget {
     min-width: 250;
     max-width: 250;
 }
 
-QTabWidget#muvistab::pane {
+/* Background and border for visualisations */
+QTabWidget#muvistab::pane, QTabWidget#mufibretab::pane {
     background: white;
     padding: 10px;
     border: 1px solid grey;
     border-radius: 4px;
 }
+
+/* Misc */
+MUComboBox#label {
+    qproperty-alignment: 'AlignBottom | AlignLeft';
+}
+

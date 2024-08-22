@@ -10,13 +10,13 @@ change). These plots are all designed for dpi = 100.
 
 from typing import Any
 
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
-    # QHBoxLayout,
+    QHBoxLayout,
     QSizePolicy,
     QTabWidget,
 )
@@ -27,12 +27,14 @@ from microemggui.widgets.base import (
     ResultsLabel,
     SubsectionTitle,
     ExpandingVSpacer,
+    ExpandingHSpacer,
+    InputComboBox,
 )
 
 # --- Plot widgets for results across all motor units ---
 
 
-class AllFibreLocationsWidget(QWidget):
+class AllFibreLocationsVisWidget(QWidget):
     """
     Widget for visualising the locations of all fibres across all analysed motor units.
     """
@@ -111,7 +113,58 @@ class MUFibreLocationsSummary(QWidget):
         self.widgets["n_fibres"].setText(n_fibres_text)
 
 
-# all fibre locations
+class MUFibreLocationsVisWidget(QWidget):
+    """
+    Widget for visualising the locations of all fibres in one motor unit.
+    """
+
+    def __init__(
+        self, reconstruct_model: EMGAnalysisReconstructModel, motor_unit_idx: int, parent=None
+    ):
+        super().__init__(parent)
+
+        self.reconstruct_model = reconstruct_model
+
+        # Figure options
+        self.dpi = 100
+
+        # Create plot and corresponding canvas
+        self.fig, self.ax = plt.subplots()
+        self.update_motor_unit(motor_unit_idx)  # add plot for specified motor unit
+        canvas = FigureCanvasQTAgg(self.fig)
+
+        # Create widgets: toolbar and canvas
+        self.widgets: dict[str, Any] = {
+            "toolbar": MatplotlibToolbar(canvas, parent=self),
+            "canvas": canvas,
+        }
+
+        # Add plot to layout and set to expand to fill the available space
+        layout = QVBoxLayout()
+        for w in self.widgets.values():
+            layout.addWidget(w)
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(layout)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+    def update_motor_unit(self, motor_unit_idx: int):
+        """
+        Update plot to display the locations of fibres in the specified motor unit.
+        Motor unit index starts at 0.
+        """
+
+        # Create plot and replace existing axes
+        self.ax.cla()  # clear axes
+        motor_units = self.reconstruct_model.reconstruct.found_motor_units
+        _, self.ax = motor_units.plot_fibre_locations(
+            "fibres", motor_unit_idx=motor_unit_idx, dpi=self.dpi, ax=self.ax, plot_legend=False
+        )
+        self.fig.set_tight_layout(True)  # Prevents window from cutting off legend
+        self.ax.set_title(
+            f"Fibre locations in motor unit {motor_unit_idx + 1}", fontsize=14, fontweight="bold"
+        )
+        self.fig.canvas.draw_idle()  # redraw
+
 
 # 3d: clustered potentials
 
@@ -125,7 +178,7 @@ class MUFibreLocationsWidget(QWidget):
     """
 
     def __init__(
-        self, reconstruct_model: EMGAnalysisReconstructModel, motor_unit_idx: int = 0, parent=None
+        self, reconstruct_model: EMGAnalysisReconstructModel, motor_unit_idx: int, parent=None
     ):
         super().__init__(parent)
 
@@ -133,13 +186,19 @@ class MUFibreLocationsWidget(QWidget):
 
         # Create widgets
         self.widgets: dict[str, Any] = {
-            "summary": MUFibreLocationsSummary(self.reconstruct_model, motor_unit_idx, parent=self)
+            "summary": MUFibreLocationsSummary(
+                self.reconstruct_model, motor_unit_idx, parent=self
+            ),
+            "locations": MUFibreLocationsVisWidget(
+                self.reconstruct_model, motor_unit_idx, parent=self
+            ),
         }
 
         # Corresponding tab labels
         tab_text = [
-            "Summary"
-        ]  # , "Fibre locations", "Clustered fibre potentials", "All fibre potentials"]
+            "Summary",
+            "Fibre locations",
+        ]  # , "Clustered fibre potentials", "All fibre potentials"]
 
         # Add to tab widget
         self.tab_widget = QTabWidget()
@@ -166,6 +225,36 @@ class MUFibreLocationsWidget(QWidget):
 # --- Widget for changing motor unit ---
 
 
+class MUComboBox(QWidget):
+    """
+    Widget for select the motor unit results that should displayed.
+    """
+
+    def __init__(self, motor_units_to_analyse: list[int], parent=None):
+        super().__init__(parent)
+
+        # Create widgets
+        self.widgets: dict[str, Any] = {
+            "label": SubsectionTitle("Motor unit", parent=self),
+            "combobox": InputComboBox(parent=self),
+        }
+
+        # Add motor units to combobox
+        motor_unit_labels = [str(i + 1) for i in motor_units_to_analyse]  # +1 for labels
+        self.widgets["combobox"].addItems(motor_unit_labels)
+        self.widgets["combobox"].setCurrentText(motor_unit_labels[0])  # set to first motor unit
+
+        self.widgets["label"].setObjectName("label")  # for style sheet
+
+        # Add to layout
+        layout = QHBoxLayout()
+        for w in self.widgets.values():
+            layout.addWidget(w)
+        layout.addItem(ExpandingHSpacer())  # spacer to push to right
+        layout.setContentsMargins(0, 30, 0, 0)  # add space above - used as section divider
+        self.setLayout(layout)
+
+
 # --- Widget for all results (within and across motor units) ---
 
 
@@ -178,18 +267,24 @@ class FibreLocalisationResultsWidget(QWidget):
     """
 
     def __init__(
-        self, reconstruct_model: EMGAnalysisReconstructModel, motor_unit_idx: int = 0, parent=None
+        self,
+        reconstruct_model: EMGAnalysisReconstructModel,
+        motor_units_to_analyse: list[int],
+        parent=None,
     ):
         super().__init__(parent)
 
         self.reconstruct_model = reconstruct_model
 
+        # Use first motor unit for initial display
+        motor_unit_idx = motor_units_to_analyse[0]
+
         # Create widgets
         # TODO: change "onetitle" to dropdown for changing motor unit
         self.widgets: dict[str, Any] = {
             "all_title": SubsectionTitle("All motor units", parent=self),
-            "all": AllFibreLocationsWidget(self.reconstruct_model, parent=self),
-            "one_title": SubsectionTitle("Motor unit", parent=self),
+            "all": AllFibreLocationsVisWidget(self.reconstruct_model, parent=self),
+            "one_title": MUComboBox(motor_units_to_analyse, parent=self),
             "one": MUFibreLocationsWidget(self.reconstruct_model, motor_unit_idx, parent=self),
         }
 
@@ -202,6 +297,14 @@ class FibreLocalisationResultsWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
-        # TODO: connection for updating motor unit (will need to subtract one for idx)
+        # Connection for updating motor unit (need to subtract one for idx)
+        self.widgets["one_title"].widgets["combobox"].currentTextChanged.connect(
+            lambda text: self.update_motor_unit(int(text) - 1)
+        )
 
-    # def update_motor_unit(self, motor_unit_idx: idx)
+    def update_motor_unit(self, motor_unit_idx: int):
+        """
+        Update motor unit in widget for results of one motor unit.
+        """
+
+        self.widgets["one"].update_motor_unit(motor_unit_idx)

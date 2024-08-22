@@ -162,7 +162,7 @@ class LocaliseFibresWidget(QWidget):
         row = 0
         col = 0
         for w in self.widgets.values():
-            self.layout.addWidget(w, row, col)
+            self.layout.addWidget(w, row, col, alignment=Qt.AlignLeft)
             row += 1
 
         self.layout.setContentsMargins(20, 20, 20, 20)
@@ -248,7 +248,7 @@ class LocaliseFibresWidget(QWidget):
             # Add results widget (including vis)
             # Start by displaying first motor unit that was analysed
             self.widgets["results"] = FibreLocalisationResultsWidget(
-                self.reconstruct_model, motor_unit_idx=self.motor_units_to_analyse[0], parent=self
+                self.reconstruct_model, self.motor_units_to_analyse, parent=self
             )
 
             # Add to layout
