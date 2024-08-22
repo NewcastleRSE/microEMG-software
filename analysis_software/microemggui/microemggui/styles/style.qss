@@ -143,7 +143,7 @@ AnalysisToolbarButton {
     border-bottom: none;
     border-right: 1px solid grey;
     padding: 10px;
-    width: 125px;
+    width: 135px;
     border-radius: 0;
 }
 
@@ -184,7 +184,7 @@ MicroEMGLogo {
     padding-top: 5px;
     padding-right: 10px;
     padding-bottom: 5px;
-    width: 125px;
+    width: 135px;
     qproperty-iconSize: 75px;
     border-radius: 0;
 }
