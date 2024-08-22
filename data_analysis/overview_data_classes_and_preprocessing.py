@@ -121,18 +121,14 @@ ax.set_title(f"{recording_id} preprocessed")
 
 # %% Selecting data to analysis
 #
-# After preprocessing, the user will get the option to limit the data analysed to a
-# specific time period and channels in the recording. These steps create attributes that
-# are booleans indicating the time points and channels that should be used for the.
-# downstream analysis.
+# After preprocessing, the user will get the option to limit the data analysed to
+# specific channels in the recording. This step create a boolean array of which channels
+# to use for the analysis.
 #
 # No data is discard in this step - the full EMG time series array stays the same. This
 # approach allows the data selection to easily be changed if the user decides their
 # initial choice isn't suitable for the analysis. As such, any downstream analysis
 # methods must use these attributes to limit the data that is analysed.
-
-# Set boolean for timepoints (here, 0-30 s)
-emg_data_preproc.set_analyse_t(start_t=0, stop_t=30)
 
 # Set boolean for channels
 # It's more standard in EMG/EEG analysis to mark "bad" channels that should be removed
@@ -144,13 +140,6 @@ print("Channels to analyse: ")
 for i in range(emg_data.n_chan):
     if emg_data_preproc.chan.analyse_chan[i]:
         print(f"{emg_data_preproc.chan.chan_names[i]} (idx {i})")
-
-# %% Probable next steps:
-# - Add methods for analysing preprocessed EMG data to EMGDataPreproc.
-# - Create classes for downstream analysis outputs (e.g., a motor unit class), with
-# methods for any analyses of that data.
-# - Any analysis settings should be stored as a class (like EMGPreprocSettings) so that
-# they can be easily set by the GUI.
 
 # %% Misc
 

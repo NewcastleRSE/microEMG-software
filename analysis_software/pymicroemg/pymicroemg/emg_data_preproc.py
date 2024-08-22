@@ -80,41 +80,6 @@ class EMGDataPreproc(EMGData):
         super().__init__(emg_ts, fs, chan, segment_of_recording)
         self.preproc_settings = preproc_settings
 
-    def set_analyse_t(self, start_t: float, stop_t: float):
-        """
-        Set time window of EMG time series to use in downstream analysis using specified
-        start and stop times of the desired time window. This method changes the
-        analyse_t attribute to mark which timepoints to use - no data is discarded.
-
-        Note that the number of samples and duration of the EMGDataPreproc instance are
-        still computed from full segment so that the time segment selected for the
-        analysis can easily be changed.
-
-        Parameters
-        ----------
-        start_t : float
-            Start of the time window to use for the analysis (in seconds).
-        stop_t : float
-            End of the time window to use for the analysis (in seconds).
-
-        Returns
-        -------
-        None.
-
-        """
-
-        # Validate requested time segment.
-        self._validate_t_range(start_t, stop_t)
-
-        # Get indices in time series corresponding to requested time segment.
-        t_idx = self._get_t_idx(start_t, stop_t)
-
-        # Store as boolean using analyse_t attribute for easy subsetting.
-        # Note that original analyse_t values are not used (reset each time method is
-        # called).
-        self.analyse_t = np.full(self.n_samples, False)
-        self.analyse_t[t_idx] = True
-
     def set_bad_chan(self, bad_chan: list[int]):
         """
         Mark "bad" channels that should be excluded from the analysis. Changes the
