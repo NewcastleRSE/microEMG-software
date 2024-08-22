@@ -216,7 +216,11 @@ class MUFibreClusters3DVisWidget(QWidget):
             motor_unit_idx
         ]
         _, self.ax = motor_unit.plot_3D_fibre_potential_clustering(
-            dpi=self.dpi, ax=self.ax, max_y=5, axis_equal=False, cmap=Vivid_10.mpl_colors
+            dpi=self.dpi,
+            ax=self.ax,
+            max_y=5,
+            axis_equal=False,
+            cmap=Vivid_10.mpl_colors,
         )
         self.fig.set_tight_layout(True)  # Prevents window from cutting off legend
         self.ax.set_title(
@@ -227,7 +231,7 @@ class MUFibreClusters3DVisWidget(QWidget):
         self.fig.canvas.draw_idle()  # redraw
 
 
-# TODO: 3d: all potentials
+# TODO: 3D plot of all potentials
 
 
 class MUFibreLocationsWidget(QWidget):
@@ -341,7 +345,6 @@ class FibreLocalisationResultsWidget(QWidget):
         motor_unit_idx = motor_units_to_analyse[0]
 
         # Create widgets
-        # TODO: change "onetitle" to dropdown for changing motor unit
         self.widgets: dict[str, Any] = {
             "all_title": SubsectionTitle("All motor units", parent=self),
             "all": AllFibreLocationsVisWidget(self.reconstruct_model, parent=self),
@@ -358,7 +361,7 @@ class FibreLocalisationResultsWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
-        # Connection for updating motor unit (need to subtract one for idx)
+        # Connection for updating motor unit (need to subtract one for index)
         self.widgets["one_title"].widgets["combobox"].currentTextChanged.connect(
             lambda text: self.update_motor_unit(int(text) - 1)
         )

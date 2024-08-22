@@ -225,10 +225,10 @@ class LocaliseFibresWidget(QWidget):
         # Show/hide next button depending on if fibres are found
         if sum(self.n_fibres) > 0:
             self.widgets["buttons"].widgets["next"].show()
+            self.fibres_found.emit(True)
         else:
             self.widgets["buttons"].widgets["next"].hide()
-
-        # TODO: emit signal
+            self.fibres_found.emit(False)
 
     def update_results(self):
         """
@@ -252,7 +252,7 @@ class LocaliseFibresWidget(QWidget):
             # Add to layout
             self.layout.addWidget(self.widgets["results"], 0, 1, 3, 1)  # span 3 rows
 
-        else:  # if no fibres, display text indicating none found
+        else:  # If no fibres, display text indicating none found
             self.widgets["results"] = SubsectionTitle("No fibres found", parent=self)
 
             # Add to layout
