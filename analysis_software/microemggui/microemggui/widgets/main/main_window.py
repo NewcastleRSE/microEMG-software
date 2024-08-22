@@ -221,19 +221,20 @@ class MicroEMGMain(QMainWindow):
                     self.motor_units_to_analyse = []
 
                 if w_name == "localise":
-                    # TODO: Delete fibre reconstruction and fibre clustering results
+                    # Delete fibre reconstruction and clustering results
+                    self.reconstruct_model.reconstruct.delete_all_mu_fibre_localisation()
 
                     # Reset motor unit clustering settings (modified in this widget)
                     print("Removing cluster settings")
                     print(
-                        "current time weight: f{self.settings_model.mu_cluster_settings.time_scale}"
+                        f"current time weight: {self.settings_model.mu_cluster_settings.time_scale}"
                     )
                     self.settings_model.mu_cluster_settings = deepcopy(
                         self.settings_model_original.mu_cluster_settings
                     )
-                    print("new time weight: f{self.settings_model.mu_cluster_settings.time_scale}")
+                    print(f"new time weight: {self.settings_model.mu_cluster_settings.time_scale}")
 
-                # TODO: also delete any stored results for each motor unit
+                # TODO: jitter analysis (results only - no settings modified)
 
             # Change delete_w to True after pass last_w_name; will delete downstream widgets
             if w_name == last_w_name:
