@@ -229,3 +229,5 @@ for mu_num in motor_units_for_fibre_localisation:
 mu_idx = 1
 mu = reconstruct.found_motor_units.motor_units[mu_idx]
 mu.plot_jitter_fibre_pair_EMG_and_times(fibre1=1, fibre2=2)
+
+mu.plot_3D_fibre_potential_clustering()

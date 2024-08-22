@@ -725,14 +725,21 @@ class EMGMotorUnit:
         # Add time axis if 3D plot.
         # Type checking complains for 3D but it is fine.
         if threeD:
-            ax.set_zlabel("Time (\u03bc seconds)", fontsize=axis_label_size, labelpad=8.0)
+            ax.set_zlabel("time (\u03bc seconds)", fontsize=axis_label_size, labelpad=8.0)
             ax.tick_params(axis="z", which="major", labelsize=tick_label_size)
 
         plt.title(f"Motor Unit {self.motor_unit_number+1}")
 
         return fig, ax
 
-    def _plot_electrodes(self, ax: Axes, marker: str = "s", clr: str = "silver", z: float = None):
+    def _plot_electrodes(
+        self,
+        ax: Axes,
+        marker: str = "s",
+        marker_size: float = 20,
+        clr: str = "silver",
+        z: float = None,
+    ):
         """
         Plot electrode locations using their (x,y) coordinates.
 
@@ -744,6 +751,8 @@ class EMGMotorUnit:
             Axes to plot the electrodes onto.
         marker : str, optional
             The kind of marker to use. The default is "s", square.
+        marker_size : float, optional
+            The size of the markers. The default is 20.
         clr : str, optional
             The colour of the electrodes. Default is "silver".
         z : float, optional
@@ -757,13 +766,16 @@ class EMGMotorUnit:
 
         # Plot electrodes.
         if z is None:
-            ax.scatter(self.chan_xy[:, 0], self.chan_xy[:, 1], marker=marker, color=clr)
+            ax.scatter(
+                self.chan_xy[:, 0], self.chan_xy[:, 1], s=marker_size, marker=marker, color=clr
+            )
         else:
             # Plot electrodes on 3D graph at set z distance.
             ax.scatter(
                 self.chan_xy[:, 0],
                 self.chan_xy[:, 1],
                 np.full(len(self.chan_xy[:, 0]), z),
+                s=marker_size,
                 marker=marker,
                 color=clr,
             )
@@ -1194,12 +1206,13 @@ class EMGMotorUnit:
         tick_label_size: float = 12,
         dpi: int = 100,
         cmap=None,
-        max_x: float = 22,
         max_y: float = 1,
+        y_buff: float = 1.75,
         plot_legend: bool = True,
         legend_pt_size: float = 50,
         legend_label_size: float = 12,
-    ):
+        ax: plt.axes.Axes | None = None,
+    ) -> tuple[Figure | None, Axes]:
         """
         Create scatter plot of fibre localisations estimated from all fibre potentials
         with the location of each fibre overlaid. Ellipse confidence regions are plotted
@@ -1230,16 +1243,22 @@ class EMGMotorUnit:
             Dots per inch. The default is 100.
         cmap : Any, optional
             Colour map to use. The default is None.
-        max_x : float, optional
-            Maximum of x axis. The default is 22.
         max_y : float, optional
-            Maximum of y axis. The default is 1.
+            The minimum positive and negative limits for the y-axis. The max absolute
+            y axis location * y_buff is used instead if it exceeds this value to ensure
+            that data points are not cut out of the plot. The default is 1.
+        y_buff: float, optional
+            Factor by which to multiple the max absolute y axis location in order to
+            determine y-axis limits (see max_y argument). Controls buffer around points
+            along the y-axis. The default is 1.75, which provides room for larger points.
         plot_legend : bool, optional
             Plot the legend or not. The default is True.
         legend_pt_size : float, optional
             Size of points in legend. The default is 50.
         legend_label_size: float, optional
             Size of labels in legend. The default is 12.
+        ax : plt.axes.Axes, optional
+            Plot to add to. The default is None, in which case new axes are created.
 
         Returns
         -------
@@ -1248,19 +1267,33 @@ class EMGMotorUnit:
         """
 
         # Setup plot.
-        fig, ax = self.plot_fibre_locations_setup(
-            figsize=figsize,
-            axis_label_size=axis_label_size,
-            tick_label_size=tick_label_size,
-            dpi=dpi,
-            threeD=True,
-        )
+        if ax is None:
+            fig, ax = self.plot_fibre_locations_setup(
+                figsize=figsize,
+                axis_label_size=axis_label_size,
+                tick_label_size=tick_label_size,
+                dpi=dpi,
+                threeD=True,
+            )
+        else:
+            fig = None
+
+            # Add axis and tick labels.
+            ax.set_xlabel("position (mm)", fontsize=axis_label_size)
+            ax.set_ylabel("position (mm)", fontsize=axis_label_size)
+            ax.tick_params(axis="x", which="major", labelsize=tick_label_size)
+            ax.tick_params(axis="y", which="major", labelsize=tick_label_size)
+            ax.set_zlabel("time (\u03bc seconds)", fontsize=axis_label_size, labelpad=8.0)
+            ax.tick_params(axis="z", which="major", labelsize=tick_label_size)
 
         # Add electrodes to plot at botton, z = 0.
         if plot_electrodes:
-            self._plot_electrodes(ax=ax, z=0)
+            self._plot_electrodes(ax=ax, z=0, clr="grey", marker_size=5)
 
         n_clusters = self.fibre_clustering_results["n_fibre_clusters"]
+
+        # Keep track of max absolute y position to ensure data is not cut off by axis limits.
+        fibre_max_y = 0
 
         # Plot each cluster.
         for cluster_no in range(n_clusters):
@@ -1274,7 +1307,23 @@ class EMGMotorUnit:
                 lw=lw,
                 threeD=True,
             )
+            # Max y
+            mu_max_y = np.max(
+                np.abs(
+                    self.fibre_centres[
+                        (self.fibre_clustering_results["fibre_clusters"] == cluster_no), 1
+                    ]
+                )
+            )
+            fibre_max_y = max(fibre_max_y, mu_max_y)
 
+            # Min and max z
+            z = (
+                self.fibre_potential_times[
+                    (self.fibre_clustering_results["fibre_clusters"] == cluster_no)
+                ]
+                / self.fs
+            ) * 1e6
         # Add legend.
         if plot_legend:
             lgnd = ax.legend(
@@ -1289,15 +1338,19 @@ class EMGMotorUnit:
                 h.set_alpha(1)
 
         # Set y axis limits.
+        max_y = max(fibre_max_y * y_buff, max_y)  # Adjust max_y based on data
         ax.set_ylim(-max_y, max_y)
 
-        # Set x axis limits.
-        ax.set_xlim(-1, max_x)
+        # Set z axis limits - limit to full range of fibre potential times in this motor unit
+        z = (self.fibre_potential_times / self.fs) * 1e6
+        z_buff = 50
+        ax.set_zlim(np.min(z) - z_buff, np.max(z) + z_buff)
 
-        # Equal aspect ratio, (this can mess up the axis limits if true when
-        #  displaying as pop up plot in Windows)
+        # Equal aspect ratio for x and y coordinates
         if axis_equal:
-            ax.axis("equal")
+            ax.set_aspect("equalxy", adjustable="box")
+
+        return fig, ax
 
     def remove_outliers_iqr(
         self, intervals: npt.NDArray[np.int64]
@@ -2608,7 +2661,7 @@ class EMGMotorUnits:
         max_y: float = 1,
         y_buff: float = 1.75,
         ax: plt.axes.Axes | None = None,
-    ) -> tuple[Figure, Axes]:
+    ) -> tuple[Figure | None, Axes]:
         """
         Create 2D scatter plot of either
 

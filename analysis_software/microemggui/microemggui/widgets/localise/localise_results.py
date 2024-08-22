@@ -13,6 +13,8 @@ from typing import Any
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 
+from palettable.cartocolors.qualitative import Vivid_10
+
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -167,9 +169,65 @@ class MUFibreLocationsVisWidget(QWidget):
         self.fig.canvas.draw_idle()  # redraw
 
 
-# 3d: clustered potentials
+class MUFibreClusters3DVisWidget(QWidget):
+    """
+    Widget for visualising the clustered fibre potentials in one motor unit in 3D.
+    """
 
-# 3d: all potentials
+    def __init__(
+        self, reconstruct_model: EMGAnalysisReconstructModel, motor_unit_idx: int, parent=None
+    ):
+        super().__init__(parent)
+
+        self.reconstruct_model = reconstruct_model
+
+        # Figure options
+        self.dpi = 100
+
+        # Create plot and corresponding canvas
+        self.fig = plt.Figure()
+        self.ax = self.fig.add_subplot(projection="3d")
+        self.update_motor_unit(motor_unit_idx)  # add plot for specified motor unit
+        canvas = FigureCanvasQTAgg(self.fig)
+
+        # Create widgets: toolbar and canvas
+        self.widgets: dict[str, Any] = {
+            "toolbar": MatplotlibToolbar(canvas, parent=self),
+            "canvas": canvas,
+        }
+
+        # Add plot to layout and set to expand to fill the available space
+        layout = QVBoxLayout()
+        for w in self.widgets.values():
+            layout.addWidget(w)
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(layout)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+    def update_motor_unit(self, motor_unit_idx: int):
+        """
+        Update plot to display fibre clusters in the specified motor unit.
+        Motor unit index starts at 0.
+        """
+
+        # Create plot and replace existing axes
+        self.ax.cla()  # clear axes
+        motor_unit = self.reconstruct_model.reconstruct.found_motor_units.motor_units[
+            motor_unit_idx
+        ]
+        _, self.ax = motor_unit.plot_3D_fibre_potential_clustering(
+            dpi=self.dpi, ax=self.ax, max_y=5, axis_equal=False, cmap=Vivid_10.mpl_colors
+        )
+        self.fig.set_tight_layout(True)  # Prevents window from cutting off legend
+        self.ax.set_title(
+            f"Clustered fibre potentials in motor unit {motor_unit_idx + 1}",
+            fontsize=14,
+            fontweight="bold",
+        )
+        self.fig.canvas.draw_idle()  # redraw
+
+
+# TODO: 3d: all potentials
 
 
 class MUFibreLocationsWidget(QWidget):
@@ -193,13 +251,17 @@ class MUFibreLocationsWidget(QWidget):
             "locations": MUFibreLocationsVisWidget(
                 self.reconstruct_model, motor_unit_idx, parent=self
             ),
+            "clusters": MUFibreClusters3DVisWidget(
+                self.reconstruct_model, motor_unit_idx, parent=self
+            ),
         }
 
         # Corresponding tab labels
         tab_text = [
             "Summary",
             "Fibre locations",
-        ]  # , "Clustered fibre potentials", "All fibre potentials"]
+            "Clustered fibre potentials",
+        ]  # , "All fibre potentials"]
 
         # Add to tab widget
         self.tab_widget = QTabWidget()

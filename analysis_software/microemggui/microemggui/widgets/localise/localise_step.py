@@ -12,11 +12,9 @@ from PySide6.QtCore import Qt, Signal
 
 from microemggui.models.emg import EMGAnalysisReconstructModel
 from microemggui.models.settings import EMGAnalysisMotorUnitClusterSettingsModel
-from microemggui.widgets.base import LargePushButton, SectionTitle
+from microemggui.widgets.base import LargePushButton, SectionTitle, SubsectionTitle
 from microemggui.widgets.localise.localise_settings import LocaliseSettingsWidget
 from microemggui.widgets.localise.localise_results import FibreLocalisationResultsWidget
-
-# TODO: add results widget
 
 
 # --- Buttons ---
@@ -253,3 +251,9 @@ class LocaliseFibresWidget(QWidget):
 
             # Add to layout
             self.layout.addWidget(self.widgets["results"], 0, 1, 3, 1)  # span 3 rows
+
+        else:  # if no fibres, display text indicating none found
+            self.widgets["results"] = SubsectionTitle("No fibres found", parent=self)
+
+            # Add to layout
+            self.layout.addWidget(self.widgets["results"], 0, 1)
