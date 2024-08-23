@@ -2009,9 +2009,10 @@ class EMGMotorUnit:
 
         Returns
         -------
+        fig : Figure | None
+            The figure to which the plot belongs.
         ax : matplotlib Axes
             Axes object with the heatmap.
-
         """
 
         # Create new figure with specified size if no axis provided.
@@ -2162,6 +2163,9 @@ class EMGMotorUnit:
 
         Returns
         -------
+
+        fig : Figure | None
+            The figure to which the plot belongs.
         ax : matplotlib Axes
             Axes object with the heatmap.
 

@@ -24,10 +24,69 @@ from microemggui.widgets.base import (
     ExpandingHSpacer,
 )
 
-# --- Plot widgets ---
+# --- All fibres ---
 
-# all fibres (heatmaps)
-# fibre pair
+# TODO: colormaps
+# TODO: fix plot ratios
+
+
+class JitterAllFibrePlotsWidget(QWidget):
+    """
+    Widget for displaying heatmaps of jitter MCD and sample sizes of all fibre pairs
+    for the specified motor unit.
+    """
+
+    def __init__(
+        self, reconstruct_model: EMGAnalysisReconstructModel, motor_unit_idx: int, parent=None
+    ):
+        super().__init__(parent)
+
+        self.reconstruct_model = reconstruct_model
+
+        # Create plot with two suplots and corresponding canvas
+        self.fig, self.axs = plt.subplots(2, 1)
+        self.fig.dpi = 100
+        self.fig.set_tight_layout(True)
+        self.update_motor_unit(motor_unit_idx)  # add plots for specified motor unit
+        canvas = FigureCanvasQTAgg(self.fig)
+
+        # Create widgets: toolbar and canvas
+        self.widgets: dict[str, Any] = {
+            "toolbar": MatplotlibToolbar(canvas, parent=self),
+            "canvas": canvas,
+        }
+
+        # Add widgets to layout and set to expand to fill the available space
+        layout = QVBoxLayout()
+        for w in self.widgets.values():
+            layout.addWidget(w)
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(layout)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+    def update_motor_unit(self, motor_unit_idx: int):
+        """
+        Update plots to display the jitter heatmaps for the specified motor unit.
+        Motor unit index counts from 0.
+        """
+
+        # Motor unit
+        mu = self.reconstruct_model.reconstruct.found_motor_units.motor_units[motor_unit_idx]
+
+        # First plot is MCD
+        if self.axs[0].collections:
+            self.axs[0].collections[0].colorbar.remove()  # have to remove colorbar separately
+        self.axs[0].cla()
+        _, self.axs[0] = mu.plot_jitter_heat_plot(median=False, ax=self.axs[0])
+
+        # Second plot is sample sizes
+        if self.axs[1].collections:
+            self.axs[1].collections[0].colorbar.remove()  # have to remove colorbar separately
+        self.axs[1].cla()
+        _, self.axs[1] = mu.plot_jitter_totals_heat_plot(percent=False, ax=self.axs[1])
+
+        self.fig.canvas.draw_idle()  # redraw
+
 
 # --- Fibre pair ---
 

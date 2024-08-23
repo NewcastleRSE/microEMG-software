@@ -218,7 +218,6 @@ for mu_num in motor_units_for_fibre_localisation:
     fig, ax = mu.plot_jitter_heat_plot()
     fig, ax = mu.plot_jitter_totals_heat_plot()
     fig, ax = mu.plot_jitter_totals_heat_plot(percent=True)
-    plt.figure()
     jitter_results = mu.fibre_jitter_results
 
 # %% Jitter plot of one fibre pair (EMG traces and times)

@@ -21,7 +21,10 @@ from microemggui.widgets.base import (
     InputComboBox,
 )
 
-from microemggui.widgets.jitter.jitter_vis import JitterFibrePairVisWidget
+from microemggui.widgets.jitter.jitter_vis import (
+    JitterFibrePairVisWidget,
+    JitterAllFibrePlotsWidget,
+)
 
 # --- Widget for changing motor unit ---
 
@@ -87,6 +90,7 @@ class JitterWidget(QWidget):
             "title": SectionTitle("Jitter analysis", self),
             "mucombobox": MUComboBox(self.motor_units_to_analyse, parent=self),
             "alltitle": SubsectionTitle("All fibre pairs", parent=self),
+            "allvis": JitterAllFibrePlotsWidget(self.reconstruct_model, self.motor_unit_idx),
             "pairtitle": SubsectionTitle("Fibre pair", parent=self),
             "pairvis": JitterFibrePairVisWidget(
                 self.reconstruct_model, self.motor_unit_idx, parent=self
@@ -98,6 +102,7 @@ class JitterWidget(QWidget):
         layout.addWidget(self.widgets["title"], 0, 0)
         layout.addWidget(self.widgets["mucombobox"], 1, 0)
         layout.addWidget(self.widgets["alltitle"], 2, 0)
+        layout.addWidget(self.widgets["allvis"], 3, 0)
         layout.addWidget(self.widgets["pairtitle"], 2, 1)
         layout.addWidget(self.widgets["pairvis"], 3, 1)
         layout.setContentsMargins(20, 20, 20, 20)
@@ -115,3 +120,4 @@ class JitterWidget(QWidget):
         """
 
         self.widgets["pairvis"].update_motor_unit(motor_unit_idx)
+        self.widgets["allvis"].update_motor_unit(motor_unit_idx)
