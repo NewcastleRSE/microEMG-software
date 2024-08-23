@@ -1979,7 +1979,14 @@ class EMGMotorUnit:
 
         return fig, ax
 
-    def plot_jitter_heat_plot(self, median: bool = False) -> Axes:
+    def plot_jitter_heat_plot(
+        self,
+        median: bool = False,
+        cmap: Any = "magma",
+        vmax: float = 100,
+        clr_background: Any = "dimgrey",
+        ax: plt.axes.Axes | None = None,
+    ) -> tuple[Figure | None, Axes]:
         """
         Plot a heat map of mean consecutive differences (MCDs) between fibres.
         (Or medians of consecutive differences)
@@ -1988,6 +1995,17 @@ class EMGMotorUnit:
         ----------
         median : bool, optional
             Plot medians instead of mean consecutive differences. The default is False.
+        cmap : matplotlib colormap name or object, or list of colors, optional
+            Colourmap. The default is matplotlib colourmap "magma".
+        vmax : float, optional
+            The upper limit for the colourmap, in microseconds. This argument ensures
+            that outliers do not dramatically skew the colourmap and that colours are
+            easily comparable across motor units. The default is 100.
+        clr_background: colour specification, optional
+            Colour for plot background (recommend similar darkness to low values of the
+            colourmap). The default is "dimgrey".
+        ax : plt.axes.Axes, optional
+            Plot to add to. The default is None, in which case new axes are created.
 
         Returns
         -------
@@ -1996,11 +2014,17 @@ class EMGMotorUnit:
 
         """
 
-        # Get number of fibre pairs, return if none.
+        # Create new figure with specified size if no axis provided.
+        if ax is None:
+            fig, ax = plt.subplots()
+        else:
+            fig = None
+
+        # Get number of fibre pairs; return early if none.
         n_fibre_pairs = len(self.fibre_jitter_results["fibre2_numbers"])
         if n_fibre_pairs == 0:
-            _, ax = plt.subplots()
-            return ax
+            ax.set_axis_off()  # remove plot axes
+            return fig, ax
 
         n_fibres = int(np.max(self.fibre_jitter_results["fibre2_numbers"]) + 1)
 
@@ -2027,26 +2051,38 @@ class EMGMotorUnit:
         # Plotting the heatmap.
         str_fibres = [str(x) for x in np.arange(1, n_fibres + 1)]
 
-        hm = sns.heatmap(
+        ax = sns.heatmap(
             data=data,
+            vmin=0,
+            vmax=vmax,
+            cmap=cmap,
             annot=True,
             xticklabels=str_fibres,
             yticklabels=str_fibres,
             cbar_kws={"label": "\u03bc seconds"},
             fmt="g",
+            ax=ax,
         )
 
-        hm.set_xlabel("Fibre number")
-        hm.set_ylabel("Fibre number")
+        ax.set_xlabel("fibre number")
+        ax.set_ylabel("fibre number")
 
+        # Titles (line break ensures that plot is the same size as plot_jitter_heat_plot,
+        # which has a two line title)
         if median:
-            hm.set_title(
-                f"Median Consecutive Differences (Motor Unit {self.motor_unit_number + 1})"
+            ax.set_title(
+                f"Median Consecutive Differences (motor unit {self.motor_unit_number + 1})\n"
             )
         else:
-            hm.set_title(f"Mean Consecutive Differences (Motor Unit {self.motor_unit_number + 1})")
+            ax.set_title(
+                f"Mean Consecutive Differences (motor unit {self.motor_unit_number + 1})\n"
+            )
 
-        return hm
+        # Ensure square and change background colour
+        ax.set_aspect("equal")
+        ax.set_facecolor(clr_background)
+
+        return fig, ax
 
     def _get_jitter_totals(self, fibre1: int, fibre2: int) -> tuple[int, float, int, float]:
         """
@@ -2101,7 +2137,13 @@ class EMGMotorUnit:
 
         return total_non_nan_diffs, percent_df, total_non_nan_cd, percent_cd
 
-    def plot_jitter_totals_heat_plot(self, percent: bool = False) -> Axes:
+    def plot_jitter_totals_heat_plot(
+        self,
+        percent: bool = False,
+        cmap: Any = "viridis",
+        clr_background: Any = "dimgrey",
+        ax: plt.axes.Axes | None = None,
+    ) -> tuple[Figure | None, Axes]:
         """
         Plot a heat map of counts used for jitter analysis.
 
@@ -2110,18 +2152,32 @@ class EMGMotorUnit:
         percent: bool, optional
             Plot percentage of non-nan counts of intervals and consecutive
             differences, otherwise plot the counts. The default is False.
+        cmap : matplotlib colormap name or object, or list of colors, optional
+            Colourmap. The default is matplotlib colourmap "viridis".
+        clr_background: colour specification, optional
+            Colour for plot background (recommend similar darkness to low values of the
+            colourmap). The default is "dimgrey".
+        ax : plt.axes.Axes, optional
+            Plot to add to. The default is None, in which case new axes are created.
 
         Returns
         -------
-        ax : Axes
+        ax : matplotlib Axes
             Axes object with the heatmap.
 
         """
 
+        # Create new figure with specified size if no axis provided.
+        if ax is None:
+            fig, ax = plt.subplots()
+        else:
+            fig = None
+
+        # Get number of fibre pairs; return early if none.
         n_fibre_pairs = len(self.fibre_jitter_results["fibre2_numbers"])
         if n_fibre_pairs == 0:
-            _, ax = plt.subplots()
-            return ax
+            ax.set_axis_off()  # remove plot axes
+            return fig, ax
 
         n_fibres = int(np.max(self.fibre_jitter_results["fibre2_numbers"]) + 1)
 
@@ -2139,13 +2195,13 @@ class EMGMotorUnit:
                 percent_cd,
             ) = self._get_jitter_totals(fib1, fib2)
 
-            # Set values for heat plot symetrically.
+            # Set values for heat plot - different upper and lower values.
             if percent:
                 data[fib1, fib2] = percent_df
                 data[fib2, fib1] = percent_cd
             else:
-                data[fib1, fib2] = total_non_nan_diffs
-                data[fib2, fib1] = total_non_nan_cd
+                data[fib1, fib2] = total_non_nan_diffs  # number of MUPs on upper diagonal
+                data[fib2, fib1] = total_non_nan_cd  # number of consecutive MUPs on lower diagonal
 
         # Plotting the heatmap.
         str_fibres = [str(x) for x in np.arange(1, n_fibres + 1)]
@@ -2155,28 +2211,37 @@ class EMGMotorUnit:
         else:
             bar_str = "count"
 
-        hm = sns.heatmap(
+        ax = sns.heatmap(
             data=data,
+            vmin=0,
+            cmap=cmap,
             annot=True,
             xticklabels=str_fibres,
             yticklabels=str_fibres,
             cbar_kws={"label": bar_str},
             fmt="g",
+            ax=ax,
         )
 
-        hm.set_xlabel("Fibre number")
-        hm.set_ylabel("Fibre number")
+        ax.set_xlabel("fibre number")
+        ax.set_ylabel("fibre number")
 
         if percent:
-            hm.set_title(
-                f"Percentage, con. diffs.\\intervals (Motor Unit {self.motor_unit_number + 1})"
+            ax.set_title(
+                f"Sample sizes used to compute jitter (motor unit {self.motor_unit_number + 1})\n"
+                + r"$\mathregular{_{\%\ consecutive\ differences}}$ \ $\mathregular{^{\%\ MUPs}}$"
             )
         else:
-            hm.set_title(
-                f"Counts, con. diffs.\\intervals (Motor Unit {self.motor_unit_number + 1})"
+            ax.set_title(
+                f"Sample sizes used to compute jitter (motor unit {self.motor_unit_number + 1})\n"
+                + r"$\mathregular{_{\#\ consecutive\ differences}}$ \ $\mathregular{^{\#\ MUPs}}$"
             )
 
-        return hm
+        # Ensure square and change background colour
+        ax.set_aspect("equal")
+        ax.set_facecolor(clr_background)
+
+        return fig, ax
 
     def get_jitter_fibre_pair_idx(self, fibre1: int, fibre2: int) -> int | None:
         """

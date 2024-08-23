@@ -208,17 +208,16 @@ for mu_num in motor_units_for_fibre_localisation:
 fig, ax = reconstruct.found_motor_units.plot_fibre_locations("fibres", motor_unit_idx=None)
 ax.set_title("Fibre locations of all motor units")
 
-# %% TODO: need to start new plot for jitter
-
-# Perform jitter analyses.
+# %% Perform jitter analyses.
 for mu_num in motor_units_for_fibre_localisation:
     # Do jitter analysis
     reconstruct.mu_jitter_analysis(mu_num)
 
     # Plot heat plot of mean consectutive differences (MCDs).
     mu = reconstruct.found_motor_units.motor_units[mu_num]
-    mu.plot_jitter_heat_plot()
-
+    fig, ax = mu.plot_jitter_heat_plot()
+    fig, ax = mu.plot_jitter_totals_heat_plot()
+    fig, ax = mu.plot_jitter_totals_heat_plot(percent=True)
     plt.figure()
     jitter_results = mu.fibre_jitter_results
 
