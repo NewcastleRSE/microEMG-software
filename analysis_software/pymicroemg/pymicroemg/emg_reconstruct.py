@@ -8,7 +8,7 @@ For use with preprocessed EMG data.
 """
 
 from __future__ import annotations  # for type hints - must be at beginning of file
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import json
 import warnings
@@ -27,6 +27,7 @@ from scipy.linalg import toeplitz
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
 from skimage import morphology
+from palettable.cartocolors.qualitative import Prism_10
 
 import pymicroemg.emg_tk_filter as tk
 
@@ -735,12 +736,14 @@ class EMGAnalysisReconstruct:
         self,
         motor_unit_idx: int,
         n_ms: int = 20,
-        offset: float = 500,
+        offset: float = 300,
         lw: float = 0.5,
+        clrs: list[Any] | None = None,
         figsize: tuple[float, float] = (7, 7),
-        axis_label_size: float = 10,
+        axis_label_size: float = 12,
+        title_size: float = 12,
         ytick_label_size: float = 6,
-        xtick_label_size: float = 8,
+        xtick_label_size: float = 10,
         dpi: int = 100,
         ax: plt.axes.Axes | None = None,
     ) -> tuple[Figure, Axes]:
@@ -756,17 +759,22 @@ class EMGAnalysisReconstruct:
             Number of milliseconds of data to extract. The data will be centered on the
             motor unit potential's onset. The default is 20.
         offset : float, optional
-            The vertical spacing, offset, between channels. The default is 500.
+            The vertical spacing, offset, between channels. The default is 300.
         lw : float, optional
             Line width. The default is 0.5.
+        clrs : list[Any], optional
+            List of colours to use for lines. Will be cycled. If None (default), uses
+            CartoColors Prism colourmap.
         figsize : tuple[float, float], optional
             Size of figure. The default is (7, 7).
         axis_label_size : float, optional
-            Size of axis labels. The default is 10.
+            Size of axis labels. The default is 12.
+        title_size : float, optional
+            Font size the titles. The default is 12.
         xtick_label_size : float, optional
             size of x tick labels. The default is 6.
         ytick_label_size : float, optional
-            Size of y tick labels. The default is 8.
+            Size of y tick labels. The default is 10.
         dpi : int, optional
             Dots per Inch. The default is 100.
         ax : plt.axes.Axes, optional
@@ -793,6 +801,13 @@ class EMGAnalysisReconstruct:
         if offset < 0:
             raise ValueError("The vertical spacing, offset, must be positive")
 
+        # Colours
+        if clrs is None:
+            clrs = Prism_10.mpl_colors
+
+        # Repeat colours to match (or exceed) number of channels
+        clrs = clrs * int(np.ceil(self.n_chan / len(clrs)))
+
         # Create new figure with specified size if no axis provided.
         if ax is None:
             fig, ax = plt.subplots(figsize=figsize)
@@ -810,19 +825,26 @@ class EMGAnalysisReconstruct:
 
         # Plot each channel's MUP, staggered by the specified offset.
         for i in range(self.n_chan):
-            ax.plot(potentials_t, potentials_avg[i, :] - offset * i, lw=lw)
+            ax.plot(potentials_t, potentials_avg[i, :] - offset * i, lw=lw, color=clrs[i])
 
         # Channel labels.
         chan_y = np.arange(0, self.n_chan * offset * -1, offset * -1)
         ax.set_yticks(chan_y)
         ax.set_yticklabels(self.emg_data_preproc.chan.chan_names)
         ax.tick_params(axis="y", which="major", labelsize=ytick_label_size)
-        ax.set_ylabel("channel", fontsize=axis_label_size)
+        ax.set_ylabel("", fontsize=axis_label_size)  # set font for any gui label changes
 
         # x-axis labels and font size.
         ax.set_xlabel("time (ms)", fontsize=axis_label_size)
         ax.tick_params(axis="x", which="major", labelsize=xtick_label_size)
         ax.set_xlim(0, max(potentials_t))
+
+        # Title
+        ax.set_title(
+            f"Average potential (across time) of motor unit {motor_unit_idx + 1}",
+            fontweight="bold",
+            fontsize=title_size,
+        )
 
         return fig, ax
 
@@ -831,10 +853,15 @@ class EMGAnalysisReconstruct:
         motor_unit_idx: int,
         chan_idx: int = -1,
         n_ms: int = 20,
-        lw: float = 0.2,
-        lw_mean: float = 0.5,
+        lw: float = 1,
+        alpha: float = 0.25,
+        clr: Any = "darkgrey",
+        lw_mean: float = 2,
+        alpha_mean: float = 0.75,
+        clr_mean: Any = "black",
         figsize: tuple[float, float] = (7, 7),
-        axis_label_size: float = 10,
+        axis_label_size: float = 12,
+        title_size: float = 12,
         xtick_label_size: float = 10,
         ytick_label_size: float = 10,
         dpi: int = 100,
@@ -863,13 +890,25 @@ class EMGAnalysisReconstruct:
             Number of milliseconds of data to extract. The data will be centered on the
             motor unit potential's onset. The default is 20.
         lw : float, optional
-            Line width. The default is 0.2.
+            Line width of the individual traces. The default is 1.
+        alpha : float, optional
+            Alpha of individual traces. The default is 0.25.
+        clr: Any, optional
+            Colour of the individual traces (e.g., as string or RGB tuple). The default
+            is "darkgrey".
         lw_mean : float, optional
-            Line width of mean line. The default is 0.5.
+            Line width of mean line. The default is 2.
+        alpha_mean : float, optional
+            Alpha of the mean line. The default is 0.75.
+        clr_mean : Any, optional
+            Colour of the mean trace (e.g., as string or RGB tuple). The default
+            is "black".
         figsize : tuple[float, float], optional
             Size of figure. The default is (7, 7).
         axis_label_size : float, optional
-            Size of axis labels. The default is 10.
+            Size of axis labels. The default is 12.
+        title_size : float, optional
+            Font size the titles. The default is 12.
         xtick_label_size : float, optional
             size of x tick labels. The default is 10.
         ytick_label_size : float, optional
@@ -921,9 +960,19 @@ class EMGAnalysisReconstruct:
             potentials_t,
             np.squeeze(potentials_data[chan_idx, :, :]),
             lw=lw,
-            color="silver",
+            color=clr,
+            alpha=alpha,
+            label="_nolegend_",
         )
-        ax.plot(potentials_t, potentials_avg[chan_idx, :], lw=lw_mean, color="black")
+        ax.plot(
+            potentials_t,
+            potentials_avg[chan_idx, :],
+            lw=lw_mean,
+            color=clr_mean,
+            alpha=alpha_mean,
+            label="mean potential",
+        )
+        ax.legend(loc="lower left", frameon=False)
 
         # Labels
         ax.tick_params(axis="y", which="major", labelsize=ytick_label_size)
@@ -933,6 +982,14 @@ class EMGAnalysisReconstruct:
         ax.set_xlabel("time (ms)", fontsize=axis_label_size)
         ax.tick_params(axis="x", which="major", labelsize=xtick_label_size)
         ax.set_xlim(0, max(potentials_t))
+
+        # Title
+        ax.set_title(
+            f"Average potential (across time) of motor unit {motor_unit_idx + 1}"
+            + f" in channel {chan_idx}",
+            fontweight="bold",
+            fontsize=title_size,
+        )
 
         return fig, ax, chan_idx
 

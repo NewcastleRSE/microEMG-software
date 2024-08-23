@@ -10,6 +10,7 @@ change). These plots are all designed for dpi = 100.
 
 from typing import Any
 
+from palettable.cartocolors.qualitative import Prism_10
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 
@@ -46,6 +47,7 @@ class MUEMGOneChannelWidget(QWidget):
 
         # Initialise blank plot
         self.fig, self.ax = plt.subplots()
+        self.fig.set_tight_layout(True)
         canvas = FigureCanvasQTAgg(self.fig)
         self.widgets: dict[str, Any] = {
             "toolbar": MatplotlibToolbar(canvas, parent=self),
@@ -92,6 +94,7 @@ class MUEMGAllChannelsWidget(QWidget):
 
         # Initialise blank plot
         self.fig, self.ax = plt.subplots()
+        self.fig.set_tight_layout(True)
         canvas = FigureCanvasQTAgg(self.fig)
         self.widgets: dict[str, Any] = {
             "toolbar": MatplotlibToolbar(canvas, parent=self),
@@ -118,7 +121,7 @@ class MUEMGAllChannelsWidget(QWidget):
         # Create plot and replace existing axes
         self.ax.cla()  # clear axes
         _, self.ax = self.reconstruct_model.reconstruct.plot_average_motor_unit_potential(
-            motor_unit_idx, ax=self.ax, dpi=100
+            motor_unit_idx, ax=self.ax, dpi=100, clrs=Prism_10.mpl_colors
         )
         self.fig.canvas.draw_idle()  # redraw
 

@@ -76,7 +76,6 @@ emg_data.trim_emg_ts(start_t=trim_start, stop_t=trim_stop)
 # identification step
 
 # Create and specify preprocessing settings using EMGPreprocSettings object
-# TODO: determine filter settings with Stu
 preproc_settings = EMGPreprocSettings()
 preproc_settings.add_butterworth_filter(cutoff_freq=[100, 2000], order=6, filter_type="bandpass")
 preproc_settings.add_remove_mains()
@@ -223,9 +222,8 @@ for mu_num in motor_units_for_fibre_localisation:
     plt.figure()
     jitter_results = mu.fibre_jitter_results
 
-
 # %% Jitter plot of one fibre pair (EMG traces and times)
 
-mu_idx = 1
+mu_idx = motor_units_for_fibre_localisation[0]
 mu = reconstruct.found_motor_units.motor_units[mu_idx]
-mu.plot_jitter_fibre_pair_EMG_and_times(fibre1=1, fibre2=2)
+mu.plot_jitter_fibre_pair_EMG_and_times(fibre1=0, fibre2=1)
