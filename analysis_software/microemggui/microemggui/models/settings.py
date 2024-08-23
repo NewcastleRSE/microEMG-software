@@ -222,15 +222,23 @@ class EMGAnalysisMotorUnitSettingsModel:
 
         # GUI options for settings values with mapping of text (e.g., "low") to value
         # and vice versa
-        # TODO: review options
-        sensitivity_text2values = {"low": 0.05, "medium (default)": 0.1, "high": 0.15}
+        # Keys must be strings
+        # TODO: review options; note uneven jumps
+        sensitivity_text2values = {
+            "very low (0.025)": 0.025,
+            "low (0.05)": 0.05,
+            "medium (0.1, default)": 0.1,
+            "high (0.15)": 0.15,
+            "very high (0.25)": 0.25,
+        }
         sensitivity_values2text = {v: k for k, v in sensitivity_text2values.items()}
 
         similarity_text2values = {
-            "low": 0.05,
-            "medium (default)": 0.1,
-            "high": 0.15,
-            "testveryhigh": 1,
+            "very low (0.025)": 0.025,
+            "low (0.05)": 0.05,
+            "medium (0.1, default)": 0.1,
+            "high (0.15)": 0.15,
+            "very high (0.25)": 0.25,
         }
         similarity_values2text = {v: k for k, v in similarity_text2values.items()}
 
