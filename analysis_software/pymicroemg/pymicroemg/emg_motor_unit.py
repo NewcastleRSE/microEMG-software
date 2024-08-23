@@ -2581,6 +2581,8 @@ class EMGMotorUnit:
         else:
             axs[ax_times].set_xlabel("time (ms) in motor unit potential", fontsize=axis_label_size)
 
+        return fig, axs
+
     def delete_fibre_localisation(self):
         """
         Deletes fibre localisation results (added by add_fibre_localisation method) and

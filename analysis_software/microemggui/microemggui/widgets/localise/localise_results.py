@@ -315,7 +315,7 @@ class MUComboBox(QWidget):
         layout = QHBoxLayout()
         for w in self.widgets.values():
             layout.addWidget(w)
-        layout.addItem(ExpandingHSpacer())  # spacer to push to right
+        layout.addItem(ExpandingHSpacer())  # spacer to push to left
         layout.setContentsMargins(0, 30, 0, 0)  # add space above - used as section divider
         self.setLayout(layout)
 
