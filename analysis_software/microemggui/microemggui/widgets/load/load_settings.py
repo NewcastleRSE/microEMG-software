@@ -33,9 +33,6 @@ from microemggui.widgets.base import (
 class LoadSettingsWidget(QWidget):
     # Labelled dropdown box for choosing settings for analysis
     # Currently only implemented preprocessing settings
-    # TODO: change to overall settings, not just preprocessing
-    # TODO: pull setting options from config file instead of defining here
-    # TODO: add saved settings? need to figure out how to load
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -61,7 +58,6 @@ class LoadSettingsWidget(QWidget):
 
 class LoadSettingsSection(QWidget):
     # Widget for selecting analysis settings
-    # TODO: consider adding option to add new settings
 
     # Signal for whether settings have been loaded
     settings_loaded = Signal(bool)
@@ -102,16 +98,12 @@ class LoadSettingsSection(QWidget):
         else:  # Settings selected
             match settings_name:
                 case "Default":
-                    # Preprocessing settings
-                    # TODO: set filter based on defaults instead?
-                    preprocess_settings = EMGPreprocSettings()
-                    preprocess_settings.add_butterworth_filter(
-                        cutoff_freq=[100, 2000], order=6, filter_type="bandpass"
-                    )
-                    preprocess_settings.add_remove_mains()
+                    # All settings depend on defaults in pymicroemg module
 
-                    # Remaining settings will depend on default values of these
-                    # settings classes
+                    # Preprocessing settings
+                    preprocess_settings = EMGPreprocSettings()
+                    preprocess_settings.add_butterworth_filter()
+                    preprocess_settings.add_remove_mains()
 
                     # Motor unit settings
                     mu_settings = EMGAnalysisMotorUnitSettings()

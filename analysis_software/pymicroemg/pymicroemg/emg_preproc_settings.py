@@ -155,7 +155,7 @@ class EMGPreprocSettings:
         # Default cutoff frequencies - only for bandpass filter
         if cutoff_freq is None:
             if filter_type == "bandpass":
-                cutoff_freq = [500, 2000]
+                cutoff_freq = [100, 2000]
             else:
                 raise Exception(
                     "Cutoff frequencies cutoff_freq must be specified if "
