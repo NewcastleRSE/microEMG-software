@@ -2072,11 +2072,13 @@ class EMGMotorUnit:
         # which has a two line title)
         if median:
             ax.set_title(
-                f"Median Consecutive Differences (motor unit {self.motor_unit_number + 1})\n"
+                f"Median Consecutive Differences (motor unit {self.motor_unit_number + 1})\n",
+                fontweight="bold",
             )
         else:
             ax.set_title(
-                f"Mean Consecutive Differences (motor unit {self.motor_unit_number + 1})\n"
+                f"Mean Consecutive Differences (motor unit {self.motor_unit_number + 1})\n",
+                fontweight="bold",
             )
 
         # Ensure square and change background colour
@@ -2232,13 +2234,15 @@ class EMGMotorUnit:
 
         if percent:
             ax.set_title(
-                f"Sample sizes used to compute jitter (motor unit {self.motor_unit_number + 1})\n"
-                + r"$\mathregular{_{\%\ consecutive\ differences}}$ \ $\mathregular{^{\%\ MUPs}}$"
+                f"Sample sizes (motor unit {self.motor_unit_number + 1})\n"
+                + r"$\mathregular{_{\%\ consecutive\ differences}}$ \ $\mathregular{^{\%\ MUPs}}$",
+                fontweight="bold",
             )
         else:
             ax.set_title(
-                f"Sample sizes used to compute jitter (motor unit {self.motor_unit_number + 1})\n"
-                + r"$\mathregular{_{\#\ consecutive\ differences}}$ \ $\mathregular{^{\#\ MUPs}}$"
+                f"Sample sizes (motor unit {self.motor_unit_number + 1})\n"
+                + r"$\mathregular{_{\#\ consecutive\ differences}}$ \ $\mathregular{^{\#\ MUPs}}$",
+                fontweight="bold",
             )
 
         # Ensure square and change background colour
@@ -2416,7 +2420,7 @@ class EMGMotorUnit:
         align_times_to_fibre1: bool = True,
         figsize: tuple[float, float] = (10, 10),
         axis_label_size: float = 12,
-        title_size: float = 14,
+        title_size: float = 12,
         dpi: int = 100,
         downsample_factor: int = 1,
     ) -> tuple[Figure | None, Axes | None]:
@@ -2472,7 +2476,7 @@ class EMGMotorUnit:
         axis_label_size : float, optional
             Font size of the axis labels. The default is 12.
         title_size : float, optional
-            Font size the titles. The default is 14.
+            Font size the titles. The default is 12.
         dpi : int, optional
             Plot resolution (dots per inch). The default is 100.
         downsample_factor : int, optional
@@ -2604,8 +2608,9 @@ class EMGMotorUnit:
             # Title/axis labels (add one to channel indices so count is from 1)
             # No x-axis label since shared across all plots
             axs[i].set_title(
-                f"motor unit {self.motor_unit_number + 1}, fibre {fibre_labels[i]}, channel {fibres_peak_chan[i] + 1}",
+                f"Motor unit {self.motor_unit_number + 1}, fibre {fibre_labels[i]}, channel {fibres_peak_chan[i] + 1}",
                 fontsize=title_size,
+                fontweight="bold",
             )
             axs[i].set_ylabel("\u03bcV", fontsize=axis_label_size)
 
@@ -2639,8 +2644,9 @@ class EMGMotorUnit:
 
         # Labels
         axs[ax_times].set_title(
-            f"fibre potential times (mean consecutive difference: {round(mcd, 2)} \u03bcs)",
+            f"Fibre potential times (mean consecutive difference: {round(mcd, 2)} \u03bcs)",
             fontsize=title_size,
+            fontweight="bold",
         )
         axs[ax_times].set_ylabel("motor unit potential", fontsize=axis_label_size)
         if align_times_to_fibre1:

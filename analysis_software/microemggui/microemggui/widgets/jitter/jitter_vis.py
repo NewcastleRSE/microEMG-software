@@ -27,7 +27,7 @@ from microemggui.widgets.base import (
 # --- All fibres ---
 
 # TODO: colormaps
-# TODO: fix plot ratios
+# TODO: move fibre comboboxes to same row
 
 
 class JitterAllFibrePlotsWidget(QWidget):
@@ -44,9 +44,9 @@ class JitterAllFibrePlotsWidget(QWidget):
         self.reconstruct_model = reconstruct_model
 
         # Create plot with two suplots and corresponding canvas
-        self.fig, self.axs = plt.subplots(2, 1)
+        self.fig, self.axs = plt.subplots(2, 1, figsize=(5, 10))
         self.fig.dpi = 100
-        self.fig.set_tight_layout(True)
+        self.fig.set_tight_layout(True)  # prevents overlap in subplots
         self.update_motor_unit(motor_unit_idx)  # add plots for specified motor unit
         canvas = FigureCanvasQTAgg(self.fig)
 
@@ -151,6 +151,8 @@ class JitterFibrePairPlotWidget(QWidget):
 
         """
 
+        figsize = (5, 10)  # to prevent plot from changing size
+
         # Get motor unit
         mu = self.reconstruct_model.reconstruct.found_motor_units.motor_units[self.motor_unit_idx]
 
@@ -160,17 +162,19 @@ class JitterFibrePairPlotWidget(QWidget):
             and (self.fibres[1] is not None)
             and (self.fibres[0] != self.fibres[1])
         ):
-            fig, _ = mu.plot_jitter_fibre_pair_EMG_and_times(self.fibres[0], self.fibres[1])
+            fig, _ = mu.plot_jitter_fibre_pair_EMG_and_times(
+                self.fibres[0], self.fibres[1], figsize=figsize
+            )
 
             # Check if plotted (will not plot if jitter not computed for that pair)
             if fig:
                 self.fig = fig
                 self.fig.set_tight_layout(True)
             else:  # otherwise, blank plot
-                self.fig, ax = plt.subplots()
+                self.fig, ax = plt.subplots(figsize=figsize)
                 ax.set_axis_off()
         else:  # otherwise, blank plot
-            self.fig, ax = plt.subplots()
+            self.fig, ax = plt.subplots(figsize=figsize)
             ax.set_axis_off()
 
         # Delete existing figure
@@ -187,6 +191,7 @@ class JitterFibrePairPlotWidget(QWidget):
         # Add plot to layout and set to expand to fill the available space
         for w in self.widgets.values():
             self.layout.addWidget(w)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
 
 class JitterFibrePairComboboxWidget(QWidget):

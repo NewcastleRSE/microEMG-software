@@ -106,6 +106,9 @@ class JitterWidget(QWidget):
         layout.addWidget(self.widgets["pairtitle"], 2, 1)
         layout.addWidget(self.widgets["pairvis"], 3, 1)
         layout.setContentsMargins(20, 20, 20, 20)
+        layout.setColumnStretch(0, 2)
+        layout.setColumnStretch(1, 3)  # second column wider than first (2:3 ratio)
+
         self.setLayout(layout)
 
         # Connect motor unit combobox to update_motor_unit
