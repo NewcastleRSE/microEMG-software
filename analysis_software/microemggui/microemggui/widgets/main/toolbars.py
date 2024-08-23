@@ -29,9 +29,9 @@ class MicroEMGLogo(QPushButton):
         super().__init__(*args, **kwargs)
 
         # Button icon
-        logo_icon = "activity"
+        logo_icon = "microemg"
 
-        self.setIcon(QIcon(":/bootstrap/" + logo_icon))
+        self.setIcon(QIcon(":/logo/" + logo_icon))
         self.setStatusTip("Home")
         self.setCheckable(True)
 
