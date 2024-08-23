@@ -2405,7 +2405,7 @@ class EMGMotorUnit:
         title_size : float, optional
             Font size the titles. The default is 14.
         dpi : int, optional
-            Plot resolution (dots per inch). The default is 300.
+            Plot resolution (dots per inch). The default is 100.
         downsample_factor : int, optional
             How much to downsample the EMG traces (recommend max of 2). The default is 1.
 
