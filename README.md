@@ -67,7 +67,7 @@ See pyproject.toml file for list of Python package dependencies.
 
 ### Installation
 
-First install poetry in your Python environment:
+After ensuring you have the project frameworks installed (PySide6, Python 3.11+), install poetry in your Python environment:
 
 Using pip:
 ```
@@ -89,7 +89,17 @@ Example recording data needs to be manually added in a "recordings" folder at th
 
 ### Running Locally
 
-How to run the application on your local system.
+To run the user interface during development testing, open a terminal and navigate to the `gui_dev` folder, then enter `python gui_dev_main.py` and the user interface should appear.
+
+Adding new packages: 
+1. `poetry add <package name>` which adds a package to the pyproject.toml file (the list of requirements)
+
+To add a package to a specific group, e.g. dev: `poetry add <package name> -G dev` 
+
+2. `poetry lock --no-update` updates the lock file (with all the packages needed and the exact versions, including dependencies of the packages in the pyproject.toml file), but does not change the version of the previously tracked dependencies
+
+3. `poetry export -f requirements.txt --without-hashes > requirements.txt` will then overwrite the requirements.txt file with the latest updates to the lockfile.
+
 
 ### Running Tests
 
@@ -102,6 +112,13 @@ How to run tests on your local system.
 ### Production
 
 Deploying to the production system. Examples of this would include cloud, HPC or virtual machine. 
+
+### Troubleshooting
+ 
+- If you ran the installation instructions outside of a virtual environment, poetry will have created one for you when you ran `poetry install`, however it won't have activated it automatically. You can activate the virtual environment with `poetry shell` and exit this with the command `exit`. Outside of this virtual environment you will not have the required installed dependencies so this can be a cause of errors.
+
+- For linux users an error has been noted when trying to run the GUI where the QT platform plugin fails to load. [This thread](https://stackoverflow.com/questions/77725761/from-6-5-0-xcb-cursor0-or-libxcb-cursor0-is-needed-to-load-the-qt-xcb-platform) proposes a solution that worked in our testing, to install libxcb-cursor-dev.
+
 
 ## Usage
 
