@@ -37,11 +37,6 @@ class ApplyMUSettingsButton(LargePushButton):
         self.setText("Re-apply")
         self.setEnabled(False)
 
-    def enable(self):
-        # Slot for enable button when settings are changed.
-
-        self.setEnabled(True)
-
 
 class NextButton(LargePushButton):
     # Button for proceeding to the next step
@@ -63,6 +58,7 @@ class NextButton(LargePushButton):
         # Slot for showing/hiding next button depending on whether motor units are found
         if mu_found:
             self.show()
+            self.setEnabled(True)  # ensure enabled, too
         else:
             self.hide()
 
@@ -95,6 +91,9 @@ class FindMUWidget(QWidget):
 
     # Signal for whether motor units have been found
     motor_units_found = Signal(bool)
+
+    # Signal to indicate that settings have been changed
+    settings_changed = Signal()
 
     def __init__(
         self,
@@ -139,13 +138,11 @@ class FindMUWidget(QWidget):
         # Connect apply button to find_motor_units
         self.widgets["buttons"].widgets["apply"].clicked.connect(self.find_motor_units)
 
-        # Enable re-apply if settings changed
+        # Trigger events if settings changed
         w_name_list = ["sensitivity", "similarity"]
         for w_name in w_name_list:
             w = self.widgets["settings"].widgets[w_name].widgets["combobox"]
-            w.currentTextChanged.connect(
-                lambda text: self.widgets["buttons"].widgets["apply"].enable()
-            )
+            w.currentTextChanged.connect(lambda text: self.settings_changed_events())
 
     def find_motor_units(self):
         """
@@ -168,3 +165,14 @@ class FindMUWidget(QWidget):
         self.motor_units_found.emit(
             n_mu > 0
         )  # emit signal to enable/disable next steps in main GUI
+
+    def settings_changed_events(self):
+        """
+        When any settings changed, 1) enable re-apply button, 2) disable next button,
+        and 3) send signal that settings have been changed (for main GUI)
+
+        """
+
+        self.widgets["buttons"].widgets["apply"].setEnabled(True)
+        self.widgets["buttons"].widgets["next"].setEnabled(False)
+        self.settings_changed.emit()

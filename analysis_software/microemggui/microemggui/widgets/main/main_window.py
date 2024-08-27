@@ -321,6 +321,7 @@ class MicroEMGMain(QMainWindow):
         Add connections for find motor units (findmu) widget.
         Adds/deletes the selectmu widget and enables/disables buttons for the next step
         depending on whether motor units have been found.
+        If settings changed, resets downstream steps of the GUI
         """
 
         # Find motor units widget
@@ -337,8 +338,12 @@ class MicroEMGMain(QMainWindow):
             )
         )
 
-        # TODO: connect motor_units_found to resetting GUI
-        # need to reset before add next widget
+        # Connection to reset downstream steps of the GUI if the settings have changed
+        # Note that the motor units found will only change if the settings change, so
+        # do not need to trigger reset when find new motor units
+        findmu_w.settings_changed.connect(
+            lambda w_name="findmu": self.reset_downstream_steps_of_gui(w_name)
+        )
 
     def add_selectmu_connections(self):
         """
