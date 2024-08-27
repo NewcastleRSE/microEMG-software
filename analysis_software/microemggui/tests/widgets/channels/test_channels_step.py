@@ -122,9 +122,8 @@ def test_toggling_one_channel_checkbox_updates_select_all(qtbot, emg_models, emg
     checkboxes = window.widgets["channels"].widgets["checkboxes"].widgets["checkboxes"]
 
     if chan <= window.n_chan - 1:  # Only test if channel exists
-        # Uncheck channel checkbox
-        # (use this method so confirms that it works if programmatically set)
-        checkboxes[chan].setChecked(False)
+        # Uncheck channel checkbox (must click - will uncheck)
+        checkboxes[chan].click()
 
         # Confirm channel checkbox unchecked
         with check:
@@ -140,8 +139,8 @@ def test_toggling_one_channel_checkbox_updates_select_all(qtbot, emg_models, emg
                 with check:
                     assert checkboxes[i].isChecked()
 
-        # Check channel checkbox to recheck
-        checkboxes[chan].setChecked(True)
+        # Click channel checkbox to recheck
+        checkboxes[chan].click()
 
         # Confirm select all checked
         with check:
@@ -166,8 +165,7 @@ def test_select_all_checks_all_channel_checkboxes_after_one_channel_unchecked(
 
     if chan <= window.n_chan - 1:  # Only test if channel exists
         # Uncheck channel checkbox
-        # (use this method so confirms that it works if programmatically set)
-        checkboxes[chan].setChecked(False)
+        checkboxes[chan].click()
 
         # Confirm select all unchecked
         with check:
@@ -203,7 +201,7 @@ def test_unchecking_channels_adds_channels_to_bad_chan_idx(qtbot, emg_models, em
             print(should_be_in_bad_chan_idx)
 
             # Uncheck channel checkbox
-            checkboxes[chan].setChecked(False)
+            checkboxes[chan].click()
 
     should_be_in_bad_chan_idx.sort()
     assert window.bad_chan_idx == should_be_in_bad_chan_idx
@@ -222,10 +220,10 @@ def test_rechecking_channels_removes_from_bad_chan_idx(qtbot, emg_models, emg_cl
     for chan in channels:
         if chan <= window.n_chan - 1:  # Only click if channel exists
             # Uncheck channel checkbox
-            checkboxes[chan].setChecked(False)
+            checkboxes[chan].click()
 
             # Recheck channel checkbox
-            checkboxes[chan].setChecked(True)
+            checkboxes[chan].click()
 
     assert window.bad_chan_idx == []
 

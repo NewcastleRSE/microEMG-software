@@ -301,7 +301,7 @@ class MicroEMGMain(QMainWindow):
     def add_channels_connections(self):
         """
         Add connections for channels widget:
-          - Update list of bad channels when click next. (If channels have changed,
+          - Update list of bad channels when selection is changed. (If channels changed,
           update_bad_chan_idx will also trigger the re-creation of the findmu widget.)
           - Disable/enable toolbar button for next step depending on whether min number
           of channels have been selected.
@@ -309,18 +309,6 @@ class MicroEMGMain(QMainWindow):
 
         channels_w = self.widgets["analysis"].widgets["channels"]
         channels_w.bad_chan_updated.connect(self.update_bad_chan_idx)
-
-        # Also connect next step in toolbar to next_clicked method of channels widget
-        # so same signal is emitted when navigate via toolbar instead of the next button
-        self.widgets["analysistoolbar"].widgets["findmu"].clicked.connect(channels_w.next_clicked)
-
-        # Disable/enable toolbar button for next step depending on whether min number
-        # of channels have been selected.
-        self.widgets["analysis"].widgets["channels"].min_chan_selected.connect(
-            lambda min_selected, w_name="findmu": self.enable_analysis_toolbar_button(
-                min_selected, w_name
-            )
-        )
 
     def add_findmu_connections(self):
         """
@@ -420,13 +408,14 @@ class MicroEMGMain(QMainWindow):
         # Use data to make channels widget
         self.add_channels_widget()
 
-    def update_bad_chan_idx(self, bad_chan_idx):
+    def update_bad_chan_idx(self, bad_chan_idx: list[int], min_chan_selected: bool):
         """
         Updates the list of bad channels that should not be included in the analysis.
         Unlike most other widgets, these changes do not need to be applied before
         proceeding to next step of the analysis - the next step (find motor units) is
         already enabled. As such, this method also updates the findmu widget that uses
-        this data.
+        this data if the minimum number of channels needed for the analysis has been
+        selected.
         """
 
         # If indices are the same, do not update and do not make new find MU widget
@@ -438,27 +427,30 @@ class MicroEMGMain(QMainWindow):
 
             # Update bad channels
             self.bad_chan_idx = bad_chan_idx
+            print("bad channels in main GUI:")
             print(self.bad_chan_idx)
 
-            # Update in preprocessed data and reconstruction analysis object
-            self.emg_model["preproc"].emg_data.set_bad_chan(self.bad_chan_idx)
-            if self.settings_model:
-                reconstruct = EMGAnalysisReconstruct(
-                    emg_data_preproc=self.emg_model["preproc"].emg_data,
-                    mu_settings=self.settings_model.mu_settings,
-                    recon_settings=self.settings_model.recon_settings,
-                    mu_cluster_settings=self.settings_model.mu_cluster_settings,
-                    mu_jitter_settings=self.settings_model.mu_jitter_settings,
-                )
-                self.reconstruct_model = EMGAnalysisReconstructModel(reconstruct)
-            else:
-                raise ValueError(
-                    "settings_model must be added to main window before"
-                    + " fibre reconstruction analysis."
-                )
+            # Update data and create widget if min number of channels are selected
+            if min_chan_selected:
+                # Update in preprocessed data and reconstruction analysis object
+                self.emg_model["preproc"].emg_data.set_bad_chan(self.bad_chan_idx)
+                if self.settings_model:
+                    reconstruct = EMGAnalysisReconstruct(
+                        emg_data_preproc=self.emg_model["preproc"].emg_data,
+                        mu_settings=self.settings_model.mu_settings,
+                        recon_settings=self.settings_model.recon_settings,
+                        mu_cluster_settings=self.settings_model.mu_cluster_settings,
+                        mu_jitter_settings=self.settings_model.mu_jitter_settings,
+                    )
+                    self.reconstruct_model = EMGAnalysisReconstructModel(reconstruct)
+                else:
+                    raise ValueError(
+                        "settings_model must be added to main window before"
+                        + " fibre reconstruction analysis."
+                    )
 
-            # Update find MU widget
-            self.add_findmu_widget()
+                # Update find MU widget
+                self.add_findmu_widget()
 
     def update_motor_units_to_analyse(self, motor_units_idx):
         """
@@ -619,8 +611,7 @@ class MicroEMGMain(QMainWindow):
         self.add_widget_to_analysis_steps(w, w_name)
 
         print("Channels to analyse: ")
-        reconstruct = w.reconstruct_model.reconstruct
-        print(reconstruct.emg_data_preproc.chan.analyse_chan)
+        print(w.reconstruct_model.reconstruct.emg_data_preproc.chan.analyse_chan)
 
         # Enable toolbar button
         self.enable_analysis_toolbar_button(True, w_name)
