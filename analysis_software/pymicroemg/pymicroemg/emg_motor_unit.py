@@ -945,6 +945,9 @@ class EMGMotorUnit:
                 cmap = colormaps["tab20"].colors
             else:
                 cmap = plt.cm.rainbow(np.linspace(0, 1, n_clusters))
+        else:  # if colourmap is specified, check that sufficient colours; if not, repeat
+            if len(cmap) < n_clusters:
+                cmap = cmap * int(np.ceil(n_clusters / len(cmap)))
 
         return cmap[cluster_no]
 
