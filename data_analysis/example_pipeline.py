@@ -19,6 +19,7 @@ from pymicroemg.emg_reconstruct_settings import (
     EMGAnalysisMotorUnitJitterSettings,
 )
 
+
 # increase figure resolution (needed for Spyder IDE)
 plt.rcParams["figure.dpi"] = 600
 

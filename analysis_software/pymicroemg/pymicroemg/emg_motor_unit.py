@@ -2072,18 +2072,20 @@ class EMGMotorUnit:
         # which has a two line title)
         if median:
             ax.set_title(
-                f"Median Consecutive Differences (motor unit {self.motor_unit_number + 1})\n",
+                f"Median Consecutive Differences\n(motor unit {self.motor_unit_number + 1})",
                 fontweight="bold",
             )
         else:
             ax.set_title(
-                f"Mean Consecutive Differences (motor unit {self.motor_unit_number + 1})\n",
+                f"Mean Consecutive Differences\n(motor unit {self.motor_unit_number + 1})",
                 fontweight="bold",
             )
 
-        # Ensure square and change background colour
+        # Ensure square, change background colour, and add frame
         ax.set_aspect("equal")
         ax.set_facecolor(clr_background)
+        for _, spine in ax.spines.items():
+            spine.set_visible(True)
 
         return fig, ax
 
@@ -2245,9 +2247,11 @@ class EMGMotorUnit:
                 fontweight="bold",
             )
 
-        # Ensure square and change background colour
+        # Ensure square, change background colour, and add frame
         ax.set_aspect("equal")
         ax.set_facecolor(clr_background)
+        for _, spine in ax.spines.items():
+            spine.set_visible(True)
 
         return fig, ax
 

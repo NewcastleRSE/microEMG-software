@@ -8,6 +8,7 @@ from typing import Any
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
+import palettable.cartocolors.sequential as carto_seq  # carto colourmaps
 
 from PySide6.QtWidgets import (
     QWidget,
@@ -20,14 +21,11 @@ from microemggui.models.emg import EMGAnalysisReconstructModel
 from microemggui.widgets.base import (
     MatplotlibToolbar,
     InputComboBox,
-    InputInlineLabel,
     ExpandingHSpacer,
+    TitleInputLabel,
 )
 
 # --- All fibres ---
-
-# TODO: colormaps
-# TODO: move fibre comboboxes to same row
 
 
 class JitterAllFibrePlotsWidget(QWidget):
@@ -77,13 +75,23 @@ class JitterAllFibrePlotsWidget(QWidget):
         if self.axs[0].collections:
             self.axs[0].collections[0].colorbar.remove()  # have to remove colorbar separately
         self.axs[0].cla()
-        _, self.axs[0] = mu.plot_jitter_heat_plot(median=False, ax=self.axs[0])
+        _, self.axs[0] = mu.plot_jitter_heat_plot(
+            median=False,
+            ax=self.axs[0],
+            cmap=carto_seq.Burg_7.mpl_colormap,
+            clr_background="whitesmoke",
+        )
 
         # Second plot is sample sizes
         if self.axs[1].collections:
             self.axs[1].collections[0].colorbar.remove()  # have to remove colorbar separately
         self.axs[1].cla()
-        _, self.axs[1] = mu.plot_jitter_totals_heat_plot(percent=False, ax=self.axs[1])
+        _, self.axs[1] = mu.plot_jitter_totals_heat_plot(
+            percent=False,
+            ax=self.axs[1],
+            cmap=carto_seq.Teal_7.mpl_colormap,
+            clr_background="whitesmoke",
+        )
 
         self.fig.canvas.draw_idle()  # redraw
 
@@ -208,9 +216,9 @@ class JitterFibrePairComboboxWidget(QWidget):
 
         # Create widgets
         self.widgets: dict[str, Any] = {
-            "label1": InputInlineLabel("1st fibre (trigger):", parent=self),
+            "label1": TitleInputLabel("Fibre pair:", parent=self),
             "combobox1": InputComboBox(parent=self),
-            "label2": InputInlineLabel("2nd fibre:", parent=self),
+            "label2": TitleInputLabel("(trigger) and", parent=self),
             "combobox2": InputComboBox(parent=self),
         }
 
@@ -270,6 +278,7 @@ class JitterFibrePairVisWidget(QWidget):
         for w in self.widgets.values():
             layout.addWidget(w)
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
         self.setLayout(layout)
 
         # Connect fibre comboboxes to visualisation
