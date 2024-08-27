@@ -288,6 +288,7 @@ class MicroEMGMain(QMainWindow):
         Add connections for the preprocess widget.
         Connection updates the preprocessed EMG data and preprocessing settings that are
         stored in the main window.
+        Also resets GUI if settings changed (indicated by settings_valid signal)
         """
 
         # Preprocess widget
@@ -296,6 +297,11 @@ class MicroEMGMain(QMainWindow):
         # Connection for updating preprocessed EMG and preprocessing settings in main window
         preprocess_w.preproc_data_changed.connect(
             self.update_preproc_emg_model_and_preprocess_settings
+        )
+
+        # Connection for resetting GUI if settings are changed
+        preprocess_w.widgets["settings"].settings_valid.connect(
+            lambda settings_valid, last_w="preprocess": self.reset_downstream_steps_of_gui(last_w)
         )
 
     def add_channels_connections(self):

@@ -73,8 +73,9 @@ class NextButton(LargePushButton):
         self.hide()  # hide initially
 
     def show_button(self):
-        # Slot for revealing next button after preprocessing
+        # Slot for revealing and enabling next button after preprocessing
         self.show()
+        self.setEnabled(True)
 
 
 class MainButtons(QWidget):
@@ -224,7 +225,7 @@ class PreprocWidget(QWidget):
         # For applying preprocessing
         self.widgets["buttons"].widgets["apply"].clicked.connect(self.apply_preproc)
 
-        # For showing next button
+        # For showing and enabling next button
         self.widgets["buttons"].widgets["apply"].clicked.connect(
             self.widgets["buttons"].widgets["next"].show_button
         )
@@ -232,6 +233,11 @@ class PreprocWidget(QWidget):
         # For enabling/disabling preprocessing based on settings validity
         self.widgets["settings"].settings_valid.connect(
             self.widgets["buttons"].widgets["apply"].change_enabled
+        )
+
+        # Disable next button if settings are changed
+        self.widgets["settings"].settings_valid.connect(
+            lambda settings_valid: self.widgets["buttons"].widgets["next"].setEnabled(False)
         )
 
         # Check if initial settings are valid
