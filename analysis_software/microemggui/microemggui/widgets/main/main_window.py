@@ -349,21 +349,12 @@ class MicroEMGMain(QMainWindow):
     def add_selectmu_connections(self):
         """
         Add connections for select motor units (selectmu) widget:
-            - Update list of motor units to analyse when click next or toolbar button
-            of the next step.
+            - Update list of motor units to analyse when selection changes.
 
-        TODO: Disable/enable toolbar button for next step depending on whether at least
-            one motor unit has been selected
         """
 
         selectmu_w = self.widgets["analysis"].widgets["selectmu"]
         selectmu_w.motor_units_updated.connect(self.update_motor_units_to_analyse)
-
-        # Also connect next step in toolbar to next_clicked method of selectmu widget
-        # so same signal is emitted when navigate via toolbar instead of the next button
-        self.widgets["analysistoolbar"].widgets["localise"].clicked.connect(
-            selectmu_w.next_clicked
-        )
 
     def add_localise_connections(self):
         """
@@ -479,7 +470,8 @@ class MicroEMGMain(QMainWindow):
         if self.motor_units_to_analyse == motor_units_idx:
             return
         else:
-            # TODO: reset downstream steps
+            # Reset downstream steps since motor units changed
+            self.reset_downstream_steps_of_gui("selectmu")
 
             # Update list of motor units
             self.motor_units_to_analyse = motor_units_idx
@@ -490,8 +482,6 @@ class MicroEMGMain(QMainWindow):
 
         # Enable/disable localise fibre button on toolbar depepnding on if motor units
         # have been selected
-        # TODO: motor units only update when next button is clicked; need to connect
-        # to an earlier step/signal
         if self.motor_units_to_analyse:
             self.widgets["analysistoolbar"].widgets["localise"].setEnabled(True)
         else:
@@ -710,11 +700,6 @@ class MicroEMGMain(QMainWindow):
 
         # Add connections
         self.add_localise_connections()
-
-        # Show widget (widget is created when next button of previous widget is clicked)
-        # Show by clicking to ensure correct button on toolbar is also toggled
-        # self.widgets["analysis"].show_widget(w_name)
-        self.widgets["analysistoolbar"].widgets[w_name].click()
 
     def add_jitter_widget(self):
         """

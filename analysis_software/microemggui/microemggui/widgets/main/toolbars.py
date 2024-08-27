@@ -63,7 +63,7 @@ class AnalysisToolbar(QToolBar):
             "findmu": "4. Find motor units",
             "selectmu": "5. Select motor units",
             "localise": "6. Localise fibres",
-            "jitter": "7. Compute jitter",
+            "jitter": "7. Analyse jitter",
             "exporttext": "Export results",
             "export": "Export",
         }

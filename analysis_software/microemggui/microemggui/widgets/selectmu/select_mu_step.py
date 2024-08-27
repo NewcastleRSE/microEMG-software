@@ -205,9 +205,6 @@ class SelectMUWidget(QWidget):
         # Connect checkboxes to list of checked motor units
         self.widgets["checkboxes"].motor_unit_toggled.connect(self.update_motor_units_checked)
 
-        # Emit motor units to analyse when next button is clicked
-        self.widgets["next"].clicked.connect(self.next_clicked)
-
     def update_motor_units_checked(self, checked: bool, idx: int):
         """
         Update boolean and indices of motor units that are checked.
@@ -221,6 +218,9 @@ class SelectMUWidget(QWidget):
         self.motor_units_checked_idx = [
             i for i in range(self.n_motor_units) if self.motor_units_checked[i]
         ]
+
+        # Emit motor units - will connect to slot in main GUI
+        self.motor_units_updated.emit(self.motor_units_checked_idx)
 
         # Update message text
         self.update_message()
@@ -249,11 +249,3 @@ class SelectMUWidget(QWidget):
 
         # Set text
         self.widgets["message"].setText(text)
-
-    def next_clicked(self):
-        """
-        Slot for next button. Emits motor unit indices when next button is clicked.
-
-        """
-        print("select MU next button clicked")
-        self.motor_units_updated.emit(self.motor_units_checked_idx)
