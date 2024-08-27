@@ -44,13 +44,6 @@ class ApplyLocaliseFibresButton(LargePushButton):
         self.setText("Re-apply")
         self.setEnabled(False)
 
-    def enable(self):
-        """
-        Slot to enable button when settings are changed.
-        """
-
-        self.setEnabled(True)
-
 
 class NextButton(LargePushButton):
     """
@@ -76,6 +69,7 @@ class NextButton(LargePushButton):
         """
         if fibres_found:
             self.show()
+            self.setEnabled(True)  # ensure enabled
         else:
             self.hide()
 
@@ -120,6 +114,9 @@ class LocaliseWidget(QWidget):
 
     # Signal for whether fibres have been found
     fibres_found = Signal(bool)
+
+    # Signal to indicate that settings have been changed
+    settings_changed = Signal()
 
     def __init__(
         self,
@@ -171,11 +168,12 @@ class LocaliseWidget(QWidget):
         # Connect apply button to localise_fibres
         self.widgets["buttons"].widgets["apply"].clicked.connect(self.localise_fibres)
 
-        # Enable re-apply if settings changed
+        # Trigger events for when settings are changed
         w = self.widgets["settings"].widgets["timeweighting"].widgets["combobox"]
-        w.currentTextChanged.connect(
-            lambda text: self.widgets["buttons"].widgets["apply"].enable()
-        )
+        w.currentTextChanged.connect(lambda text: self.settings_changed_events())
+
+        # Show/hide next button based on whether fibres are found
+        self.fibres_found.connect(self.widgets["buttons"].widgets["next"].show_button)
 
     def localise_fibres(self):
         """
@@ -222,13 +220,9 @@ class LocaliseWidget(QWidget):
         # Update results
         self.update_results()
 
-        # Show/hide next button depending on if fibres are found
-        if sum(self.n_fibres) > 0:
-            self.widgets["buttons"].widgets["next"].show()
-            self.fibres_found.emit(True)
-        else:
-            self.widgets["buttons"].widgets["next"].hide()
-            self.fibres_found.emit(False)
+        # Emit signal for whether fibres are found
+        # Will also update next button
+        self.fibres_found.emit(sum(self.n_fibres) > 0)
 
     def update_results(self):
         """
@@ -257,3 +251,14 @@ class LocaliseWidget(QWidget):
 
             # Add to layout
             self.layout.addWidget(self.widgets["results"], 0, 1)
+
+    def settings_changed_events(self):
+        """
+        When any settings changed, 1) enable re-apply button, 2) disable next button,
+        and 3) send signal that settings have been changed (for main GUI)
+
+        """
+
+        self.widgets["buttons"].widgets["apply"].setEnabled(True)
+        self.widgets["buttons"].widgets["next"].setEnabled(False)
+        self.settings_changed.emit()

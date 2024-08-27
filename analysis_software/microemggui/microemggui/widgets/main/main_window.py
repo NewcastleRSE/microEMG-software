@@ -340,7 +340,7 @@ class MicroEMGMain(QMainWindow):
 
         # Connection to reset downstream steps of the GUI if the settings have changed
         # Note that the motor units found will only change if the settings change, so
-        # do not need to trigger reset when find new motor units
+        # do not need to trigger additional reset when find new motor units
         findmu_w.settings_changed.connect(
             lambda w_name="findmu": self.reset_downstream_steps_of_gui(w_name)
         )
@@ -359,10 +359,26 @@ class MicroEMGMain(QMainWindow):
         """
         Add connections for localise fibres (localise) widget:
             - Add/update jitter widget when perform localisation by clicking apply button
+            - Reset downstream steps if settings changed
         """
 
         localise_w = self.widgets["analysis"].widgets["localise"]
         localise_w.widgets["buttons"].widgets["apply"].clicked.connect(self.add_jitter_widget)
+
+        # Connection to reset downstream steps of the GUI if the settings have changed
+        # Note that the localised fibres found will only change if the settings change,
+        # so do not need to trigger additional reset when perform localisation
+        localise_w.settings_changed.connect(
+            lambda w_name="localise": self.reset_downstream_steps_of_gui(w_name)
+        )
+
+        # Connection for enabling/disabling next step (jitter analysis) depending on if
+        # fibres are found
+        localise_w.fibres_found.connect(
+            lambda fibres_found, w_name="jitter": self.enable_analysis_toolbar_button(
+                fibres_found, w_name
+            )
+        )
 
     def update_toolbar_connections(self):
         """
