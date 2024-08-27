@@ -2419,7 +2419,7 @@ class EMGMotorUnit:
         emg_line_lw: float = 1,
         emg_line_alpha: float = 0.25,
         emg_y_perc: float = 95,
-        emg_y_buff_prop: float = 0.1,
+        emg_y_buff_prop: float = 0.2,
         time_marker_size: float = 2,
         align_times_to_fibre1: bool = True,
         figsize: tuple[float, float] = (10, 10),
@@ -2469,7 +2469,7 @@ class EMGMotorUnit:
         emg_y_buff_prop : float, optional
             The buffer to add around the min and max y values computed using emg_y_perc.
             The final y axis limits for the EMG traces are computed by multiplying the
-            difference of those values by emg_y_buff_prop. The default is 0.1.
+            difference of those values by emg_y_buff_prop. The default is 0.2.
         time_marker_size : float, optional
             Size of the markers for the fibre potential times. The default is 2.
         align_times_to_fibre1 : bool, optional

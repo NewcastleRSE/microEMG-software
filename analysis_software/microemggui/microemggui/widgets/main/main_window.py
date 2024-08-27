@@ -35,6 +35,7 @@ from microemggui.widgets.channels.channels_step import ChannelsWidget
 from microemggui.widgets.findmu.find_mu_step import FindMUWidget
 from microemggui.widgets.selectmu.select_mu_step import SelectMUWidget
 from microemggui.widgets.localise.localise_step import LocaliseWidget
+from microemggui.widgets.jitter.jitter_step import JitterWidget
 
 # Models
 from microemggui.models.settings import EMGSettingsModel, EMGPreprocSettingsModel
@@ -163,7 +164,6 @@ class MicroEMGMain(QMainWindow):
     def reset_downstream_steps_of_gui(self, last_w_name: str):
         """
         Reset steps and data that occur after analysis step last_w_name.
-        TODO: store original settings and return to original if corresponding widget deleted
         """
 
         print(f"Resetting part of GUI analysis (downstream of {last_w_name})")
@@ -171,9 +171,8 @@ class MicroEMGMain(QMainWindow):
         # All analysis steps that have been added
         analysis_w_names = list(self.widgets["analysis"].widgets.keys())
 
-        # Delete steps after w_name
-        # Also delete data added by that step
-        # TODO: delete parts of the reconstruct analyses/reset settings
+        # Delete widgets for steps after w_name
+        # Also delete data added by later steps and reset settings modified by later steps
         delete_w = False
         for w_name in analysis_w_names:
             if delete_w:
@@ -222,7 +221,8 @@ class MicroEMGMain(QMainWindow):
 
                 if w_name == "localise":
                     # Delete fibre reconstruction and clustering results
-                    self.reconstruct_model.reconstruct.delete_all_mu_fibre_localisation()
+                    if self.reconstruct_model:
+                        self.reconstruct_model.reconstruct.delete_all_mu_fibre_localisation()
 
                     # Reset motor unit clustering settings (modified in this widget)
                     print("Removing cluster settings")
@@ -234,7 +234,10 @@ class MicroEMGMain(QMainWindow):
                     )
                     print(f"new time weight: {self.settings_model.mu_cluster_settings.time_scale}")
 
-                # TODO: jitter analysis (results only - no settings modified)
+                if w_name == "jitter":
+                    if self.reconstruct_model:
+                        self.reconstruct_model.reconstruct.delete_all_mu_fibre_jitter()
+                    print("Reset jitter widget: deleted jitter results")
 
             # Change delete_w to True after pass last_w_name; will delete downstream widgets
             if w_name == last_w_name:
@@ -345,7 +348,7 @@ class MicroEMGMain(QMainWindow):
 
     def add_selectmu_connections(self):
         """
-        Add connections for select motor units (selectmu) widget.
+        Add connections for select motor units (selectmu) widget:
             - Update list of motor units to analyse when click next or toolbar button
             of the next step.
 
@@ -361,6 +364,15 @@ class MicroEMGMain(QMainWindow):
         self.widgets["analysistoolbar"].widgets["localise"].clicked.connect(
             selectmu_w.next_clicked
         )
+
+    def add_localise_connections(self):
+        """
+        Add connections for localise fibres (localise) widget:
+            - Add/update jitter widget when perform localisation by clicking apply button
+        """
+
+        localise_w = self.widgets["analysis"].widgets["localise"]
+        localise_w.widgets["buttons"].widgets["apply"].clicked.connect(self.add_jitter_widget)
 
     def update_toolbar_connections(self):
         """
@@ -467,12 +479,23 @@ class MicroEMGMain(QMainWindow):
         if self.motor_units_to_analyse == motor_units_idx:
             return
         else:
+            # TODO: reset downstream steps
+
             # Update list of motor units
             self.motor_units_to_analyse = motor_units_idx
             print(f"Motor units to analyse updated: {self.motor_units_to_analyse}")
 
             # Create localise widget
             self.add_localise_widget()
+
+        # Enable/disable localise fibre button on toolbar depepnding on if motor units
+        # have been selected
+        # TODO: motor units only update when next button is clicked; need to connect
+        # to an earlier step/signal
+        if self.motor_units_to_analyse:
+            self.widgets["analysistoolbar"].widgets["localise"].setEnabled(True)
+        else:
+            self.widgets["analysistoolbar"].widgets["localise"].setEnabled(False)
 
     def connect_next_button_to_analysis_widget(self, next_button, w_name: str):
         """
@@ -685,10 +708,41 @@ class MicroEMGMain(QMainWindow):
         next_button = self.widgets["analysis"].widgets["selectmu"].widgets["next"]
         self.connect_next_button_to_analysis_widget(next_button, w_name)
 
-        # TODO: Add any connections
-        # self.add_localise_connections()
+        # Add connections
+        self.add_localise_connections()
 
         # Show widget (widget is created when next button of previous widget is clicked)
         # Show by clicking to ensure correct button on toolbar is also toggled
         # self.widgets["analysis"].show_widget(w_name)
         self.widgets["analysistoolbar"].widgets[w_name].click()
+
+    def add_jitter_widget(self):
+        """
+        Add widget for jitter analysis results in selected motor units.
+
+        """
+        w_name = "jitter"
+
+        if self.reconstruct_model:
+            # Perform jitter analysis (no apply button in this widget since settings are fixed)
+            for mu_idx in self.motor_units_to_analyse:
+                self.reconstruct_model.reconstruct.mu_jitter_analysis(mu_idx)
+
+            # Create widget and add to stack of analysis step widgets with toolbar connections
+            w = JitterWidget(self.reconstruct_model, self.motor_units_to_analyse, parent=self)
+            print("Added jitter widget")
+        else:
+            raise ValueError(
+                "GUI model for fibre reconstruction analysis must be created before "
+                + "creating widgets for this analysis."
+            )
+        self.add_widget_to_analysis_steps(w, w_name)
+
+        # Enable toolbar button
+        self.enable_analysis_toolbar_button(True, w_name)
+
+        # Add connection to next button of previous step
+        next_button = (
+            self.widgets["analysis"].widgets["localise"].widgets["buttons"].widgets["next"]
+        )
+        self.connect_next_button_to_analysis_widget(next_button, w_name)
