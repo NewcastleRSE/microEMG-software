@@ -164,7 +164,7 @@ class SelectMUWidget(QWidget):
         layout = QGridLayout()
         row = 0
         col = 0
-        for k, w in self.widgets.items():
+        for w in self.widgets.values():
             layout.addWidget(w, row, col)
             row += 1
         layout.setContentsMargins(20, 20, 20, 20)

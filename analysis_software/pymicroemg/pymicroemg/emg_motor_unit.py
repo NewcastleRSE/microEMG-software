@@ -2615,7 +2615,8 @@ class EMGMotorUnit:
             # Title/axis labels (add one to channel indices so count is from 1)
             # No x-axis label since shared across all plots
             axs[i].set_title(
-                f"Motor unit {self.motor_unit_number + 1}, fibre {fibre_labels[i]}, channel {fibres_peak_chan[i] + 1}",
+                f"Motor unit {self.motor_unit_number + 1}, "
+                + f"fibre {fibre_labels[i]}, channel {fibres_peak_chan[i] + 1}",
                 fontsize=title_size,
                 fontweight="bold",
             )
