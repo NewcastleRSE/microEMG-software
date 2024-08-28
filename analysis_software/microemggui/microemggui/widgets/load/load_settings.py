@@ -9,6 +9,12 @@ from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
 from PySide6.QtCore import Signal
 
 from pymicroemg.emg_preproc_settings import EMGPreprocSettings
+from pymicroemg.emg_reconstruct_settings import (
+    EMGAnalysisMotorUnitSettings,
+    EMGAnalysisReconstructSettings,
+    EMGAnalysisMotorUnitClusterSettings,
+    EMGAnalysisMotorUnitJitterSettings,
+)
 
 from microemggui.models.settings import EMGSettingsModel
 
@@ -27,9 +33,6 @@ from microemggui.widgets.base import (
 class LoadSettingsWidget(QWidget):
     # Labelled dropdown box for choosing settings for analysis
     # Currently only implemented preprocessing settings
-    # TODO: change to overall settings, not just preprocessing
-    # TODO: pull setting options from config file instead of defining here
-    # TODO: add saved settings? need to figure out how to load
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -55,7 +58,6 @@ class LoadSettingsWidget(QWidget):
 
 class LoadSettingsSection(QWidget):
     # Widget for selecting analysis settings
-    # TODO: consider adding option to add new settings
 
     # Signal for whether settings have been loaded
     settings_loaded = Signal(bool)
@@ -96,14 +98,32 @@ class LoadSettingsSection(QWidget):
         else:  # Settings selected
             match settings_name:
                 case "Default":
+                    # All settings depend on defaults in pymicroemg module
+
+                    # Preprocessing settings
                     preprocess_settings = EMGPreprocSettings()
-                    preprocess_settings.add_butterworth_filter(
-                        cutoff_freq=[100, 2000], order=6, filter_type="bandpass"
-                    )
+                    preprocess_settings.add_butterworth_filter()
                     preprocess_settings.add_remove_mains()
 
-            # TODO: update to all settings
-            self.settings_model = EMGSettingsModel(preprocess_settings=preprocess_settings)
+                    # Motor unit settings
+                    mu_settings = EMGAnalysisMotorUnitSettings()
+
+                    # Fibre reconstruction settings
+                    recon_settings = EMGAnalysisReconstructSettings()
+
+                    # Clustering
+                    mu_cluster_settings = EMGAnalysisMotorUnitClusterSettings()
+
+                    # Jitter
+                    mu_jitter_settings = EMGAnalysisMotorUnitJitterSettings()
+
+            self.settings_model = EMGSettingsModel(
+                preprocess_settings=preprocess_settings,
+                mu_settings=mu_settings,
+                recon_settings=recon_settings,
+                mu_cluster_settings=mu_cluster_settings,
+                mu_jitter_settings=mu_jitter_settings,
+            )
             self.settings_changed.emit(self.settings_model)  # Must emit first
             self.settings_loaded.emit(True)
 

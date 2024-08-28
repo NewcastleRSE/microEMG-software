@@ -8,7 +8,7 @@ For use with preprocessed EMG data.
 """
 
 from __future__ import annotations  # for type hints - must be at beginning of file
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import json
 import warnings
@@ -27,6 +27,7 @@ from scipy.linalg import toeplitz
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
 from skimage import morphology
+from palettable.cartocolors.qualitative import Prism_10
 
 import pymicroemg.emg_tk_filter as tk
 
@@ -518,15 +519,16 @@ class EMGAnalysisReconstruct:
 
     def plot_motor_units_raster(
         self,
-        linelengths: float = 0.9,
-        linewidths: float = 0.75,
-        ax: Optional[Axes] = None,
+        linelengths: float = 0.75,
+        linewidths: float = 0.25,
         figsize: tuple[float, float] = (10, 5),
         dpi: int = 100,
         axis_label_size: float = 14,
+        title_size: float = 14,
         xtick_label_size: float = 12,
         ytick_label_size: float = 12,
         sort_by: str = "default",
+        ax: plt.axes.Axes | None = None,
     ) -> tuple[Optional[Figure], Axes]:
         """
         Create a raster plot of the potentials of each motor unit in the recording.
@@ -536,15 +538,17 @@ class EMGAnalysisReconstruct:
         Parameters
         ----------
         linelengths : float, optional
-            Length of lines. The default is 0.9.
+            Length of lines. The default is 0.75.
         linewidths : float, optional
-            Width of lines. The default is 0.75.
+            Width of lines. The default is 0.25.
         figsize : tuple[float, float], optional
             Size of figure. The default is (10, 5).
         dpi : int, optional
             Dots per Inch. The default is 100.
         axis_label_size : float, optional
             Size of axis labels. The default is 14.
+        title_size : float, optional
+            Font size the titles. The default is 14.
         xtick_label_size : float, optional
             size of x tick labels. The default is 12.
         ytick_label_size : float, optional
@@ -552,6 +556,8 @@ class EMGAnalysisReconstruct:
         sort_by : str, optional
             How motor units should be ordered.
             The default is "default". Options are "default" and "n_potentials".
+        ax : plt.axes.Axes, optional
+            Plot to add to. The default is None, in which case new axes are created.
 
         Raises
         ------
@@ -591,7 +597,7 @@ class EMGAnalysisReconstruct:
         else:
             fig = None
 
-        # Time vector for x axis.
+        # Time vector for x axis (in seconds).
         emg_t = self.emg_data_preproc.get_emg_t()
 
         # Create list of times of MUPs.
@@ -603,20 +609,63 @@ class EMGAnalysisReconstruct:
         # Raster plot.
         # Places first motor unit at the top of the plot.
         ax.invert_yaxis()
-        ax.eventplot(potential_t, linelengths=linelengths, linewidths=linewidths)
+        ax.eventplot(potential_t, linelengths=linelengths, linewidths=linewidths, colors="black")
 
         # Axis ticks and labels
+
         # y axis
-        ax.set_yticks(np.arange(self.found_motor_units.n_motor_units))
-        ax.set_yticklabels(str(motor_units_numbers))
+        n_motor_units = self.found_motor_units.n_motor_units
+        # eventplot starts ticks at 0 if there are multiple motor units, but 1 if there
+        # is only one motor unit - need to adjust tick locations accordingly
+        if n_motor_units == 1:
+            ax.set_yticks(np.arange(n_motor_units) + 1)
+        else:
+            ax.set_yticks(np.arange(n_motor_units))
+        ax.set_yticklabels(["MU " + str(i) for i in motor_units_numbers])
         ax.tick_params(axis="y", which="major", labelsize=ytick_label_size)
-        ax.set_ylabel("motor unit", fontsize=axis_label_size)
+
         # x axis
         ax.tick_params(axis="x", which="major", labelsize=xtick_label_size)
-        ax.set_xlabel("time (seconds)", fontsize=axis_label_size)
+        ax.set_xlabel("time (mm:ss)", fontsize=axis_label_size)
         ax.set_xlim(min(emg_t) - 1 / self.emg_data_preproc.fs, max(emg_t))
 
+        ax.xaxis.set_major_formatter(plt.FuncFormatter(self._seconds_axis_label_formatter))
+
+        # title
+        ax.set_title(
+            "Times of motor unit potentials in the EMG recording",
+            fontsize=title_size,
+            fontweight="bold",
+        )
+
         return fig, ax
+
+    def _seconds_axis_label_formatter(self, time_s, pos) -> str:
+        """
+        Formatter for matplotlib axis tick labels - will convert seconds to display as
+        mm:ss.
+
+        Returns
+        -------
+        str
+            Formatted string for tick labels.
+
+        """
+
+        S_TO_MIN = 60
+
+        # Number of minutes and seconds for label
+        n_min = int(time_s / S_TO_MIN)
+        n_sec = time_s - (n_min * S_TO_MIN)
+
+        # Ignore ms if whole number of seconds
+        # (allow small differences in case of floating point errors)
+        if abs(int(time_s) - time_s) < 1e-10:
+            time_label = f"{n_min:02d}:{int(n_sec):02d}"
+        else:  # include ms
+            time_label = f"{n_min:02d}:{round(n_sec,2):0{2+3}.{2}f}"
+
+        return time_label
 
     def _get_potentials_data_of_one_motor_unit(
         self, motor_unit_idx: int, n_ms: int = 20
@@ -687,16 +736,20 @@ class EMGAnalysisReconstruct:
         self,
         motor_unit_idx: int,
         n_ms: int = 20,
-        offset: float = 500,
+        offset: float = 300,
         lw: float = 0.5,
+        clrs: list[Any] | None = None,
         figsize: tuple[float, float] = (7, 7),
-        axis_label_size: float = 10,
+        axis_label_size: float = 12,
+        title_size: float = 12,
         ytick_label_size: float = 6,
-        xtick_label_size: float = 8,
+        xtick_label_size: float = 10,
         dpi: int = 100,
+        ax: plt.axes.Axes | None = None,
     ) -> tuple[Figure, Axes]:
         """
-        Plot the average (mean) time series of the motor unit's potential.
+        Plot the average (mean) time series of the motor unit's potential. The onset of
+        the MUP is plotted at t = 0 ms.
 
         Parameters
         ----------
@@ -707,19 +760,26 @@ class EMGAnalysisReconstruct:
             Number of milliseconds of data to extract. The data will be centered on the
             motor unit potential's onset. The default is 20.
         offset : float, optional
-            The vertical spacing, offset, between channels. The default is 500.
+            The vertical spacing, offset, between channels. The default is 300.
         lw : float, optional
             Line width. The default is 0.5.
+        clrs : list[Any], optional
+            List of colours to use for lines. Will be cycled. If None (default), uses
+            CartoColors Prism colourmap.
         figsize : tuple[float, float], optional
             Size of figure. The default is (7, 7).
         axis_label_size : float, optional
-            Size of axis labels. The default is 10.
+            Size of axis labels. The default is 12.
+        title_size : float, optional
+            Font size the titles. The default is 12.
         xtick_label_size : float, optional
             size of x tick labels. The default is 6.
         ytick_label_size : float, optional
-            Size of y tick labels. The default is 8.
+            Size of y tick labels. The default is 10.
         dpi : int, optional
             Dots per Inch. The default is 100.
+        ax : plt.axes.Axes, optional
+            Plot to add to. The default is None, in which case new axes are created.
 
         Raises
         ------
@@ -742,9 +802,19 @@ class EMGAnalysisReconstruct:
         if offset < 0:
             raise ValueError("The vertical spacing, offset, must be positive")
 
-        # Create new figure with specified size.
-        fig, ax = plt.subplots(figsize=figsize)
-        fig.dpi = dpi
+        # Colours
+        if clrs is None:
+            clrs = Prism_10.mpl_colors
+
+        # Repeat colours to match (or exceed) number of channels
+        clrs = clrs * int(np.ceil(self.n_chan / len(clrs)))
+
+        # Create new figure with specified size if no axis provided.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+            fig.dpi = dpi
+        else:
+            fig = None
 
         # Get motor unit potentials and average (mean).
         potentials_data = self._get_potentials_data_of_one_motor_unit(motor_unit_idx, n_ms)
@@ -753,22 +823,30 @@ class EMGAnalysisReconstruct:
 
         # Time vector for x axis (ms).
         potentials_t = (np.arange(1, n_samples + 1) / self.emg_data_preproc.fs) * 1000
+        potentials_t = potentials_t - n_ms / 2  # Center MUP so onset is at t = 0 ms
 
         # Plot each channel's MUP, staggered by the specified offset.
         for i in range(self.n_chan):
-            ax.plot(potentials_t, potentials_avg[i, :] - offset * i, lw=lw)
+            ax.plot(potentials_t, potentials_avg[i, :] - offset * i, lw=lw, color=clrs[i])
 
         # Channel labels.
         chan_y = np.arange(0, self.n_chan * offset * -1, offset * -1)
         ax.set_yticks(chan_y)
         ax.set_yticklabels(self.emg_data_preproc.chan.chan_names)
         ax.tick_params(axis="y", which="major", labelsize=ytick_label_size)
-        ax.set_ylabel("channel", fontsize=axis_label_size)
+        ax.set_ylabel("", fontsize=axis_label_size)  # set font for any gui label changes
 
         # x-axis labels and font size.
         ax.set_xlabel("time (ms)", fontsize=axis_label_size)
         ax.tick_params(axis="x", which="major", labelsize=xtick_label_size)
-        ax.set_xlim(0, max(potentials_t))
+        ax.set_xlim(0 - n_ms / 2, max(potentials_t))
+
+        # Title
+        ax.set_title(
+            f"Average potential (across time) of motor unit {motor_unit_idx + 1}",
+            fontweight="bold",
+            fontsize=title_size,
+        )
 
         return fig, ax
 
@@ -777,18 +855,24 @@ class EMGAnalysisReconstruct:
         motor_unit_idx: int,
         chan_idx: int = -1,
         n_ms: int = 20,
-        lw: float = 0.2,
-        lw_mean: float = 0.5,
+        lw: float = 1,
+        alpha: float = 0.25,
+        clr: Any = "darkgrey",
+        lw_mean: float = 2,
+        alpha_mean: float = 0.75,
+        clr_mean: Any = "black",
         figsize: tuple[float, float] = (7, 7),
-        axis_label_size: float = 10,
+        axis_label_size: float = 12,
+        title_size: float = 12,
         xtick_label_size: float = 10,
         ytick_label_size: float = 10,
         dpi: int = 100,
+        ax: plt.axes.Axes | None = None,
     ) -> tuple[Figure, Axes, int]:
         """
 
         Plots the time series of all motor unit potentials of one motor unit in one
-        channel, with the mean time series overlaid.
+        channel, with the mean time series overlaid. MUP onset is plotted at t = 0 ms.
 
         If channel is not specified, the channel used for detecting motor unit
         potentials is plotted.
@@ -808,19 +892,33 @@ class EMGAnalysisReconstruct:
             Number of milliseconds of data to extract. The data will be centered on the
             motor unit potential's onset. The default is 20.
         lw : float, optional
-            Line width. The default is 0.2.
+            Line width of the individual traces. The default is 1.
+        alpha : float, optional
+            Alpha of individual traces. The default is 0.25.
+        clr: Any, optional
+            Colour of the individual traces (e.g., as string or RGB tuple). The default
+            is "darkgrey".
         lw_mean : float, optional
-            Line width of mean line. The default is 0.5.
+            Line width of mean line. The default is 2.
+        alpha_mean : float, optional
+            Alpha of the mean line. The default is 0.75.
+        clr_mean : Any, optional
+            Colour of the mean trace (e.g., as string or RGB tuple). The default
+            is "black".
         figsize : tuple[float, float], optional
             Size of figure. The default is (7, 7).
         axis_label_size : float, optional
-            Size of axis labels. The default is 10.
+            Size of axis labels. The default is 12.
+        title_size : float, optional
+            Font size the titles. The default is 12.
         xtick_label_size : float, optional
             size of x tick labels. The default is 10.
         ytick_label_size : float, optional
             Size of y tick labels. The default is 10.
         dpi : int, optional
             Dots per Inch. The default is 100.
+        ax : plt.axes.Axes, optional
+            Plot to add to. The default is None, in which case new axes are created.
 
         Raises
         ------
@@ -844,9 +942,12 @@ class EMGAnalysisReconstruct:
         if chan_idx < 0:
             chan_idx = self.chan_for_find_motor_units
 
-        # Create new figure with specified size.
-        fig, ax = plt.subplots(figsize=figsize)
-        fig.dpi = dpi
+        # Create new figure with specified size if no axis provided.
+        if ax is None:
+            fig, ax = plt.subplots(figsize=figsize)
+            fig.dpi = dpi
+        else:
+            fig = None
 
         # Get motor unit potentials and average (mean).
         potentials_data = self._get_potentials_data_of_one_motor_unit(motor_unit_idx, n_ms)
@@ -855,25 +956,43 @@ class EMGAnalysisReconstruct:
 
         # Time vector for x axis (ms)
         potentials_t = (np.arange(1, n_samples + 1) / self.emg_data_preproc.fs) * 1000
+        potentials_t = potentials_t - n_ms / 2  # Center MUP so onset is at t = 0 ms
 
         # Plot each MUP in specified channel.
         ax.plot(
             potentials_t,
             np.squeeze(potentials_data[chan_idx, :, :]),
             lw=lw,
-            color="silver",
+            color=clr,
+            alpha=alpha,
+            label="_nolegend_",
         )
-        ax.plot(potentials_t, potentials_avg[chan_idx, :], lw=lw_mean, color="black")
+        ax.plot(
+            potentials_t,
+            potentials_avg[chan_idx, :],
+            lw=lw_mean,
+            color=clr_mean,
+            alpha=alpha_mean,
+            label="mean potential",
+        )
+        ax.legend(loc="lower left", frameon=False)
 
         # Labels
         ax.tick_params(axis="y", which="major", labelsize=ytick_label_size)
         ax.set_ylabel("\u03bcV", fontsize=axis_label_size)
-        # TODO: check that label should be uV.
 
         # x-axis labels and font size.
         ax.set_xlabel("time (ms)", fontsize=axis_label_size)
         ax.tick_params(axis="x", which="major", labelsize=xtick_label_size)
-        ax.set_xlim(0, max(potentials_t))
+        ax.set_xlim(0 - n_ms / 2, max(potentials_t))
+
+        # Title
+        ax.set_title(
+            f"Average potential (across time) of motor unit {motor_unit_idx + 1}"
+            + f" in channel {chan_idx}",
+            fontweight="bold",
+            fontsize=title_size,
+        )
 
         return fig, ax, chan_idx
 
@@ -948,6 +1067,9 @@ class EMGAnalysisReconstruct:
         # Fibre potential peak times relative to the onset time
         # of the corresponding MUP (in indices units).
         fibre_potential_times = np.array([])
+
+        # Fibre potential peak channels
+        fibre_potential_peak_chan = np.array([])
 
         max_signal_id = all_spikes.shape[0] - self.recon_settings.mavg_length
 
@@ -1041,6 +1163,9 @@ class EMGAnalysisReconstruct:
                 #  and relative to the MUP onset times.
                 fibre_potential_times = np.append(fibre_potential_times, time_peak)
 
+                # Add fibre peak channel
+                fibre_potential_peak_chan = np.append(fibre_potential_peak_chan, peak_electrode)
+
         # End of signal_id loop.
 
         # Scaling factor to account for tissue attenuation differences in y-axis direction.
@@ -1052,6 +1177,7 @@ class EMGAnalysisReconstruct:
                 fibre_centres=pos,
                 mup_onsets=mup_onsets,
                 fibre_potential_times=fibre_potential_times,
+                fibre_potential_peak_chan=fibre_potential_peak_chan,
                 all_spikes=all_spikes,
                 generator_potential=np.array(np.transpose(self.opr)),
             )
@@ -1363,7 +1489,7 @@ class EMGAnalysisReconstruct:
         """
 
         # Loop thro' motor units.
-        for mu in self.found_motor_units:
+        for mu in self.found_motor_units.motor_units:
             # Perform cluster analysis using cluster settings.
             mu.cluster_fibre_potentials(self.mu_cluster_settings)
 
@@ -1404,6 +1530,52 @@ class EMGAnalysisReconstruct:
         """
 
         # Loop thro' motor units.
-        for mu in self.found_motor_units:
+        for mu in self.found_motor_units.motor_units:
             # Perform jitter analysis using jitter settings.
             mu.jitter_analysis(self.mu_jitter_settings)
+
+    def delete_all_mu_fibre_localisation(self):
+        """
+        Deletes fibre localisation results in each motor unit.
+
+        Also removes downstream analysis (fibre clustering and jitter).
+
+        Returns
+        -------
+        None.
+
+        """
+
+        # Loop thro' motor units.
+        for mu in self.found_motor_units.motor_units:
+            mu.delete_fibre_localisation()
+
+    def delete_all_mu_fibre_clustering(self):
+        """
+        Deletes fibre cluster results in each motor unit.
+
+        Also removes downstream analysis (fibre jitter).
+
+        Returns
+        -------
+        None.
+
+        """
+
+        # Loop thro' motor units.
+        for mu in self.found_motor_units.motor_units:
+            mu.delete_fibre_clustering()
+
+    def delete_all_mu_fibre_jitter(self):
+        """
+        Deletes fibre jitter results in each motor unit.
+
+        Returns
+        -------
+        None.
+
+        """
+
+        # Loop thro' motor units.
+        for mu in self.found_motor_units.motor_units:
+            mu.delete_fibre_jitter()

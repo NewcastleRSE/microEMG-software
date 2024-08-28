@@ -66,9 +66,6 @@ class EMGData:
         self.segment_of_recording = segment_of_recording
         self.chan = chan
 
-        # default time points to use for the analysis (all timepoints)
-        self.analyse_t = np.full(self.n_samples, True)
-
     def __new__(cls, *args, **kwargs):
         """
         Override "new" method to only allow children of EMGData to be
@@ -240,19 +237,19 @@ class EMGData:
 
     def plot_emg_ts(
         self,
-        start_t=0,
-        stop_t=None,
-        offset=1000,
+        start_t: float = 0,
+        stop_t: float | None = None,
+        offset: float = 1000,
         ax=None,
-        lw=0.5,
-        figsize=(7, 7),
-        yticklabel_size=6,
-        xticklabel_size=8,
-        dpi=100,
-        downsample_factor=1,
+        lw: float = 0.5,
+        figsize: tuple[float, float] = (7, 7),
+        axis_label_size: float = 12,
+        yticklabel_size: float = 6,
+        xticklabel_size: float = 8,
+        dpi: int = 100,
+        downsample_factor: int = 1,
     ):
         """
-        TODO: update documentation
         Plot the specified segment of the EMG time series, with each channel's
         signal staggered vertically by the specified offset.
 
@@ -271,13 +268,19 @@ class EMGData:
             generated.
         lw : float, optional
             Linewidth of each signal's line plot. The default is 0.5.
-        figsize : tuple, optional
+        figsize : tuple[float, float], optional
             Figure size in inches (only used if a new figure is created). The
             default is (7, 7).
+        axis_label_size : float, optional
+            Font size of the axis labels. The default is 12.
         yticklabel_size : float, optional
             Font size of the y-tick labels. The default is 6.
         xticklabel_size : float, optional
             Font size of the x-tick labels. The default is 8.
+        dpi : int, optional
+            Plot resolution (dots per inch). The default is 100.
+        downsample_factor : int, optional
+            How much to downsample the EMG traces. The default is 1.
 
         Returns
         -------
@@ -287,8 +290,6 @@ class EMGData:
             Axis handle.
 
         """
-        # TODO: design alterations (e.g., default colors and color options)
-
         # Default end (stop) time is the segment's duration
         if stop_t is None:
             stop_t = self.emg_dur
@@ -325,9 +326,10 @@ class EMGData:
         ax.tick_params(axis="y", which="major", labelsize=yticklabel_size)
 
         # x axis labels and font size
-        ax.set_xlabel("time (seconds)")
+        ax.set_xlabel("time (seconds)", fontsize=axis_label_size)
         ax.tick_params(axis="x", which="major", labelsize=xticklabel_size)
         ax.set_xlim(min(emg_t[plot_idx]) - 1 / self.fs, max(emg_t[plot_idx]))
+
         return fig, ax
 
     def compute_pxx(self, window_size: float) -> EMGPxx:

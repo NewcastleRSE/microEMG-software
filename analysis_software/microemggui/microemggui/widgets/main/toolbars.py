@@ -29,9 +29,9 @@ class MicroEMGLogo(QPushButton):
         super().__init__(*args, **kwargs)
 
         # Button icon
-        logo_icon = "activity"
+        logo_icon = "microemg"
 
-        self.setIcon(QIcon(":/bootstrap/" + logo_icon))
+        self.setIcon(QIcon(":/logo/" + logo_icon))
         self.setStatusTip("Home")
         self.setCheckable(True)
 
@@ -60,9 +60,10 @@ class AnalysisToolbar(QToolBar):
             "preprocess": "2. Preprocess",
             "channels": "3. Select channels",
             "analysetext": "Analyse EMG",
-            "motorunits": "4. Find motor units",
-            "fibres": "5. Localise fibres",
-            "jitter": "6. Compute jitter",
+            "findmu": "4. Find motor units",
+            "selectmu": "5. Select motor units",
+            "localise": "6. Localise fibres",
+            "jitter": "7. Analyse jitter",
             "exporttext": "Export results",
             "export": "Export",
         }
@@ -73,6 +74,7 @@ class AnalysisToolbar(QToolBar):
             True,
             True,
             False,
+            True,
             True,
             True,
             True,

@@ -3,6 +3,8 @@
     <qresource prefix="bootstrap">
         <file alias="check">bootstrap-icons-1.11.3/check.svg</file>
         <file alias="rewind">bootstrap-icons-1.11.3/rewind.svg</file>
+        <file alias="chevron-left">bootstrap-icons-1.11.3/chevron-left.svg</file>
+        <file alias="chevron-right">bootstrap-icons-1.11.3/chevron-right.svg</file>
         <file alias="caret-left">bootstrap-icons-1.11.3/caret-left.svg</file>
         <file alias="caret-right">bootstrap-icons-1.11.3/caret-right.svg</file>
         <file alias="fast-forward">bootstrap-icons-1.11.3/fast-forward.svg</file>
@@ -15,5 +17,8 @@
     </qresource>
     <qresource prefix="amplitude">
         <file alias="amp1">amplitude-icons/amp1.svg</file>
+    </qresource>
+    <qresource prefix="logo">
+        <file alias="microemg">logo/MicroEMG.svg</file>
     </qresource>
 </RCC>

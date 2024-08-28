@@ -6,12 +6,14 @@ Models for EMG data for EMG data analysis.
 Note: does not use Qt classes for model/view framework. Purpose is to provide an
 interface to pymicroemg data classes for EMG data:
     - EMGData child classes (EMGDataRaw/EMGDataPreprocessed)
+    - EMGAnalysisReconstruct
 """
 
 from __future__ import annotations
 
 from pymicroemg.emg_data_preproc import EMGDataPreproc
 from pymicroemg.emg_data_raw import EMGDataRaw
+from pymicroemg.emg_reconstruct import EMGAnalysisReconstruct
 from pymicroemg.emg_preproc_settings import EMGPreprocSettings
 
 
@@ -46,3 +48,16 @@ class EMGDataPreprocModel:
 
     def __init__(self, emg_data: EMGDataPreproc):
         self.emg_data = emg_data
+
+
+class EMGAnalysisReconstructModel:
+    """
+    Model for EMG reconstruction analysis and data. Used as an interface between the
+    pymicroemg class, EMGAnalysisReconstruct, and the GUI.
+    """
+
+    def __init__(self, reconstruct: EMGAnalysisReconstruct):
+        self.reconstruct = reconstruct
+
+    def find_motor_units(self):
+        self.reconstruct.find_motor_units()

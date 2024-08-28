@@ -105,7 +105,7 @@ class SelectRecordingWidget(QWidget):
         if recording_path:
             recording_label_match = re.search(r"/[^/]*$", recording_path)
             if recording_label_match:
-                recording_label = recording_path[recording_label_match.start() + 1:]
+                recording_label = recording_path[recording_label_match.start() + 1 :]
             else:
                 recording_label = recording_path
         else:  # If no file name (empty path), send empty string for label
@@ -240,8 +240,10 @@ class LoadRecordingSection(QWidget):
             # Message about data
             n_chan = self.emg_model.emg_data.n_chan
             emg_dur = self.emg_model.emg_data.emg_dur
+            fs = self.emg_model.emg_data.fs
             self.widgets["message"].setText(
-                "Recording loaded:\n"
-                + f"Channels: {n_chan}\n"
-                + f"Duration: {int(emg_dur) // 60:02d}:{int(emg_dur) % 60:02d}"
+                "<b>Recording loaded</b><br>"
+                + f"Channels: {n_chan}<br>"
+                + f"Duration: {int(emg_dur) // 60:02d}:{int(emg_dur) % 60:02d}<br>"
+                + f"Sampling frequency: {int(fs):,} Hz"  # formatted with commas
             )

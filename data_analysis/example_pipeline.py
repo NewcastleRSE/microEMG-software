@@ -19,6 +19,7 @@ from pymicroemg.emg_reconstruct_settings import (
     EMGAnalysisMotorUnitJitterSettings,
 )
 
+
 # increase figure resolution (needed for Spyder IDE)
 plt.rcParams["figure.dpi"] = 600
 
@@ -29,7 +30,7 @@ recording_num = 1
 match recording_num:
     case 1:
         trim_start = 0  # start of segment to analyse
-        trim_stop = 30  # end of segment to analyse
+        trim_stop = 60  # end of segment to analyse
         plot_offset_ts = 2000  # spacing for traces in recording time series plot
         plot_offset_mu = 300  # spacing for traces in motor unit recording plot
         bad_chan = []  # indices of bad channels
@@ -76,7 +77,6 @@ emg_data.trim_emg_ts(start_t=trim_start, stop_t=trim_stop)
 # identification step
 
 # Create and specify preprocessing settings using EMGPreprocSettings object
-# TODO: determine filter settings with Stu
 preproc_settings = EMGPreprocSettings()
 preproc_settings.add_butterworth_filter(cutoff_freq=[100, 2000], order=6, filter_type="bandpass")
 preproc_settings.add_remove_mains()
@@ -165,7 +165,7 @@ for i in np.arange(reconstruct.found_motor_units.n_motor_units):
 
 match recording_num:
     case 1:
-        motor_units_for_fibre_localisation = [1]
+        motor_units_for_fibre_localisation = [0, 1]
     case 3:
         motor_units_for_fibre_localisation = [0, 1, 2]
 
@@ -176,15 +176,19 @@ for mu in motor_units_for_fibre_localisation:
 # %% Plot fibre localisations (all fibre potentials)
 
 # All motor units
-fig, ax = reconstruct.found_motor_units.plot_fibre_potential_locations(
+
+# Potentials
+fig, ax = reconstruct.found_motor_units.plot_fibre_locations(
+    "potentials",
     motor_unit_idx=None,
 )
 ax.set_title(f"{recording_id}: fibre localisations (all fibre potentials)")
 
+
 # Individual motor units
 for mu_num in motor_units_for_fibre_localisation:
-    fig, ax = reconstruct.found_motor_units.plot_fibre_potential_locations(
-        motor_unit_idx=mu_num, plot_legend=False
+    fig, ax = reconstruct.found_motor_units.plot_fibre_locations(
+        "potentials", motor_unit_idx=mu_num, plot_legend=False
     )
     ax.set_title(
         f"{recording_id}: motor unit {mu_num + 1}" + " fibre localisations (all fibre potentials)"
@@ -201,13 +205,24 @@ for mu_num in motor_units_for_fibre_localisation:
 
     clustering_results = mu.fibre_clustering_results
 
-# Perform jitter analyses.
+# Estimated fibre locations of all motor units (median only)
+fig, ax = reconstruct.found_motor_units.plot_fibre_locations("fibres", motor_unit_idx=None)
+ax.set_title("Fibre locations of all motor units")
+
+# %% Perform jitter analyses.
 for mu_num in motor_units_for_fibre_localisation:
     # Do jitter analysis
     reconstruct.mu_jitter_analysis(mu_num)
 
     # Plot heat plot of mean consectutive differences (MCDs).
     mu = reconstruct.found_motor_units.motor_units[mu_num]
-    mu.plot_jitter_heat_plot()
-
+    fig, ax = mu.plot_jitter_heat_plot()
+    fig, ax = mu.plot_jitter_totals_heat_plot()
+    fig, ax = mu.plot_jitter_totals_heat_plot(percent=True)
     jitter_results = mu.fibre_jitter_results
+
+# %% Jitter plot of one fibre pair (EMG traces and times)
+
+mu_idx = motor_units_for_fibre_localisation[0]
+mu = reconstruct.found_motor_units.motor_units[mu_idx]
+mu.plot_jitter_fibre_pair_EMG_and_times(fibre1=0, fibre2=1)

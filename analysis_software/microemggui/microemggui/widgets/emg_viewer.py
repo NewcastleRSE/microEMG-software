@@ -454,7 +454,7 @@ class EMGArrowsWidget(QWidget):
         self.plot_widget = plot_widget
 
         # Create button widgets
-        self.widgets: dict[str, Any] = {
+        self.widgets = {
             "previous_fast": WidgetControlButton(self),
             "previous": WidgetControlButton(self),
             "next": WidgetControlButton(self),

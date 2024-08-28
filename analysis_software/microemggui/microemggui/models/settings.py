@@ -1,34 +1,80 @@
 """
-Models for settings for EMG data analysis.
+Models (i.e., interfaces) for settings for EMG data analysis.
 
-Note: does not use Qt classes for model/view framework. Purpose is to provide an
-interface to pymicroemg data classes for settings:
-    - EMGPreprocSettings
+This code does not use Qt classes for the model/view framework.
+Instead, we use custom classes to provide an interface to these pymicroemg data classes
+that store analysis settings:
+    - EMGPreprocSettings (model: EMGPreprocSettingsModel)
+    - EMGAnalysisMotorUnitSettings (model: EMGAnalysisMotorUnitSettingsModel)
+    - EMGAnalysisMotorUnitClusterSettings (model: EMGAnalysisMotorUnitClusterSettingsModel)
+
+The remaining settings classes do not contain any settings that are modified in the GUI.
+
+EMGSettingsModel also stores all settings as attributes (without the interface for each
+settings - the interface is created as needed to interact with the settings).
+
+This approach helps separate the GUI logic from the underlying analysis code.
 """
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from pymicroemg.emg_preproc_settings import EMGPreprocSettings
+    from pymicroemg.emg_reconstruct_settings import (
+        EMGAnalysisMotorUnitSettings,
+        EMGAnalysisReconstructSettings,
+        EMGAnalysisMotorUnitClusterSettings,
+        EMGAnalysisMotorUnitJitterSettings,
+    )
 
 
 class EMGSettingsModel:
-    # Model for all EMG settings. Each settings object is stored as a separate
-    # attribute. Note that the pymicroemg settings class (not the microemggui model
-    # classes) are used for each attribute - the corresponding models will be created
-    # by the GUI as needed.
-    # TODO: consider passing in object that contains all settings instead of individual
-    # groups of settings.
+    """
+    Model for all EMG settings. Each settings object is stored as a separate
+    attribute.
 
-    def __init__(self, preprocess_settings: EMGPreprocSettings):
+    Note that the pymicroemg settings class (not the microemggui model
+    classes) are used for each attribute - the corresponding models will be created
+    by the GUI as needed.
+
+    """
+
+    def __init__(
+        self,
+        preprocess_settings: EMGPreprocSettings,
+        mu_settings: EMGAnalysisMotorUnitSettings,
+        recon_settings: EMGAnalysisReconstructSettings,
+        mu_cluster_settings: EMGAnalysisMotorUnitClusterSettings,
+        mu_jitter_settings: EMGAnalysisMotorUnitJitterSettings,
+    ):
         self.preprocess_settings = preprocess_settings
+        self.mu_settings = mu_settings
+        self.recon_settings = recon_settings
+        self.mu_cluster_settings = mu_cluster_settings
+        self.mu_jitter_settings = mu_jitter_settings
 
     def get_formatted_settings_text(self) -> str:
-        # Formatted settings text with breaks and bold section headers, for display in
-        # GUI
+        """
+        Formatted settings text with breaks and bold section headers, for display in
+        GUI.
 
-        # Preprocessing
+        Only settings that can be modified by the user are shown.
+        """
+
+        preprocess_str = self.get_formatted_preprocess_settings_text()
+        mu_str = self.get_formatted_mu_settings_text()
+        localise_str = self.get_formatted_localise_settings_text()
+
+        settings_text = f"{preprocess_str}<br><br>{mu_str}<br><br>{localise_str}"
+        return settings_text
+
+    def get_formatted_preprocess_settings_text(self) -> str:
+        """
+        Preprocessing settings text for display in GUI.
+
+        """
+
         remove_mains_str = f"Remove mains: {self.preprocess_settings.remove_mains}"
         filter_str = f"Filter: {self.preprocess_settings.butterworth_filter}"
         if self.preprocess_settings.butterworth_filter:
@@ -44,38 +90,93 @@ class EMGSettingsModel:
                 filter_str + f" ({filter_type} Butterworth filter, {cutoff_str}, order: {order})"
             )
 
-        preprocess_str = f"<b>Preprocessing settings</b><br>{remove_mains_str}<br>{filter_str}"
+        preprocess_str = f"<b>Preprocessing</b><br>{remove_mains_str}<br>{filter_str}"
 
-        # TODO: add remaining settings
-        settings_text = preprocess_str
-        return settings_text
+        return preprocess_str
+
+    def get_formatted_mu_settings_text(self) -> str:
+        """
+        Motor unit identification settings text for display in GUI.
+
+        """
+
+        # Create model
+        mu_settings_model = EMGAnalysisMotorUnitSettingsModel(self.mu_settings)
+
+        # Get text versions of each setting
+        sensitivity_text = mu_settings_model.get_setting_current_text("sensitivity")
+        similarity_text = mu_settings_model.get_setting_current_text("similarity")
+
+        # Create strings
+        sensitivity_str = (
+            "Detection sensitivity: "
+            + sensitivity_text
+            + f" ({self.mu_settings.tk_filt_thres_spike})"
+        )
+        similarity_str = (
+            "Motor unit similarity: "
+            + similarity_text
+            + f" ({self.mu_settings.tk_filt_thres_PsC})"
+        )
+        mu_str = f"<b>Finding motor units</b><br>{sensitivity_str}<br>{similarity_str}"
+
+        return mu_str
+
+    def get_formatted_localise_settings_text(self) -> str:
+        """
+        Localise settings ( = cluster and reconstruction settings) text for display in
+        GUI.
+
+        Only cluster settings are modifiable in the GUI at present, but any
+        reconstruction settings should also be added here if added to the GUI.
+        """
+
+        # Time weighting/time_scale setting
+        time_weighting_str = f"Time weighting: {self.mu_cluster_settings.time_scale}"
+
+        # All settings
+        localise_str = f"<b>Localising fibres</b><br>{time_weighting_str}"
+
+        return localise_str
+
+
+# --- Preprocessing ---
 
 
 class EMGPreprocSettingsModel:
-    # Model for the EMG preprocessing settings
+    """
+    Model for the EMG preprocessing settings.
+    """
 
     def __init__(self, settings: EMGPreprocSettings):
         self.settings = settings
 
     def mains_checkbox_toggled(self, checked):
-        # Slot for mains removal checkbox
+        """
+        Slot for mains removal checkbox
 
-        # Uses add_remove_mains and remove_remove_mains method so associated parameters
-        # are also updated.
-        # The associated parameters are fixed for the GUI, so do not need to be
-        # separately modified; add_remove_mains method sets the default parameters.
+        Uses add_remove_mains and remove_remove_mains method so associated parameters
+        are also updated.
+        The associated parameters are fixed for the GUI, so do not need to be
+        separately modified; add_remove_mains method sets the default parameters.
+        """
+
         if checked:
             self.settings.add_remove_mains()
         else:
             self.settings.remove_remove_mains()
 
     def filter_checkbox_toggled(self, checked: bool):
-        # Slot for filter checkbox
+        """
+        Slot for filter checkbox.
+        """
 
         self.settings.butterworth_filter = checked
 
     def filter_type_text_changed(self, filter_type: str):
-        # Slot for filter type combobox
+        """
+        Slot for filter type combobox.
+        """
 
         # Set filter type
         self.settings.butterworth_filter_settings["filter_type"] = filter_type
@@ -86,13 +187,182 @@ class EMGPreprocSettingsModel:
             self.settings.butterworth_filter_settings["cutoff2"] = None
 
     def filter_order_changed(self, order: int):
-        # Slot for filter order spinbox
+        """
+        Slot for filter order spinbox.
+        """
 
         self.settings.butterworth_filter_settings["order"] = order
 
     def filter_cutoff_changed(self, cutoff_freq, cutoff, is_valid_input):
-        # Slot for filter cutoff line edit
-        # Value only changed if input is valid
+        """
+        Slot for filter cutoff line edit.
+        Value only changed if input is valid.
+        """
 
         if is_valid_input:
             self.settings.butterworth_filter_settings[cutoff] = float(cutoff_freq)
+
+
+# --- Motor unit identification settings ---
+
+
+class EMGAnalysisMotorUnitSettingsModel:
+    """
+    Model for the motor unit identification settings.
+
+    Includes slot for changing detection sensitivity (tk_filt_thres_spike) and motor
+    unit similarity (tk_filt_thres_PsC).
+
+    Also specifies valid settings text options for the GUI and the mapping to float
+    values.
+    """
+
+    def __init__(self, settings: EMGAnalysisMotorUnitSettings):
+        self.settings = settings
+
+        # GUI options for settings values with mapping of text (e.g., "low") to value
+        # and vice versa
+        # Keys must be strings
+        # TODO: review options; note uneven jumps
+        sensitivity_text2values = {
+            "very low (0.025)": 0.025,
+            "low (0.05)": 0.05,
+            "medium (0.1, default)": 0.1,
+            "high (0.15)": 0.15,
+            "very high (0.25)": 0.25,
+        }
+        sensitivity_values2text = {v: k for k, v in sensitivity_text2values.items()}
+
+        similarity_text2values = {
+            "very low (0.025)": 0.025,
+            "low (0.05)": 0.05,
+            "medium (0.1, default)": 0.1,
+            "high (0.15)": 0.15,
+            "very high (0.25)": 0.25,
+        }
+        similarity_values2text = {v: k for k, v in similarity_text2values.items()}
+
+        # Store mapping by GUI setting name so easier to request each setting's mapping
+        # Also include attribute name ("alias") for each setting
+        self.mapping: dict[str, dict[str, Any]] = {
+            "sensitivity": {
+                "alias": "tk_filt_thres_spike",
+                "text2values": sensitivity_text2values,
+                "values2text": sensitivity_values2text,
+            },
+            "similarity": {
+                "alias": "tk_filt_thres_PsC",
+                "text2values": similarity_text2values,
+                "values2text": similarity_values2text,
+            },
+        }
+
+        # Check that current settings are valid GUI options
+        settings_names = ["sensitivity", "similarity"]
+        for name in settings_names:
+            value = self.get_setting_current_value(name)
+            _ = self.map_values2text(name, value)  # will raise error if no matching GUI option
+
+    def map_text2values(self, setting: str, text: str) -> float:
+        """
+        Get setting value that corresponds to GUI text.
+        """
+
+        value = self.mapping[setting]["text2values"].get(text)
+        if not value:
+            raise ValueError(f"{text} is not a GUI option for {setting}")
+        return value
+
+    def map_values2text(self, setting: str, value: float) -> str:
+        """
+        Get GUI text that corresponds to settings value.
+        """
+
+        text = self.mapping[setting]["values2text"].get(value)
+        if not text:
+            raise ValueError(f"{value} does not have a corresponding GUI option for {setting}")
+        return text
+
+    def get_setting_current_value(self, setting: str) -> float:
+        """
+        Get the current value for
+        - detection sensitivity ("sensitivity") (stored as tk_filt_thres_spike)
+        - motor unit similarity ("similarity") (stored as tk_filt_thres_PsC)
+
+        """
+
+        value = getattr(self.settings, self.mapping[setting]["alias"])
+        if not value:
+            raise ValueError("Setting is not part of motor unit settings GUI options.")
+
+        return value
+
+    def get_setting_current_text(self, setting: str) -> str:
+        """
+        Get the text that corresponds to a setting's current value.
+        """
+
+        value = getattr(self.settings, self.mapping[setting]["alias"])
+        if not value:
+            raise ValueError("Setting is not part of motor unit settings GUI options.")
+        text = self.map_values2text(setting, value)
+
+        return text
+
+    def change_setting(self, setting: str, combobox_text: str):
+        """
+        Slot for detection sensitivity and motor unit similarity comboboxes.
+        "sensitivity" is the term the GUI uses for tk_filt_thres_spike.
+        "similarity" is the term the GUI uses for tk_filt_thres_PsC.
+        Use mapping to convert the combobox text to the setting's corresponding value.
+        """
+
+        value = self.map_text2values(setting, combobox_text)
+        setattr(self.settings, self.mapping[setting]["alias"], value)
+        print(f"{setting} changed:")
+        print(self.get_setting_current_text(setting))
+        print(self.get_setting_current_value(setting))
+
+
+# --- Fibre clustering settings ---
+
+
+class EMGAnalysisMotorUnitClusterSettingsModel:
+    """
+    Model for motor unit clustering settings (clusters fibre potentials in a motor unit
+    to identify different muscle fibres).
+
+    Only the time_scale (= time weighting) setting can be modified by the GUI.
+
+    Unlike EMGAnalysisMotorUnitSettingsModel, all settings values are converted directly
+    to combobox text and vice versa
+
+    """
+
+    def __init__(self, settings: EMGAnalysisMotorUnitClusterSettings):
+        # Clustering settings
+        self.settings = settings
+
+        # Options for settings that have GUI comboboxes
+        # Must include default value for each setting
+        self.options = {
+            # all float to avoid float/int mismatches with string conversions
+            "time_scale": [0.0, 1.0, 2.5]
+        }
+
+        # Check that current value is a valid option
+        self.settings.time_scale = float(self.settings.time_scale)  # ensure float
+        if self.settings.time_scale not in self.options["time_scale"]:
+            raise ValueError(
+                f"time_scale value of {self.settings.time_scale} "
+                + "does not have a matching GUI option."
+            )
+
+    def change_setting(self, setting: str, combobox_text: str):
+        """
+        Slot for changing specified setting to float version of the combobox text.
+        Currently only used for time_scale ( = time weighting in the GUI) setting.
+
+        """
+        value = float(combobox_text)
+        setattr(self.settings, setting, value)

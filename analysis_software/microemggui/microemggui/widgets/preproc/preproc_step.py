@@ -13,7 +13,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QSizePolicy,
     QProgressDialog,
-    QDialog,
     QTabBar,
 )
 from PySide6.QtCore import Qt, Signal
@@ -73,8 +72,9 @@ class NextButton(LargePushButton):
         self.hide()  # hide initially
 
     def show_button(self):
-        # Slot for revealing next button after preprocessing
+        # Slot for revealing and enabling next button after preprocessing
         self.show()
+        self.setEnabled(True)
 
 
 class MainButtons(QWidget):
@@ -168,13 +168,6 @@ class EMGViewerTabbedWidget(QWidget):
         self.widgets["tabs"].setCurrentIndex(tab_idx)  # change tab
 
 
-class PreprocProgressDialog(QDialog):
-    def __init__(self, settings_model: EMGPreprocSettingsModel, parent=None):
-        super().__init__(parent)
-
-        self.setWindowTitle("progress bar")
-
-
 # --- Preprocessing widget ----
 
 
@@ -217,15 +210,14 @@ class PreprocWidget(QWidget):
         layout.addWidget(self.widgets["buttons"], 2, 0)
         layout.addWidget(self.widgets["tabbedviewer"], 0, 1, 3, 1)
         layout.setContentsMargins(20, 20, 20, 20)
-        self.layout = layout
-        self.setLayout(self.layout)
+        self.setLayout(layout)
 
         # Connections
 
         # For applying preprocessing
         self.widgets["buttons"].widgets["apply"].clicked.connect(self.apply_preproc)
 
-        # For showing next button
+        # For showing and enabling next button
         self.widgets["buttons"].widgets["apply"].clicked.connect(
             self.widgets["buttons"].widgets["next"].show_button
         )
@@ -233,6 +225,11 @@ class PreprocWidget(QWidget):
         # For enabling/disabling preprocessing based on settings validity
         self.widgets["settings"].settings_valid.connect(
             self.widgets["buttons"].widgets["apply"].change_enabled
+        )
+
+        # Disable next button if settings are changed
+        self.widgets["settings"].settings_valid.connect(
+            lambda settings_valid: self.widgets["buttons"].widgets["next"].setEnabled(False)
         )
 
         # Check if initial settings are valid
@@ -246,8 +243,6 @@ class PreprocWidget(QWidget):
         # Apply preprocessing settings to raw data to generate preprocessed data.
         # Add preprocessed data to viewer.
         # Will overwrite any previously computed preprocessed data.
-        # TODO: figure out how to nicely cancel preprocessing using dialog window
-        # TODO: create variable/config for logger name
 
         # Create handler for processing logger; create connections to log records
         self.handler = QtHandler(self.update_progress_bar_from_log)
@@ -255,8 +250,10 @@ class PreprocWidget(QWidget):
 
         # Create progress bar
         n_chan = self.emg_model["raw"].emg_data.n_chan
-        print(f"{n_chan} channels")
         self.progress = QProgressDialog("Preprocessing", None, 0, n_chan, parent=self)
+        # Ensure that progress dialog closes if GUI window is minimised
+        # GUI window will pop up when process finishes and the progress bar closes
+        self.progress.setAttribute(Qt.WA_DeleteOnClose, True)
         self.progress.setWindowModality(Qt.WindowModal)
         self.progress.setMinimumDuration(0)
 
@@ -266,9 +263,7 @@ class PreprocWidget(QWidget):
         )
 
         # Set progress bar to max value to close dialog window
-        print(f"progress bar value at end of preprocessing: {self.progress.value()}")
         self.progress.setValue(n_chan)
-        print(f"progress bar value after setting to {n_chan} (n_chan): {self.progress.value()}")
         self.progress.hide()  # Forces to bar to disappear regardless of value
 
         # Add preprocessed data to viewer
@@ -299,8 +294,4 @@ class PreprocWidget(QWidget):
         # Note i will never reach the max value of the progress bar - this allows the
         # bar to be reset for different analysis steps
         elif record.record_context.loop_i:
-            print(record.record_context.analysis_step)
-            print(f"loop i: {record.record_context.loop_i}")
-            print(f"progress bar original value: {self.progress.value()}")
             self.progress.setValue(record.record_context.loop_i)
-            print(f"progress bar updated value: {self.progress.value()}")

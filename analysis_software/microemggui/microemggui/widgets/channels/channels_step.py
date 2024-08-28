@@ -10,7 +10,6 @@ from PySide6.QtWidgets import (
     QWidget,
     QCheckBox,
     QGridLayout,
-    QHBoxLayout,
     QVBoxLayout,
     QSizePolicy,
 )
@@ -20,7 +19,6 @@ from microemggui.widgets.preproc.preproc_step import EMGViewerTabbedWidget
 from microemggui.models.emg import EMGDataRawModel, EMGDataPreprocModel
 from microemggui.widgets.base import (
     CheckBoxChannel,
-    CheckBoxChannelLabel,
     HighlightedLabel,
     SectionTitle,
     LargePushButton,
@@ -29,32 +27,12 @@ from microemggui.widgets.base import (
 # --- Component widgets ---
 
 
-class ColourfulChannelCheckBox(QWidget):
-    # Option for adding checkbox text that is not coloured to match emg viewer
-    # TODO: remove if not used
-    def __init__(self, chan_name: str, chan_clr: str, parent=None):
-        super().__init__(parent)
-
-        self.checkbox = CheckBoxChannel("channel", parent=self)
-        label = CheckBoxChannelLabel(chan_name, parent=self)
-        label.setStyleSheet("color: " + chan_clr)
-
-        layout = QHBoxLayout()
-        layout.addWidget(self.checkbox)
-        layout.addWidget(label)
-        layout.setContentsMargins(0, 0, 0, 0)
-        self.setLayout(layout)
-
-    def setChecked(self, is_checked: bool):
-        self.checkbox.setChecked(is_checked)
-
-
 class ChannelsCheckBoxes(QWidget):
     # Checkboxes for each channel
 
-    # Signal to emit indicating if each channel is checked
+    # Signal to emit indicating if each channel is checked when it is clicked
     # Sends bool for check state (bool) and channel index, counting from 0 (int)
-    chan_toggled = Signal(bool, int)
+    chan_clicked = Signal(bool, int)
 
     def __init__(self, chan: EMGChannels, chan_clrs: list[str], max_chan: int = 32, parent=None):
         # max_chan = maximum number of channels to put in one column
@@ -94,15 +72,34 @@ class ChannelsCheckBoxes(QWidget):
 
         # Connections
 
-        # Send index of channel with check state when channel is toggled
+        # Send index of channel with check state when channel is clicked
+        # Use clicked signal so only sent when clicked by user (not when changed
+        # programmatically) - avoids sending many signals when toggled by select all
+        # connections
         for idx, w in self.widgets["checkboxes"].items():
-            w.toggled.connect(lambda checked, idx=idx: self.chan_toggled.emit(checked, idx))
+            w.clicked.connect(lambda checked=False, idx=idx: self.send_chan_clicked(idx))
+
+    def send_chan_clicked(self, idx: int):
+        # Slot for when channel checkbox is clicked
+        # Ensures check state is determined and passed on correctly (had issues with
+        # sending check state of clicked signal)
+
+        # Check state
+        w = self.widgets["checkboxes"][idx]
+        checked = w.isChecked()
+
+        # Emit check state and index
+        self.chan_clicked.emit(checked, idx)
 
 
 class SelectChannels(QWidget):
     # Widget for selecting channels to include in the analysis
     # Channel checkboxes with related widgets (select all/none and label for channels
     # that will be excluded from the analysis)
+
+    # Signals for whether all are checked or all are unchecked
+    # Use to send single signal for changes in multiple channel check states
+    all_chan_checked = Signal(bool)
 
     def __init__(self, chan: EMGChannels, chan_clrs: list[str], parent=None):
         # chan_clrs should be the same length as the number of channels
@@ -142,10 +139,11 @@ class SelectChannels(QWidget):
 
     def check_or_uncheck_all(self, checked: bool):
         # Check or uncheck all channel checkboxes
-        # Slot for self.widgets["all"] checkbox (select all/none)
+        # Slot for self.widgets["all"] checkbox (select all/none) clicked
 
         for w in self.widgets["checkboxes"].widgets["checkboxes"].values():
             w.setChecked(checked)
+        self.all_chan_checked.emit(checked)
 
 
 class NextButton(LargePushButton):
@@ -170,9 +168,9 @@ class NextButton(LargePushButton):
 class ChannelsWidget(QWidget):
     # Widgets for channels to include in the analysis
 
-    # Signal for sending updated indices of bad channels
-    # TODO: remove if not needed
-    bad_chan_updated = Signal(list[int])
+    # Signal for sending updated indices of bad channels (list[int]) and whether
+    # minimum number of channels have been selected (bool)
+    bad_chan_updated = Signal(list, bool)
 
     def __init__(
         self,
@@ -229,10 +227,14 @@ class ChannelsWidget(QWidget):
 
         # Connections
 
-        # For updating chan_checked based on checkbox state
-        self.widgets["channels"].widgets["checkboxes"].chan_toggled.connect(
+        # For updating chan_checked based on individual checkbox state
+        self.widgets["channels"].widgets["checkboxes"].chan_clicked.connect(
             self.update_chan_checked
         )
+
+        # For updating chan_checked based on select all checkbox state
+        # (prevents sending individual signal for each checkbox)
+        self.widgets["channels"].all_chan_checked.connect(self.update_all_chan_checked)
 
     def selected_min_channels(self) -> bool:
         # Compute whether min number of channels are selected
@@ -241,7 +243,7 @@ class ChannelsWidget(QWidget):
         return min_selected
 
     def update_chan_checked(self, checked: bool, idx: int):
-        # Update check status of a channel; slot for chan_toggled
+        # Update check status of an individual channel; slot for chan_clicked
 
         self.chan_checked[idx] = checked
 
@@ -251,15 +253,29 @@ class ChannelsWidget(QWidget):
         # Uncheck select all checkbox if any bad channels
         self.update_select_all_checkbox()
 
+    def update_all_chan_checked(self, checked: bool):
+        # Update check status of all channels; slot for all_chan_checked
+
+        self.chan_checked = [checked for i in self.chan_checked]
+
+        # Update bad channels
+        self.update_bad_chan_idx()
+
     def update_bad_chan_idx(self):
         # Updates indices of channels that are unchecked (i.e., "bad" channels)
         # Also triggers downstream changes:
         #   1) Updates corresponding message for channels that will be excluded
         #   2) Enables/disables Next button based on whether enough channels selected
+        #   3) Emits list of bad channels as signal (and whether min number of channels
+        #      has been selected)
 
         self.bad_chan_idx = [i for i in range(len(self.chan_checked)) if not self.chan_checked[i]]
         self.update_exclude_message()
-        self.widgets["next"].change_enabled(self.selected_min_channels())
+        min_chan_selected = self.selected_min_channels()
+        self.widgets["next"].change_enabled(min_chan_selected)
+
+        # Emit updated bad channels (for main GUI)
+        self.bad_chan_updated.emit(self.bad_chan_idx, min_chan_selected)
 
     def update_select_all_checkbox(self):
         # Unchecks select all checkbox if any channels unchecked
@@ -298,7 +314,3 @@ class ChannelsWidget(QWidget):
 
         # Set text
         self.widgets["exclude"].setText(text)
-
-
-# TODO:
-# add list of bad channels to preprocessed data (probably in main window)

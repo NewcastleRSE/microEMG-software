@@ -16,6 +16,9 @@ from PySide6.QtWidgets import (
     QSizePolicy,
 )
 
+from matplotlib.backends.backend_qtagg import NavigationToolbar2QT
+
+
 # --- Settings input ---
 
 
@@ -92,6 +95,13 @@ class InputWarningLabel(QLabel):
         self.setWordWrap(True)
 
 
+class InputExplanationLabel(QLabel):
+    # Explanation text for settings input
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setWordWrap(True)
+
+
 class SubsectionTitle(QLabel):
     # Label for subsection of a larger widget (e.g., settings)
     def __init__(self, *args, **kwargs):
@@ -110,16 +120,26 @@ class AnalysisToolbarLabel(QLabel):
         super().__init__(*args, **kwargs)
 
 
-class CheckBoxChannelLabel(QLabel):
-    # Label for channel checkbox
-    # (separate so can set colour)
+class HighlightedLabel(QLabel):
+    # Label highlighted in a different colour to make more prominent
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
 
-class HighlightedLabel(QLabel):
-    # Label highlighted in a different colour to make more prominent
+class ResultsLabel(QLabel):
+    """
+    Label for displaying results (e.g., summary statistics)
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class TitleInputLabel(QLabel):
+    """
+    Label for an input field that also serves as a title.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -153,6 +173,13 @@ class WidgetControlButton(QToolButton):
         super().__init__(*args, **kwargs)
 
 
+class MotorUnitButton(QPushButton):
+    # Button for motor units in selectmu widget
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
 # --- Spacers ---
 
 
@@ -178,3 +205,12 @@ class ExpandingHSpacer(QSpacerItem):
     # Used to keep other widgets a fixed size.
     def __init__(self):
         super().__init__(0, 0, QSizePolicy.Expanding, QSizePolicy.Fixed)
+
+
+# --- Matplotlib widgets ---
+
+
+class MatplotlibToolbar(NavigationToolbar2QT):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # self.setStyleSheet("background-color:white;")
