@@ -205,14 +205,8 @@ class MicroEMGMain(QMainWindow):
 
                     # Reset motor unit settings (modified in this widget)
                     print("Resetting motor unit settings")
-                    print(
-                        f"current spike thresh: {self.settings_model.mu_settings.tk_filt_thres_spike}"
-                    )
                     self.settings_model.mu_settings = deepcopy(
                         self.settings_model_original.mu_settings
-                    )
-                    print(
-                        f"new spike thresh: {self.settings_model.mu_settings.tk_filt_thres_spike}"
                     )
 
                 if w_name == "selectmu":
@@ -226,13 +220,9 @@ class MicroEMGMain(QMainWindow):
 
                     # Reset motor unit clustering settings (modified in this widget)
                     print("Removing cluster settings")
-                    print(
-                        f"current time weight: {self.settings_model.mu_cluster_settings.time_scale}"
-                    )
                     self.settings_model.mu_cluster_settings = deepcopy(
                         self.settings_model_original.mu_cluster_settings
                     )
-                    print(f"new time weight: {self.settings_model.mu_cluster_settings.time_scale}")
 
                 if w_name == "jitter":
                     if self.reconstruct_model:
