@@ -2643,6 +2643,7 @@ class EMGMotorUnit:
 
         # Axes (x-axis changes will apply to all plots)
         axs[ax_times].set_ylim([1, max(mup_number)])
+        axs[ax_times].set_yticks([])  # no ticks
         axs[ax_times].invert_yaxis()  # first MUP at the top of the plot
         axs[ax_times].set_xlim([np.nanmin(mup_t), np.nanmax(mup_t)])  # tight x-axis limits
 
@@ -2652,13 +2653,7 @@ class EMGMotorUnit:
             fontsize=title_size,
             fontweight="bold",
         )
-        axs[ax_times].set_ylabel("motor unit potential", fontsize=axis_label_size)
-        if align_times_to_fibre1:
-            axs[ax_times].set_xlabel(
-                f"time (ms) relative to time of fibre {fibre_labels[0]}", fontsize=axis_label_size
-            )
-        else:
-            axs[ax_times].set_xlabel("time (ms) in motor unit potential", fontsize=axis_label_size)
+        axs[ax_times].set_xlabel("time (ms)", fontsize=axis_label_size)
 
         return fig, axs
 
