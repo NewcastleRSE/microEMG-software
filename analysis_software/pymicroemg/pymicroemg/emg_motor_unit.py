@@ -1522,7 +1522,7 @@ class EMGMotorUnit:
 
                 # Record which fibre potentials were used to look into later, if desired.
                 # TODO: check GS changed to index relative to fibre_potential_times array
-                # TODO: need to remove outliers
+                # Note that these fibres include outliers
                 fibre1_pots_used_idx[mup_num] = fib_pot_pos1  # fibre1_potential_to_use
                 fibre2_pots_used_idx[mup_num] = fib_pot_pos2  # fibre2_potential_to_use
 
