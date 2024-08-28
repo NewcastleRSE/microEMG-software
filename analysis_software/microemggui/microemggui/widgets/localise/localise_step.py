@@ -7,7 +7,7 @@ Created on Tue Aug 13 11:41:14 2024
 """
 from typing import Any
 
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QGridLayout
+from PySide6.QtWidgets import QWidget, QHBoxLayout, QGridLayout, QProgressDialog, QApplication
 from PySide6.QtCore import Qt, Signal
 
 from microemggui.models.emg import EMGAnalysisReconstructModel
@@ -185,6 +185,15 @@ class LocaliseWidget(QWidget):
         potential timing is also considered when clustering the fibre potentials.
         """
 
+        # Create progress bar for showing localisation progress
+        n_mu = len(self.motor_units_to_analyse)
+        self.progress = QProgressDialog("Localising fibres", None, 0, n_mu, parent=self)
+        # Ensure that progress dialog closes if GUI window is minimised
+        # GUI window will pop up when process finishes and the progress bar closes
+        self.progress.setAttribute(Qt.WA_DeleteOnClose, True)
+        self.progress.setWindowModality(Qt.WindowModal)
+        self.progress.setMinimumDuration(0)
+
         # Update cluster settings in fibre reconstruction class
         self.reconstruct_model.reconstruct.mu_cluster_settings = (
             self.cluster_settings_model.settings
@@ -193,8 +202,19 @@ class LocaliseWidget(QWidget):
         # Store number of fibres found
         self.n_fibres: list[int] = []
 
+        # Counter for progress bar
+        mu_count = 0
+
         # Run analysis for each motor unit
         for mu_idx in self.motor_units_to_analyse:
+            # Update progress bar label and count
+            self.progress.setLabelText(
+                f"Localising fibres\nMotor unit {mu_idx + 1} ({mu_count+1}/{n_mu})"
+            )
+            self.progress.setValue(mu_count)
+            QApplication.processEvents()  # Force progress bar to update before proceeding
+            mu_count += 1  # Update bar counter value
+
             # Motor unit
             mu = self.reconstruct_model.reconstruct.found_motor_units.motor_units[mu_idx]
 
@@ -215,7 +235,9 @@ class LocaliseWidget(QWidget):
             # Number of fibres found in this motor unit
             self.n_fibres.append(mu.fibre_clustering_results["n_fibre_clusters"])
 
-        print(f"{self.n_fibres} fibres")
+        # Ensure progress bar closed
+        self.progress.setValue(n_mu)
+        self.progress.hide()  # Forces to bar to disappear regardless of value
 
         # Update results
         self.update_results()
