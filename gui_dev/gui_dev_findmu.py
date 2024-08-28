@@ -39,7 +39,7 @@ class MainWindow(QMainWindow):
         emg_dir, _ = cfg.get_control_recording_path_and_id(recording_num)
         emg_files = EMGFiles(emg_dir)
         emg_data = emg_files.load_emg_data()
-        emg_data.trim_emg_ts(0, 30)
+        emg_data.trim_emg_ts(0, 60)
 
         settings = EMGPreprocSettings()
         settings.add_remove_mains()  # Remain mains noise

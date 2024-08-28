@@ -6,7 +6,7 @@ Widget for finding motor units
 
 from typing import Any
 
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QGridLayout
+from PySide6.QtWidgets import QWidget, QHBoxLayout, QGridLayout, QProgressDialog
 from PySide6.QtCore import Qt, Signal
 
 from microemggui.models.emg import EMGAnalysisReconstructModel
@@ -149,12 +149,29 @@ class FindMUWidget(QWidget):
         Find motor units using specified settings and update widget with results.
         """
 
+        # Create dialog box to indicate step may be slow
+        # Note: ideal set up would be to set min and max to 0 to create busy indicator,
+        # but animation only works if use multithreading (had issues implementing for
+        # finding motor units, so using this simpler implementation of empty bar)
+        self.progress = QProgressDialog("Finding motor units...", None, 0, 100, parent=self)
+        # Ensure that progress dialog closes if GUI window is minimised
+        # GUI window will pop up when process finishes and the progress bar closes
+        self.progress.setAttribute(Qt.WA_DeleteOnClose, True)
+        self.progress.setWindowModality(Qt.WindowModal)
+        self.progress.setMinimumDuration(0)
+
+        # Show progress bar
+        self.progress.show()
+
         # Update settings
         self.reconstruct_model.reconstruct.mu_settings = self.mu_settings_model.settings
-        print(self.reconstruct_model.reconstruct.mu_settings)
 
         # Find motor units
         self.reconstruct_model.find_motor_units()
+
+        # Close dialog window when analysis is finished
+        self.progress.setValue(100)
+        self.progress.cancel()
 
         # Update results plot
         self.widgets["results"].update_reconstruct(self.reconstruct_model)
