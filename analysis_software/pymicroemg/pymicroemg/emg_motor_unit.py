@@ -1521,10 +1521,9 @@ class EMGMotorUnit:
                 )
 
                 # Record which fibre potentials were used to look into later, if desired.
-                # TODO: check GS changed to index relative to fibre_potential_times array
                 # Note that these fibres include outliers
-                fibre1_pots_used_idx[mup_num] = fib_pot_pos1  # fibre1_potential_to_use
-                fibre2_pots_used_idx[mup_num] = fib_pot_pos2  # fibre2_potential_to_use
+                fibre1_pots_used_idx[mup_num] = fib_pot_pos1
+                fibre2_pots_used_idx[mup_num] = fib_pot_pos2
 
         # Remove outliers in time intervals.
         if self.mu_jitter_settings.remove_outliers:
@@ -1683,7 +1682,6 @@ class EMGMotorUnit:
     def get_fibre_jitter_dict(self) -> dict:
         """
         Returns dictionary of fibre jitter results so that it can be saved.
-        TODO: update to include additional results
 
         Parameters
         ----------
@@ -2525,7 +2523,6 @@ class EMGMotorUnit:
         if np.isnan(mcd):
             return None, None
         else:  # convert to microseconds
-            # TODO: ask RH why need to add 0.5
             mcd = int((mcd / self.fs) * 1e6 + 0.5)
 
         # Boolean array of which MUPs were analysed and the indices (in
@@ -2673,8 +2670,6 @@ class EMGMotorUnit:
 
         Also removes downstream analysis (fibre clustering and jitter).
 
-        TODO: RH to confirm that this method resets attributes to original state.
-
         Returns
         -------
         None.
@@ -2706,8 +2701,6 @@ class EMGMotorUnit:
 
         Also removes downstream analysis (fibre jitter).
 
-        TODO: RH to confirm that this method resets attributes to original state.
-
         Returns
         -------
         None.
@@ -2728,8 +2721,6 @@ class EMGMotorUnit:
         """
         Deletes fibre jitter results (added by jitter_analysis method) and
         marks that fibre jitter analysis has not been performed.
-
-        TODO: RH to confirm that this method resets attributes to original state.
 
         Returns
         -------

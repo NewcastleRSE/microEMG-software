@@ -1066,7 +1066,6 @@ class EMGAnalysisReconstruct:
         fibre_potential_times = np.array([])
 
         # Fibre potential peak channels
-        # TODO: check that GS has extracted the correct info
         fibre_potential_peak_chan = np.array([])
 
         max_signal_id = all_spikes.shape[0] - self.recon_settings.mavg_length
@@ -1162,11 +1161,6 @@ class EMGAnalysisReconstruct:
                 fibre_potential_times = np.append(fibre_potential_times, time_peak)
 
                 # Add fibre peak channel
-                # TODO: check GS implementation and determine whether to add check to
-                # avoid including bad channels (should not be peaks since set to 0)
-                # if peak_electrode not in included_electrodes:
-                #     peak_idx = np.argmin(np.abs(peak_electrode - included_electrodes))
-                #     peak_electrode = included_electrodes(peak_idx)
                 fibre_potential_peak_chan = np.append(fibre_potential_peak_chan, peak_electrode)
 
         # End of signal_id loop.
@@ -1543,8 +1537,6 @@ class EMGAnalysisReconstruct:
 
         Also removes downstream analysis (fibre clustering and jitter).
 
-        TODO: RH to confirm that this method resets attributes to original state.
-
         Returns
         -------
         None.
@@ -1561,8 +1553,6 @@ class EMGAnalysisReconstruct:
 
         Also removes downstream analysis (fibre jitter).
 
-        TODO: RH to confirm that this method resets attributes to original state.
-
         Returns
         -------
         None.
@@ -1576,8 +1566,6 @@ class EMGAnalysisReconstruct:
     def delete_all_mu_fibre_jitter(self):
         """
         Deletes fibre jitter results in each motor unit.
-
-        TODO: RH to confirm that this method resets attributes to original state.
 
         Returns
         -------
