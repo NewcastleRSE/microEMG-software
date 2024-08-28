@@ -980,7 +980,8 @@ class EMGMotorUnit:
         lw : float, optional
             Line weight. The default is 0.
         threeD : bool, optional
-            If points are plotted on a 3D axis or not. The default is False.
+            If points are plotted on a 3D axis or not (z axis = time in ms). The default
+            is False.
 
         Returns
         -------
@@ -994,12 +995,19 @@ class EMGMotorUnit:
 
         # Get z coords to plot if a 3D plot.
         if threeD:
+            N_MS_PER_SEC = 1000
+            # Determine shift needed to plot MUP onset at t = 0
+            n_samples = self.all_spikes.shape[2]
+            n_ms = ((n_samples - 1) / 2) / self.fs * N_MS_PER_SEC
+
+            # Fibre potential times
             z = (
                 self.fibre_potential_times[
                     (self.fibre_clustering_results["fibre_clusters"] == cluster_no)
                 ]
                 / self.fs
-            ) * 1e6
+            ) * N_MS_PER_SEC
+            z = z - n_ms
 
         # Get colour of points.
         pt_facecolor = self.get_cluster_colour(cluster_no, n_clusters, cmap)
@@ -1221,7 +1229,9 @@ class EMGMotorUnit:
     ) -> tuple[Figure | None, Axes]:
         """
         Create scatter plot of fibre localisations estimated from all fibre potentials
-        (one point per potential).
+        (one point per potential) with z-axis corresponding to the time of each fibre
+        potential in the motor unit potential (t = 0 ms is MUP onset).
+
         Plots results from one motor unit at a time.
 
         Default point colour depends on the fibre cluster.
@@ -1288,12 +1298,18 @@ class EMGMotorUnit:
             ax.set_ylabel("position (mm)", fontsize=axis_label_size)
             ax.tick_params(axis="x", which="major", labelsize=tick_label_size)
             ax.tick_params(axis="y", which="major", labelsize=tick_label_size)
-            ax.set_zlabel("time (\u03bc seconds)", fontsize=axis_label_size, labelpad=8.0)
+            ax.set_zlabel("time (ms)", fontsize=axis_label_size, labelpad=8.0)
             ax.tick_params(axis="z", which="major", labelsize=tick_label_size)
 
-        # Add electrodes to plot at botton, z = 0.
+        # Determine z axis limits based on window used to compute motor unit potentials.
+        N_MS_PER_SEC = 1000
+        n_samples = self.all_spikes.shape[2]
+        n_ms = ((n_samples - 1) / 2) / self.fs * N_MS_PER_SEC  # shift to plot MUP onset at t=0
+        max_z = n_ms
+
+        # Add electrodes to plot at bottom.
         if plot_electrodes:
-            self._plot_electrodes(ax=ax, z=0, clr="grey", marker_size=5)
+            self._plot_electrodes(ax=ax, z=-max_z, clr="grey", marker_size=5)
 
         n_clusters = self.fibre_clustering_results["n_fibre_clusters"]
 
@@ -1322,13 +1338,6 @@ class EMGMotorUnit:
             )
             fibre_max_y = max(fibre_max_y, mu_max_y)
 
-            # Min and max z
-            z = (
-                self.fibre_potential_times[
-                    (self.fibre_clustering_results["fibre_clusters"] == cluster_no)
-                ]
-                / self.fs
-            ) * 1e6
         # Add legend.
         if plot_legend:
             lgnd = ax.legend(
@@ -1342,14 +1351,10 @@ class EMGMotorUnit:
                 h._sizes = [legend_pt_size]
                 h.set_alpha(1)
 
-        # Set y axis limits.
+        # Set y axis and z-axis limits.
         max_y = max(fibre_max_y * y_buff, max_y)  # Adjust max_y based on data
         ax.set_ylim(-max_y, max_y)
-
-        # Set z axis limits - limit to full range of fibre potential times in this motor unit
-        z = (self.fibre_potential_times / self.fs) * 1e6
-        z_buff = 50
-        ax.set_zlim(np.min(z) - z_buff, np.max(z) + z_buff)
+        ax.set_zlim(-max_z, max_z)
 
         # Equal aspect ratio for x and y coordinates
         if axis_equal:
