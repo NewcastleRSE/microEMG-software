@@ -3,9 +3,23 @@ Software for recording and analysing microEMG recordings, developed for "Multi-c
 
 ## About
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sollicitudin ante at eleifend eleifend. Sed non vestibulum nisi. Aliquam vel condimentum quam. Donec fringilla et purus at auctor. Praesent euismod vitae metus non consectetur. Sed interdum aliquet nisl at efficitur. Nulla urna quam, gravida eget elementum eget, mattis nec tortor. Fusce ut neque tellus. Integer at magna feugiat lacus porta posuere eget vitae metus.
+In clinical practice, electromyography (EMG) is performed using a single-channel electrode to capture motor unit and muscle fibre potentials. These recordings are subsequently analysed to detect abnormalities in motor unit function. Clinicians must currently obtain multiple single-channel recordings which is time-consuming and requires expertise. Additionally, a single-channel recording does not provide information about muscle fibre locations or motor unit sizes.
 
-Curabitur a tempus arcu. Maecenas blandit risus quam, quis convallis justo pretium in. Suspendisse rutrum, elit at venenatis cursus, dolor ligula iaculis dui, ut dignissim enim justo at ligula. Donec interdum dignissim egestas. Nullam nec ultrices enim. Nam quis arcu tincidunt, auctor purus sit amet, aliquam libero. Fusce rhoncus lectus ac imperdiet varius. Sed gravida urna eros, ac luctus justo condimentum nec. Integer ultrices nibh in neque sagittis, at pretium erat pretium. Praesent feugiat purus id iaculis laoreet. Proin in tellus tristique, congue ante in, sodales quam. Sed imperdiet est tortor, eget vestibulum tortor pulvinar volutpat. In et pretium nisl.
+To address these limitations, the microEMG team have developed:
+
+1. A multichannel EMG (microEMG) electrode. Each electrode contains 32 or 64 channels, allowing clinicians to obtain a single, multivariate recording per muscle.
+2. An analytical pipeline that identifies motor units and localises muscle fibres. 
+
+
+The microEMG team’s primary goal is for their microEMG electrode technology and analysis pipeline to be obtained by an external company that will commercialise these techniques.
+ 
+To meet this goal, the microEMG team requires RSE team assistance in the following: 
+
+1.	Development of a real-time recording GUI for EMG recordings with multiple channels. 
+2.	Development of analysis scripts and GUI to allow clinicians to perform microEMG recording analyses within a reasonable runtime. 
+3.	The microEMG team will conduct a small pilot study to collect microEMG data from patients with neuromuscular disorders. The current analytical pipeline needs to be extended to describe more features of the patients’ motor units, and the data from all patients will need to be analysed using the updated software.
+
+See project documentation for a detailed description.
 
 ### Project Team
 
@@ -53,7 +67,7 @@ See pyproject.toml file for list of Python package dependencies.
 
 ### Installation
 
-First install poetry in your Python environment:
+After ensuring you have the project frameworks installed (PySide6, Python 3.11+), install poetry in your Python environment:
 
 Using pip:
 ```
@@ -75,7 +89,17 @@ Example recording data needs to be manually added in a "recordings" folder at th
 
 ### Running Locally
 
-How to run the application on your local system.
+To run the user interface during development testing, open a terminal and navigate to the `gui_dev` folder, then enter `python gui_dev_main.py` and the user interface should appear.
+
+Adding new packages: 
+1. `poetry add <package name>` which adds a package to the pyproject.toml file (the list of requirements)
+
+To add a package to a specific group, e.g. dev: `poetry add <package name> -G dev` 
+
+2. `poetry lock --no-update` updates the lock file (with all the packages needed and the exact versions, including dependencies of the packages in the pyproject.toml file), but does not change the version of the previously tracked dependencies
+
+3. `poetry export -f requirements.txt --without-hashes > requirements.txt` will then overwrite the requirements.txt file with the latest updates to the lockfile.
+
 
 ### Running Tests
 
@@ -88,6 +112,13 @@ How to run tests on your local system.
 ### Production
 
 Deploying to the production system. Examples of this would include cloud, HPC or virtual machine. 
+
+### Troubleshooting
+ 
+- If you ran the installation instructions outside of a virtual environment, poetry will have created one for you when you ran `poetry install`, however it won't have activated it automatically. You can activate the virtual environment with `poetry shell` and exit this with the command `exit`. Outside of this virtual environment you will not have the required installed dependencies so this can be a cause of errors.
+
+- For linux users an error has been noted when trying to run the GUI where the QT platform plugin fails to load. [This thread](https://stackoverflow.com/questions/77725761/from-6-5-0-xcb-cursor0-or-libxcb-cursor0-is-needed-to-load-the-qt-xcb-platform) proposes a solution that worked in our testing, to install libxcb-cursor-dev.
+
 
 ## Usage
 
