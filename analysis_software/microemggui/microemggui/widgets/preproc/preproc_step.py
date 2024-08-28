@@ -13,7 +13,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QSizePolicy,
     QProgressDialog,
-    QDialog,
     QTabBar,
 )
 from PySide6.QtCore import Qt, Signal
@@ -169,17 +168,6 @@ class EMGViewerTabbedWidget(QWidget):
         self.widgets["tabs"].setCurrentIndex(tab_idx)  # change tab
 
 
-class PreprocProgressDialog(QDialog):
-    def __init__(self, settings_model: EMGPreprocSettingsModel, parent=None):
-        super().__init__(parent)
-
-        self.setWindowTitle("progress bar")
-
-        # Ensure that progress dialog closes if GUI window is minimised
-        # GUI window will pop up when process finishes and the progress bar closes
-        self.setAttribute(Qt.WA_DeleteOnClose, True)
-
-
 # --- Preprocessing widget ----
 
 
@@ -263,6 +251,9 @@ class PreprocWidget(QWidget):
         # Create progress bar
         n_chan = self.emg_model["raw"].emg_data.n_chan
         self.progress = QProgressDialog("Preprocessing", None, 0, n_chan, parent=self)
+        # Ensure that progress dialog closes if GUI window is minimised
+        # GUI window will pop up when process finishes and the progress bar closes
+        self.progress.setAttribute(Qt.WA_DeleteOnClose, True)
         self.progress.setWindowModality(Qt.WindowModal)
         self.progress.setMinimumDuration(0)
 
