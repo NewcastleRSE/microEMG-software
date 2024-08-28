@@ -1221,8 +1221,7 @@ class EMGMotorUnit:
     ) -> tuple[Figure | None, Axes]:
         """
         Create scatter plot of fibre localisations estimated from all fibre potentials
-        with the location of each fibre overlaid. Ellipse confidence regions are plotted
-        around te fibre locations
+        (one point per potential).
         Plots results from one motor unit at a time.
 
         Default point colour depends on the fibre cluster.
