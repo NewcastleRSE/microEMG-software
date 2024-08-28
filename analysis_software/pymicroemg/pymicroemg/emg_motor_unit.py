@@ -2150,13 +2150,14 @@ class EMGMotorUnit:
         ax: plt.axes.Axes | None = None,
     ) -> tuple[Figure | None, Axes]:
         """
-        Plot a heat map of counts used for jitter analysis.
+        Plot a heat map of counts (= number of consecutive differences) used for jitter
+        analysis.
 
         Parameters
         ----------
         percent: bool, optional
-            Plot percentage of non-nan counts of intervals and consecutive
-            differences, otherwise plot the counts. The default is False.
+            Plot percentage of non-nan counts of consecutive differences, otherwise plot
+            the counts. The default is False.
         cmap : matplotlib colormap name or object, or list of colors, optional
             Colourmap. The default is matplotlib colourmap "viridis".
         clr_background: colour specification, optional
@@ -2197,19 +2198,19 @@ class EMGMotorUnit:
             fib2 = int(self.fibre_jitter_results["fibre2_numbers"][i])
 
             (
-                total_non_nan_diffs,
-                percent_df,
+                _,
+                _,
                 total_non_nan_cd,
                 percent_cd,
             ) = self._get_jitter_totals(fib1, fib2)
 
-            # Set values for heat plot - different upper and lower values.
+            # Set values for heat plot (symmetric)
             if percent:
-                data[fib1, fib2] = percent_df
+                data[fib1, fib2] = percent_cd
                 data[fib2, fib1] = percent_cd
             else:
-                data[fib1, fib2] = total_non_nan_diffs  # number of MUPs on upper diagonal
-                data[fib2, fib1] = total_non_nan_cd  # number of consecutive MUPs on lower diagonal
+                data[fib1, fib2] = total_non_nan_cd  # number of consecutive differences
+                data[fib2, fib1] = total_non_nan_cd
 
         # Plotting the heatmap.
         str_fibres = [str(x) for x in np.arange(1, n_fibres + 1)]
@@ -2236,14 +2237,14 @@ class EMGMotorUnit:
 
         if percent:
             ax.set_title(
-                f"Sample sizes (motor unit {self.motor_unit_number + 1})\n"
-                + r"$\mathregular{_{\%\ consecutive\ differences}}$ \ $\mathregular{^{\%\ MUPs}}$",
+                "Sample sizes (% of consecutive differences)\n"
+                + f"(motor unit {self.motor_unit_number + 1})",
                 fontweight="bold",
             )
         else:
             ax.set_title(
-                f"Sample sizes (motor unit {self.motor_unit_number + 1})\n"
-                + r"$\mathregular{_{\#\ consecutive\ differences}}$ \ $\mathregular{^{\#\ MUPs}}$",
+                "Sample sizes (# consecutive differences)\n"
+                + f"(motor unit {self.motor_unit_number + 1})",
                 fontweight="bold",
             )
 
