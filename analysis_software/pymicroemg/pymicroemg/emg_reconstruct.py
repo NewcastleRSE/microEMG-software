@@ -748,7 +748,8 @@ class EMGAnalysisReconstruct:
         ax: plt.axes.Axes | None = None,
     ) -> tuple[Figure, Axes]:
         """
-        Plot the average (mean) time series of the motor unit's potential.
+        Plot the average (mean) time series of the motor unit's potential. The onset of
+        the MUP is plotted at t = 0 ms.
 
         Parameters
         ----------
@@ -822,6 +823,7 @@ class EMGAnalysisReconstruct:
 
         # Time vector for x axis (ms).
         potentials_t = (np.arange(1, n_samples + 1) / self.emg_data_preproc.fs) * 1000
+        potentials_t = potentials_t - n_ms / 2  # Center MUP so onset is at t = 0 ms
 
         # Plot each channel's MUP, staggered by the specified offset.
         for i in range(self.n_chan):
@@ -837,7 +839,7 @@ class EMGAnalysisReconstruct:
         # x-axis labels and font size.
         ax.set_xlabel("time (ms)", fontsize=axis_label_size)
         ax.tick_params(axis="x", which="major", labelsize=xtick_label_size)
-        ax.set_xlim(0, max(potentials_t))
+        ax.set_xlim(0 - n_ms / 2, max(potentials_t))
 
         # Title
         ax.set_title(
@@ -870,7 +872,7 @@ class EMGAnalysisReconstruct:
         """
 
         Plots the time series of all motor unit potentials of one motor unit in one
-        channel, with the mean time series overlaid.
+        channel, with the mean time series overlaid. MUP onset is plotted at t = 0 ms.
 
         If channel is not specified, the channel used for detecting motor unit
         potentials is plotted.
@@ -954,6 +956,7 @@ class EMGAnalysisReconstruct:
 
         # Time vector for x axis (ms)
         potentials_t = (np.arange(1, n_samples + 1) / self.emg_data_preproc.fs) * 1000
+        potentials_t = potentials_t - n_ms / 2  # Center MUP so onset is at t = 0 ms
 
         # Plot each MUP in specified channel.
         ax.plot(
@@ -981,7 +984,7 @@ class EMGAnalysisReconstruct:
         # x-axis labels and font size.
         ax.set_xlabel("time (ms)", fontsize=axis_label_size)
         ax.tick_params(axis="x", which="major", labelsize=xtick_label_size)
-        ax.set_xlim(0, max(potentials_t))
+        ax.set_xlim(0 - n_ms / 2, max(potentials_t))
 
         # Title
         ax.set_title(
