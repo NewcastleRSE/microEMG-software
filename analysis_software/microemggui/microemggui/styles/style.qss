@@ -26,11 +26,11 @@ TitleInputLabel {
 
 SmallPushButton {
     font-size: 12pt;
-    color: {clr_accent};
+    color: {clr_primary};
     background-color: {clr_small_button};
     border-style: solid;
     border-width: 1px;
-    border-color: {clr_accent};
+    border-color: {clr_primary};
     padding: 4;
     width: 100px;
     border-radius: {radius_button};
@@ -38,25 +38,25 @@ SmallPushButton {
 
 SmallPushButton:hover, MotorUnitButton:hover {
     color: {clr_large_button_text};
-    border-color: {clr_accent};
-    background-color: {clr_accent};
+    border-color: {clr_primary};
+    background-color: {clr_primary};
 }
 
 SmallPushButton:pressed, MotorUnitButton:pressed {
     color: {clr_large_button_text};
-    border-color: {clr_accent_pressed};
-    background-color: {clr_accent_pressed};
+    border-color: {clr_primary_pressed};
+    background-color: {clr_primary_pressed};
 }
 
 SmallPushButton:disabled, MotorUnitButton:disabled {
-    color: {clr_accent_disabled};
-    border-color: {clr_accent_disabled};
+    color: {clr_primary_disabled};
+    border-color: {clr_primary_disabled};
 }
 
 LargePushButton {
     font-size: 16pt;
     color: {clr_large_button_text};
-    background-color: {clr_accent};
+    background-color: {clr_primary};
     border: none;
     padding: 4;
     width: 100px;
@@ -64,15 +64,15 @@ LargePushButton {
 }
 
 LargePushButton:hover {
-    background-color: {clr_accent_hover};
+    background-color: {clr_primary_hover};
 }
 
 LargePushButton:pressed {
-    background-color: {clr_accent_pressed};
+    background-color: {clr_primary_pressed};
 }
 
 LargePushButton:disabled {
-    background-color: {clr_accent_disabled};
+    background-color: {clr_primary_disabled};
 }
 
 TabButton {
@@ -120,15 +120,15 @@ MotorUnitButton {
     background-color: {clr_small_button};
     border-style: solid;
     border-width: 1px;
-    border-color: {clr_accent};
-    color: {clr_accent};
+    border-color: {clr_primary};
+    color: {clr_primary};
     padding: 4;
     width: 80px;
     border-radius: {radius_button};
 }
 
 MotorUnitButton:checked {
-    background-color: {clr_accent};
+    background-color: {clr_primary};
     color: {clr_large_button_text};
 }
 
@@ -170,7 +170,7 @@ AnalysisToolbarButton:hover {
 }
 
 AnalysisToolbarButton:checked {
-    background-color: {clr_accent};
+    background-color: {clr_primary};
     color: {clr_large_button_text};
 }
 
@@ -213,7 +213,7 @@ MicroEMGLogo:hover {
 }
 
 MicroEMGLogo:checked {
-    background-color: {clr_accent};
+    background-color: {clr_primary};
 }
 
 /* Settings input widgets - main section */
@@ -241,7 +241,7 @@ CheckBoxChannel::indicator {
 }
 
 CheckBoxChannel::indicator:checked {
-    background-color: {clr_accent};
+    background-color: {clr_primary};
     border: 1px solid {clr_border_light};
 }
 
@@ -290,13 +290,13 @@ InputExplanationLabel {
 }
 
 InputInlineHighlightedText {
-    color: {clr_accent_dark};
+    color: {clr_primary_dark};
     min-height: 20;
     max-height: 20;
 }
 
 HighlightedLabel {
-    color: {clr_accent_dark};
+    color: {clr_primary_dark};
 }
 
 HighlightedLabel#channels_widget_exclude {
@@ -305,7 +305,7 @@ HighlightedLabel#channels_widget_exclude {
     max-height: 100;
     min-width: 250;
     max-width: 250;
-    color: {clr_accent_dark};
+    color: {clr_primary_dark};
 }
 
 HighlightedLabel#select_mu_widget_message {
@@ -314,7 +314,7 @@ HighlightedLabel#select_mu_widget_message {
     max-height: 100;
     min-width: 175;
     max-width: 175;
-    color: {clr_accent_dark};
+    color: {clr_primary_dark};
 }
 
 InputWarningLabel {

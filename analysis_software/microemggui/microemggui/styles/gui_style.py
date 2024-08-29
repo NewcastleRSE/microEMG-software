@@ -54,28 +54,28 @@ def get_formatted_gui_style_sheet() -> str:
     # Note on MacOS, background by default is #ececec -
     # should have good contrast with that colour
 
-    # Accent colour, with variations for different states
-    clr_accent = "#30819C"
-    clr_accent_disabled = "#A4C1CB"
-    clr_accent_hover = "#276A7E"
-    clr_accent_pressed = "#1E5362"
+    # Primary colour, with variations for different states
+    clr_primary = "#30819C"
+    clr_primary_disabled = "#A4C1CB"
+    clr_primary_hover = "#276A7E"
+    clr_primary_pressed = "#1E5362"
 
     # Dictionary for defining different variables in style sheet
     style_var = {
         # theme colors
-        "{clr_accent}": clr_accent,  # should have high contrast with white
-        "{clr_accent_dark}": "#276A7E",  # darker version for text on light background
-        "{clr_accent_disabled}": clr_accent_disabled,
-        "{clr_accent_hover}": clr_accent_hover,
-        "{clr_accent_pressed}": clr_accent_pressed,
+        "{clr_primary}": clr_primary,  # should have high contrast with white
+        "{clr_primary_dark}": "#276A7E",  # darker version for text on light background
+        "{clr_primary_disabled}": clr_primary_disabled,
+        "{clr_primary_hover}": clr_primary_hover,
+        "{clr_primary_pressed}": clr_primary_pressed,
         "{clr_warning}": "#A33221",  # should be a shade of red/orange
         # text colors
         "{clr_text_dark}": "#0D0D0D",
         "{clr_text_medium}": "#404040",
         "{clr_text_light}": "#656565",
-        # large buttons - will use accent colors directly
+        # large buttons - will use primary colors directly
         "{clr_large_button_text}": "white",  # light text
-        # small buttons - will use accent colors directly as outline and text
+        # small buttons - will use primary colors directly as outline and text
         "{clr_small_button}": "white",
         # icon buttons
         # all buttons
