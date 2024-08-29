@@ -240,18 +240,9 @@ CheckBoxChannel::indicator {
     height: 14px;
 }
 
-CheckBoxChannel::indicator:checked {
-    background-color: {clr_primary};
-    border: 1px solid {clr_border_light};
-}
-
 CheckBoxChannel::indicator:unchecked {
     background-color: {clr_background};
     border: 1px solid {clr_border_light};
-}
-
-CheckBoxChannel::indicator:checked {
-    image: url(none);
 }
 
 CheckBoxChannel::indicator:checked {
