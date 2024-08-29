@@ -19,11 +19,11 @@ from pymicroemg.emg_reconstruct_settings import (
 from microemggui.models.settings import EMGSettingsModel
 
 from microemggui.widgets.base import (
-    InputInlineText,
     InputInlineLabel,
     InputComboBox,
     SubsectionTitle,
     ExpandingHSpacer,
+    InputInlineText,
 )
 
 

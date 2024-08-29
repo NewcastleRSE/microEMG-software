@@ -19,7 +19,6 @@ from microemggui.widgets.base import (
     LargePushButton,
     InputInlineText,
     InputInlineLabel,
-    HighlightedLabel,
     InputWarningLabel,
     InputComboBox,
     SubsectionTitle,
@@ -169,7 +168,7 @@ class LoadRecordingSection(QWidget):
             "selectrecording": SelectRecordingWidget(parent=self),
             "label": RecordingLabel(parent=self),
             "load": LoadRecordingButton(parent=self),
-            "message": HighlightedLabel("", self),
+            "message": InputInlineText("", self),
             "errormessage": InputWarningLabel("", self),
         }
 

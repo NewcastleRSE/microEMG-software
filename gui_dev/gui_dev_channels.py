@@ -5,17 +5,14 @@ Creates channel selection widget for GUI development and testing.
 """
 
 import sys
-import os
 
 from palettable.cartocolors.qualitative import Prism_10
 
 from PySide6.QtWidgets import QApplication, QMainWindow
-from PySide6.QtCore import QFile
-
-import microemggui
 
 from microemggui.models.emg import EMGDataRawModel, EMGDataPreprocModel
 from microemggui.widgets.channels.channels_step import ChannelsWidget
+from microemggui.styles.gui_style import get_formatted_gui_style_sheet
 
 from pymicroemg.emg_preproc_settings import EMGPreprocSettings
 from pymicroemg.emg_files import EMGFiles
@@ -62,15 +59,8 @@ app = QApplication(sys.argv)
 window = MainWindow()
 window.show()
 
-# style
-# TODO: create function for loading and applying style
-style_dir = microemggui.__file__
-style_dir = style_dir[:-11]  # remove init
-style_path = os.path.join(style_dir, "styles", "style.qss")
-gui_style_file = QFile(style_path)
-gui_style_file.open(QFile.OpenModeFlag.ReadOnly)
-gui_style = gui_style_file.readAll().toStdString()
-app.setStyleSheet(gui_style)
-
+# Apply style
+gui_style_sheet = get_formatted_gui_style_sheet()
+app.setStyleSheet(gui_style_sheet)
 
 app.exec()
