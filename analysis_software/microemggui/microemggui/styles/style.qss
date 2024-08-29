@@ -238,6 +238,7 @@ CheckBoxChannel {
 CheckBoxChannel::indicator {
     width: 14px;
     height: 14px;
+    border-radius: 2px;
 }
 
 CheckBoxChannel::indicator:unchecked {
@@ -319,16 +320,7 @@ InputComboBox {
     selection-color: {clr_large_button_text};
     selection-color-background: {clr_primary};
 }
-/*
-InputComboBox::drop-down {
-    subcontrol-origin: padding;
-    subcontrol-position: top right;
-    width: 10px;
-    border-radius: 3px;
-    background-color: {clr_secondary};
-    padding: 3px;
-}
-*/
+
 InputSpinBox {
     min-width: 100;
     max-width: 100;
@@ -342,6 +334,24 @@ InputLineEdit {
 QPushButton {
     min-width: 50;
     max-width: 50;
+}
+
+/* Progress bars */
+QProgressBar {
+     border: 1px solid {clr_border_light};
+     border-radius: 4px;
+     background-color: {clr_background};
+     height: 8px;
+ }
+
+QProgressBar::chunk {
+    background-color: {clr_secondary};
+    border-radius: 4px;
+}
+
+QProgressBar#findmuprogress {
+    border: none;
+    height: 0px; /* hides bar */
 }
 
 /* Misc settings for specific widgets */
@@ -378,22 +388,4 @@ QTabWidget#muvistab::pane, QTabWidget#mufibretab::pane {
     padding: 10px;
     border: 1px solid {clr_border};
     border-radius: 4px;
-}
-
-/* Progress bars */
-QProgressBar {
-     border: 1px solid {clr_border_light};
-     border-radius: 4px;
-     background-color: {clr_background};
-     height: 8px;
- }
-
-QProgressBar::chunk {
-    background-color: {clr_secondary};
-    border-radius: 4px;
-}
-
-QProgressBar#findmuprogress {
-    border: none;
-    height: 0px; /* hides bar */
 }
