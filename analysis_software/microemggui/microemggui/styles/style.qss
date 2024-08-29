@@ -169,7 +169,8 @@ AnalysisToolbarButton {
 }
 
 AnalysisToolbarButton:hover {
-    background-color: #D9D9D9;
+    background-color: {clr_primary};
+    color: {clr_large_button_text};
 }
 
 AnalysisToolbarButton:checked {
@@ -178,7 +179,7 @@ AnalysisToolbarButton:checked {
 }
 
 AnalysisToolbarButton:disabled {
-    color: {clr_text_light};
+    color: {clr_text_very_light};
 }
 
 AnalysisToolbarLabel {
@@ -212,7 +213,8 @@ MicroEMGLogo {
 }
 
 MicroEMGLogo:hover {
-    background-color: #D9D9D9;
+    background-color: {clr_primary};
+    opacity: 0.5;
 }
 
 MicroEMGLogo:checked {

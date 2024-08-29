@@ -78,6 +78,7 @@ def get_formatted_gui_style_sheet() -> str:
         "{clr_text_dark}": "#0D0D0D",
         "{clr_text_medium}": "#404040",
         "{clr_text_light}": "#656565",
+        "{clr_text_very_light}": "#949494",
         # large buttons - will use primary colors directly
         "{clr_large_button_text}": "white",  # light text
         # small buttons - will use primary colors directly as outline and text
