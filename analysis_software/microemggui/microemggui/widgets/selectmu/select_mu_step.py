@@ -167,7 +167,7 @@ class SelectMUWidget(QWidget):
         for w in self.widgets.values():
             layout.addWidget(w, row, col)
             row += 1
-        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setContentsMargins(20, 5, 20, 20)
         layout.setHorizontalSpacing(50)
         self.setLayout(layout)
 
