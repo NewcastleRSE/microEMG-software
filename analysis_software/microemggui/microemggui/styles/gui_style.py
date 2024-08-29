@@ -60,6 +60,10 @@ def get_formatted_gui_style_sheet() -> str:
     clr_primary_hover = "#276A7E"
     clr_primary_pressed = "#1E5362"
 
+    # Secondary colour (will set to same colour as primary, but use separate
+    # variable for flexibility; using purple to test)
+    clr_secondary = "purple"
+
     # Dictionary for defining different variables in style sheet
     style_var = {
         # theme colors
@@ -68,6 +72,7 @@ def get_formatted_gui_style_sheet() -> str:
         "{clr_primary_disabled}": clr_primary_disabled,
         "{clr_primary_hover}": clr_primary_hover,
         "{clr_primary_pressed}": clr_primary_pressed,
+        "{clr_secondary}": clr_secondary,
         "{clr_warning}": "#A33221",  # should be a shade of red/orange
         # text colors
         "{clr_text_dark}": "#0D0D0D",
@@ -83,6 +88,8 @@ def get_formatted_gui_style_sheet() -> str:
         # borders
         "{clr_border}": "#808080",
         "{clr_border_light}": "#D9D9D9",
+        # background color (for when do not use default)
+        "{clr_background}": "white",
     }
 
     # Replace variables in style sheet with corresponding values

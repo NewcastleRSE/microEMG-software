@@ -6,7 +6,7 @@ Widget for finding motor units
 
 from typing import Any
 
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QGridLayout, QProgressDialog
+from PySide6.QtWidgets import QWidget, QHBoxLayout, QGridLayout, QProgressDialog, QProgressBar
 from PySide6.QtCore import Qt, Signal
 
 from microemggui.models.emg import EMGAnalysisReconstructModel
@@ -154,6 +154,12 @@ class FindMUWidget(QWidget):
         # but animation only works if use multithreading (had issues implementing for
         # finding motor units, so using this simpler implementation of empty bar)
         self.progress = QProgressDialog("Finding motor units...", None, 0, 100, parent=self)
+        bar = QProgressBar(self.progress)
+        bar.setMinimum(0)
+        bar.setMaximum(100)
+        bar.setTextVisible(False)
+        bar.setObjectName("findmuprogress")  # to hide in style sheet
+        self.progress.setBar(bar)
         # Ensure that progress dialog closes if GUI window is minimised
         # GUI window will pop up when process finishes and the progress bar closes
         self.progress.setAttribute(Qt.WA_DeleteOnClose, True)

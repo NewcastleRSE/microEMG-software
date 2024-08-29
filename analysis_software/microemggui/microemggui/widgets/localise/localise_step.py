@@ -7,7 +7,14 @@ Created on Tue Aug 13 11:41:14 2024
 """
 from typing import Any
 
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QGridLayout, QProgressDialog, QApplication
+from PySide6.QtWidgets import (
+    QWidget,
+    QHBoxLayout,
+    QGridLayout,
+    QProgressDialog,
+    QProgressBar,
+    QApplication,
+)
 from PySide6.QtCore import Qt, Signal
 
 from microemggui.models.emg import EMGAnalysisReconstructModel
@@ -188,6 +195,11 @@ class LocaliseWidget(QWidget):
         # Create progress bar for showing localisation progress
         n_mu = len(self.motor_units_to_analyse)
         self.progress = QProgressDialog("Localising fibres", None, 0, n_mu, parent=self)
+        bar = QProgressBar(self.progress)
+        bar.setMinimum(0)
+        bar.setMaximum(n_mu)
+        bar.setTextVisible(False)
+        self.progress.setBar(bar)
         # Ensure that progress dialog closes if GUI window is minimised
         # GUI window will pop up when process finishes and the progress bar closes
         self.progress.setAttribute(Qt.WA_DeleteOnClose, True)

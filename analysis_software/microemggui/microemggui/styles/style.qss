@@ -86,7 +86,7 @@ TabButton {
 }
 
 TabButton:disabled {
-    background-color: 'white';
+    background-color: {clr_background};
     font-weight: bold;
     color: 'black';
     font-size: 12pt;
@@ -99,7 +99,7 @@ TabButton:disabled {
 }
 
 WidgetControlButton {
-    background-color: 'white';
+    background-color: {clr_background};
     border-style: solid;
     border-width: 1px;
     border-color: {clr_small_button_border};
@@ -136,7 +136,7 @@ MotorUnitButton:checked {
 
 TopToolbar {
     padding: 5px;
-    background: 'white';
+    background: {clr_background};
     border-left: none;
     border-top: none;
     border-bottom: 1px solid {clr_border_light};
@@ -144,7 +144,7 @@ TopToolbar {
 }
 
 AnalysisToolbar {
-    background: 'white';
+    background: {clr_background};
     border-left: none;
     border-top: none;
     border-bottom: none;
@@ -155,7 +155,7 @@ AnalysisToolbar {
 AnalysisToolbarButton {
     font-size: 14pt;
     text-align: left;
-    background-color: 'white';
+    background-color: {clr_background};
     border-left: none;
     border-top: none;
     border-bottom: none;
@@ -175,7 +175,7 @@ AnalysisToolbarButton:checked {
 }
 
 AnalysisToolbarButton:disabled {
-    color: #D9D9D9;
+    color: {clr_text_light};
 }
 
 AnalysisToolbarLabel {
@@ -194,7 +194,7 @@ RecordingLabel {
 
 MicroEMGLogo {
     text-align: center;
-    background-color: 'white';
+    background-color: {clr_background};
     border-left: none;
     border-top: none;
     border-bottom: none;
@@ -246,7 +246,7 @@ CheckBoxChannel::indicator:checked {
 }
 
 CheckBoxChannel::indicator:unchecked {
-    background-color: white;
+    background-color: {clr_background};
     border: 1px solid {clr_border_light};
 }
 
@@ -255,7 +255,7 @@ CheckBoxChannel::indicator:checked {
 }
 
 CheckBoxChannel::indicator:checked {
-    background-color: white;
+    background-color: {clr_background};
     border: 1px solid {clr_border_light};
     image: url(:/bootstrap/check)
 }
@@ -325,8 +325,19 @@ InputWarningLabel {
 InputComboBox {
     min-width: 150;
     max-width: 150;
+    selection-color: {clr_large_button_text};
+    selection-color-background: {clr_primary};
 }
-
+/*
+InputComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 10px;
+    border-radius: 3px;
+    background-color: {clr_secondary};
+    padding: 3px;
+}
+*/
 InputSpinBox {
     min-width: 100;
     max-width: 100;
@@ -347,7 +358,7 @@ QPushButton {
 /* EMG viewer */
 
 EMGViewerWidget {
-    background: white;
+    background: {clr_background};
     border: 1px solid {clr_border};
     border-radius: 4px;
 }
@@ -372,11 +383,26 @@ ChannelsCheckBoxes {
 
 /* Background and border for visualisations */
 QTabWidget#muvistab::pane, QTabWidget#mufibretab::pane {
-    background: white;
+    background: {clr_background};
     padding: 10px;
     border: 1px solid {clr_border};
     border-radius: 4px;
 }
 
-/* Misc */
+/* Progress bars */
+QProgressBar {
+     border: 1px solid {clr_border_light};
+     border-radius: 4px;
+     background-color: {clr_background};
+     height: 8px;
+ }
 
+QProgressBar::chunk {
+    background-color: {clr_secondary};
+    border-radius: 4px;
+}
+
+QProgressBar#findmuprogress {
+    border: none;
+    height: 0px; /* hides bar */
+}

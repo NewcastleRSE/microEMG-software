@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QSizePolicy,
     QProgressDialog,
+    QProgressBar,
     QTabBar,
 )
 from PySide6.QtCore import Qt, Signal
@@ -251,6 +252,11 @@ class PreprocWidget(QWidget):
         # Create progress bar
         n_chan = self.emg_model["raw"].emg_data.n_chan
         self.progress = QProgressDialog("Preprocessing", None, 0, n_chan, parent=self)
+        bar = QProgressBar(self.progress)
+        bar.setMinimum(0)
+        bar.setMaximum(n_chan)
+        bar.setTextVisible(False)
+        self.progress.setBar(bar)
         # Ensure that progress dialog closes if GUI window is minimised
         # GUI window will pop up when process finishes and the progress bar closes
         self.progress.setAttribute(Qt.WA_DeleteOnClose, True)
