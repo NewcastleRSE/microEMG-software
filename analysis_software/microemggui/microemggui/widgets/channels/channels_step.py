@@ -67,7 +67,8 @@ class ChannelsCheckBoxes(QWidget):
                 col += 1
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setVerticalSpacing(0)
-        layout.setHorizontalSpacing(25)
+        layout.setHorizontalSpacing(50)
+        layout.setAlignment(Qt.AlignLeft)
         self.setLayout(layout)
 
         # Connections

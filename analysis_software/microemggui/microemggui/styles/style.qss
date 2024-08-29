@@ -245,6 +245,7 @@ CheckBoxChannelLabel {
     font-weight: bold;
     min-height: 20;
     max-height: 20;
+    padding: 0;
 }
 
 InputLabel {
@@ -335,9 +336,14 @@ QLabel#amp{
 }
 
 /* Settings - set width */
-PreprocSettingsWidget, LocaliseSettingsWidget, ChannelsCheckBoxes {
+PreprocSettingsWidget, LocaliseSettingsWidget {
     min-width: 250;
     max-width: 250;
+}
+
+ChannelsCheckBoxes {
+    min-width: 220;
+    max-width: 220;
 }
 
 /* Background and border for visualisations */

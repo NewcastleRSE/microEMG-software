@@ -93,6 +93,7 @@ class AnalysisStepsWidget(QWidget):
         for w in self.widgets.values():
             self.layout.addWidget(w)
         self.setLayout(self.layout)
+        self.layout.setContentsMargins(0, 0, 0, 0)
 
     def show_widget(self, widget_name):
         # Slot for signals for changing displayed widget in stacked layout
