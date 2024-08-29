@@ -99,16 +99,19 @@ TabButton:disabled {
 }
 
 WidgetControlButton {
-    background-color: {clr_background};
-    border-style: solid;
-    border-width: 1px;
-    border-color: {clr_small_button_border};
+    background-color: {clr_control_button};
+    border: none;
+    color: {clr_primary};
     border-radius: {radius_button};
     padding: 3;
 }
 
+WidgetControlButton:hover {
+    background-color: {clr_control_button_hover};
+}
+
 WidgetControlButton:pressed {
-    background-color: #D9D9D9;
+    background-color: {clr_control_button_pressed};
 }
 
 WidgetControlButton:disabled {

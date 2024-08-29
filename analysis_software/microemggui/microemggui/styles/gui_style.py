@@ -62,7 +62,7 @@ def get_formatted_gui_style_sheet() -> str:
 
     # Secondary colour (will set to same colour as primary, but use separate
     # variable for flexibility; using purple to test)
-    clr_secondary = "purple"
+    clr_secondary = clr_primary
 
     # Dictionary for defining different variables in style sheet
     style_var = {
@@ -83,6 +83,10 @@ def get_formatted_gui_style_sheet() -> str:
         # small buttons - will use primary colors directly as outline and text
         "{clr_small_button}": "white",
         # icon buttons
+        "{clr_control_button}": "#f2f2f2",
+        "{clr_control_button_hover}": "#d9d9d9",
+        "{clr_control_button_pressed}": "#cccccc",
+        "{clr_control_button_disabled}": "#8c8c8c",
         # all buttons
         "{radius_button}": "4",
         # borders
