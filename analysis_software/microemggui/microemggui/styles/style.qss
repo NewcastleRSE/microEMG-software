@@ -3,15 +3,15 @@
 SectionTitle{
     font-weight: bold;
     font-size: 20pt;
-    min-height: 40;
-    max-height: 40;
-    qproperty-alignment: 'AlignTop | AlignLeft';
+    min-height: 30;
+    max-height: 30;
+   /* qproperty-alignment: 'AlignTop | AlignLeft';*/
 }
 
 SubsectionTitle{
     font-weight: bold;
     font-size: 16pt;
-    qproperty-alignment: 'AlignTop | AlignLeft';
+    /*qproperty-alignment: 'AlignTop | AlignLeft';*/
 }
 
 TitleInputLabel {
@@ -211,13 +211,13 @@ CheckBoxMain {
 CheckBoxChannel {
     font-size: 12pt;
     font-weight: bold;
-    min-height: 20px;
-    max-height: 75px;
+    min-height: 18px;
+    max-height: 40px;
 }
 
 CheckBoxChannel::indicator {
-    width: 15px;
-    height: 15px;
+    width: 14px;
+    height: 14px;
 }
 
 CheckBoxChannel::indicator:checked {
@@ -335,7 +335,7 @@ QLabel#amp{
 }
 
 /* Settings - set width */
-PreprocSettingsWidget, LocaliseSettingsWidget {
+PreprocSettingsWidget, LocaliseSettingsWidget, ChannelsCheckBoxes {
     min-width: 250;
     max-width: 250;
 }

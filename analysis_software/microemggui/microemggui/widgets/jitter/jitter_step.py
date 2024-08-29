@@ -103,7 +103,7 @@ class JitterWidget(QWidget):
         layout.addWidget(self.widgets["alltitle"], 2, 0)
         layout.addWidget(self.widgets["allvis"], 3, 0)
         layout.addWidget(self.widgets["pairvis"], 2, 1, 2, 1)  # span 2 rows
-        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setContentsMargins(20, 5, 20, 20)
         layout.setVerticalSpacing(13)
         layout.setColumnStretch(0, 2)
         layout.setColumnStretch(1, 3)  # second column wider than first (2:3 ratio)
