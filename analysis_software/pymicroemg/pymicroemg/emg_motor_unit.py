@@ -98,6 +98,9 @@ class EMGMotorUnit:
         # Number of fibre potentials (peaks) found across all MUPs.
         self.n_fibre_potentials = 0
 
+        # Size of window used for localisation.
+        self.n_samples_window = 0
+        
         # Estimated fibre x, y coordinate at each time (size n peaks x 2).
         self.fibre_centres = np.array([])
 
@@ -210,7 +213,12 @@ class EMGMotorUnit:
         self.fibre_potential_peak_chan = fibre_potential_peak_chan
         self.all_spikes = all_spikes
         self.generator_potential = generator_potential
-
+              
+        # Save the size of the window in number of indices, used later for plots.
+        # So that all_spikes does not need to be saved with the results, and this
+        # value can be saved and loaded instead.
+        self.n_samples_window = self.all_spikes.shape[2]
+       
     def get_fibre_localisation_dict(self, save_all_spikes: bool = False) -> dict:
         """
         Returns dictionary of fibre localisation so that it can be saved
@@ -234,6 +242,7 @@ class EMGMotorUnit:
             "mup_onsets": self.mup_onsets.tolist(),
             "fibre_potential_times": self.fibre_potential_times.tolist(),
             "all_spikes": [],
+            "n_samples_window": self.n_samples_window,
             # "generator_potential" : self.generator_potential.tolist()
         }
 
@@ -263,6 +272,7 @@ class EMGMotorUnit:
         self.mup_onsets = np.array(fibre_local_dict["mup_onsets"])
         self.fibre_potential_times = np.array(fibre_local_dict["fibre_potential_times"])
         self.all_spikes = np.array(fibre_local_dict["all_spikes"])
+        self.n_samples_window = fibre_local_dict["n_samples_window"]
         # self.generator_potential = np.array(fibre_local_dict["generator_potential"])
 
         # Note analysis performed.
@@ -599,7 +609,7 @@ class EMGMotorUnit:
 
         return fibre_clusters_dict
 
-    def set_fibre_clusters_from_dict(self, fibre_clusters_dict: dict):
+    def set_fibre_clusters_from_dict(self, fibre_clusters_dict: dict, mu_cluster_settings: EMGAnalysisMotorUnitClusterSettings):
         """
         Sets fibre localisation results from loaded dictionary.
 
@@ -608,6 +618,9 @@ class EMGMotorUnit:
         fibre_clusters_dict : dict
             Dictionary containing saved results of clustering
 
+        mu_cluster_settings : EMGAnalysisMotorUnitClusterSettings
+            Copy of settings used to do clustering.
+            
         Returns
         -------
         None.
@@ -634,6 +647,9 @@ class EMGMotorUnit:
 
             # Note analysis performed.
             self.analysis_performed["fibres_clustered"] = True
+            
+            # Set clustering settings also.
+            self.mu_cluster_settings = mu_cluster_settings
 
     def plot_compare_cluster_scores(self) -> sns.FacetGrid:
         """
@@ -996,9 +1012,8 @@ class EMGMotorUnit:
         # Get z coords to plot if a 3D plot.
         if threeD:
             N_MS_PER_SEC = 1000
-            # Determine shift needed to plot MUP onset at t = 0
-            n_samples = self.all_spikes.shape[2]
-            n_ms = ((n_samples - 1) / 2) / self.fs * N_MS_PER_SEC
+            # Determine shift needed to plot MUP onset at t = 0            
+            n_ms = ((self.n_samples_window - 1) / 2) / self.fs * N_MS_PER_SEC
 
             # Fibre potential times
             z = (
@@ -1302,9 +1317,8 @@ class EMGMotorUnit:
             ax.tick_params(axis="z", which="major", labelsize=tick_label_size)
 
         # Determine z axis limits based on window used to compute motor unit potentials.
-        N_MS_PER_SEC = 1000
-        n_samples = self.all_spikes.shape[2]
-        n_ms = ((n_samples - 1) / 2) / self.fs * N_MS_PER_SEC  # shift to plot MUP onset at t=0
+        N_MS_PER_SEC = 1000        
+        n_ms = ((self.n_samples_window - 1) / 2) / self.fs * N_MS_PER_SEC  # shift to plot MUP onset at t=0
         max_z = n_ms
 
         # Add electrodes to plot at bottom.
@@ -1676,8 +1690,8 @@ class EMGMotorUnit:
             "number_of_differences_outliers": number_of_differences_outliers,
             "number_of_cons_diffs": number_of_cons_diffs,
             "number_of_cons_diffs_outliers": number_of_cons_diffs_outliers,
-            "fibre1_pot_used_idx": fibre1_pots_used_idx,
-            "fibre2_pot_used_idx": fibre2_pots_used_idx,
+            "fibre1_pots_used_idx": fibre1_pots_used_idx,
+            "fibre2_pots_used_idx": fibre2_pots_used_idx,
         }
 
         # Record that the jitter analysis has been performed for this motor unit.
@@ -1710,21 +1724,30 @@ class EMGMotorUnit:
                 ].tolist(),
                 "differences": self.fibre_jitter_results["differences"].tolist(),
                 "consecutive_diffs": self.fibre_jitter_results["consecutive_diffs"].tolist(),
+                "number_of_differences": self.fibre_jitter_results["number_of_differences"].tolist(),
+                "number_of_differences_outliers": self.fibre_jitter_results["number_of_differences_outliers"].tolist(),
+                "number_of_cons_diffs": self.fibre_jitter_results["number_of_cons_diffs"].tolist(),
+                "number_of_cons_diffs_outliers": self.fibre_jitter_results["number_of_cons_diffs_outliers"].tolist(),
+                "fibre1_pots_used_idx": self.fibre_jitter_results["fibre1_pots_used_idx"].tolist(),
+                "fibre2_pots_used_idx": self.fibre_jitter_results["fibre2_pots_used_idx"].tolist(),
             }
         else:
             fibre_jitter_dict = {}
 
         return fibre_jitter_dict
 
-    def set_fibre_jitter_from_dict(self, fibre_jitter_dict: dict):
+    def set_fibre_jitter_from_dict(self, fibre_jitter_dict: dict, mu_jitter_settings: EMGAnalysisMotorUnitJitterSettings):
         """
         Sets fibre jitter results from loaded jitter results.
 
         Parameters
         ----------
         fibre_jitter_dict : dict
-            Dictionary containing saved results of clustering.
+            Dictionary containing saved results of jitter analysis.
 
+        mu_jitter_settings : EMGAnalysisMotorUnitJitterSettings
+            Copy of settings used to do jitter analysis.
+            
         Returns
         -------
         None.
@@ -1742,11 +1765,19 @@ class EMGMotorUnit:
                 ),
                 "differences": np.array(fibre_jitter_dict["differences"]),
                 "consecutive_diffs": np.array(fibre_jitter_dict["consecutive_diffs"]),
+                "number_of_differences": np.array(fibre_jitter_dict["number_of_differences"]),
+                "number_of_differences_outliers": np.array(fibre_jitter_dict["number_of_differences_outliers"]),
+                "number_of_cons_diffs": np.array(fibre_jitter_dict["number_of_cons_diffs"]),
+                "number_of_cons_diffs_outliers": np.array(fibre_jitter_dict["number_of_cons_diffs_outliers"]),
+                "fibre1_pots_used_idx": np.array(fibre_jitter_dict["fibre1_pots_used_idx"]),
+                "fibre2_pots_used_idx": np.array(fibre_jitter_dict["fibre2_pots_used_idx"]),
             }
 
             # Note analysis performed.
             self.analysis_performed["fibres_jitter_computed"] = True
 
+            self.mu_jitter_settings = mu_jitter_settings
+            
     def plot_fibre_potential_time_diffs(
         self, fibre1_num: int, fibre2_num: int, display_counts: bool = True
     ) -> tuple[Figure, Axes]:
@@ -2566,7 +2597,7 @@ class EMGMotorUnit:
         # Create time vectors (ms) for x-axis of MUP EMG traces (analysed MUP only)
         # Will create a separate column for each trace so can align based on fibre potential
         # times if requested
-        mup_t = (np.arange(1, self.all_spikes.shape[2] + 1) / self.fs) * MS_MULTIPLIER
+        mup_t = (np.arange(1, self.n_samples_window + 1) / self.fs) * MS_MULTIPLIER
         mup_t = np.transpose(
             np.tile(mup_t, [self.n_potentials, 1])
         )  # repeat and transpose (column = mup)
@@ -2840,6 +2871,8 @@ class EMGMotorUnits:
 
         Parameters
         ----------
+        location_type : str
+            Either "potentials" or "fibres" (see above).
         motor_unit_idx : int, optional
             Motor unit index. The default is None.
         plot_electrodes : bool, optional
