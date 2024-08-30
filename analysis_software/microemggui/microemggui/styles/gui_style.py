@@ -55,10 +55,28 @@ def get_formatted_gui_style_sheet() -> str:
     # should have good contrast with that colour
 
     # Primary colour, with variations for different states
+
+    # teal
     clr_primary = "#30819C"
     clr_primary_disabled = "#A4C1CB"
     clr_primary_hover = "#276A7E"
     clr_primary_pressed = "#1E5362"
+    clr_primary_dark = "#276A7E"
+
+    # # golden brown
+    # clr_primary = "#A77E28"
+    # clr_primary_disabled = "#D1BF8A"
+    # clr_primary_hover = "#8B671F"
+    # clr_primary_pressed = "#705019"
+    # clr_primary_dark = "#8C671E"
+
+    # dark purple: #4B0082
+    # purple: #6A1B9A
+    # forest green: #228B22
+    # green: #39B54A
+    # deep navy blue: #004080
+    # purple blue: 6A5ACD
+    # more vibrant teal: "#1C7DA6"
 
     # Secondary colour (will set to same colour as primary, but use separate
     # variable for flexibility; using purple to test)
@@ -68,7 +86,7 @@ def get_formatted_gui_style_sheet() -> str:
     style_var = {
         # theme colors
         "{clr_primary}": clr_primary,  # should have high contrast with white
-        "{clr_primary_dark}": "#276A7E",  # darker version for text on light background
+        "{clr_primary_dark}": clr_primary_dark,  # darker version for text on light background
         "{clr_primary_disabled}": clr_primary_disabled,
         "{clr_primary_hover}": clr_primary_hover,
         "{clr_primary_pressed}": clr_primary_pressed,
@@ -87,7 +105,7 @@ def get_formatted_gui_style_sheet() -> str:
         "{clr_control_button}": "#f2f2f2",
         "{clr_control_button_hover}": "#d9d9d9",
         "{clr_control_button_pressed}": "#cccccc",
-        "{clr_control_button_disabled}": "#8c8c8c",
+        "{clr_control_button_disabled}": "#a6a6a6",
         # all buttons
         "{radius_button}": "4",
         # borders

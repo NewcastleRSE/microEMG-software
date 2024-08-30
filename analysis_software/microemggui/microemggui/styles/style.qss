@@ -23,9 +23,9 @@ TitleInputLabel {
 }
 
 /* Buttons */
+/* QPushButton will style buttons in matplotlib toolbar popups */
 
-SmallPushButton, MotorUnitButton {
-    font-size: 12pt;
+QPushButton, SmallPushButton, MotorUnitButton {
     color: {clr_primary};
     background-color: {clr_small_button};
     border-style: solid;
@@ -36,11 +36,13 @@ SmallPushButton, MotorUnitButton {
 }
 
 SmallPushButton {
+    font-size: 14pt;
     min-width: 100px;
     max-width: 100px;
 }
 
 MotorUnitButton {
+    font-size: 12pt;
     min-width: 80px;
     max-width: 80px;
 }
@@ -50,19 +52,19 @@ MotorUnitButton:checked {
     color: {clr_large_button_text};
 }
 
-SmallPushButton:hover, MotorUnitButton:hover {
+QPushButton:hover, SmallPushButton:hover, MotorUnitButton:hover {
     color: {clr_large_button_text};
     border-color: {clr_primary};
     background-color: {clr_primary};
 }
 
-SmallPushButton:pressed, MotorUnitButton:pressed {
+QPushButton:pressed, SmallPushButton:pressed, MotorUnitButton:pressed {
     color: {clr_large_button_text};
     border-color: {clr_primary_pressed};
     background-color: {clr_primary_pressed};
 }
 
-SmallPushButton:disabled, MotorUnitButton:disabled {
+QPushButton:disabled, SmallPushButton:disabled, MotorUnitButton:disabled {
     color: {clr_primary_disabled};
     border-color: {clr_primary_disabled};
 }
@@ -79,14 +81,20 @@ LargePushButton {
 }
 
 LargePushButton:hover {
+    color: {clr_large_button_text};
+    border: none;
     background-color: {clr_primary_hover};
 }
 
 LargePushButton:pressed {
+    color: {clr_large_button_text};
+    border: none;
     background-color: {clr_primary_pressed};
 }
 
 LargePushButton:disabled {
+    color: {clr_large_button_text};
+    border: none;
     background-color: {clr_primary_disabled};
 }
 
@@ -130,7 +138,7 @@ WidgetControlButton:pressed {
 }
 
 WidgetControlButton:disabled {
-    background-color: #D9D9D9;
+    background-color: {clr_control_button_disabled};
 }
 
 /* Toolbars and toolbar widgets */
@@ -156,6 +164,7 @@ AnalysisToolbar {
 AnalysisToolbarButton {
     font-size: 14pt;
     text-align: left;
+    color: {clr_text_dark};
     background-color: {clr_background};
     border-left: none;
     border-top: none;
