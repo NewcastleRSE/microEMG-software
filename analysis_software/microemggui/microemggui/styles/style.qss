@@ -334,11 +334,6 @@ InputLineEdit {
     max-width: 50;
 }
 
-QPushButton {
-    min-width: 50;
-    max-width: 50;
-}
-
 /* Progress bars */
 QProgressBar {
      border: 1px solid {clr_border_light};
