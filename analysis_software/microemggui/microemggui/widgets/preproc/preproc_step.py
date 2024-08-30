@@ -209,7 +209,7 @@ class PreprocWidget(QWidget):
         layout.addWidget(self.widgets["settings"], 1, 0)
         layout.addWidget(self.widgets["buttons"], 2, 0)
         layout.addWidget(self.widgets["tabbedviewer"], 0, 1, 3, 1)
-        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setContentsMargins(20, 5, 20, 20)
         self.setLayout(layout)
 
         # Connections

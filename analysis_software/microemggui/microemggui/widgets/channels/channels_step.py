@@ -65,9 +65,9 @@ class ChannelsCheckBoxes(QWidget):
             if row == max_chan:  # reset row number
                 row = 0
                 col += 1
-        layout.setContentsMargins(0, 0, 50, 0)
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.setVerticalSpacing(0)
-        layout.setHorizontalSpacing(50)
+        layout.setHorizontalSpacing(25)
         self.setLayout(layout)
 
         # Connections
@@ -222,7 +222,7 @@ class ChannelsWidget(QWidget):
         layout.addWidget(self.widgets["viewer"], 0, 1, 4, 1)  # span 2 rows
         layout.addWidget(self.widgets["exclude"], 2, 0)  # span 2 columns
         layout.addWidget(self.widgets["next"], 3, 0)
-        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setContentsMargins(20, 5, 20, 20)
         self.setLayout(layout)
 
         # Connections

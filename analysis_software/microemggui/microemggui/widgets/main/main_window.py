@@ -67,7 +67,7 @@ class WelcomeWidget(QWidget):
         for w in self.widgets.values():
             layout.addWidget(w)
         layout.addItem(ExpandingVSpacer())  # spacer
-        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setContentsMargins(20, 5, 20, 20)
         self.setLayout(layout)
 
 
@@ -150,7 +150,7 @@ class MicroEMGMain(QMainWindow):
         self.setCentralWidget(widget)
 
         # Window properties
-        self.resize(1200, 850)
+        self.resize(1100, 750)
 
         # Connections
 
