@@ -322,8 +322,6 @@ InputWarningLabel {
 InputComboBox {
     min-width: 150;
     max-width: 150;
-    selection-color: {clr_large_button_text};
-    selection-color-background: {clr_primary};
 }
 
 InputSpinBox {
