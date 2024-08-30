@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QSpacerItem,
     QSizePolicy,
 )
+from PySide6.QtCore import QSize
 
 from matplotlib.backends.backend_qtagg import NavigationToolbar2QT
 
@@ -213,4 +214,5 @@ class ExpandingHSpacer(QSpacerItem):
 class MatplotlibToolbar(NavigationToolbar2QT):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.setIconSize(QSize(20, 20))
         # self.setStyleSheet("background-color:white;")
