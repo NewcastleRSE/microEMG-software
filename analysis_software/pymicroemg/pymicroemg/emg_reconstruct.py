@@ -350,7 +350,10 @@ class EMGAnalysisReconstruct:
 
         Parameters
         ----------
-        None
+        save_all_spikes : bool, optional
+            Whether to save all_spikes. Uses a lot of data and is not necessary,
+            unless plot_jitter_fibre_pair_EMG_and_times is needed.            
+            The default is False.
 
         Returns
         -------
@@ -377,7 +380,8 @@ class EMGAnalysisReconstruct:
         filename: string
             Name of file to save in.
         save_all_spikes : bool, optional
-            Whether to save all_spikes. Uses a lot of data and is not necessary.
+            Whether to save all_spikes. Uses a lot of data and is not necessary,
+            unless plot_jitter_fibre_pair_EMG_and_times is needed.            
             The default is False.
 
         Returns
@@ -678,7 +682,7 @@ class EMGAnalysisReconstruct:
         self.mu_cluster_settings.set_settings_from_dict(all_settings_dict["mu_cluster_settings"])
         self.mu_jitter_settings.set_settings_from_dict(all_settings_dict["mu_jitter_settings"])
 
-    def save_all_results_and_settings(self, filename: str):
+    def save_all_results_and_settings(self, filename: str, save_all_spikes: bool = False):
         """
         Saves all analysis results and settings.
 
@@ -686,7 +690,11 @@ class EMGAnalysisReconstruct:
         ----------
         filename: str
             Name of file to save results and settings in.
-
+        save_all_spikes : bool, optional
+            Whether to save all_spikes. Uses a lot of data and is not necessary,
+            unless plot_jitter_fibre_pair_EMG_and_times is needed.
+            The default is False.
+            
         Returns
         -------
         None.
@@ -700,7 +708,7 @@ class EMGAnalysisReconstruct:
             "mu_cluster_settings": self.mu_cluster_settings.get_settings_dict(),
             "mu_jitter_settings": self.mu_jitter_settings.get_settings_dict(),
             "motor_units_results": self._get_motor_units_dict(),
-            "localisation_results": self._get_localisation_results_dict(),
+            "localisation_results": self._get_localisation_results_dict(save_all_spikes),
             "clustering_results": self._get_clustering_results_dict(),
             "jitter_results": self._get_jitter_results_dict(),
         }
