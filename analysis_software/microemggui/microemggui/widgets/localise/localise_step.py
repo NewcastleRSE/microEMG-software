@@ -160,7 +160,7 @@ class LocaliseWidget(QWidget):
             self.layout.addWidget(w, row, col, alignment=Qt.AlignLeft)
             row += 1
 
-        self.layout.setContentsMargins(20, 20, 20, 20)
+        self.layout.setContentsMargins(20, 5, 20, 20)
         self.setLayout(self.layout)
 
         # Connections

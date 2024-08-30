@@ -130,7 +130,7 @@ class FindMUWidget(QWidget):
         self.widgets["results"] = MUResultsWidget(reconstruct_model, parent=self)
         layout.addWidget(self.widgets["results"], 1, 1)
 
-        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setContentsMargins(20, 5, 20, 20)
         self.setLayout(layout)
 
         # Connections
