@@ -178,15 +178,18 @@ AnalysisToolbarButton {
 AnalysisToolbarButton:hover {
     background-color: {clr_primary};
     color: {clr_large_button_text};
+    border-right: 1px solid {clr_border};
 }
 
 AnalysisToolbarButton:checked {
     background-color: {clr_primary};
     color: {clr_large_button_text};
+    border-right: 1px solid {clr_border};
 }
 
 AnalysisToolbarButton:disabled {
     color: {clr_text_very_light};
+    border-right: 1px solid {clr_border};
 }
 
 AnalysisToolbarLabel {
