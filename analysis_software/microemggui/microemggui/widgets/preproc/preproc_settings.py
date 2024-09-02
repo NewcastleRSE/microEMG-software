@@ -30,7 +30,10 @@ from microemggui.models.settings import EMGPreprocSettingsModel
 
 
 class FilterTypeWidget(QWidget):
-    # Widget for specifying filter type from labelled combobox
+    """
+    Widget for specifying filter type from labelled combobox.
+    """
+
     def __init__(
         self,
         settings_model: EMGPreprocSettingsModel,
@@ -61,22 +64,27 @@ class FilterTypeWidget(QWidget):
         self.connect_to_settings(settings_model)
 
     def match_input_to_settings(self, settings_model: EMGPreprocSettingsModel):
-        # Set combobox text to corresponding text in preprocessing settings
-
+        """
+        Set combobox text to corresponding text in preprocessing settings
+        """
         self.type_combobox.setCurrentText(
             settings_model.settings.butterworth_filter_settings["filter_type"]
         )
 
     def connect_to_settings(self, settings_model: EMGPreprocSettingsModel):
-        # Connect combobox value to corresponding values in preprocessing settings.
-        # Changes filter type and also sets cutoff2 frequency to none if filter type
-        # only requires one frequency
+        """
+        Connect combobox value to corresponding values in preprocessing settings.
+        Changes filter type and also sets cutoff2 frequency to none if filter type
+        only requires one frequency.
+        """
 
         self.type_combobox.currentTextChanged.connect(settings_model.filter_type_text_changed)
 
 
 class FilterOrderWidget(QWidget):
-    # Widget for specifying the filter order from a spinbox
+    """
+    Widget for specifying the filter order from a spinbox
+    """
 
     def __init__(self, settings_model: EMGPreprocSettingsModel, parent=None):
         super().__init__(parent)
@@ -109,20 +117,26 @@ class FilterOrderWidget(QWidget):
         self.connect_to_settings()
 
     def match_input_to_settings(self):
-        # Set spinbox value to corresponding value in preprocessing settings
+        """
+        Set spinbox value to corresponding value in preprocessing settings.
+        """
 
         self.order_spinbox.setValue(
             self.settings_model.settings.butterworth_filter_settings["order"]
         )
 
     def connect_to_settings(self):
-        # Connect spinbox value to corresponding value in preprocessing settings
+        """
+        Connect spinbox value to corresponding value in preprocessing settings
+        """
 
         self.order_spinbox.valueChanged.connect(self.settings_model.filter_order_changed)
 
 
 class FilterFreqWidget(QWidget):
-    # Widget for specifying the filter frequencies from input boxes
+    """
+    Widget for specifying the filter frequencies from input boxes
+    """
 
     def __init__(self, settings_model: EMGPreprocSettingsModel, fs: float, parent=None):
         super().__init__(parent)
@@ -215,11 +229,13 @@ class FilterFreqWidget(QWidget):
         self.match_input_to_settings()
 
     def set_n_freq(self, filter_type: str):
-        # Set frequency input to match the number of frequencies needed (determined
-        # by filter type).
-        # Used both by the class and as a slot for the filter type combobox.
-        # Note that setting cutoff2 frequency to None is handled by FilterTypeWidget
-        # signal.
+        """
+        Set frequency input to match the number of frequencies needed (determined
+        by filter type).
+        Used both by the class and as a slot for the filter type combobox.
+        Note that setting cutoff2 frequency to None is handled by FilterTypeWidget
+        signal.
+        """
 
         self.filter_type = filter_type  # store filter type for validity checks
 
@@ -259,8 +275,10 @@ class FilterFreqWidget(QWidget):
         self.check_freq_values_valid()
 
     def match_input_to_settings(self):
-        # Set line edit box text to the corresponding values in the preprocessing
-        # settings
+        """
+        Set line edit box text to the corresponding values in the preprocessing
+        settings.
+        """
 
         # Match lineedit inputs to frequencies
         # If cutoff2 is None, will be replaced by empty string by self.set_n_freq
@@ -275,11 +293,14 @@ class FilterFreqWidget(QWidget):
         self.set_n_freq(self.settings_model.settings.butterworth_filter_settings["filter_type"])
 
     def connect_to_settings(self):
-        # Connect line edit values to corresponding values in preprocessing settings
-        # Will send signal whenever text changed, but only stored if in valid range
-        # Note - does not check if relationship between frequencies is valid before
-        # changing settings; however, button to apply the settings will be disabled if
-        # invalid.
+        """
+        Connect line edit values to corresponding values in preprocessing settings.
+        Will send signal whenever text changed, but only stored if in valid range.
+
+        Note - does not check if relationship between frequencies is valid before
+        changing settings; however, button to apply the settings will be disabled if
+        invalid.
+        """
 
         for k, w in self.freq_lineedit.items():
             w.textChanged.connect(
@@ -289,9 +310,12 @@ class FilterFreqWidget(QWidget):
             )
 
     def change_validator_warning_visibility(self, has_acceptable_input: bool, cutoff: str):
-        # Slot for changing warning message visibility for whether frequency is within
-        # valid range
-        # Validator warnings have keys that match the line edit widget keys
+        """
+        Slot for changing warning message visibility for whether frequency is within
+        valid range.
+
+        Validator warnings have keys that match the line edit widget keys.
+        """
 
         if has_acceptable_input:
             self.warning_labels[cutoff].hide()
@@ -299,7 +323,9 @@ class FilterFreqWidget(QWidget):
             self.warning_labels[cutoff].show()
 
     def connect_input_to_validator_warning(self):
-        # Connect line edit values to visibility of warning messages based on validator
+        """
+        Connect line edit values to visibility of warning messages based on validator
+        """
 
         for k, w in self.freq_lineedit.items():
             w.textChanged.connect(
@@ -309,16 +335,21 @@ class FilterFreqWidget(QWidget):
             )
 
     def connect_input_to_check_freq_values_valid(self):
-        # Connection between changes in input text and check for frequency validity
+        """
+        Connection between changes in input text and check for frequency validity.
+        """
 
         for w in self.freq_lineedit.values():
             w.textChanged.connect(self.check_freq_values_valid)
 
     def check_freq_values_valid(self):
-        # Check if frequency values are valid based on 1) validator range (will also be
-        # invalid if empty) and 2) whether frequency cutoff1 is less than cutoff2.
-        # Also shows/hides warning message for whether frequency cutoff1 is less than
-        # cutoff2 if frequencies are otherwise in a valid range.
+        """
+        Check if frequency values are valid based on 1) validator range (will also be
+        invalid if empty) and 2) whether frequency cutoff1 is less than cutoff2.
+
+        Also shows/hides warning message for whether frequency cutoff1 is less than
+        cutoff2 if frequencies are otherwise in a valid range.
+        """
 
         filter_n_freq = self.settings_model.settings._get_n_freq_per_filter_type()
         n_freq = filter_n_freq[self.filter_type]
@@ -352,7 +383,10 @@ class FilterFreqWidget(QWidget):
 
 
 class FilterSpecWidget(QWidget):
-    # Widget for all filter specifications
+    """
+    Widget for all filter specifications
+    """
+
     def __init__(
         self,
         settings_model: EMGPreprocSettingsModel,
@@ -387,7 +421,10 @@ class FilterSpecWidget(QWidget):
 
 
 class PreprocSettingsWidget(QWidget):
-    # Widget for all preprocessing settings
+    """
+    Widget for all preprocessing settings
+
+    """
 
     # Signal for whether settings are valid (emitted when settings changed)
     settings_valid = Signal(bool)
@@ -462,7 +499,10 @@ class PreprocSettingsWidget(QWidget):
             w.textChanged.connect(self.settings_changed)
 
     def match_input_to_settings(self):
-        # Set checkboxes to match provided preprocessing settings
+        """
+        Set checkboxes to match provided preprocessing settings
+
+        """
         settings = self.settings_model.settings
 
         # Mains noise removal checkbox
@@ -472,9 +512,12 @@ class PreprocSettingsWidget(QWidget):
         self.widgets["filter_checkbox"].setChecked(settings.butterworth_filter)
 
     def change_filter_spec_visibility(self, checked: bool):
-        # Show or hide filter specification widgets based on filter checkbox state
-        # Note that filter specification settings are retained so they are available
-        # if the filtering option is added back to the preprocessing steps.
+        """
+        Show or hide filter specification widgets based on filter checkbox state.
+
+        Note that filter specification settings are retained so they are available
+        if the filtering option is added back to the preprocessing steps.
+        """
 
         if checked:
             self.show_filter_spec()
@@ -482,19 +525,29 @@ class PreprocSettingsWidget(QWidget):
             self.hide_filter_spec()
 
     def hide_filter_spec(self):
-        # Hides filter specification widgets
-        # Values do not change, but will not be used if filter checkbox is not checked
+        """
+        Hides filter specification widgets.
+
+        Values do not change, but will not be used if filter checkbox is not checked.
+        """
+
         for w in self.widgets["filter_spec"].widgets.values():
             w.hide()
 
     def show_filter_spec(self):
-        # Shows filter specification widgets
+        """
+        Shows filter specification widgets
+
+        """
         for w in self.widgets["filter_spec"].widgets.values():
             w.show()
 
     def settings_changed(self):
-        # Slot for when any settings changed.
-        # Used to check whether settings are valid, then emit settings_valid signal.
+        """
+        Slot for when any settings changed.
+        Used to check whether settings are valid, then emit settings_valid signal.
+
+        """
 
         # If filter checkbox is checked, check filter frequency validity
         # (Note filter settings are not changed when checkbox is checked/unchecked, so
