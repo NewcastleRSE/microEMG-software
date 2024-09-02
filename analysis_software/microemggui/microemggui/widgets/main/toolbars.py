@@ -128,9 +128,9 @@ class TopToolbar(QToolBar):
             self.addWidget(w)
 
         # Icons for actions
-        my_icons = ["gear", "question-circle", "info-circle"]
+        my_icons = ["question-circle"]
 
-        tips = ["Settings", "Help", "About"]
+        tips = ["Help"]
 
         for ic, tip in zip(my_icons, tips):
             action = QAction(QIcon(":/bootstrap/" + ic), tip, self)
