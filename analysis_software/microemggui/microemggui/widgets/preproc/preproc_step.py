@@ -194,7 +194,9 @@ class PreprocWidget(QWidget):
         # Create widgets
         self.widgets: dict[str, Any] = {
             "title": SectionTitle("Preprocessing", self),
-            "settings": PreprocSettingsWidget(self.settings_model, parent=self),
+            "settings": PreprocSettingsWidget(
+                self.settings_model, self.emg_model["raw"].emg_data.fs, parent=self
+            ),
             "tabbedviewer": EMGViewerTabbedWidget(
                 self.emg_model["raw"], self.emg_clrs, parent=self
             ),

@@ -3,6 +3,8 @@ Widgets for specifying preprocessing settings
 """
 from typing import Any
 
+import numpy as np
+
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
 from PySide6.QtWidgets import QSizePolicy
 
@@ -122,10 +124,8 @@ class FilterOrderWidget(QWidget):
 class FilterFreqWidget(QWidget):
     # Widget for specifying the filter frequencies from input boxes
 
-    def __init__(self, settings_model: EMGPreprocSettingsModel, parent=None):
+    def __init__(self, settings_model: EMGPreprocSettingsModel, fs: float, parent=None):
         super().__init__(parent)
-
-        # TODO: set validator based on data sampling frequency
 
         # Settings
         self.settings_model = settings_model
@@ -165,7 +165,7 @@ class FilterFreqWidget(QWidget):
 
         # Valid range for frequencies
         self.freq_val_low = 0.01
-        self.freq_val_high = 9999  # Nyquist frequency for 20k Hz sampling frequency
+        self.freq_val_high = int(np.floor(fs / 2)) - 1  # Nyquist frequency
         freq_val = QDoubleValidator(self.freq_val_low, self.freq_val_high, 2)
         for w in self.freq_lineedit.values():
             w.setValidator(freq_val)
@@ -356,6 +356,7 @@ class FilterSpecWidget(QWidget):
     def __init__(
         self,
         settings_model: EMGPreprocSettingsModel,
+        fs: float,
         filter_types: list[str],
         parent=None,
     ):
@@ -366,7 +367,7 @@ class FilterSpecWidget(QWidget):
             "filter_type": FilterTypeWidget(
                 settings_model=settings_model, filter_types=filter_types, parent=self
             ),  # type
-            "filter_freq": FilterFreqWidget(settings_model, self),  # frequencies
+            "filter_freq": FilterFreqWidget(settings_model, fs, self),  # frequencies
             "filter_order": FilterOrderWidget(settings_model, parent=self),  # order
         }
 
@@ -391,7 +392,7 @@ class PreprocSettingsWidget(QWidget):
     # Signal for whether settings are valid (emitted when settings changed)
     settings_valid = Signal(bool)
 
-    def __init__(self, settings_model: EMGPreprocSettingsModel, parent=None):
+    def __init__(self, settings_model: EMGPreprocSettingsModel, fs: float, parent=None):
         super().__init__(parent)
 
         # Settings interface
@@ -408,6 +409,7 @@ class PreprocSettingsWidget(QWidget):
         # Filter settings
         filter_spec = FilterSpecWidget(
             settings_model=self.settings_model,
+            fs=fs,
             filter_types=settings_model.settings._get_filter_types_allowed(),
             parent=self,
         )
