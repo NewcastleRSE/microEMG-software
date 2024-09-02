@@ -10,8 +10,11 @@ from PySide6.QtWidgets import QApplication
 
 from microemggui.widgets.main.main_window import MicroEMGMain
 from microemggui.styles.gui_style import get_formatted_gui_style_sheet
+from microemggui.gui_logger import set_up_gui_logging
 
 # %% Create and execute GUI
+
+set_up_gui_logging()  # logging
 
 app = QApplication(sys.argv)
 window = MicroEMGMain()
