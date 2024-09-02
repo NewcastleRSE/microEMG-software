@@ -27,6 +27,10 @@ from microemggui.icons import icons  # noqa - import allows icon references
 
 
 class MicroEMGLogo(QPushButton):
+    """
+    Button with the MicroEMG logo - serves as to home button.
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -39,8 +43,10 @@ class MicroEMGLogo(QPushButton):
 
 
 class RecordingLabel(QLabel):
-    # Widget for recording label in top toolbar
-    # Separate class so easy to style
+    """
+    Widget for recording label in top toolbar.
+    Separate class so easy to style.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -50,7 +56,9 @@ class RecordingLabel(QLabel):
 
 
 class AnalysisToolbar(QToolBar):
-    # Toolbar on left of window for navigating analysis steps
+    """
+    Toolbar on left of window for navigating analysis steps.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -114,8 +122,12 @@ class AnalysisToolbar(QToolBar):
 
 
 class TopToolbar(QToolBar):
-    # Toolbar on top of page for settings, info, and help links
-    # Also has label for recording
+    """
+    Toolbar on top of page for help icon. Could also add settings and info links in the
+    future when that functionality is added.
+
+    Also has a label for the loaded EMG recording.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -147,7 +159,9 @@ class TopToolbar(QToolBar):
         self.setIconSize(QSize(16, 16))
 
     def change_recording_label(self, recording: str):
-        # Slot for updating recording label
+        """
+        Slot for updating recording label.
+        """
 
         if recording:
             self.widgets["recording"].setText(f"<b>Recording:</b> {recording}")
