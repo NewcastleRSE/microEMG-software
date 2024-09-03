@@ -31,7 +31,6 @@ class ApplyLocaliseFibresButton(LargePushButton):
     """
     Button for applying settings settings for localising fibres and triggering this step
     of the analysis.
-
     """
 
     def __init__(self, parent=None):
@@ -54,7 +53,7 @@ class ApplyLocaliseFibresButton(LargePushButton):
 
 class NextButton(LargePushButton):
     """
-    Button for proceeding to the next step
+    Button for proceeding to the next step.
     """
 
     def __init__(self, parent=None):
@@ -261,7 +260,6 @@ class LocaliseWidget(QWidget):
     def update_results(self):
         """
         Add widgets for displaying results of fibre localisation step.
-
         """
 
         # Delete if already present
@@ -289,8 +287,7 @@ class LocaliseWidget(QWidget):
     def settings_changed_events(self):
         """
         When any settings changed, 1) enable re-apply button, 2) disable next button,
-        and 3) send signal that settings have been changed (for main GUI)
-
+        and 3) send signal that settings have been changed (for main GUI).
         """
 
         self.widgets["buttons"].widgets["apply"].setEnabled(True)
