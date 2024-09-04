@@ -5,6 +5,7 @@ Widgets for selecting and loading recording in load step.
 """
 from typing import Any
 import re
+import logging
 
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QFileDialog
 from PySide6.QtCore import Signal
@@ -25,6 +26,7 @@ from microemggui.widgets.base import (
     ExpandingHSpacer,
 )
 
+logger = logging.getLogger("microemggui.load")
 
 # --- Widgets for selecting and loading a recording ---
 
@@ -246,14 +248,16 @@ class LoadRecordingSection(QWidget):
         try:
             emg_files = EMGFiles(self.recording_path)
             emg_data = emg_files.load_emg_data()
-        except FileNotFoundError as e:
+        except FileNotFoundError as e:  # If file not found
             self.widgets["errormessage"].show()
             self.widgets["errormessage"].setText(
                 f"Could not load recording: recording files not found.\n{e}"
             )
-        except Exception as e:
+            logger.exception(f"Could not load recording: recording files not found.\n{e}")
+        except Exception as e:  # Other errors (don't display specific error message)
             self.widgets["errormessage"].show()
-            self.widgets["errormessage"].setText(f"Could not load recording.\n{e}")
+            self.widgets["errormessage"].setText("Could not load recording.")
+            logger.exception(f"Could not load recording.\n{e}")
         else:
             self.emg_model = EMGDataRawModel(emg_data)
             self.recording_changed.emit(self.emg_model)  # Must emit first
@@ -263,9 +267,13 @@ class LoadRecordingSection(QWidget):
             n_chan = self.emg_model.emg_data.n_chan
             emg_dur = self.emg_model.emg_data.emg_dur
             fs = self.emg_model.emg_data.fs
+
+            msg_chan = f"Channels: {n_chan}"
+            msg_dur = f"Duration: {int(emg_dur) // 60:02d}:{int(emg_dur) % 60:02d}"
+            msg_fs = f"Sampling frequency: {int(fs):,} Hz"
             self.widgets["message"].setText(
-                "<b>Recording loaded</b><br>"
-                + f"Channels: {n_chan}<br>"
-                + f"Duration: {int(emg_dur) // 60:02d}:{int(emg_dur) % 60:02d}<br>"
-                + f"Sampling frequency: {int(fs):,} Hz"  # formatted with commas
+                "<b>Recording loaded</b><br>" + msg_chan + "<br>" + msg_dur + "<br>" + msg_fs
             )
+
+            # log
+            logger.info("Recording loaded (" + msg_chan + ", " + msg_dur + ", " + msg_fs + ")")
