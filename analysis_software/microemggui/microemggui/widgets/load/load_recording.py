@@ -30,7 +30,9 @@ from microemggui.widgets.base import (
 
 
 class SelectRecordingWidget(QWidget):
-    # Widget for selecting recording to load
+    """
+    Widget for selecting recording to load.
+    """
 
     # Signals for when recording file path and label are changed
     recording_path_changed = Signal(str)
@@ -69,9 +71,11 @@ class SelectRecordingWidget(QWidget):
         self.widgets["button"].clicked.connect(self.browse_for_recording_file)
 
     def demo_recording_changed(self, idx: int):
-        # Slot for when combobox option is changed; receives index of current selection.
-        # Uses index to determine demo recording number, then emits signal with
-        # recording file path and label.
+        """
+        Slot for when combobox option is changed; receives index of current selection.
+        Uses index to determine demo recording number, then emits signal with
+        recording file path and label.
+        """
 
         recording_num = self.demo_recording_num[idx]
 
@@ -88,9 +92,12 @@ class SelectRecordingWidget(QWidget):
         self.recording_label_changed.emit(self.widgets["combobox"].currentText())
 
     def browse_for_recording_file(self):
-        # Slot for button for choosing recording files; gets path to files
-        # TODO: best default location to open file browser?
-        # TODO: select folder or header file? currently select folder
+        """
+        Slot for button for choosing recording files; gets path to files (select folder
+        containing recording files).
+
+        May want to change default location for file browser in future versions.
+        """
 
         recording_path = QFileDialog.getExistingDirectory(self, "Select Intan recording files", "")
 
@@ -113,7 +120,9 @@ class SelectRecordingWidget(QWidget):
 
 
 class RecordingLabel(QWidget):
-    # Text indicating what data will be analysed
+    """
+    Text indicating what data will be analysed.
+    """
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -133,12 +142,17 @@ class RecordingLabel(QWidget):
         self.setLayout(layout)
 
     def update_recording(self, text: str):
-        # Update the recording name
+        """
+        Update the recording name.
+        """
+
         self.widgets["recording"].setText(text)
 
 
 class LoadRecordingButton(LargePushButton):
-    # Button for loading data
+    """
+    Button for loading data.
+    """
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -147,7 +161,10 @@ class LoadRecordingButton(LargePushButton):
 
 
 class LoadRecordingSection(QWidget):
-    # Widget for selecting a recording to analyse, with section headers and recording label
+    """
+    Widget for selecting a recording to analyse, with section headers and recording
+    label.
+    """
 
     # Signal for whether recording is loaded
     recording_loaded = Signal(bool)
@@ -191,13 +208,17 @@ class LoadRecordingSection(QWidget):
         self.update_recording_path("")
 
     def update_recording_label(self, recording_label: str):
-        # Slot for updating recording label (attribute and label widget)
+        """
+        Slot for updating recording label (both the attribute and the label widget).
+        """
 
         self.emg_label = recording_label
         self.widgets["label"].update_recording(recording_label)
 
     def update_recording_path(self, recording_path: str):
-        # Slot for updating recording path
+        """
+        Slot for updating recording path.
+        """
 
         self.recording_path = recording_path
 
@@ -216,9 +237,11 @@ class LoadRecordingSection(QWidget):
         self.widgets["errormessage"].hide()
 
     def load_data(self):
-        # Load EMG data (slot for load button)
-        # TODO: continue adding to specific errors that can be caught (e.g., no header file)
-        # TODO: loading spinner or pop up window during loading
+        """
+        Load EMG data (slot for load button).
+        Also catches and displays specific load errors to help the user correct loading
+        problems.
+        """
 
         try:
             emg_files = EMGFiles(self.recording_path)
