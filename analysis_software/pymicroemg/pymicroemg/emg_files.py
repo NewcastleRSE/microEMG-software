@@ -183,7 +183,8 @@ class EMGFiles:
         # Create EMGDataRaw object with EMG time series and associated metadata
         emg_data = EMGDataRaw(
             emg_ts=emg_ts,
-            fs=int(emg_header["samprate"][0]),
+            # Needs to be cast to float as float32 is not JSON serializable.
+            fs=float(emg_header["samprate"][0]),
             chan=chan,
             segment_of_recording=segment_of_recording,
         )
