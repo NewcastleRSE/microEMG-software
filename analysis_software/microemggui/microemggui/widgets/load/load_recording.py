@@ -55,7 +55,6 @@ class SelectRecordingWidget(QWidget):
         self.widgets["button"].setToolTip("Choose Intan recording files")
 
         # Demo options
-        # TODO: move to config file?
         self.demo_names = ["", "Demo Recording 1 (healthy)"]
         self.demo_recording_num = [-1, 0]  # < 0 means it is not a recording
         self.widgets["combobox"].addItems(self.demo_names)
