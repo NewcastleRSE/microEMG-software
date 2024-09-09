@@ -11,7 +11,6 @@ numpy = "^1.26.3"
 matplotlib = "^3.8.2"
 scipy = "^1.11.4"
 pymicroemg = {path = "analysis_software/pymicroemg", develop = true}
-intanutil = {path = "analysis_software/intanutil", develop = true}
 pyside6 = "^6.6.1"
 microemggui = {path = "analysis_software/microemggui", develop = true}
 pyqtgraph = "^0.13.4"
@@ -37,7 +36,6 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.mypy]
-exclude = ["analysis_software/intanutil/"]
 ignore_missing_imports = true
 warn_unused_configs = true
 warn_redundant_casts = true
@@ -52,5 +50,4 @@ module = ["PySide6.*"]
 ignore_errors = true
 
 [tool.black]
-extend-exclude = "analysis_software/intanutil/"
 line-length = 99

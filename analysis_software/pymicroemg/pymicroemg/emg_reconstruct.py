@@ -224,20 +224,17 @@ class EMGAnalysisReconstruct:
 
         self.found_motor_units = EMGMotorUnits(all_motor_units)
 
-    def save_motor_units(self, filename: str, include_settings: bool = False):
+    def _get_motor_units_dict(self, include_settings: bool = False) -> dict:
         """
-        Saves motor unit data so that it can be loaded without recalculating
+        Returns dictionary of found motor units.
 
         Parameters
         ----------
-        filename: string
-            Name of file to save in.
-        include_settings: bool, optional
-            Whether to include motor unit settings or not. The default is False.
+        None
 
         Returns
         -------
-        None.
+        dict
 
         """
 
@@ -260,18 +257,18 @@ class EMGAnalysisReconstruct:
         if include_settings:
             motor_units_dict["mu_settings"] = self.mu_settings
 
-        # Convert and write JSON object to file.
-        with open(filename, "w") as outfile:
-            json.dump(motor_units_dict, outfile)
+        return motor_units_dict
 
-    def load_motor_units(self, filename: str):
+    def save_motor_units(self, filename: str, include_settings: bool = False):
         """
-        Loads motor unit data from file.
+        Saves motor unit data so that it can be loaded without recalculating
 
         Parameters
         ----------
         filename: string
-            Name of file to load.
+            Name of file to save in.
+        include_settings: bool, optional
+            Whether to include motor unit settings or not. The default is False.
 
         Returns
         -------
@@ -279,9 +276,27 @@ class EMGAnalysisReconstruct:
 
         """
 
-        # Opening JSON file.
-        with open(filename) as json_file:
-            motor_units_dict = json.load(json_file)
+        # Define dictionary to save results.
+        motor_units_dict = self._get_motor_units_dict(include_settings)
+
+        # Convert and write JSON object to file.
+        with open(filename, "w") as outfile:
+            json.dump(motor_units_dict, outfile)
+
+    def _set_motor_units_from_dict(self, motor_units_dict: dict):
+        """
+        Sets motor unit results from loaded dictionary.
+
+        Parameters
+        ----------
+        motor_units_dict : dict
+            Dictionary containing saved results of motor unit identification.
+
+        Returns
+        -------
+        None.
+
+        """
 
         # Set sampling frequency of data.
         self.emg_data_preproc.fs = motor_units_dict["fs"]
@@ -307,21 +322,42 @@ class EMGAnalysisReconstruct:
 
         self.found_motor_units = EMGMotorUnits(all_motor_units)
 
-    def save_mu_fibre_localisations(self, filename: str, save_all_spikes: bool = False):
+    def load_motor_units(self, filename: str):
         """
-        Saves fibre_localisations for every motor unit.
+        Loads motor unit data from file.
 
         Parameters
         ----------
         filename: string
-            Name of file to save in.
-        save_all_spikes : bool, optional
-            Whether to save all_spikes. Uses a lot of data and is not necessary.
-            The default is False.
+            Name of file to load.
 
         Returns
         -------
         None.
+
+        """
+
+        # Opening JSON file.
+        with open(filename) as json_file:
+            motor_units_dict = json.load(json_file)
+
+        # Set motor units.
+        self._set_motor_units_from_dict(motor_units_dict)
+
+    def _get_localisation_results_dict(self, save_all_spikes: bool = False) -> dict:
+        """
+        Returns dictionary of localisation results.
+
+        Parameters
+        ----------
+        save_all_spikes : bool, optional
+            Whether to save all_spikes. Uses a lot of data and is not necessary,
+            unless plot_jitter_fibre_pair_EMG_and_times is needed.
+            The default is False.
+
+        Returns
+        -------
+        dict
 
         """
 
@@ -333,9 +369,53 @@ class EMGAnalysisReconstruct:
             dict_name = "motor_unit_" + str(mu.motor_unit_number)
             fibre_local_dict[dict_name] = mu.get_fibre_localisation_dict(save_all_spikes)
 
+        return fibre_local_dict
+
+    def save_mu_fibre_localisations(self, filename: str, save_all_spikes: bool = False):
+        """
+        Saves fibre_localisations for every motor unit.
+
+        Parameters
+        ----------
+        filename: string
+            Name of file to save in.
+        save_all_spikes : bool, optional
+            Whether to save all_spikes. Uses a lot of data and is not necessary,
+            unless plot_jitter_fibre_pair_EMG_and_times is needed.
+            The default is False.
+
+        Returns
+        -------
+        None.
+
+        """
+
+        # Define dictionary to save results.
+        fibre_local_dict = self._get_localisation_results_dict(save_all_spikes)
+
         # Convert and write JSON object to file.
         with open(filename, "w") as outfile:
             json.dump(fibre_local_dict, outfile)
+
+    def _set_mu_fibre_localisations_from_dict(self, fibre_local_dict: dict):
+        """
+        Sets fibre localisation results from loaded dictionary.
+
+        Parameters
+        ----------
+        fibre_local_dict : dict
+            Dictionary containing saved results of fibre localisation.
+
+        Returns
+        -------
+        None.
+
+        """
+
+        # Set localisation results for each motor unit.
+        for mu in self.found_motor_units.motor_units:
+            dict_name = "motor_unit_" + str(mu.motor_unit_number)
+            mu.set_fibre_localisation_from_dict(fibre_local_dict[dict_name])
 
     def load_mu_fibre_localisations(self, filename: str):
         """
@@ -356,10 +436,32 @@ class EMGAnalysisReconstruct:
         with open(filename) as json_file:
             fibre_local_dict = json.load(json_file)
 
-        # Set localisation results for each motor unit.
+        # Set localisation results
+        self._set_mu_fibre_localisations_from_dict(fibre_local_dict)
+
+    def _get_clustering_results_dict(self) -> dict:
+        """
+        Returns dictionary of clustering results.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        dict
+
+        """
+
+        # Define dictionary to save results.
+        fibre_clustering_dict = {}
+
+        # Add localisation results for each motor unit.
         for mu in self.found_motor_units.motor_units:
             dict_name = "motor_unit_" + str(mu.motor_unit_number)
-            mu.set_fibre_localisation_from_dict(fibre_local_dict[dict_name])
+            fibre_clustering_dict[dict_name] = mu.get_fibre_clusters_dict()
+
+        return fibre_clustering_dict
 
     def save_mu_fibre_clustering(self, filename: str):
         """
@@ -377,18 +479,40 @@ class EMGAnalysisReconstruct:
         """
 
         # Define dictionary to save results.
-        fibre_clustering_dict = {}
-
-        # Add localisation results for each motor unit.
-        for mu in self.found_motor_units.motor_units:
-            dict_name = "motor_unit_" + str(mu.motor_unit_number)
-            fibre_clustering_dict[dict_name] = mu.get_fibre_clusters_dict()
+        fibre_clustering_dict = self._get_clustering_results_dict()
 
         # Convert and write JSON object to file.
         with open(filename, "w") as outfile:
             json.dump(fibre_clustering_dict, outfile)
 
-    def load_mu_fibre_clustering(self, filename: str):
+    def _set_mu_fibre_clustering_from_dict(
+        self, fibre_clustering_dict: dict, mu_cluster_settings: EMGAnalysisMotorUnitClusterSettings
+    ):
+        """
+        Sets clustering results from loaded dictionary.
+
+        Parameters
+        ----------
+        fibre_clustering_dict : dict
+            Dictionary containing saved results of clustering.
+
+        mu_cluster_settings : EMGAnalysisMotorUnitClusterSettings
+            Copy of settings used to do clustering.
+
+        Returns
+        -------
+        None.
+
+        """
+
+        # Set clustering results for each motor unit.
+        for mu in self.found_motor_units.motor_units:
+            dict_name = "motor_unit_" + str(mu.motor_unit_number)
+            mu.set_fibre_clusters_from_dict(fibre_clustering_dict[dict_name], mu_cluster_settings)
+
+    def load_mu_fibre_clustering(
+        self, filename: str, mu_cluster_settings: EMGAnalysisMotorUnitClusterSettings = None
+    ):
         """
         Loads fibre clustering for every motor unit.
 
@@ -407,10 +531,35 @@ class EMGAnalysisReconstruct:
         with open(filename) as json_file:
             fibre_clustering_dict = json.load(json_file)
 
-        # Set localisation results for each motor unit.
+        # Set clustering results.
+        if mu_cluster_settings is None:
+            mu_cluster_settings = self.mu_cluster_settings
+
+        self._set_mu_fibre_clustering_from_dict(fibre_clustering_dict, mu_cluster_settings)
+
+    def _get_jitter_results_dict(self) -> dict:
+        """
+        Returns dictionary of jitter results.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        dict
+
+        """
+
+        # Define dictionary to save results.
+        fibre_jitter_dict = {}
+
+        # Add localisation results for each motor unit.
         for mu in self.found_motor_units.motor_units:
             dict_name = "motor_unit_" + str(mu.motor_unit_number)
-            mu.set_fibre_clusters_from_dict(fibre_clustering_dict[dict_name])
+            fibre_jitter_dict[dict_name] = mu.get_fibre_jitter_dict()
+
+        return fibre_jitter_dict
 
     def save_mu_fibre_jitter(self, filename: str):
         """
@@ -428,18 +577,40 @@ class EMGAnalysisReconstruct:
         """
 
         # Define dictionary to save results.
-        fibre_jitter_dict = {}
-
-        # Add localisation results for each motor unit.
-        for mu in self.found_motor_units.motor_units:
-            dict_name = "motor_unit_" + str(mu.motor_unit_number)
-            fibre_jitter_dict[dict_name] = mu.get_fibre_jitter_dict()
+        fibre_jitter_dict = self._get_jitter_results_dict()
 
         # Convert and write JSON object to file.
         with open(filename, "w") as outfile:
             json.dump(fibre_jitter_dict, outfile)
 
-    def load_mu_fibre_jitter(self, filename: str):
+    def _set_mu_fibre_jitter_from_dict(
+        self, fibre_jitter_dict: dict, mu_jitter_settings: EMGAnalysisMotorUnitJitterSettings
+    ):
+        """
+        Sets jitter analysis results from loaded dictionary.
+
+        Parameters
+        ----------
+        fibre_local_dict : dict
+            Dictionary containing saved results of jitter analysis.
+
+        mu_jitter_settings : EMGAnalysisMotorUnitJitterSettings
+            Copy of settings used to do jitter analysis.
+
+        Returns
+        -------
+        None.
+
+        """
+
+        # Set jitter analysis results for each motor unit.
+        for mu in self.found_motor_units.motor_units:
+            dict_name = "motor_unit_" + str(mu.motor_unit_number)
+            mu.set_fibre_jitter_from_dict(fibre_jitter_dict[dict_name], mu_jitter_settings)
+
+    def load_mu_fibre_jitter(
+        self, filename: str, mu_jitter_settings: EMGAnalysisMotorUnitJitterSettings = None
+    ):
         """
         Loads fibre jitter analysis results for every motor unit.
 
@@ -458,10 +629,11 @@ class EMGAnalysisReconstruct:
         with open(filename) as json_file:
             fibre_jitter_dict = json.load(json_file)
 
-        # Set localisation results for each motor unit.
-        for mu in self.found_motor_units.motor_units:
-            dict_name = "motor_unit_" + str(mu.motor_unit_number)
-            mu.set_fibre_jitter_from_dict(fibre_jitter_dict[dict_name])
+        # Set jitter analysis results.
+        if mu_jitter_settings is None:
+            mu_jitter_settings = self.mu_jitter_settings
+
+        self._set_mu_fibre_jitter_from_dict(fibre_jitter_dict, mu_jitter_settings)
 
     def save_settings(self, filename: str):
         """
@@ -516,6 +688,90 @@ class EMGAnalysisReconstruct:
         # Set cluster and jitter settings.
         self.mu_cluster_settings.set_settings_from_dict(all_settings_dict["mu_cluster_settings"])
         self.mu_jitter_settings.set_settings_from_dict(all_settings_dict["mu_jitter_settings"])
+
+    def save_all_results_and_settings(self, filename: str, save_all_spikes: bool = False):
+        """
+        Saves all analysis results and settings.
+
+        Parameters
+        ----------
+        filename: str
+            Name of file to save results and settings in.
+        save_all_spikes : bool, optional
+            Whether to save all_spikes. Uses a lot of data and is not necessary,
+            unless plot_jitter_fibre_pair_EMG_and_times is needed.
+            The default is False.
+
+        Returns
+        -------
+        None.
+
+        """
+
+        # Define all results and settings dictionary.
+        all_results_and_settings_dict = {
+            "mu_settings": self.mu_settings.get_settings_dict(),
+            "recon_settings": self.recon_settings.get_settings_dict(),
+            "mu_cluster_settings": self.mu_cluster_settings.get_settings_dict(),
+            "mu_jitter_settings": self.mu_jitter_settings.get_settings_dict(),
+            "motor_units_results": self._get_motor_units_dict(),
+            "localisation_results": self._get_localisation_results_dict(save_all_spikes),
+            "clustering_results": self._get_clustering_results_dict(),
+            "jitter_results": self._get_jitter_results_dict(),
+        }
+
+        # Convert and write JSON object to file.
+        with open(filename, "w") as outfile:
+            json.dump(all_results_and_settings_dict, outfile)
+
+    def load_all_results_and_settings(self, filename: str):
+        """
+        Loads all results and settings.
+
+        Parameters
+        ----------
+        filename: str
+            Name of file to load.
+
+        Returns
+        -------
+        None.
+
+        """
+
+        # Opening JSON file.
+        with open(filename) as json_file:
+            all_results_and_settings_dict = json.load(json_file)
+
+        # Set motor unit finding and reconstruction settings.
+        self.mu_settings.set_settings_from_dict(all_results_and_settings_dict["mu_settings"])
+        self.recon_settings.set_settings_from_dict(all_results_and_settings_dict["recon_settings"])
+
+        # Set cluster and jitter settings.
+        self.mu_cluster_settings.set_settings_from_dict(
+            all_results_and_settings_dict["mu_cluster_settings"]
+        )
+        self.mu_jitter_settings.set_settings_from_dict(
+            all_results_and_settings_dict["mu_jitter_settings"]
+        )
+
+        # Set motor units.
+        self._set_motor_units_from_dict(all_results_and_settings_dict["motor_units_results"])
+
+        # Set localisation results.
+        self._set_mu_fibre_localisations_from_dict(
+            all_results_and_settings_dict["localisation_results"]
+        )
+
+        # Set clustering results.
+        self._set_mu_fibre_clustering_from_dict(
+            all_results_and_settings_dict["clustering_results"], self.mu_cluster_settings
+        )
+
+        # Set jitter results.
+        self._set_mu_fibre_jitter_from_dict(
+            all_results_and_settings_dict["jitter_results"], self.mu_jitter_settings
+        )
 
     def plot_motor_units_raster(
         self,

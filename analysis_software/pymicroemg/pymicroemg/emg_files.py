@@ -13,7 +13,7 @@ import os
 import numpy as np
 import numpy.typing as npt
 
-import intanutil.header as intan_header
+from pymicroemg.header_reader import header_reader
 from pymicroemg.emg_data_raw import EMGDataRaw
 from pymicroemg.emg_channels import EMGChannels
 
@@ -107,24 +107,23 @@ class EMGFiles:
 
         return chan_fnames
 
-    def read_header(self) -> dict:
+    def read_header(self) -> npt.NDArray:
         """
-        Reads the Intan header file 'info.rhd' using the intanutil package
-        provided by Intan.
+        Reads the Intan header file 'info.rhd' using function defined
+        in header_reader.py.
 
         Returns
         -------
-        emg_header : dict
-            Dictionary of all information contained in the Intan header file.
+        emg_header : npt.NDArray
+            Array of information contained in the Intan header file.
 
         """
 
         # Full path to header file
         header_path = os.path.join(self.emg_dir, self.header_fname)
 
-        # Load header file as dictionary using intanutils header module
-        with open(header_path, "rb") as fid:
-            emg_header = intan_header.read_header(fid)
+        # Load header as array.
+        emg_header = header_reader(header_path)
 
         return emg_header
 
@@ -184,7 +183,8 @@ class EMGFiles:
         # Create EMGDataRaw object with EMG time series and associated metadata
         emg_data = EMGDataRaw(
             emg_ts=emg_ts,
-            fs=emg_header["sample_rate"],
+            # Needs to be cast to float as float32 is not JSON serializable.
+            fs=float(emg_header["samprate"][0]),
             chan=chan,
             segment_of_recording=segment_of_recording,
         )
