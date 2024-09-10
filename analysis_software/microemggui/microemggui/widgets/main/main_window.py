@@ -131,7 +131,6 @@ class MicroEMGMain(QMainWindow):
         self.motor_units_to_analyse = []  # List of motor units to analyse
 
         # Colours for EMG recordings
-        # TODO: make configurable?
         self.emg_clrs = Prism_10.hex_colors
 
         # Make widgets and toolbars
@@ -289,7 +288,6 @@ class MicroEMGMain(QMainWindow):
         load_w.load_data_changed.connect(self.update_raw_emg_model_and_settings_model)
 
         # Link recording label to top toolbar
-        # TODO: consider storing in main window (e.g., for saving/exports)
         select_recording_w = load_w.widgets["recording"].widgets["selectrecording"]
         select_recording_w.recording_label_changed.connect(
             self.widgets["toptoolbar"].change_recording_label
