@@ -87,12 +87,12 @@ class EMGAnalysisReconstructSettings:
 
     def set_settings_from_dict(self, settings_dict: dict):
         """
-        Saves settings for analysis.
+        Sets settings for analysis.
 
         Parameters
         ----------
         settings_dict: dict
-            Dictionary with all the settings save in it.
+            Dictionary with all the settings saved in it.
 
         Returns
         -------
@@ -217,12 +217,12 @@ class EMGAnalysisMotorUnitSettings:
 
     def set_settings_from_dict(self, settings_dict: dict):
         """
-        Saves settings for analysis.
+        Sets settings for analysis.
 
         Parameters
         ----------
         settings_dict: dict
-            Dictionary with all the settings save in it.
+            Dictionary with all the settings saved in it.
 
         Returns
         -------
@@ -322,12 +322,12 @@ class EMGAnalysisMotorUnitClusterSettings:
 
     def set_settings_from_dict(self, settings_dict: dict):
         """
-        Saves settings for analysis.
+        Sets settings for analysis.
 
         Parameters
         ----------
         settings_dict: dict
-            Dictionary with all the settings save in it.
+            Dictionary with all the settings saved in it.
 
         Returns
         -------
@@ -420,12 +420,12 @@ class EMGAnalysisMotorUnitJitterSettings:
 
     def set_settings_from_dict(self, settings_dict: dict):
         """
-        Saves settings for analysis.
+        Sets settings for analysis.
 
         Parameters
         ----------
         settings_dict: Dictionary
-            Dictionary with all the settings save in it.
+            Dictionary with all the settings saved in it.
 
         Returns
         -------
