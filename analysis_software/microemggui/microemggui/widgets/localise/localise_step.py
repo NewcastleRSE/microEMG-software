@@ -7,7 +7,14 @@ Created on Tue Aug 13 11:41:14 2024
 """
 from typing import Any
 
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QGridLayout, QProgressDialog, QApplication
+from PySide6.QtWidgets import (
+    QWidget,
+    QHBoxLayout,
+    QGridLayout,
+    QProgressDialog,
+    QProgressBar,
+    QApplication,
+)
 from PySide6.QtCore import Qt, Signal
 
 from microemggui.models.emg import EMGAnalysisReconstructModel
@@ -24,7 +31,6 @@ class ApplyLocaliseFibresButton(LargePushButton):
     """
     Button for applying settings settings for localising fibres and triggering this step
     of the analysis.
-
     """
 
     def __init__(self, parent=None):
@@ -47,7 +53,7 @@ class ApplyLocaliseFibresButton(LargePushButton):
 
 class NextButton(LargePushButton):
     """
-    Button for proceeding to the next step
+    Button for proceeding to the next step.
     """
 
     def __init__(self, parent=None):
@@ -188,6 +194,11 @@ class LocaliseWidget(QWidget):
         # Create progress bar for showing localisation progress
         n_mu = len(self.motor_units_to_analyse)
         self.progress = QProgressDialog("Localising fibres", None, 0, n_mu, parent=self)
+        bar = QProgressBar(self.progress)
+        bar.setMinimum(0)
+        bar.setMaximum(n_mu)
+        bar.setTextVisible(False)
+        self.progress.setBar(bar)
         # Ensure that progress dialog closes if GUI window is minimised
         # GUI window will pop up when process finishes and the progress bar closes
         self.progress.setAttribute(Qt.WA_DeleteOnClose, True)
@@ -249,7 +260,6 @@ class LocaliseWidget(QWidget):
     def update_results(self):
         """
         Add widgets for displaying results of fibre localisation step.
-
         """
 
         # Delete if already present
@@ -277,8 +287,7 @@ class LocaliseWidget(QWidget):
     def settings_changed_events(self):
         """
         When any settings changed, 1) enable re-apply button, 2) disable next button,
-        and 3) send signal that settings have been changed (for main GUI)
-
+        and 3) send signal that settings have been changed (for main GUI).
         """
 
         self.widgets["buttons"].widgets["apply"].setEnabled(True)

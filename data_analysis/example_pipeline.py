@@ -226,3 +226,10 @@ for mu_num in motor_units_for_fibre_localisation:
 mu_idx = motor_units_for_fibre_localisation[0]
 mu = reconstruct.found_motor_units.motor_units[mu_idx]
 mu.plot_jitter_fibre_pair_EMG_and_times(fibre1=0, fibre2=1)
+
+# Test saving all results and settings, and then test loading
+filename_all = 'all_res.json'
+
+reconstruct.save_all_results_and_settings(filename_all)
+
+reconstruct.load_all_results_and_settings(filename_all)

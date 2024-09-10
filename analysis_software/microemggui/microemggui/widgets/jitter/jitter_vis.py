@@ -101,7 +101,7 @@ class JitterAllFibrePlotsWidget(QWidget):
 
 class JitterFibrePairPlotWidget(QWidget):
     """
-    Widget for visualising jitter of one fibre pair
+    Widget for visualising jitter of one fibre pair.
     """
 
     def __init__(
@@ -140,7 +140,7 @@ class JitterFibrePairPlotWidget(QWidget):
         """
         Update the plotted fibres.
         fibre is the text from the combobox, and fibre_idx is 0 or 1 (for first or
-        second fibre of the fibre pair)
+        second fibre of the fibre pair).
         """
 
         if fibre:  # if not an empty string, convert to int and store
@@ -156,7 +156,6 @@ class JitterFibrePairPlotWidget(QWidget):
     def update_plot(self):
         """
         Update plot after changing motor unit and/or fibre pair.
-
         """
 
         figsize = (5, 10)  # to prevent plot from changing size

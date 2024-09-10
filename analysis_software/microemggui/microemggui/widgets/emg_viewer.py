@@ -40,8 +40,9 @@ from microemggui.models.emg import EMGDataRawModel, EMGDataPreprocModel
 
 
 def convert_seconds_to_time_label(time_s: float, with_ms: bool = False, n_dec: int = 4) -> str:
-    # Convert time in seconds to a mm:ss string
-    # TODO: check for any floating point issues
+    """
+    Convert time in seconds to a mm:ss string.
+    """
 
     S_TO_MIN = 60
 
@@ -110,13 +111,17 @@ class EMGPlotWidget(QWidget):
         self.can_move_backward = False  # Cannot move backwards initially since at t = 0
 
     def compute_stop_time(self) -> float:
-        # Compute stop time of plotted data based on start time and division size
+        """
+        Compute stop time of plotted data based on start time and division size.
+        """
 
         stop_t = self.start_t + (self.div_size * self.n_div)
         return stop_t
 
     def make_plot_pens(self) -> list[QPen]:
-        # Make a pen for drawing each EMG signal in the pyqtgraph plot
+        """
+        Make a pen for drawing each EMG signal in the pyqtgraph plot.
+        """
 
         n_chan = self.emg_model.emg_data.n_chan  # number of channels
 
@@ -134,7 +139,9 @@ class EMGPlotWidget(QWidget):
         return pens
 
     def make_fig(self):
-        # Make figure
+        """
+        Make figure of EMG time series.
+        """
 
         # Compute stop time
         stop_t = self.compute_stop_time()
@@ -174,15 +181,15 @@ class EMGPlotWidget(QWidget):
         self.set_x_ticks_and_range()
 
         # Tick label fonts
-        # TODO: consider other fonts
-        # TODO: consider setting font size as an option
         font = QFont("Lucida Sans Typewriter", self.y_font_size)
         self.plot_w.getAxis("left").setStyle(tickFont=font)
         font = QFont("Lucida Sans Typewriter", self.x_font_size)
         self.plot_w.getAxis("bottom").setStyle(tickFont=font)
 
     def update_plot(self):
-        # Update plotted data using existing axes
+        """
+        Update plotted data using existing axes.
+        """
 
         # Compute stop time
         stop_t = self.compute_stop_time()
@@ -212,17 +219,20 @@ class EMGPlotWidget(QWidget):
         self.set_x_ticks_and_range()  # update x-axis
 
     def replace_emg_model(self, emg_model):
-        # Replace EMG model with a new model (and new EMG data).
-        # Assumes the number of channels is the same (e.g., the new data is a
-        # transformed version of the original data).
-        # TODO: consider adding check for number of channels
+        """
+        Replace EMG model with a new model (and new EMG data).
+        Assumes the number of channels is the same (e.g., the new data is a
+        transformed version of the original data).
+        """
 
         self.emg_model = emg_model
         self.update_plot()
 
     def set_y_ticks_and_range(self):
-        # Fix y-axis ticks and range of pyqtgraph plot based on offset value and
-        # number of channels
+        """
+        Fix y-axis ticks and range of pyqtgraph plot based on offset value and
+        number of channels.
+        """
 
         # Compute y-tick locations
         y_ticks = list(
@@ -243,9 +253,11 @@ class EMGPlotWidget(QWidget):
         self.plot_w.setYRange(y_ticks[0] + y_buff, y_ticks[len(y_ticks) - 1] - y_buff, padding=0)
 
     def set_x_ticks_and_range(self):
-        # Set x-axis ticks and range of pyqtgraph plot based on the plotted time segment
-        # Set the x-axis ticks to form 10 divisions
-        # Label with recording time in minutes and seconds
+        """
+        Set x-axis ticks and range of pyqtgraph plot based on the plotted time segment.
+        Set the x-axis ticks to form 10 divisions.
+        Label with recording time in minutes and seconds.
+        """
 
         # Compute x-tick locations
         stop_t = self.compute_stop_time()
@@ -268,9 +280,11 @@ class EMGPlotWidget(QWidget):
         self.plot_w.setXRange(self.start_t - x_buff, stop_t + (x_buff * 1.5), padding=0)
 
     def compute_ds_factor(self) -> int:
-        # Compute downsampling factor based on division size
-        # Downsampling prevents slow plotting when large time interval is plotted
-        # Set to divison size * 50, with min of 1 and max of 100
+        """
+        Compute downsampling factor based on division size.
+        Downsampling prevents slow plotting when large time interval is plotted.
+        Set to divison size * 50, with min of 1 and max of 100.
+        """
 
         ds_factor = min(self.div_size * 50, 100)
         ds_factor = max(ds_factor, 1)
@@ -279,7 +293,9 @@ class EMGPlotWidget(QWidget):
         return ds_factor
 
     def update_div_size(self, div_size: float):
-        # Update division size (includes updated downsampling factor correspondingly)
+        """
+        Update division size (includes updated downsampling factor correspondingly).
+        """
 
         self.div_size = div_size  # new division size
         self.ds_factor = self.compute_ds_factor()  # update downsample factor
@@ -287,8 +303,10 @@ class EMGPlotWidget(QWidget):
         self.div_size_changed.emit()  # emit signal for slider
 
     def update_start_time(self, start_t: float):
-        # Update start time of plotted data
-        # Used as slot for slider and also called by increment_start_time()
+        """
+        Update start time of plotted data.
+        Used as slot for slider and also called by increment_start_time().
+        """
 
         self.start_t = start_t
         self.update_plot()
@@ -305,16 +323,19 @@ class EMGPlotWidget(QWidget):
             self.at_start.emit(self.can_move_backward)
 
     def get_max_start_time(self) -> float:
-        # Compute maximum allowed start time given division size and number of
-        # divisions
+        """
+        Compute maximum allowed start time given division size and number of divisions.
+        """
 
         max_start = self.emg_model.emg_data.emg_dur - (self.div_size * (self.n_div - 1))
         max_start = max(max_start, 0)  # Ensures min possible value is zero
         return max_start
 
     def increment_start_time(self, n_div: int):
-        # Slot for arrow buttons for incrementing start time
-        # n_div = number of divisions to move
+        """
+        Slot for arrow buttons for incrementing start time.
+        n_div = number of divisions to move.
+        """
 
         # Increment by n div
         start_t = self.start_t + (n_div * self.div_size)
@@ -332,17 +353,19 @@ class EMGPlotWidget(QWidget):
         self.start_time_incremented.emit(start_t)
 
     def scale_offset(self, scale: float):
-        # Slot for buttons that scale amplitude of plotted lines (via offset
-        # parameter)
-        # Also updates y-axis ticks and range
+        """
+        Slot for buttons that scale amplitude of plotted lines (via offset parameter).
+        Also updates y-axis ticks and range.
+        """
 
         self.offset = self.offset / scale  # scale offset
         self.update_plot()  # update plot
         self.set_y_ticks_and_range()  # update y-axis ticks
 
     def eventFilter(self, obj, event) -> bool:
-        # Catch wheel events on pyqtgraph plot
-        # TODO: check that works as expected using mouse and WindowsOS
+        """
+        Catch wheel events on pyqtgraph plot.
+        """
 
         if "QWheelEvent" in str(event):
             wheel_delta = event.angleDelta().y()
@@ -356,8 +379,10 @@ class EMGPlotWidget(QWidget):
 
 
 class EMGDivSizeWidget(QWidget):
-    # Widget for specifying the window size (i.e., time segment duration) for viewing
-    # EMG data in terms of division size (with 10 divisions per "page")
+    """
+    Widget for specifying the window size (i.e., time segment duration) for viewing
+    EMG data in terms of division size (with 10 divisions per "page").
+    """
 
     def __init__(self, plot_widget, parent=None):
         super().__init__(parent)
@@ -390,10 +415,12 @@ class EMGDivSizeWidget(QWidget):
 
     @staticmethod
     def make_combobox_options():
-        # Make division options for combobox.
-        # Includes combobox text and corresponding division values in seconds; the
-        # latter will be used for signals.
-        # TODO: ensure initial division size is included in options
+        """
+        Make division options for combobox (must include original division size defined
+        in EMGPlotWidget!)
+        Includes combobox text and corresponding division values in seconds; the
+        latter will be used for signals.
+        """
 
         MS_TO_S = 1000
 
@@ -434,9 +461,11 @@ class EMGDivSizeWidget(QWidget):
         return options
 
     def connect_div_size(self):
-        # Sends division size in seconds (stored in self.options["values_s"]) that
-        # corresponds to the combobox index.
-        # Connected to plot widget method for updating the division size.
+        """
+        Sends division size in seconds (stored in self.options["values_s"]) that
+        corresponds to the combobox index.
+        Connected to plot widget method for updating the division size.
+        """
 
         w = self.widgets["div_combobox"]
         w.currentIndexChanged.connect(
@@ -445,7 +474,9 @@ class EMGDivSizeWidget(QWidget):
 
 
 class EMGArrowsWidget(QWidget):
-    # Arrow buttons for moving backwards and forwards through time series plot
+    """
+    Arrow buttons for moving backwards and forwards through time series plot.
+    """
 
     def __init__(self, plot_widget, parent=None):
         super().__init__(parent)
@@ -507,23 +538,29 @@ class EMGArrowsWidget(QWidget):
         self.plot_widget.at_start.connect(self.toggle_previous_buttons)
 
     def connect_start_time(self):
-        # Connect button clicked signal to start time of EMG plot.
-        # Will increment start time by the number of divisions moved by the button
+        """
+        Connect button clicked signal to start time of EMG plot.
+        Will increment start time by the number of divisions moved by the button.
+        """
 
         for w, n in zip(self.widgets.values(), self.button_n_div):
             w.clicked.connect(lambda checked=None, n=n: self.plot_widget.increment_start_time(n))
 
     def toggle_next_buttons(self, can_move_forward):
-        # Enable/disable buttons for progressing time series.
-        # Slot for self.plot_widget "at_stop" signal.
+        """
+        Enable/disable buttons for progressing time series.
+        Slot for self.plot_widget "at_stop" signal.
+        """
 
         for w, n in zip(self.widgets.values(), self.button_n_div):
             if n > 0:  # widgets that move forward through EMG time series
                 w.setEnabled(can_move_forward)
 
     def toggle_previous_buttons(self, can_move_backward):
-        # Enable/disable buttons for progressing time series.
-        # Slot for self.plot_widget "at_stop" signal.
+        """
+        Enable/disable buttons for progressing time series.
+        Slot for self.plot_widget "at_stop" signal.
+        """
 
         for w, n in zip(self.widgets.values(), self.button_n_div):
             if n < 0:  # widgets that move backward through EMG time series
@@ -531,10 +568,11 @@ class EMGArrowsWidget(QWidget):
 
 
 class EMGStartTimeWidget(QWidget):
-    # Slider for changing time in EMG Viewer.
-    # Intervals are determined by division size.
-    # Provides mm:ss label for start time.
-    # TODO: consider custom slider class if need multiple sliders with different styles
+    """
+    Slider for changing time in EMG Viewer.
+    Intervals are determined by division size.
+    Provides mm:ss label for start time.
+    """
 
     def __init__(self, plot_widget, parent=None):
         super().__init__(parent)
@@ -572,8 +610,10 @@ class EMGStartTimeWidget(QWidget):
         self.plot_widget.div_size_changed.connect(self.set_slider_maximum)
 
     def set_slider_maximum(self):
-        # Set slider maximum match number of divisions in data
-        # Correspondingly adjust current slider value to match current start time
+        """
+        Set slider maximum match number of divisions in data.
+        Correspondingly adjust current slider value to match current start time.
+        """
 
         # Get current plot time (may be changed when change slider max)
         start_t = self.plot_widget.start_t
@@ -586,13 +626,17 @@ class EMGStartTimeWidget(QWidget):
         self.update_max_time_label()
 
     def convert_slider_value_to_start_time(self) -> float:
-        # Converts slider value (number of divisions) to start time in seconds
+        """
+        Converts slider value (number of divisions) to start time in seconds.
+        """
 
         start_t = self.widgets["slider"].value() * self.plot_widget.div_size
         return start_t
 
     def update_time_label(self, slider_value: int):
-        # Updates time label from slider value
+        """
+        Updates time label from slider value.
+        """
 
         # Start time in seconds
         start_t = self.convert_slider_value_to_start_time()
@@ -602,8 +646,10 @@ class EMGStartTimeWidget(QWidget):
         self.widgets["time"].setText(t_label)
 
     def update_max_time_label(self):
-        # Update the max time label for the slider based on the interval size
-        # (max time is the maximal start time that the slider can be set to)
+        """
+        Update the max time label for the slider based on the interval size
+        (max time is the maximal start time that the slider can be set to).
+        """
 
         # Convert max slider value to seconds
         max_t = self.widgets["slider"].maximum() * self.plot_widget.div_size
@@ -613,12 +659,16 @@ class EMGStartTimeWidget(QWidget):
         self.widgets["maxtime"].setText(t_label)
 
     def connect_slider_value_to_time_label(self):
-        # Connection for changes in slider value to change start time label
+        """
+        Connection for changes in slider value to change start time label.
+        """
 
         self.widgets["slider"].valueChanged.connect(self.update_time_label)
 
     def connect_slider_value_to_start_time(self):
-        # Connection for changes in slider value to change start time in plot
+        """
+        Connection for changes in slider value to change start time in plot.
+        """
 
         self.widgets["slider"].valueChanged.connect(
             lambda value: self.plot_widget.update_start_time(
@@ -627,9 +677,11 @@ class EMGStartTimeWidget(QWidget):
         )
 
     def update_slider(self, start_time: float):
-        # Slot for changing slider when plot start time is incremented (via arrows).
-        # Also used when updating slider maximum (which also changes slider interval
-        # size)
+        """
+        Slot for changing slider when plot start time is incremented (via arrows).
+        Also used when updating slider maximum (which also changes slider interval
+        size).
+        """
 
         # Multiply by 1/div_size rather than divide by div_size to reduce (prevent?)
         # floating point precision errors; also round as a back-up
@@ -637,7 +689,9 @@ class EMGStartTimeWidget(QWidget):
 
 
 class EMGTimeControlsWidget(QWidget):
-    # Controls for changing time in EMG Viewer
+    """
+    Controls for changing time in EMG Viewer.
+    """
 
     def __init__(self, plot_widget, parent=None):
         super().__init__(parent)
@@ -660,7 +714,9 @@ class EMGTimeControlsWidget(QWidget):
 
 
 class EMGGainWidget(QWidget):
-    # Controls for controlling plotted signal amplitude (gain)
+    """
+    Controls for changing plotted signal amplitude (gain).
+    """
 
     def __init__(self, plot_widget, parent=None):
         super().__init__(parent)
@@ -709,8 +765,10 @@ class EMGGainWidget(QWidget):
         self.connect_scale_to_plot_offset()
 
     def connect_scale_to_plot_offset(self):
-        # Connect button clicked signal of buttons to offset of EMG plot.
-        # Will scale offset by widget_scale value
+        """
+        Connect button clicked signal of buttons to offset of EMG plot.
+        Will scale offset by widget_scale value.
+        """
 
         for w, scale in zip(self.widgets.values(), self.widget_scale):
             w.clicked.connect(
@@ -722,7 +780,9 @@ class EMGGainWidget(QWidget):
 
 
 class EMGViewerWidget(QWidget):
-    # Widget for viewing EMG time series data
+    """
+    Widget for viewing EMG time series data.
+    """
 
     def __init__(
         self, emg_model: EMGDataRawModel | EMGDataPreprocModel, emg_clrs: list[str], parent=None

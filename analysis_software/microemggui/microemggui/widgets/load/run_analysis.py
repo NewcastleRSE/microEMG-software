@@ -15,8 +15,10 @@ from microemggui.widgets.base import (
 
 
 class NextButton(LargePushButton):
-    # Button for going to next analysis step
-    # Also triggers data to be sent to main window
+    """
+    Button for going to next analysis step.
+    Also triggers data to be sent to main window.
+    """
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -25,8 +27,9 @@ class NextButton(LargePushButton):
 
 
 class RunAnalysisSection(QWidget):
-    # Section in loading widget for running the analysis
-    # TODO: add button for running multiple/all steps of analysis without user input
+    """
+    Section in loading widget for running the analysis.
+    """
 
     def __init__(self, parent=None):
         super().__init__(parent)

@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 from pymicroemg.emg_reconstruct_settings import EMGAnalysisMotorUnitClusterSettings
 from pymicroemg.emg_reconstruct_settings import EMGAnalysisMotorUnitJitterSettings
 
+import json
 import numpy as np
 import numpy.typing as npt
 
@@ -147,3 +148,93 @@ class EMGDataPreproc(EMGData):
         )
 
         return reconstruct
+
+    def get_emg_info_dict(self) -> dict:
+        """
+        Returns EMG info used for preprocessing and downstream analysis.
+
+        Parameters
+        ----------
+        None.
+
+        Returns
+        -------
+        dict
+
+        """
+
+        # Define settings dictionary.
+        emg_info_dict = {
+            "fs": self.fs,
+            "analyse_chan": self.chan.analyse_chan.tolist(),
+            "segment_of_recording": self.segment_of_recording.tolist(),
+        }
+
+        return emg_info_dict
+
+    def set_emg_info_from_dict(self, emg_info_dict: dict):
+        """
+        Sets EMG info used for preprocessing and downstream analysis.
+
+        Parameters
+        ----------
+        emg_info_dict: Dictionary
+            Dictionary with all the EMG info saved in it.
+
+        Returns
+        -------
+        None
+
+        """
+
+        self.fs = emg_info_dict["fs"]
+        self.chan.analyse_chan = np.array(emg_info_dict["analyse_chan"])
+        self.segment_of_recording = np.array(emg_info_dict["segment_of_recording"])
+
+    def save_preprocess_setup(self, filename: str):
+        """
+        Saves EMG info and prepocessing settings.
+
+        Parameters
+        ----------
+        filename: str
+            Name of file to save in.
+
+        Returns
+        -------
+        None
+
+        """
+
+        # Define dictionary to save results.
+        preproc_dict = self.get_emg_info_dict()
+
+        # Add settings used for preprocessing.
+        preproc_dict["preproc_settings"] = self.preproc_settings.get_settings_dict()
+
+        # Convert and write JSON object to file.
+        with open(filename, "w") as outfile:
+            json.dump(preproc_dict, outfile)
+
+    def load_preprocess_setup(self, filename: str):
+        """
+        Loads EMG info and prepocessing settings.
+
+        Parameters
+        ----------
+        filename: str
+            Name of file to load data from.
+
+        Returns
+        -------
+        None
+
+        """
+
+        # Opening JSON file.
+        with open(filename) as json_file:
+            preproc_dict = json.load(json_file)
+
+        # Set EMG info and preprocessing settings.
+        self.set_emg_info_from_dict(preproc_dict)
+        self.preproc_settings.set_settings_from_dict(preproc_dict["preproc_settings"])

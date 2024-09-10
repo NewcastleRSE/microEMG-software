@@ -172,6 +172,12 @@ class MUVisWidget(QWidget):
 
 
 class MUEMGArrowsWidget(QWidget):
+    """
+    Arrow buttons for navigating through motor units.
+    """
+
+    # Signal for when an arrow is clicked with the amount that the motor unit number
+    # should be incremented (-1 if left arrow, +1 if right arrow)
     mu_arrow_clicked = Signal(int)
 
     def __init__(self, parent=None):
@@ -297,7 +303,6 @@ class MUEMGViewerWidget(QWidget):
     def update_motor_unit(self):
         """
         Update visualised motor unit.
-
         """
 
         # Number of potentials

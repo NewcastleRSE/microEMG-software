@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jul 31 11:01:39 2024
-
-@author: Gabrielle
+GUI for developing jitter widget
 """
 
 import sys
 
 from PySide6.QtWidgets import QApplication, QMainWindow
 
-from microemggui.widgets.localise.localise_step import LocaliseWidget
+from microemggui.widgets.export.export_step import ExportWidget
 from microemggui.models.emg import EMGAnalysisReconstructModel
 from microemggui.styles.gui_style import get_formatted_gui_style_sheet
 
@@ -36,7 +34,7 @@ class MainWindow(QMainWindow):
         emg_dir, _ = cfg.get_control_recording_path_and_id(recording_num)
         emg_files = EMGFiles(emg_dir)
         emg_data = emg_files.load_emg_data()
-        emg_data.trim_emg_ts(0, 30)
+        emg_data.trim_emg_ts(20, 25)
 
         settings = EMGPreprocSettings()
         settings.add_remove_mains()  # Remain mains noise
@@ -66,10 +64,16 @@ class MainWindow(QMainWindow):
         reconstruct_model.reconstruct.find_motor_units()
 
         # motor units to analyse
-        self.analyse_mu = [0, 1]
+        self.analyse_mu = [0]
 
-        # localise widget
-        self.widget = LocaliseWidget(reconstruct_model, self.analyse_mu, parent=self)
+        # Perform fibre reconstruction, clustering, and jitter analysis
+        for mu_idx in self.analyse_mu:
+            reconstruct.reconstruct_fibres(mu_idx)
+            reconstruct.mu_cluster_fibre_potentials(mu_idx)
+            reconstruct.mu_jitter_analysis(mu_idx)
+
+        # Export widget
+        self.widget = ExportWidget(reconstruct_model, parent=self)
 
         # layout and size
         self.setCentralWidget(self.widget)

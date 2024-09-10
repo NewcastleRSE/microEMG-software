@@ -231,9 +231,6 @@ class MUFibreClusters3DVisWidget(QWidget):
         self.fig.canvas.draw_idle()  # redraw
 
 
-# TODO: 3D plot of all potentials
-
-
 class MUFibreLocationsWidget(QWidget):
     """
     Stacked widget for displaying summary measures and visualisations for the fibre

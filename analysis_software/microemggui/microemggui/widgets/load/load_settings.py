@@ -3,6 +3,7 @@
 """
 Widgets for selecting and loading analysis settings in load step.
 """
+
 from typing import Any
 
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
@@ -19,11 +20,11 @@ from pymicroemg.emg_reconstruct_settings import (
 from microemggui.models.settings import EMGSettingsModel
 
 from microemggui.widgets.base import (
-    InputInlineText,
     InputInlineLabel,
     InputComboBox,
     SubsectionTitle,
     ExpandingHSpacer,
+    InputInlineText,
 )
 
 
@@ -31,8 +32,10 @@ from microemggui.widgets.base import (
 
 
 class LoadSettingsWidget(QWidget):
-    # Labelled dropdown box for choosing settings for analysis
-    # Currently only implemented preprocessing settings
+    """
+    Labelled dropdown box for choosing settings for analysis.
+    Currently only implemented preprocessing settings.
+    """
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -44,6 +47,9 @@ class LoadSettingsWidget(QWidget):
         }
 
         # List of settings options
+        # If you want to add more options in the future, append them to the end of this
+        # list and then specify those settings as a case in the load_settings method of
+        # the LoadSettingsSection widget.
         self.settings_options = ["", "Default"]
         self.widgets["combobox"].addItems(self.settings_options)
 
@@ -57,7 +63,9 @@ class LoadSettingsWidget(QWidget):
 
 
 class LoadSettingsSection(QWidget):
-    # Widget for selecting analysis settings
+    """
+    Widget for selecting analysis settings.
+    """
 
     # Signal for whether settings have been loaded
     settings_loaded = Signal(bool)
@@ -89,8 +97,9 @@ class LoadSettingsSection(QWidget):
         self.widgets["load"].widgets["combobox"].currentTextChanged.connect(self.load_settings)
 
     def load_settings(self, settings_name: str):
-        # Add correct settings as attribute when settings combobox is changed
-        # TODO: Update to get from config file and use all settings (not just preproc)
+        """
+        Add correct settings as attribute when settings combobox is changed.
+        """
 
         if not settings_name:  # No settings selected
             self.settings_model = None
@@ -130,8 +139,10 @@ class LoadSettingsSection(QWidget):
         self.display_settings()
 
     def display_settings(self):
-        # Update settingstext widget to display summary of EMG settings that have been
-        # selected
+        """
+        Update settingstext widget to display summary of EMG settings that have been
+        selected.
+        """
 
         if not self.settings_model:
             self.widgets["settingstext"].setText("")

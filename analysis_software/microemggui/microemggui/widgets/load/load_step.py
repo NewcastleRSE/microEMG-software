@@ -25,8 +25,10 @@ from microemggui.widgets.load.run_analysis import RunAnalysisSection
 
 
 class LoadWidget(QWidget):
-    # Full widget for all load steps (loading recording, loading settings, running
-    # analysis)
+    """
+    Full widget for all load steps (loading recording, loading settings, running
+    analysis).
+    """
 
     # Signal for whether all loading steps are finished
     load_finished = Signal(bool)
@@ -80,9 +82,11 @@ class LoadWidget(QWidget):
         self.widgets["recording"].recording_loaded.emit(False)
 
     def updates_after_loading_emg(self, recording_loaded: bool):
-        # Show/hide steps after loading depend on if data has been loaded
-        # Remove emg_model saved if recording not loaded
-        # Slot for recording_loaded signal
+        """
+        Show/hide steps after loading depend on if data has been loaded.
+        Remove emg_model saved if recording not loaded.
+        Slot for recording_loaded signal.
+        """
 
         if recording_loaded:
             self.widgets["settings"].show()
@@ -101,8 +105,10 @@ class LoadWidget(QWidget):
             self.load_finished.emit(False)
 
     def updates_after_loading_settings(self, settings_loaded: bool):
-        # Show/hide steps after loading depend on if data has been loaded
-        # Slot for settings_loaded signal
+        """
+        Show/hide steps after loading depending on if data has been loaded.
+        Slot for settings_loaded signal.
+        """
 
         if settings_loaded:
             self.widgets["run"].show()
@@ -122,11 +128,17 @@ class LoadWidget(QWidget):
             self.load_finished.emit(False)
 
     def update_emg_model(self, emg_model: EMGDataRawModel):
-        # Update EMG data model (raw data)
-        # Slot for recording_changed signal
+        """
+        Update EMG data model (raw data).
+        Slot for recording_changed signal.
+        """
+
         self.emg_model = emg_model
 
     def update_settings_model(self, settings_model: EMGSettingsModel):
-        # Update EMG settings model
-        # Slot for settings_changed signal
+        """
+        Update EMG settings model.
+        Slot for settings_changed signal.
+        """
+
         self.settings_model = settings_model
