@@ -95,7 +95,7 @@ Alternatively, you can develop your own analysis scripts using the `pymicroemg` 
 
 We developed two modules: 
 - [`pymicroemg`](analysis_software/pymicroemg/pymicroemg) contains functions and classes for analysing microEMG data.
-- [`microemggui](analysis_software/microemggui/microemggui) is built on top of `pymicroemg` to provide a graphical user interface (GUI) for performing the analysis, with the ability to modify some analysis settings.
+- [`microemggui`](analysis_software/microemggui/microemggui) is built on top of `pymicroemg` to provide a graphical user interface (GUI) for performing the analysis, with the ability to modify some analysis settings.
 
 #### microemggui module
 
