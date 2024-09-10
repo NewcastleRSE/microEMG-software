@@ -87,6 +87,12 @@ class ExportSettingsWidget(QWidget):
 class ExportWidget(QWidget):
     """
     Widget for exporting the results and settings of the microEMG analysis.
+
+    Results can be exported at any point once a EMGAnalysisReconstructModel instance is
+    created, regardless of whether all analyses have been performed. In the main GUI,
+    this export widget is provided once motor units have been found. Note that the
+    settings will be included for all analysis steps, regardless of whether those steps
+    have been run, because settings are added when EMGAnalysisReconstruct is created.
     """
 
     def __init__(self, reconstruct_model: EMGAnalysisReconstructModel, parent=None):
@@ -143,11 +149,12 @@ class ExportWidget(QWidget):
         self.export_path = QFileDialog.getExistingDirectory(
             self, "Select folder for storing results", ""
         )
-        print(self.export_path)
 
         # Update widgets that depend on export path
         if self.export_path:
-            # Create name of export folder (will be added to export_path)
+            logger.info(f"Export path choosen: {self.export_path}")
+
+            # Create name of export folder (will be saved as export_folder attribute)
             self.create_name_of_export_folder()
 
             # Enable export button
@@ -239,9 +246,11 @@ class ExportWidget(QWidget):
             logger.info(f"Exported fibre localisation plot ({plot_path + '.png'})")
 
             fig.savefig(plot_path + ".svg")
-            logger.info("Exported fibre localisation plot ({plot_path + '.svg'})")
+            logger.info(f"Exported fibre localisation plot ({plot_path + '.svg'})")
 
-            # More exports can be added here if needed - recommend adding logs for each one
+            # More exports can be added here if needed - recommend adding logs for each one.
+            # May need to check that results have been added before trying to plot certain
+            # figures.
 
             # Show message that save was successful
             self.widgets["success"].show()
