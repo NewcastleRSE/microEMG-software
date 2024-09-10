@@ -151,7 +151,7 @@ class EMGDataPreproc(EMGData):
 
     def get_preprocess_dict(self) -> dict:
         """
-        Returns info used for preprocessing.
+        Returns EMG info used for preprocessing.
 
         Parameters
         ----------
@@ -174,7 +174,7 @@ class EMGDataPreproc(EMGData):
 
     def set_preprocess_from_dict(self, settings_dict: dict):
         """
-        Sets info used for preprocessing.
+        Sets EMG info used for preprocessing.
 
         Parameters
         ----------
@@ -193,7 +193,7 @@ class EMGDataPreproc(EMGData):
 
     def save_preprocess(self, filename: str):
         """
-        Saves prepocessing info and settings.
+        Saves prepocessing EMG info and settings.
 
         Parameters
         ----------
@@ -218,7 +218,7 @@ class EMGDataPreproc(EMGData):
 
     def load_preprocess(self, filename: str):
         """
-        Loads preprocessing info and settings.
+        Loads preprocessing EMG info and settings.
 
         Parameters
         ----------
