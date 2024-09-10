@@ -78,14 +78,18 @@ Example recording data needs to be manually added in a `recordings` folder at th
 
 ### Running Locally
 
-**MicroEMG GUI**: From the root directory, run [`gui_dev/gui_dev_main.py`](gui_dev/gui_dev_main.py) from a command line to launch the full GUI:
+#### MicroEMG GUI
+
+From the root directory, run [`gui_dev/gui_dev_main.py`](gui_dev/gui_dev_main.py) from a command line to launch the full GUI:
 ```
 python gui_dev/gui_dev_main.py
 ```
-Subsections of the GUI can also be run using the other Python files in `gui_dev`.
+Subsections of the GUI can also be run using the other Python files in [`gui_dev`](gui_dev).
 GUI instructions are [here](analysis_software/microemggui/microemggui/docs/microemg_help_guide.pdf).
 
-**MicroEMG analysis scripts**: Alternatively, you can develop your own analysis scripts using the `pymicroemg` module for additional control over analysis settings and steps. See [`data_analysis/example_pipeline.py`](`data_analysis/example_pipeline.py`) for an example pipeline.
+####MicroEMG analysis scripts
+
+Alternatively, you can develop your own analysis scripts using the `pymicroemg` module for additional control over analysis settings and steps. See [`data_analysis/example_pipeline.py`](`data_analysis/example_pipeline.py`) for an example pipeline.
 
 ### Software structure
 
@@ -93,19 +97,19 @@ We developed two modules:
 - [`pymicroemg`](analysis_software/pymicroemg/pymicroemg) contains functions and classes for analysing microEMG data.
 - [`microemggui](analysis_software/microemggui/microemggui) is built on top of `pymicroemg` to provide a graphical user interface (GUI) for performing the analysis, with the ability to modify some analysis settings.
 
-#### microemggui
+#### microemggui module
 
-The [widgets](analysis_software/microemggui/microemggui/widgets) module contains the widgets for the GUI, organised by the "pages" in the GUI (one page per analysis step).
+The [widgets](analysis_software/microemggui/microemggui/widgets) submodule contains the widgets for the GUI, organised by the "pages" in the GUI (one page per analysis step).
 The full GUI is specified in [widgets/main/main_window.py](analysis_software/microemggui/microemggui/widgets/main/main_window.py).
 
-The [models](analysis_software/microemggui/microemggui/models) module contains "models", or interfaces, to some of the `pymicroemg` classes for settings and data. 
+The [models](analysis_software/microemggui/microemggui/models) submodule contains "models", or interfaces, to some of the `pymicroemg` classes for settings and data. 
 This approach makes it easier to separate GUI functionality from the underlying analysis software. Note that many of the settings options (e.g., options for dropdown boxes) for the GUI are specified in [`models/settings.py`](analysis_software/microemggui/microemggui/models/settings.py).
 
 The [docs](analysis_software/microemggui/microemggui/docs) folder contains a PDF with GUI instructions, [`microemg_help_guide.pdf`](analysis_software/microemggui/microemggui/docs/microemg_help_guide.pdf). This PDF can be manually updated using the associated Word Document. It is linked to a help icon in the GUI.
 
-The [styles](analysis_software/microemggui/microemggui/styles) module contains a style sheet for modifying the GUI's appearance and code for implementing the style sheet.
+The [styles](analysis_software/microemggui/microemggui/styles) submodule contains a style sheet for modifying the GUI's appearance and code for implementing the style sheet.
 
-The [icons](analysis_software/microemggui/microemggui/icons) module contains icons (mostly [Bootstrap](https://icons.getbootstrap.com/)) used in the GUI. 
+The [icons](analysis_software/microemggui/microemggui/icons) submodule contains icons (mostly [Bootstrap](https://icons.getbootstrap.com/)) used in the GUI. 
 These icons are set up using a [Qt resource system](https://www.pythonguis.com/tutorials/packaging-data-files-pyside6-with-qresource-system/) to ensure they are not dependent on a specific directory structure or paths.
 If you change the icons, you need to update the resource system by running this command from the root directory in a terminal: 
 ```
