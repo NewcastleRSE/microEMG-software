@@ -78,7 +78,10 @@ Example recording data needs to be manually added in a `recordings` folder at th
 
 ### Running Locally
 
-**MicroEMG GUI**: From the root directory, run [`python gui_dev/gui_dev_main.py`](python gui_dev/gui_dev_main.py) from a command line to launch the full GUI. 
+**MicroEMG GUI**: From the root directory, run [`gui_dev_main.py`](python gui_dev/gui_dev_main.py) from a command line to launch the full GUI:
+```
+python gui_dev/gui_dev_main.py
+```
 Subsections of the GUI can also be run using the other Python files in `gui_dev`.
 GUI instructions are [here](analysis_software/microemggui/microemggui/docs/microemg_help_guide.pdf).
 
