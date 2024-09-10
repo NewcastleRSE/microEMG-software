@@ -177,8 +177,6 @@ class EMGData:
 
         """
 
-        # TODO: consider moving validation (using _validate_t_range) call to this method
-
         t_idx = np.arange(np.round(start_t * self.fs), np.round(stop_t * self.fs))
         t_idx = t_idx.astype("int")
 
@@ -190,6 +188,8 @@ class EMGData:
 
         Updates the recording's number of samples, duration, and corresponding
         segment in the original recording accordingly.
+
+        EMG data can only be trimmed once.
 
         Parameters
         ----------
@@ -208,10 +208,6 @@ class EMGData:
         None.
 
         """
-        # TODO: determine how to allow segment trimmed to be changed;
-        # will depend on when trimming occurs relative to preprocessing.
-        # TODO: could also allow time segment to be further trimmed - would need to
-        # calculate corresponding segment in original recording.
 
         # Only allow trimming if time series has not been trimmed yet
         # (i.e., segment_of_recording bounds are inf)
