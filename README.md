@@ -28,11 +28,13 @@ Newcastle University
 
 ## Built With
 
-This section is intended to list the frameworks and tools you're using to develop this software. Please link to the home page or documentation in each case.
-
 [Python 3.11](https://www.python.org/)  
 [PySide6](https://www.qt.io/qt-for-python)  
 [Framework 3](https://something.com)  
+
+The microEMG GUI uses
+[Bootstrap Icons](https://icons.getbootstrap.com/)
+[CartoColors](https://carto.com/carto-colors/) (via the [palettable](https://jiffyclub.github.io/palettable/) Python package))
 
 ## Getting Started
 
@@ -70,13 +72,13 @@ Next, [install the packages using poetry](https://python-poetry.org/docs/basic-u
 poetry install
 ```
 
-`poetry` will install both the Python package dependencies and set up paths to the local modules, `pymicroemg` and `microemggui`.
+`poetry` will install both the Python package dependencies and set up paths to the local modules, [`pymicroemg`](analysis_software/pymicroemg/pymicroemg) and [`microemggui`](analysis_software/microemggui/microemggui).
 
-Example recording data needs to be manually added in a "recordings" folder at the root level. See the paths in helper_config.py in pymicroemg. These paths are the same as in the provided data, with the exception that the "64 channel" directory is replaced with "64-channel". The recording needed as a demo recording for the GUI is `recordings/64-channel/Stuart_E2/raw`.
+Example recording data needs to be manually added in a `recordings` folder at the root level (see the paths in [`helper_config.py`](analysis_software/pymicroemg/pymicroemg/helper_config.py)). These paths are the same as in the provided data, with the exception that the `64 channel` directory is replaced with `64-channel`. The recording needed as a demo recording for the GUI is `recordings/64-channel/Stuart_E2/raw`.
 
 ### Running Locally
 
-**MicroEMG GUI**: From the root directory, run [`python gui_dev/gui_dev_main.py`](`python gui_dev/gui_dev_main.py`) from a command line to launch the full GUI. 
+**MicroEMG GUI**: From the root directory, run [`python gui_dev/gui_dev_main.py`](python gui_dev/gui_dev_main.py) from a command line to launch the full GUI. 
 Subsections of the GUI can also be run using the other Python files in `gui_dev`.
 GUI instructions are [here](analysis_software/microemggui/microemggui/docs/microemg_help_guide.pdf).
 
