@@ -32,8 +32,8 @@ Newcastle University
 [PySide6](https://www.qt.io/qt-for-python)  
 [Framework 3](https://something.com)  
 
-The microEMG GUI uses
-[Bootstrap Icons](https://icons.getbootstrap.com/)
+The microEMG GUI uses  
+[Bootstrap Icons](https://icons.getbootstrap.com/)   
 [CartoColors](https://carto.com/carto-colors/) (via the [palettable](https://jiffyclub.github.io/palettable/) Python package))
 
 ## Getting Started
