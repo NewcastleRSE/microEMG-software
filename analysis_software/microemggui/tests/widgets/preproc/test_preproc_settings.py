@@ -140,7 +140,7 @@ def assert_settings_match(window, settings, is_initial=False):
 
 def test_preproc_widget_matches_initial_settings(qtbot, settings_model):
     # Set up window
-    window = preproc_set.PreprocSettingsWidget(settings_model)
+    window = preproc_set.PreprocSettingsWidget(settings_model, fs=20000)
     window.show()
     qtbot.addWidget(window)
 
@@ -150,7 +150,7 @@ def test_preproc_widget_matches_initial_settings(qtbot, settings_model):
 
 def test_preproc_widget_modifying_filter_order(qtbot, settings_model):
     # Set up window
-    window = preproc_set.PreprocSettingsWidget(settings_model)
+    window = preproc_set.PreprocSettingsWidget(settings_model, fs=20000)
     window.show()
     qtbot.addWidget(window)
 
@@ -172,7 +172,7 @@ def test_preproc_widget_modifying_filter_type(qtbot, settings_model, filter_type
     # Note: changing filter type also modifies cutoff frequencies
 
     # Set up window
-    window = preproc_set.PreprocSettingsWidget(settings_model)
+    window = preproc_set.PreprocSettingsWidget(settings_model, fs=20000)
     window.show()
     qtbot.addWidget(window)
 
@@ -191,7 +191,7 @@ def test_preproc_widget_modifying_filter_type(qtbot, settings_model, filter_type
 @pytest.mark.parametrize("freq", [150, 150.01, 150.1])  # keep below fixture's cutoff2
 def test_preproc_widget_modifying_filter_cutoff1(qtbot, settings_model, freq):
     # Set up window
-    window = preproc_set.PreprocSettingsWidget(settings_model)
+    window = preproc_set.PreprocSettingsWidget(settings_model, fs=20000)
     window.show()
     qtbot.addWidget(window)
 
@@ -213,7 +213,7 @@ def test_preproc_widget_modifying_filter_cutoff1_fails_when_input_invalid(
     qtbot, settings_model, freq
 ):
     # Set up window
-    window = preproc_set.PreprocSettingsWidget(settings_model)
+    window = preproc_set.PreprocSettingsWidget(settings_model, fs=20000)
     window.show()
     qtbot.addWidget(window)
 
@@ -241,7 +241,7 @@ def test_preproc_widget_modifying_filter_cutoff1_fails_when_input_invalid(
 @pytest.mark.parametrize("freq", [550, 550.01, 550.1])  # keep above fixture's cutoff1
 def test_preproc_widget_modifying_filter_cutoff2(qtbot, settings_model_with_bandpass_filter, freq):
     # Set up window
-    window = preproc_set.PreprocSettingsWidget(settings_model_with_bandpass_filter)
+    window = preproc_set.PreprocSettingsWidget(settings_model_with_bandpass_filter, fs=20000)
     window.show()
     qtbot.addWidget(window)
 
@@ -263,7 +263,7 @@ def test_preproc_widget_modifying_filter_cutoff2_fails_when_input_invalid(
     qtbot, settings_model_with_bandpass_filter, freq
 ):
     # Set up window
-    window = preproc_set.PreprocSettingsWidget(settings_model_with_bandpass_filter)
+    window = preproc_set.PreprocSettingsWidget(settings_model_with_bandpass_filter, fs=20000)
     window.show()
     qtbot.addWidget(window)
 
@@ -295,7 +295,7 @@ def test_preproc_widget_modifying_filter_cutoff2_fails_when_input_invalid(
 )
 def test_toggle_checkbox_changes_settings_bool_and_checkbox_state(qtbot, settings_model, setting):
     # Set up window
-    window = preproc_set.PreprocSettingsWidget(settings_model)
+    window = preproc_set.PreprocSettingsWidget(settings_model, fs=20000)
     window.show()
     qtbot.addWidget(window)
 
@@ -326,7 +326,7 @@ def test_invalid_cutoff1_freq_changes_freq_values_valid_attribute_to_false(
     qtbot, settings_model, delta
 ):
     # Set up window
-    window = preproc_set.PreprocSettingsWidget(settings_model)
+    window = preproc_set.PreprocSettingsWidget(settings_model, fs=20000)
     window.show()
     qtbot.addWidget(window)
 
@@ -367,7 +367,7 @@ def test_invalid_cutoff2_freq_changes_freq_values_valid_attribute_to_false(
     qtbot, settings_model_with_bandpass_filter, delta
 ):
     # Set up window
-    window = preproc_set.PreprocSettingsWidget(settings_model_with_bandpass_filter)
+    window = preproc_set.PreprocSettingsWidget(settings_model_with_bandpass_filter, fs=20000)
     window.show()
     qtbot.addWidget(window)
 
@@ -408,7 +408,7 @@ def test_cutoff2_less_than_or_equal_tocutoff1_changes_freq_values_attribute_to_f
     qtbot, settings_model_with_bandpass_filter, freqs
 ):
     # Set up window
-    window = preproc_set.PreprocSettingsWidget(settings_model_with_bandpass_filter)
+    window = preproc_set.PreprocSettingsWidget(settings_model_with_bandpass_filter, fs=20000)
     window.show()
     qtbot.addWidget(window)
 

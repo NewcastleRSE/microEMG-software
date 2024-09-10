@@ -28,7 +28,9 @@ from microemggui.widgets.base import (
 
 
 class ChannelsCheckBoxes(QWidget):
-    # Checkboxes for each channel
+    """
+    Checkboxes for each channel.
+    """
 
     # Signal to emit indicating if each channel is checked when it is clicked
     # Sends bool for check state (bool) and channel index, counting from 0 (int)
@@ -36,7 +38,8 @@ class ChannelsCheckBoxes(QWidget):
 
     def __init__(self, chan: EMGChannels, chan_clrs: list[str], max_chan: int = 32, parent=None):
         # max_chan = maximum number of channels to put in one column
-        # chan_clrs should be the same length as the number of channels
+        # chan_clrs should be the same length as the number of channels - can pull from
+        # properties of the EMG viewer
 
         super().__init__(parent)
 
@@ -67,7 +70,8 @@ class ChannelsCheckBoxes(QWidget):
                 col += 1
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setVerticalSpacing(0)
-        layout.setHorizontalSpacing(25)
+        layout.setHorizontalSpacing(50)
+        layout.setAlignment(Qt.AlignLeft)
         self.setLayout(layout)
 
         # Connections
@@ -80,9 +84,11 @@ class ChannelsCheckBoxes(QWidget):
             w.clicked.connect(lambda checked=False, idx=idx: self.send_chan_clicked(idx))
 
     def send_chan_clicked(self, idx: int):
-        # Slot for when channel checkbox is clicked
-        # Ensures check state is determined and passed on correctly (had issues with
-        # sending check state of clicked signal)
+        """
+        Slot for when channel checkbox is clicked.
+        Ensures check state is determined and passed on correctly (had issues with
+        sending check state of clicked signal).
+        """
 
         # Check state
         w = self.widgets["checkboxes"][idx]
@@ -93,16 +99,19 @@ class ChannelsCheckBoxes(QWidget):
 
 
 class SelectChannels(QWidget):
-    # Widget for selecting channels to include in the analysis
-    # Channel checkboxes with related widgets (select all/none and label for channels
-    # that will be excluded from the analysis)
+    """
+    Widget for selecting channels to include in the analysis.
+    Channel checkboxes with related widgets (select all/none and label for channels
+    that will be excluded from the analysis).
+    """
 
     # Signals for whether all are checked or all are unchecked
     # Use to send single signal for changes in multiple channel check states
     all_chan_checked = Signal(bool)
 
     def __init__(self, chan: EMGChannels, chan_clrs: list[str], parent=None):
-        # chan_clrs should be the same length as the number of channels
+        # chan_clrs should be the same length as the number of channels - will pull
+        # from EMG viewer
 
         super().__init__(parent)
 
@@ -124,8 +133,10 @@ class SelectChannels(QWidget):
         self.connect_channel_checkboxes_to_select_all_checkbox()
 
     def connect_channel_checkboxes_to_select_all_checkbox(self):
-        # Connect select all checkbox to all channel checkboxes
-        # Select all checkbox can check/uncheck all channel checkboxes
+        """
+        Connect select all checkbox to all channel checkboxes.
+        Select all checkbox can check/uncheck all channel checkboxes.
+        """
 
         # Connect select all checkbox to all channel checkboxes
         # Use "clicked" signal so not emitted if change checkbox state programmatically
@@ -138,8 +149,10 @@ class SelectChannels(QWidget):
         # attribute can be used to determine the check state of the select all checkbox.
 
     def check_or_uncheck_all(self, checked: bool):
-        # Check or uncheck all channel checkboxes
-        # Slot for self.widgets["all"] checkbox (select all/none) clicked
+        """
+        Check or uncheck all channel checkboxes.
+        Slot for self.widgets["all"] checkbox (select all/none) clicked.
+        """
 
         for w in self.widgets["checkboxes"].widgets["checkboxes"].values():
             w.setChecked(checked)
@@ -147,7 +160,9 @@ class SelectChannels(QWidget):
 
 
 class NextButton(LargePushButton):
-    # Button for proceeding to the next step
+    """
+    Button for proceeding to the next step.
+    """
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -156,8 +171,10 @@ class NextButton(LargePushButton):
         self.setToolTip("Proceed to next step")
 
     def change_enabled(self, enabled: bool):
-        # Method for enable/disabling button based on whether sufficient channels are
-        # selected
+        """
+        Method for enable/disabling button based on whether sufficient channels are
+        selected.
+        """
 
         self.setEnabled(enabled)
 
@@ -166,7 +183,9 @@ class NextButton(LargePushButton):
 
 
 class ChannelsWidget(QWidget):
-    # Widgets for channels to include in the analysis
+    """
+    Widgets for channels to include in the analysis.
+    """
 
     # Signal for sending updated indices of bad channels (list[int]) and whether
     # minimum number of channels have been selected (bool)
@@ -237,13 +256,17 @@ class ChannelsWidget(QWidget):
         self.widgets["channels"].all_chan_checked.connect(self.update_all_chan_checked)
 
     def selected_min_channels(self) -> bool:
-        # Compute whether min number of channels are selected
+        """
+        Compute whether min number of channels are selected.
+        """
 
         min_selected = self.n_chan - len(self.bad_chan_idx) >= self.min_chan
         return min_selected
 
     def update_chan_checked(self, checked: bool, idx: int):
-        # Update check status of an individual channel; slot for chan_clicked
+        """
+        Update check status of an individual channel; slot for chan_clicked.
+        """
 
         self.chan_checked[idx] = checked
 
@@ -254,7 +277,9 @@ class ChannelsWidget(QWidget):
         self.update_select_all_checkbox()
 
     def update_all_chan_checked(self, checked: bool):
-        # Update check status of all channels; slot for all_chan_checked
+        """
+        Update check status of all channels; slot for all_chan_checked.
+        """
 
         self.chan_checked = [checked for i in self.chan_checked]
 
@@ -262,12 +287,14 @@ class ChannelsWidget(QWidget):
         self.update_bad_chan_idx()
 
     def update_bad_chan_idx(self):
-        # Updates indices of channels that are unchecked (i.e., "bad" channels)
-        # Also triggers downstream changes:
-        #   1) Updates corresponding message for channels that will be excluded
-        #   2) Enables/disables Next button based on whether enough channels selected
-        #   3) Emits list of bad channels as signal (and whether min number of channels
-        #      has been selected)
+        """
+        Updates indices of channels that are unchecked (i.e., "bad" channels).
+        Also triggers downstream changes:
+          1) Updates corresponding message for channels that will be excluded.
+          2) Enables/disables Next button based on whether enough channels selected.
+          3) Emits list of bad channels as signal (and whether min number of channels
+             has been selected).
+        """
 
         self.bad_chan_idx = [i for i in range(len(self.chan_checked)) if not self.chan_checked[i]]
         self.update_exclude_message()
@@ -278,8 +305,10 @@ class ChannelsWidget(QWidget):
         self.bad_chan_updated.emit(self.bad_chan_idx, min_chan_selected)
 
     def update_select_all_checkbox(self):
-        # Unchecks select all checkbox if any channels unchecked
-        # Checks select all checkbox if all channels checked
+        """
+        Unchecks select all checkbox if any channels unchecked.
+        Checks select all checkbox if all channels checked.
+        """
 
         # Use self.bad_chan_idx as a quick way to see if any channels unchecked
         # (if not empty, channels are unchecked)
@@ -289,8 +318,10 @@ class ChannelsWidget(QWidget):
             self.widgets["channels"].widgets["all"].setChecked(True)
 
     def update_exclude_message(self):
-        # Update exclude message to list bad channels that will be excluded from the
-        # analysis
+        """
+        Update exclude message to list bad channels that will be excluded from the
+        analysis.
+        """
 
         # Channel  names - need to add one to go from indices to labels
         bad_chan_names = [str(i + 1) for i in self.bad_chan_idx]

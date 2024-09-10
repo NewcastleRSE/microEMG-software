@@ -23,3 +23,6 @@ analysis_software/analysis/
 
 # Remove below to easily add new demo recordings
 recordings/**
+
+# Logs
+*.log

@@ -5,162 +5,195 @@ SectionTitle{
     font-size: 20pt;
     min-height: 30;
     max-height: 30;
-   /* qproperty-alignment: 'AlignTop | AlignLeft';*/
+    qproperty-alignment: 'AlignTop | AlignLeft';
+    color: {clr_text_dark};
 }
 
 SubsectionTitle{
     font-weight: bold;
     font-size: 16pt;
-    /*qproperty-alignment: 'AlignTop | AlignLeft';*/
+    qproperty-alignment: 'AlignTop | AlignLeft';
+    color: {clr_text_dark};
 }
 
 TitleInputLabel {
     font-weight: bold;
     font-size: 16pt;
+    color: {clr_text_dark};
 }
 
 /* Buttons */
+/* QPushButton will style buttons in matplotlib toolbar popups */
 
-SmallPushButton {
-    font-size: 12pt;
-    background-color: 'white';
+QPushButton, SmallPushButton, MotorUnitButton {
+    color: {clr_primary};
+    background-color: {clr_small_button};
     border-style: solid;
     border-width: 1px;
-    border-color: #D9D9D9;
+    border-color: {clr_primary};
     padding: 4;
-    width: 100px;
-    border-radius: 2;
+    border-radius: {radius_button};
 }
 
-SmallPushButton:pressed {
-    background-color: 'grey';
+SmallPushButton {
+    font-size: 14pt;
+    min-width: 100px;
+    max-width: 100px;
+}
+
+MotorUnitButton {
+    font-size: 12pt;
+    min-width: 80px;
+    max-width: 80px;
+}
+
+MotorUnitButton:checked {
+    background-color: {clr_primary};
+    color: {clr_large_button_text};
+}
+
+QPushButton:hover, SmallPushButton:hover, MotorUnitButton:hover {
+    color: {clr_large_button_text};
+    border-color: {clr_primary};
+    background-color: {clr_primary};
+}
+
+QPushButton:pressed, SmallPushButton:pressed, MotorUnitButton:pressed {
+    color: {clr_large_button_text};
+    border-color: {clr_primary_pressed};
+    background-color: {clr_primary_pressed};
+}
+
+QPushButton:disabled, SmallPushButton:disabled, MotorUnitButton:disabled {
+    color: {clr_primary_disabled};
+    border-color: {clr_primary_disabled};
 }
 
 LargePushButton {
     font-size: 16pt;
-    background-color: 'light blue';
-    border-style: solid;
-    border-width: 1px;
-    border-color: #D9D9D9;
+    color: {clr_large_button_text};
+    background-color: {clr_primary};
+    border: none;
     padding: 4;
-    width: 100px;
-    border-radius: 2;
+    min-width: 100px;
+    max-width: 100px;
+    border-radius: {radius_button};
+}
+
+LargePushButton:hover {
+    color: {clr_large_button_text};
+    border: none;
+    background-color: {clr_primary_hover};
 }
 
 LargePushButton:pressed {
-    background-color: 'grey';
+    color: {clr_large_button_text};
+    border: none;
+    background-color: {clr_primary_pressed};
+}
+
+LargePushButton:disabled {
+    color: {clr_large_button_text};
+    border: none;
+    background-color: {clr_primary_disabled};
 }
 
 TabButton {
     font-size: 12pt;
     border-style: solid;
     border-width: 1px;
-    border-color: #D9D9D9;
+    border-color: {clr_small_button_border};
     padding: 4;
     width: 150px;
-    border-radius: 2;
+    border-radius: {radius_button};
 }
 
 TabButton:disabled {
-    background-color: 'white';
+    background-color: {clr_background};
     font-weight: bold;
     color: 'black';
     font-size: 12pt;
     border-style: solid;
     border-width: 1px;
-    border-color: #D9D9D9;
+    border-color: {clr_small_button_border};
     padding: 4;
     width: 150px;
-    border-radius: 2;
+    border-radius: {radius_button};
 }
 
 WidgetControlButton {
-    background-color: 'white';
-    border-style: solid;
-    border-width: 1px;
-    border-color: #D9D9D9;
-    border-radius: 2;
+    background-color: {clr_control_button};
+    border: none;
+    color: {clr_primary};
+    border-radius: {radius_button};
     padding: 3;
 }
 
+WidgetControlButton:hover {
+    background-color: {clr_control_button_hover};
+}
+
 WidgetControlButton:pressed {
-    background-color: #D9D9D9;
+    background-color: {clr_control_button_pressed};
 }
 
 WidgetControlButton:disabled {
-    background-color: #D9D9D9;
-}
-
-MotorUnitButton {
-    font-size: 12pt;
-    background-color: 'white';
-    border-style: solid;
-    border-width: 1px;
-    border-color: #D9D9D9;
-    padding: 4;
-    width: 80px;
-    border-radius: 2;
-}
-
-MotorUnitButton:pressed {
-    background-color: #D9D9D9;
-}
-
-MotorUnitButton:hover {
-    background-color: #D9D9D9;
-}
-
-MotorUnitButton:checked {
-    background-color: "light blue";
+    background-color: {clr_control_button_disabled};
 }
 
 /* Toolbars and toolbar widgets */
 
 TopToolbar {
     padding: 5px;
-    background: 'white';
+    background: {clr_background};
     border-left: none;
     border-top: none;
-    border-bottom: 1px solid #D9D9D9;
+    border-bottom: 1px solid {clr_border_light};
     border-right: none;
 }
 
 AnalysisToolbar {
-    background: 'white';
+    background: {clr_background};
     border-left: none;
     border-top: none;
     border-bottom: none;
-    border-right: 1px solid grey;
+    border-right: 1px solid {clr_border};
     spacing: 0px;
 }
 
 AnalysisToolbarButton {
     font-size: 14pt;
     text-align: left;
-    background-color: 'white';
+    color: {clr_text_dark};
+    background-color: {clr_background};
     border-left: none;
     border-top: none;
     border-bottom: none;
-    border-right: 1px solid grey;
+    border-right: 1px solid {clr_border};
     padding: 10px;
     width: 135px;
     border-radius: 0;
 }
 
 AnalysisToolbarButton:hover {
-    background-color: #D9D9D9;
+    background-color: {clr_primary};
+    color: {clr_large_button_text};
+    border-right: 1px solid {clr_border};
 }
 
 AnalysisToolbarButton:checked {
-    background-color: "light blue";
+    background-color: {clr_primary};
+    color: {clr_large_button_text};
+    border-right: 1px solid {clr_border};
 }
 
 AnalysisToolbarButton:disabled {
-    color: #D9D9D9;
+    color: {clr_text_very_light};
+    border-right: 1px solid {clr_border};
 }
 
 AnalysisToolbarLabel {
-    color: 'grey';
+    color: {clr_text_light};
     font-weight: bold;
     font-size: 12pt;
     padding-left: 5px;
@@ -169,17 +202,17 @@ AnalysisToolbarLabel {
 }
 
 RecordingLabel {
-    color: 'grey';
+    color: {clr_text_light};
     font-size: 12pt;
 }
 
 MicroEMGLogo {
     text-align: center;
-    background-color: 'white';
+    background-color: {clr_background};
     border-left: none;
     border-top: none;
     border-bottom: none;
-    border-right: 1px solid grey;
+    border-right: 1px solid {clr_border};
     padding-left: 10px;
     padding-top: 0px;
     padding-right: 10px;
@@ -190,11 +223,12 @@ MicroEMGLogo {
 }
 
 MicroEMGLogo:hover {
-    background-color: #D9D9D9;
+    background-color: {clr_primary};
+    opacity: 0.5;
 }
 
 MicroEMGLogo:checked {
-    background-color: "light blue";
+    background-color: {clr_primary};
 }
 
 /* Settings input widgets - main section */
@@ -204,6 +238,7 @@ CheckBoxMain {
     font-size: 14pt;
     min-height: 35;
     max-height: 35;
+    color: {clr_text_medium};
 }
 
 /* Settings input widgets */
@@ -218,25 +253,17 @@ CheckBoxChannel {
 CheckBoxChannel::indicator {
     width: 14px;
     height: 14px;
-}
-
-CheckBoxChannel::indicator:checked {
-    background-color: lightblue;
-    border: 1px solid grey;
+    border-radius: 2px;
 }
 
 CheckBoxChannel::indicator:unchecked {
-    background-color: white;
-    border: 1px solid #D9D9D9;
+    background-color: {clr_background};
+    border: 1px solid {clr_border_light};
 }
 
 CheckBoxChannel::indicator:checked {
-    image: url(none);
-}
-
-CheckBoxChannel::indicator:checked {
-    background-color: white;
-    border: 1px solid #D9D9D9;
+    background-color: {clr_background};
+    border: 1px solid {clr_border_light};
     image: url(:/bootstrap/check)
 }
 
@@ -245,6 +272,7 @@ CheckBoxChannelLabel {
     font-weight: bold;
     min-height: 20;
     max-height: 20;
+    padding: 0;
 }
 
 InputLabel {
@@ -252,28 +280,30 @@ InputLabel {
     min-height: 20;
     max-height: 20;
     font-weight: bold;
+    color: {clr_text_medium};
 }
 
 InputInlineLabel {
     font-weight: bold;
+    color: {clr_text_medium};
 }
 
 InputInlineText {
-    color: 'grey';
+    color: {clr_text_light};
 }
 
 InputExplanationLabel {
-    color: 'grey';
+    color: {clr_text_light};
 }
 
 InputInlineHighlightedText {
-    color: 'blue';
+    color: {clr_primary_dark};
     min-height: 20;
     max-height: 20;
 }
 
 HighlightedLabel {
-    color: 'blue';
+    color: {clr_primary_dark};
 }
 
 HighlightedLabel#channels_widget_exclude {
@@ -282,6 +312,7 @@ HighlightedLabel#channels_widget_exclude {
     max-height: 100;
     min-width: 250;
     max-width: 250;
+    color: {clr_primary_dark};
 }
 
 HighlightedLabel#select_mu_widget_message {
@@ -290,10 +321,11 @@ HighlightedLabel#select_mu_widget_message {
     max-height: 100;
     min-width: 175;
     max-width: 175;
+    color: {clr_primary_dark};
 }
 
 InputWarningLabel {
-    color: 'red';
+    color: {clr_warning};
     font-size: 12pt;
 }
 
@@ -312,9 +344,22 @@ InputLineEdit {
     max-width: 50;
 }
 
-QPushButton {
-    min-width: 50;
-    max-width: 50;
+/* Progress bars */
+QProgressBar {
+     border: 1px solid {clr_border_light};
+     border-radius: 4px;
+     background-color: {clr_background};
+     height: 8px;
+ }
+
+QProgressBar::chunk {
+    background-color: {clr_secondary};
+    border-radius: 4px;
+}
+
+QProgressBar#findmuprogress {
+    border: none;
+    height: 0px; /* hides bar */
 }
 
 /* Misc settings for specific widgets */
@@ -322,8 +367,8 @@ QPushButton {
 /* EMG viewer */
 
 EMGViewerWidget {
-    background: white;
-    border: 1px solid grey;
+    background: {clr_background};
+    border: 1px solid {clr_border};
     border-radius: 4px;
 }
 
@@ -335,18 +380,20 @@ QLabel#amp{
 }
 
 /* Settings - set width */
-PreprocSettingsWidget, LocaliseSettingsWidget, ChannelsCheckBoxes {
+PreprocSettingsWidget, LocaliseSettingsWidget {
     min-width: 250;
     max-width: 250;
 }
 
-/* Background and border for visualisations */
-QTabWidget#muvistab::pane, QTabWidget#mufibretab::pane {
-    background: white;
-    padding: 10px;
-    border: 1px solid grey;
-    border-radius: 4px;
+ChannelsCheckBoxes {
+    min-width: 220;
+    max-width: 220;
 }
 
-/* Misc */
-
+/* Background and border for visualisations */
+QTabWidget#muvistab::pane, QTabWidget#mufibretab::pane {
+    background: {clr_background};
+    padding: 10px;
+    border: 1px solid {clr_border};
+    border-radius: 4px;
+}

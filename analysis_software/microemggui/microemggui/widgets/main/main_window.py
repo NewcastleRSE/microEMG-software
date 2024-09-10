@@ -7,6 +7,7 @@ Widget for main window with toolbars and other navigation elements.
 from typing import Any
 
 from copy import deepcopy
+import logging
 
 from palettable.cartocolors.qualitative import Prism_10
 
@@ -36,6 +37,7 @@ from microemggui.widgets.findmu.find_mu_step import FindMUWidget
 from microemggui.widgets.selectmu.select_mu_step import SelectMUWidget
 from microemggui.widgets.localise.localise_step import LocaliseWidget
 from microemggui.widgets.jitter.jitter_step import JitterWidget
+from microemggui.widgets.export.export_step import ExportWidget
 
 # Models
 from microemggui.models.settings import EMGSettingsModel, EMGPreprocSettingsModel
@@ -45,6 +47,7 @@ from microemggui.models.emg import (
     EMGAnalysisReconstructModel,
 )
 
+logger = logging.getLogger("microemggui.main")
 
 # --- Widgets to put within main window ---
 
@@ -93,6 +96,7 @@ class AnalysisStepsWidget(QWidget):
         for w in self.widgets.values():
             self.layout.addWidget(w)
         self.setLayout(self.layout)
+        self.layout.setContentsMargins(0, 0, 0, 0)
 
     def show_widget(self, widget_name):
         # Slot for signals for changing displayed widget in stacked layout
@@ -108,14 +112,16 @@ class MicroEMGMain(QMainWindow):
 
     Types of methods:
         - resetting the analysis
-        - adding connections
+        - adding connections between widgets
         - updating data/settings
-        - adding widget for each analysis step
+        - adding widget for each analysis step (match dictionary names in analysis toolbar)
 
     """
 
     def __init__(self):
         super().__init__()
+
+        logger.info("Setting up microEMG GUI.")
 
         # Initialise attributes for storing data needed for analysis
         self.emg_model = {}
@@ -125,7 +131,6 @@ class MicroEMGMain(QMainWindow):
         self.motor_units_to_analyse = []  # List of motor units to analyse
 
         # Colours for EMG recordings
-        # TODO: make configurable?
         self.emg_clrs = Prism_10.hex_colors
 
         # Make widgets and toolbars
@@ -150,7 +155,7 @@ class MicroEMGMain(QMainWindow):
         self.setCentralWidget(widget)
 
         # Window properties
-        self.resize(1100, 750)
+        self.resize(1200, 800)
 
         # Connections
 
@@ -166,68 +171,84 @@ class MicroEMGMain(QMainWindow):
         Reset steps and data that occur after analysis step last_w_name.
         """
 
-        print(f"Resetting part of GUI analysis (downstream of {last_w_name})")
+        logger.info(f"Resetting part of GUI analysis (downstream of {last_w_name})")
 
         # All analysis steps that have been added
         analysis_w_names = list(self.widgets["analysis"].widgets.keys())
 
+        # Remove "export" from list of widgets - the deletion of this widget is instead
+        # linked to the selectmu widget
+        if "export" in analysis_w_names:
+            analysis_w_names.remove("export")
+
         # Delete widgets for steps after w_name
+        # (except for export widget - linked to selectmu widget)
         # Also delete data added by later steps and reset settings modified by later steps
         delete_w = False
         for w_name in analysis_w_names:
             if delete_w:
                 w = self.widgets["analysis"].widgets.pop(w_name, None)  # also removes from dict
                 w.deleteLater()  # delete
-                print(f"Deleted {w_name} widget")
+                logger.info(f"Deleted {w_name} widget")
 
                 # Disable toolbar buttons
                 self.widgets["analysistoolbar"].widgets[w_name].setEnabled(False)
 
                 # Remove data if delete certain points of the analysis
                 if w_name == "preprocess":
-                    print("Deleting EMG model and settings model")
                     self.emg_model = {}
                     self.settings_model = None
+                    logger.info("Reset EMG model and settings model in main window")
 
                 if w_name == "channels":
-                    print("Removing bad channels")
                     self.bad_chan_idx = []  # bad channels
                     if self.emg_model:  # also remove bad channels from EMG model if still present
-                        print("Also removing bad channels from EMG model")
                         self.emg_model["preproc"].emg_data.set_bad_chan(self.bad_chan_idx)
-                    print("Removing reconstruct model")
+                        logger.info("Reset bad channels in EMG model")
+                    logger.info("Reset bad channels in main window")
+
                     self.reconstruct_model = None
+                    logger.info("Reset fibre reconstruction model")
 
                 if w_name == "findmu":
-                    print("Removing motor units")
                     if self.reconstruct_model:
                         self.reconstruct_model.found_motor_units = None
+                        logger.info("Reset found motor units")
 
                     # Reset motor unit settings (modified in this widget)
-                    print("Resetting motor unit settings")
                     self.settings_model.mu_settings = deepcopy(
                         self.settings_model_original.mu_settings
                     )
+                    logger.info("Reset motor unit settings")
 
                 if w_name == "selectmu":
-                    print("Removing list of motor units to analyse")
                     self.motor_units_to_analyse = []
+                    logger.info("Reset list of motor units to analyse")
 
                 if w_name == "localise":
                     # Delete fibre reconstruction and clustering results
                     if self.reconstruct_model:
                         self.reconstruct_model.reconstruct.delete_all_mu_fibre_localisation()
+                        logger.info("Reset fibre localisation and clustering")
 
                     # Reset motor unit clustering settings (modified in this widget)
-                    print("Removing cluster settings")
                     self.settings_model.mu_cluster_settings = deepcopy(
                         self.settings_model_original.mu_cluster_settings
                     )
+                    logger.info("Reset clustering settings")
+
+                    # Also remove export widget if exists
+                    export_w_name = "export"
+                    export_w = self.widgets["analysis"].widgets.pop(export_w_name, None)
+                    if export_w:
+                        export_w.deleteLater()  # delete
+                        logger.info(f"Deleted {export_w_name} widget")
+                    self.widgets["analysistoolbar"].widgets[export_w_name].setEnabled(False)
 
                 if w_name == "jitter":
                     if self.reconstruct_model:
                         self.reconstruct_model.reconstruct.delete_all_mu_fibre_jitter()
-                    print("Reset jitter widget: deleted jitter results")
+                        logger.info("Reset fibre jitter results")
 
             # Change delete_w to True after pass last_w_name; will delete downstream widgets
             if w_name == last_w_name:
@@ -267,7 +288,6 @@ class MicroEMGMain(QMainWindow):
         load_w.load_data_changed.connect(self.update_raw_emg_model_and_settings_model)
 
         # Link recording label to top toolbar
-        # TODO: consider storing in main window (e.g., for saving/exports)
         select_recording_w = load_w.widgets["recording"].widgets["selectrecording"]
         select_recording_w.recording_label_changed.connect(
             self.widgets["toptoolbar"].change_recording_label
@@ -318,10 +338,11 @@ class MicroEMGMain(QMainWindow):
         findmu_w = self.widgets["analysis"].widgets["findmu"]
 
         # Connection for adding/deleting next step (select motor units widget)
-        next_w_name = "selectmu"
+        # Will also add export widget in add_selectmu_widget method
         findmu_w.motor_units_found.connect(self.add_selectmu_widget)
 
         # Connection for enabling/disabling next step (select motor units)
+        next_w_name = "selectmu"
         findmu_w.motor_units_found.connect(
             lambda motor_units_found, w_name=next_w_name: self.enable_analysis_toolbar_button(
                 motor_units_found, w_name
@@ -349,11 +370,13 @@ class MicroEMGMain(QMainWindow):
         """
         Add connections for localise fibres (localise) widget:
             - Add/update jitter widget when perform localisation by clicking apply button
+            - Add/update export widget
             - Reset downstream steps if settings changed
         """
 
         localise_w = self.widgets["analysis"].widgets["localise"]
         localise_w.widgets["buttons"].widgets["apply"].clicked.connect(self.add_jitter_widget)
+        localise_w.widgets["buttons"].widgets["apply"].clicked.connect(self.add_export_widget)
 
         # Connection to reset downstream steps of the GUI if the settings have changed
         # Note that the localised fibres found will only change if the settings change,
@@ -376,12 +399,12 @@ class MicroEMGMain(QMainWindow):
         This method is called repeatedly as more analysis widgets are added.
         """
 
-        print("Updating toolbar connections")
+        logger.info("Updating toolbar connections")
         for w_name in self.widgets["analysis"].widgets.keys():
             self.widgets["analysistoolbar"].widgets[w_name].clicked.connect(
                 lambda checked=None, w_name=w_name: self.widgets["analysis"].show_widget(w_name)
             )
-            print(w_name)
+            logger.debug(f"Updated toolbar connection of {w_name} widget")
 
     def update_raw_emg_model_and_settings_model(
         self, raw_emg_model: EMGDataRawModel, settings_model: EMGSettingsModel
@@ -393,6 +416,7 @@ class MicroEMGMain(QMainWindow):
 
         self.emg_model["raw"] = raw_emg_model
         self.settings_model = settings_model
+        logger.info("Updated raw EMG model and settings model in main window.")
 
         # Also save original settings model as a separate variable that will not be
         # changed (deep copy) - allows resetting of the downstream settings if partially
@@ -444,8 +468,7 @@ class MicroEMGMain(QMainWindow):
 
             # Update bad channels
             self.bad_chan_idx = bad_chan_idx
-            print("bad channels in main GUI:")
-            print(self.bad_chan_idx)
+            logger.info(f"Updated list of bad channels in main window: {self.bad_chan_idx}")
 
             # Update data and create widget if min number of channels are selected
             if min_chan_selected:
@@ -484,7 +507,7 @@ class MicroEMGMain(QMainWindow):
 
             # Update list of motor units
             self.motor_units_to_analyse = motor_units_idx
-            print(f"Motor units to analyse updated: {self.motor_units_to_analyse}")
+            logger.info(f"Motor units to analyse updated: {self.motor_units_to_analyse}")
 
             # Create localise widget
             self.add_localise_widget()
@@ -493,8 +516,10 @@ class MicroEMGMain(QMainWindow):
         # have been selected
         if self.motor_units_to_analyse:
             self.widgets["analysistoolbar"].widgets["localise"].setEnabled(True)
+            logger.info("Enabled localise step.")
         else:
             self.widgets["analysistoolbar"].widgets["localise"].setEnabled(False)
+            logger.info("Disabled localise step - no motor units selected")
 
     def connect_next_button_to_analysis_widget(self, next_button, w_name: str):
         """
@@ -542,6 +567,8 @@ class MicroEMGMain(QMainWindow):
 
         # Update toolbar connections
         self.update_toolbar_connections()
+
+        logger.info(f"Added {w_name} widget.")
 
     def add_preprocess_widget(self):
         """
@@ -627,9 +654,6 @@ class MicroEMGMain(QMainWindow):
             )
         self.add_widget_to_analysis_steps(w, w_name)
 
-        print("Channels to analyse: ")
-        print(w.reconstruct_model.reconstruct.emg_data_preproc.chan.analyse_chan)
-
         # Enable toolbar button
         self.enable_analysis_toolbar_button(True, w_name)
 
@@ -651,7 +675,6 @@ class MicroEMGMain(QMainWindow):
         w_name = "selectmu"
 
         if motor_units_found:  # if motor units found, create widget
-            print("creating selectmu widget")
             # Create widget and add to stack of analysis step widgets with toolbar connections
             if self.reconstruct_model:
                 w = SelectMUWidget(self.reconstruct_model, parent=self)
@@ -675,11 +698,10 @@ class MicroEMGMain(QMainWindow):
             self.add_selectmu_connections()
 
         else:  # Otherwise, delete widget if it exists
-            print("deleting select mu widget")
             w = self.widgets["analysis"].widgets.pop(w_name, None)
             if w:
                 w.deleteLater()
-                print(f"Deleted {w_name} widget")
+                logger.info("Deleted select motor units (selectmu) widget.")
 
     def add_localise_widget(self):
         """
@@ -723,7 +745,6 @@ class MicroEMGMain(QMainWindow):
 
             # Create widget and add to stack of analysis step widgets with toolbar connections
             w = JitterWidget(self.reconstruct_model, self.motor_units_to_analyse, parent=self)
-            print("Added jitter widget")
         else:
             raise ValueError(
                 "GUI model for fibre reconstruction analysis must be created before "
@@ -739,3 +760,41 @@ class MicroEMGMain(QMainWindow):
             self.widgets["analysis"].widgets["localise"].widgets["buttons"].widgets["next"]
         )
         self.connect_next_button_to_analysis_widget(next_button, w_name)
+
+        # Do not need to update export widget since no settings/results changed in jitter
+        # widget.
+
+    def add_export_widget(self):
+        """
+        Add widget for exporting results.
+
+        This widget is first created once motor units are found. It can use Python's
+        Python's shallow copy behaviour to update the reconstruct_model instance
+        as more analysis results and settings are added/updated. However, we re-create
+        this widget when additional analyses are performed (by calling
+        self.add_export_widget() repeatedly) to easily reset the state of the widget
+        (e.g., no export folder chosen).
+        """
+
+        w_name = "export"
+
+        # Delete widget if it already exists
+        w = self.widgets["analysis"].widgets.pop(w_name, None)
+        if w:
+            w.deleteLater()
+            logger.info("Deleted existing export widget.")
+            self.enable_analysis_toolbar_button(False, w_name)
+
+        # Create widget
+        if self.reconstruct_model:
+            # Create widget and add to stack of analysis step widgets with toolbar connections
+            w = ExportWidget(self.reconstruct_model, parent=self)
+        else:
+            raise ValueError(
+                "GUI model for fibre reconstruction analysis must be created before "
+                + "creating widgets for this analysis."
+            )
+        self.add_widget_to_analysis_steps(w, w_name)
+
+        # Enable toolbar button
+        self.enable_analysis_toolbar_button(True, w_name)

@@ -3,6 +3,8 @@
 """
 Main window toolbars and widgets placed in toolbars (e.g., logo button)
 """
+import os
+import subprocess
 
 from PySide6.QtWidgets import (
     QToolBar,
@@ -14,17 +16,21 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QAction, QIcon
 
+import microemggui
 from microemggui.widgets.base import (
     AnalysisToolbarButton,
     AnalysisToolbarLabel,
 )
 from microemggui.icons import icons  # noqa - import allows icon references
 
-
 # --- Widgets in toolbars ---
 
 
 class MicroEMGLogo(QPushButton):
+    """
+    Button with the MicroEMG logo - serves as to home button.
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -37,8 +43,10 @@ class MicroEMGLogo(QPushButton):
 
 
 class RecordingLabel(QLabel):
-    # Widget for recording label in top toolbar
-    # Separate class so easy to style
+    """
+    Widget for recording label in top toolbar.
+    Separate class so easy to style.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -48,7 +56,9 @@ class RecordingLabel(QLabel):
 
 
 class AnalysisToolbar(QToolBar):
-    # Toolbar on left of window for navigating analysis steps
+    """
+    Toolbar on left of window for navigating analysis steps.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -112,8 +122,12 @@ class AnalysisToolbar(QToolBar):
 
 
 class TopToolbar(QToolBar):
-    # Toolbar on top of page for settings, info, and help links
-    # Also has label for recording
+    """
+    Toolbar on top of page for help icon. Could also add settings and info links in the
+    future when that functionality is added.
+
+    Also has a label for the loaded EMG recording.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -128,23 +142,43 @@ class TopToolbar(QToolBar):
             self.addWidget(w)
 
         # Icons for actions
-        my_icons = ["gear", "question-circle", "info-circle"]
+        my_icons = ["question-circle"]
 
-        tips = ["Settings", "Help", "About"]
+        tips = ["Help"]
 
         for ic, tip in zip(my_icons, tips):
             action = QAction(QIcon(":/bootstrap/" + ic), tip, self)
             action.setStatusTip(tip)
-            # TODO: create and connect to pop-up windows
             self.addAction(action)
+
+            # Connect help icon to opening pdf
+            if tip == "Help":
+                action.triggered.connect(self.open_help_guide_pdf)
 
         # Properties
         self.setIconSize(QSize(16, 16))
 
     def change_recording_label(self, recording: str):
-        # Slot for updating recording label
+        """
+        Slot for updating recording label.
+        """
 
         if recording:
             self.widgets["recording"].setText(f"<b>Recording:</b> {recording}")
         else:  # if label is empty, remove all text from label
             self.widgets["recording"].setText("")
+
+    def open_help_guide_pdf(self):
+        """
+        Open help guide for microEMG GUI.
+        File must have specified name and file path.
+        """
+
+        # Get path to module
+        module_path = os.path.dirname(microemggui.__file__)
+
+        # Path to PDF
+        pdf_file_path = os.path.join(module_path, "docs", "microemg_help_guide.pdf")
+
+        # Open
+        subprocess.Popen(["open", pdf_file_path])
