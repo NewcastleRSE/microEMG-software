@@ -156,7 +156,7 @@ class MicroEMGMain(QMainWindow):
         self.setCentralWidget(widget)
 
         # Window properties
-        self.resize(1100, 750)
+        self.resize(1200, 800)
 
         # Connections
 
