@@ -156,6 +156,7 @@ TODO: add docs for pymicroemg
 - Type hints have been implemented, but not fully validated using `mypy` (a static type checker)
 - [Package GUI](https://www.pythonguis.com/tutorials/packaging-pyside6-applications-windows-pyinstaller-installforge/)
 - Improve and test GUI implementation on Windows and Linux
+- Update CI to 1) automatically update documentation (GUI PDF and `pymicroemg` `pdoc` documentation) and the Qt resource system when necessary and 2) include testing and static type checking in pull request checks.
 
 Additional potential features are organised using the associate project board and issues (see not planned issues).
 
