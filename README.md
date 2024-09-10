@@ -102,7 +102,7 @@ We developed two modules:
 
 #### pymicroemg module
 
-The `pymicroemg` module is documented using `pdoc` [here](docs/pymicroemg). You can view this documentation by downloading the entire folder (or cloning the repository) and opening [pymicroemg.html](docs/pymicroemg/pymicroemg.html) - it will open in web browser.
+The `pymicroemg` module is documented using `pdoc` [here](docs/pymicroemg), and an overview of the methods is provided [here](docs/Analysis-report.docx). You can view this documentation by downloading the entire folder (or cloning the repository) and opening [pymicroemg.html](docs/pymicroemg/pymicroemg.html) - it will open in web browser.
 
 If you update the `pymicroemg` module, please update the documentation by running 
 ```
