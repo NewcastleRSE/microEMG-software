@@ -18,7 +18,8 @@ Dr Roger Whittaker, Newcastle University  ([roger.whittaker@newcastle.ac.uk](mai
 Dr Stuart Maitland, Newcastle University  ([stu.maitland@newcastle.ac.uk](mailto:stu.maitland@newcastle.ac.uk))  
 
 Dr Gabrielle Schroeder, Newcastle University ([gabrielle.schroeder@newcastle.ac.uk](mailto:gabrielle.schroeder@newcastle.ac.uk))  
-Dr Richard Howey, Newcastle University ([richard.howey@newcastle.ac.uk](mailto:richard.howey@newcastle.ac.uk))
+Dr Richard Howey, Newcastle University ([richard.howey@newcastle.ac.uk](mailto:richard.howey@newcastle.ac.uk))  
+Dr Frances Turner, Newcastle University ([frances.hutchings@newcastle.ac.uk](mailto:frances.hutchings@newcastle.ac.uk))
 
 ### RSE Contact
 Gabrielle Schroeder
@@ -32,8 +33,8 @@ Newcastle University
 [PySide6](https://www.qt.io/qt-for-python)  
 [Framework 3](https://something.com)  
 
-The microEMG GUI uses
-[Bootstrap Icons](https://icons.getbootstrap.com/)
+The microEMG GUI uses  
+[Bootstrap Icons](https://icons.getbootstrap.com/)   
 [CartoColors](https://carto.com/carto-colors/) (via the [palettable](https://jiffyclub.github.io/palettable/) Python package))
 
 ## Getting Started
@@ -87,9 +88,11 @@ python gui_dev/gui_dev_main.py
 Subsections of the GUI can also be run using the other Python files in [`gui_dev`](gui_dev).
 GUI instructions are [here](analysis_software/microemggui/microemggui/docs/microemg_help_guide.pdf).
 
-####MicroEMG analysis scripts
+The GUI has been developed on MacOS and may have some missing functionality or altered formats on other operating systems.
 
-Alternatively, you can develop your own analysis scripts using the `pymicroemg` module for additional control over analysis settings and steps. See [`data_analysis/example_pipeline.py`](`data_analysis/example_pipeline.py`) for an example pipeline.
+#### MicroEMG analysis scripts
+
+Alternatively, you can develop your own analysis scripts using the `pymicroemg` module for additional control over analysis settings and steps. See [`data_analysis/example_pipeline.py`](data_analysis/example_pipeline.py) for an example pipeline.
 
 ### Software structure
 
@@ -99,17 +102,17 @@ We developed two modules:
 
 #### microemggui module
 
-The [widgets](analysis_software/microemggui/microemggui/widgets) submodule contains the widgets for the GUI, organised by the "pages" in the GUI (one page per analysis step).
+The [`widgets`](analysis_software/microemggui/microemggui/widgets) submodule contains the widgets for the GUI, organised by the "pages" in the GUI (one page per analysis step).
 The full GUI is specified in [widgets/main/main_window.py](analysis_software/microemggui/microemggui/widgets/main/main_window.py).
 
-The [models](analysis_software/microemggui/microemggui/models) submodule contains "models", or interfaces, to some of the `pymicroemg` classes for settings and data. 
+The [`models`](analysis_software/microemggui/microemggui/models) submodule contains "models", or interfaces, to some of the `pymicroemg` classes for settings and data. 
 This approach makes it easier to separate GUI functionality from the underlying analysis software. Note that many of the settings options (e.g., options for dropdown boxes) for the GUI are specified in [`models/settings.py`](analysis_software/microemggui/microemggui/models/settings.py).
 
-The [docs](analysis_software/microemggui/microemggui/docs) folder contains a PDF with GUI instructions, [`microemg_help_guide.pdf`](analysis_software/microemggui/microemggui/docs/microemg_help_guide.pdf). This PDF can be manually updated using the associated Word Document. It is linked to a help icon in the GUI.
+The [`docs`](analysis_software/microemggui/microemggui/docs) folder contains a PDF with GUI instructions, [`microemg_help_guide.pdf`](analysis_software/microemggui/microemggui/docs/microemg_help_guide.pdf). This PDF can be manually updated using the associated Word Document. It is linked to a help icon in the GUI.
 
-The [styles](analysis_software/microemggui/microemggui/styles) submodule contains a style sheet for modifying the GUI's appearance and code for implementing the style sheet.
+The [`styles`](analysis_software/microemggui/microemggui/styles) submodule contains a style sheet for modifying the GUI's appearance and code for implementing the style sheet.
 
-The [icons](analysis_software/microemggui/microemggui/icons) submodule contains icons (mostly [Bootstrap](https://icons.getbootstrap.com/)) used in the GUI. 
+The [`icons`](analysis_software/microemggui/microemggui/icons) submodule contains icons (mostly [Bootstrap](https://icons.getbootstrap.com/)) used in the GUI. 
 These icons are set up using a [Qt resource system](https://www.pythonguis.com/tutorials/packaging-data-files-pyside6-with-qresource-system/) to ensure they are not dependent on a specific directory structure or paths.
 If you change the icons, you need to update the resource system by running this command from the root directory in a terminal: 
 ```
@@ -118,15 +121,12 @@ pyside6-rcc analysis_software/microemggui/microemggui/icons/icons.qrc -o analysi
 
 ### Running Tests
 
-How to run tests on your local system.
+The `microemggui` has partial test coverage using `pytest`. These tests can be run from a terminal using
+```
+pytest analysis_software/microemggui/
+```
 
 ## Deployment
-
-### Local
-
-### Production
-
-Deploying to the production system. Examples of this would include cloud, HPC or virtual machine. 
 
 ### Troubleshooting
  
@@ -137,14 +137,27 @@ Deploying to the production system. Examples of this would include cloud, HPC or
 
 ## Usage
 
-Any links to the production environment, video demos and screenshots.
+TODO: add docs for pymicroemg
+- [GUI instructions](analysis_software/microemggui/microemggui/docs/microemg_help_guide.pdf)
+- [MicroEMG analysis methods](docs/Analysis-report.docx)
+- [Intan recording format](docs/Intan_RHD2000_data_file_formats.pdf)
 
 ## Roadmap
 
 - [ ] Initial Research  
 - [x] Minimum viable product <-- You are Here  
 - [ ] Alpha Release  
-- [ ] Feature-Complete Release  
+- [ ] Feature-Complete Release
+
+### Suggested software improvements
+
+- Extend test coverage of `microemggui` and add unit tests for `pymicroemg`
+- Modify `pymicroemg` settings classes to validate settings attributes when modified by the user and prevent direct access to settings attributes (e.g., using [getters and setters](https://realpython.com/python-getter-setter/))
+- Type hints have been implemented, but not fully validated using `mypy` (a static type checker)
+- [Package GUI](https://www.pythonguis.com/tutorials/packaging-pyside6-applications-windows-pyinstaller-installforge/)
+- Improve and test GUI implementation on Windows and Linux
+
+Additional potential features are organised using the associate project board and issues (see not planned issues).
 
 ## Contributing
 
