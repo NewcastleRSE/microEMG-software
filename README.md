@@ -100,6 +100,16 @@ We developed two modules:
 - [`pymicroemg`](analysis_software/pymicroemg/pymicroemg) contains functions and classes for analysing microEMG data.
 - [`microemggui`](analysis_software/microemggui/microemggui) is built on top of `pymicroemg` to provide a graphical user interface (GUI) for performing the analysis, with the ability to modify some analysis settings.
 
+#### pymicroemg module
+
+The pymicroemg module is documented using `pdoc` [here](docs/pymicroemg). You can view this documentation by downloading the entire folder (or cloning the repository) and opening [pymicroemg.html](docs/pymicroemg/pymicroemg.html) - it will open in web browser.
+
+If you update the `pymicroemg` module, please update the documentation by running 
+```
+pdoc --docformat numpy pymicroemg -o ./docs/pymicroemg
+```
+from a terminal from the root directory.
+
 #### microemggui module
 
 The [`widgets`](analysis_software/microemggui/microemggui/widgets) submodule contains the widgets for the GUI, organised by the "pages" in the GUI (one page per analysis step).
@@ -137,7 +147,7 @@ pytest analysis_software/microemggui/
 
 ## Usage
 
-TODO: add docs for pymicroemg
+- [`pymicroemg` documentation](docs/pymicroemg) (must download entire folder and open [pymicroemg.html](docs/pymicroemg/pymicroemg.html) - will open in web browser)
 - [GUI instructions](analysis_software/microemggui/microemggui/docs/microemg_help_guide.pdf)
 - [MicroEMG analysis methods](docs/Analysis-report.docx)
 - [Intan recording format](docs/Intan_RHD2000_data_file_formats.pdf)
