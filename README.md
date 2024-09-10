@@ -136,7 +136,10 @@ pytest analysis_software/microemggui/
 
 ## Usage
 
-Any links to the production environment, video demos and screenshots.
+TODO: add docs for pymicroemg
+- [GUI instructions](analysis_software/microemggui/microemggui/docs/microemg_help_guide.pdf)
+- [MicroEMG analysis methods](docs/Analysis-report.docx)
+- [Intan recording format](docs/Intan_RHD2000_data_file_formats.pdf)
 
 ## Roadmap
 
@@ -153,7 +156,7 @@ Any links to the production environment, video demos and screenshots.
 - [Package GUI](https://www.pythonguis.com/tutorials/packaging-pyside6-applications-windows-pyinstaller-installforge/)
 - Improve and test GUI implementation on Windows and Linux
 
-Additional potential features are organised using the associate project board and issues (see not planned issues)
+Additional potential features are organised using the associate project board and issues (see not planned issues).
 
 ## Contributing
 
