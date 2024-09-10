@@ -716,7 +716,7 @@ class EMGAnalysisReconstruct:
 
         # Define all results and settings dictionary.
         all_results_and_settings_dict = {
-            "emg_info": self.emg_data_preproc.get_preprocess_dict(),
+            "emg_info": self.emg_data_preproc.get_emg_info_dict(),
             "preproc_settings": self.emg_data_preproc.preproc_settings.get_settings_dict(),
             "mu_settings": self.mu_settings.get_settings_dict(),
             "recon_settings": self.recon_settings.get_settings_dict(),
@@ -752,7 +752,7 @@ class EMGAnalysisReconstruct:
             all_results_and_settings_dict = json.load(json_file)
 
         # Set preprocessing info used during preprocessing.
-        self.emg_data_preproc.set_preprocess_from_dict(all_results_and_settings_dict["emg_info"])
+        self.emg_data_preproc.set_emg_info_from_dict(all_results_and_settings_dict["emg_info"])
 
         # Set preprocessing settings.
         self.emg_data_preproc.preproc_settings.set_settings_from_dict(

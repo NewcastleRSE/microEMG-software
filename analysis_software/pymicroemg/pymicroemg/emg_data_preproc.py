@@ -149,9 +149,9 @@ class EMGDataPreproc(EMGData):
 
         return reconstruct
 
-    def get_preprocess_dict(self) -> dict:
+    def get_emg_info_dict(self) -> dict:
         """
-        Returns EMG info used for preprocessing.
+        Returns EMG info used for preprocessing and downstream analysis.
 
         Parameters
         ----------
@@ -164,22 +164,22 @@ class EMGDataPreproc(EMGData):
         """
 
         # Define settings dictionary.
-        preproc_dict = {
+        emg_info_dict = {
             "fs": self.fs,
             "analyse_chan": self.chan.analyse_chan.tolist(),
             "segment_of_recording": self.segment_of_recording.tolist(),
         }
 
-        return preproc_dict
+        return emg_info_dict
 
-    def set_preprocess_from_dict(self, settings_dict: dict):
+    def set_emg_info_from_dict(self, emg_info_dict: dict):
         """
-        Sets EMG info used for preprocessing.
+        Sets EMG info used for preprocessing and downstream analysis.
 
         Parameters
         ----------
-        settings_dict: Dictionary
-            Dictionary with all the settings saved in it.
+        emg_info_dict: Dictionary
+            Dictionary with all the EMG info saved in it.
 
         Returns
         -------
@@ -187,13 +187,13 @@ class EMGDataPreproc(EMGData):
 
         """
 
-        self.fs = settings_dict["fs"]
-        self.chan.analyse_chan = np.array(settings_dict["analyse_chan"])
-        self.segment_of_recording = np.array(settings_dict["segment_of_recording"])
+        self.fs = emg_info_dict["fs"]
+        self.chan.analyse_chan = np.array(emg_info_dict["analyse_chan"])
+        self.segment_of_recording = np.array(emg_info_dict["segment_of_recording"])
 
-    def save_preprocess(self, filename: str):
+    def save_preprocess_setup(self, filename: str):
         """
-        Saves prepocessing EMG info and settings.
+        Saves EMG info and prepocessing settings.
 
         Parameters
         ----------
@@ -207,7 +207,7 @@ class EMGDataPreproc(EMGData):
         """
 
         # Define dictionary to save results.
-        preproc_dict = self.get_preprocess_dict()
+        preproc_dict = self.get_emg_info_dict()
 
         # Add settings used for preprocessing.
         preproc_dict["preproc_settings"] = self.preproc_settings.get_settings_dict()
@@ -216,9 +216,9 @@ class EMGDataPreproc(EMGData):
         with open(filename, "w") as outfile:
             json.dump(preproc_dict, outfile)
 
-    def load_preprocess(self, filename: str):
+    def load_preprocess_setup(self, filename: str):
         """
-        Loads preprocessing EMG info and settings.
+        Loads EMG info and prepocessing settings.
 
         Parameters
         ----------
@@ -235,6 +235,6 @@ class EMGDataPreproc(EMGData):
         with open(filename) as json_file:
             preproc_dict = json.load(json_file)
 
-        # Set preprocessing info and settings.
-        self.set_preprocess_from_dict(preproc_dict)
+        # Set EMG info and preprocessing settings.
+        self.set_emg_info_from_dict(preproc_dict)
         self.preproc_settings.set_settings_from_dict(preproc_dict["preproc_settings"])
