@@ -57,7 +57,9 @@ class ExportSettingsWidget(QWidget):
         # Create widgets
         self.widgets: dict[str, Any] = {
             "title": SubsectionTitle("Export options", self),
-            "checkbox_mups": CheckBoxRegular("Save EMG of motor unit potentials", self),
+            "checkbox_mups": CheckBoxRegular(
+                "Save EMG of motor unit potentials (will create a large file!)", self
+            ),
             "button_folder": SmallPushButton(self),
             "text_path": InputInlineText("", self),
         }
@@ -199,9 +201,15 @@ class ExportWidget(QWidget):
         """
         Change attribute indicating whether motor unit potential EMG should be saved.
         Slot for checkbox.
+
         """
 
         self.save_mup_emg = checked
+
+        # Also enable export button since settings have been changed
+        self.widgets["button"].setEnabled(True)
+        self.widgets["success"].hide()
+        self.widgets["fail"].hide()
 
     def export_results(self):
         """
