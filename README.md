@@ -98,8 +98,6 @@ To add a package to a specific group, e.g. dev: `poetry add <package name> -G de
 
 2. `poetry lock --no-update` updates the lock file (with all the packages needed and the exact versions, including dependencies of the packages in the pyproject.toml file), but does not change the version of the previously tracked dependencies
 
-3. `poetry export -f requirements.txt --without-hashes > requirements.txt` will then overwrite the requirements.txt file with the latest updates to the lockfile.
-
 
 ### Running Tests
 
