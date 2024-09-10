@@ -96,7 +96,7 @@ class EMGPreprocSettings:
         }
 
         return settings_dict
-    
+
     def set_settings_from_dict(self, settings_dict: dict):
         """
         Sets settings for preprocessing.

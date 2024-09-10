@@ -167,11 +167,11 @@ class EMGDataPreproc(EMGData):
         preproc_dict = {
             "fs": self.fs,
             "analyse_chan": self.chan.analyse_chan.tolist(),
-            "segment_of_recording": self.segment_of_recording.tolist()            
+            "segment_of_recording": self.segment_of_recording.tolist(),
         }
 
         return preproc_dict
-    
+
     def set_preprocess_from_dict(self, settings_dict: dict):
         """
         Sets info used for preprocessing.
@@ -190,8 +190,7 @@ class EMGDataPreproc(EMGData):
         self.fs = settings_dict["fs"]
         self.chan.analyse_chan = np.array(settings_dict["analyse_chan"])
         self.segment_of_recording = np.array(settings_dict["segment_of_recording"])
-        
-       
+
     def save_preprocess(self, filename: str):
         """
         Saves prepocessing info and settings.
@@ -212,11 +211,11 @@ class EMGDataPreproc(EMGData):
 
         # Add settings used for preprocessing.
         preproc_dict["preproc_settings"] = self.preproc_settings.get_settings_dict()
-        
+
         # Convert and write JSON object to file.
         with open(filename, "w") as outfile:
             json.dump(preproc_dict, outfile)
-            
+
     def load_preprocess(self, filename: str):
         """
         Loads preprocessing info and settings.

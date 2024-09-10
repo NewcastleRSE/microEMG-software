@@ -683,8 +683,10 @@ class EMGAnalysisReconstruct:
             all_settings_dict = json.load(json_file)
 
         # Set preprocessing settings.
-        self.emg_data_preproc.preproc_settings.set_settings_from_dict(all_settings_dict["preproc_settings"])
-        
+        self.emg_data_preproc.preproc_settings.set_settings_from_dict(
+            all_settings_dict["preproc_settings"]
+        )
+
         # Set motor unit finding and reconstruction settings.
         self.mu_settings.set_settings_from_dict(all_settings_dict["mu_settings"])
         self.recon_settings.set_settings_from_dict(all_settings_dict["recon_settings"])
@@ -715,7 +717,7 @@ class EMGAnalysisReconstruct:
         # Define all results and settings dictionary.
         all_results_and_settings_dict = {
             "preproc_info": self.emg_data_preproc.get_preprocess_dict(),
-            "preproc_settings": self.emg_data_preproc.preproc_settings.get_settings_dict(),            
+            "preproc_settings": self.emg_data_preproc.preproc_settings.get_settings_dict(),
             "mu_settings": self.mu_settings.get_settings_dict(),
             "recon_settings": self.recon_settings.get_settings_dict(),
             "mu_cluster_settings": self.mu_cluster_settings.get_settings_dict(),
@@ -750,11 +752,15 @@ class EMGAnalysisReconstruct:
             all_results_and_settings_dict = json.load(json_file)
 
         # Set preprocessing info used during preprocessing.
-        self.emg_data_preproc.set_preprocess_from_dict(all_results_and_settings_dict["preproc_info"])
-        
+        self.emg_data_preproc.set_preprocess_from_dict(
+            all_results_and_settings_dict["preproc_info"]
+        )
+
         # Set preprocessing settings.
-        self.emg_data_preproc.preproc_settings.set_settings_from_dict(all_results_and_settings_dict["preproc_settings"])
-        
+        self.emg_data_preproc.preproc_settings.set_settings_from_dict(
+            all_results_and_settings_dict["preproc_settings"]
+        )
+
         # Set motor unit finding and reconstruction settings.
         self.mu_settings.set_settings_from_dict(all_results_and_settings_dict["mu_settings"])
         self.recon_settings.set_settings_from_dict(all_results_and_settings_dict["recon_settings"])
