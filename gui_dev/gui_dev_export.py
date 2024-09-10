@@ -8,7 +8,7 @@ import sys
 
 from PySide6.QtWidgets import QApplication, QMainWindow
 
-from microemggui.widgets.export.export_results import ExportWidget
+from microemggui.widgets.export.export_step import ExportWidget
 from microemggui.models.emg import EMGAnalysisReconstructModel
 from microemggui.styles.gui_style import get_formatted_gui_style_sheet
 
