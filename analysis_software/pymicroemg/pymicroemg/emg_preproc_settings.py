@@ -73,6 +73,50 @@ class EMGPreprocSettings:
 
         return ans
 
+    def get_settings_dict(self) -> dict:
+        """
+        Saves settings for preprocessing.
+
+        Parameters
+        ----------
+        None.
+
+        Returns
+        -------
+        dict
+
+        """
+
+        # Define settings dictionary.
+        settings_dict = {
+            "remove_mains": self.remove_mains,
+            "remove_mains_settings": self.remove_mains_settings,
+            "butterworth_filter": self.butterworth_filter,
+            "butterworth_filter_settings": self.butterworth_filter_settings,
+        }
+
+        return settings_dict
+    
+    def set_settings_from_dict(self, settings_dict: dict):
+        """
+        Sets settings for preprocessing.
+
+        Parameters
+        ----------
+        settings_dict: Dictionary
+            Dictionary with all the settings saved in it.
+
+        Returns
+        -------
+        None
+
+        """
+
+        self.remove_mains = settings_dict["remove_mains"]
+        self.remove_mains_settings = settings_dict["remove_mains_settings"]
+        self.butterworth_filter = settings_dict["butterworth_filter"]
+        self.butterworth_filter_settings = settings_dict["butterworth_filter_settings"]
+
     @staticmethod
     def _get_filter_types_allowed() -> list[str]:
         """
