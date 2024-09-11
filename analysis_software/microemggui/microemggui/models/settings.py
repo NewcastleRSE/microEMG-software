@@ -221,9 +221,9 @@ class EMGAnalysisMotorUnitSettingsModel:
         self.settings = settings
 
         # GUI options for settings values with mapping of text (e.g., "low") to value
-        # and vice versa
-        # Keys must be strings
-        # TODO: review options; note uneven jumps
+        # and vice versa.
+        # Keys must be strings.
+        # Note irregular increments between values.
         sensitivity_text2values = {
             "very low (0.025)": 0.025,
             "low (0.05)": 0.05,
@@ -242,8 +242,8 @@ class EMGAnalysisMotorUnitSettingsModel:
         }
         similarity_values2text = {v: k for k, v in similarity_text2values.items()}
 
-        # Store mapping by GUI setting name so easier to request each setting's mapping
-        # Also include attribute name ("alias") for each setting
+        # Store mapping by GUI setting name so easier to request each setting's mapping.
+        # Also include attribute name ("alias") for each setting.
         self.mapping: dict[str, dict[str, Any]] = {
             "sensitivity": {
                 "alias": "tk_filt_thres_spike",
@@ -261,7 +261,7 @@ class EMGAnalysisMotorUnitSettingsModel:
         settings_names = ["sensitivity", "similarity"]
         for name in settings_names:
             value = self.get_setting_current_value(name)
-            _ = self.map_values2text(name, value)  # will raise error if no matching GUI option
+            _ = self.map_values2text(name, value)  # raises error if no matching GUI option
 
     def map_text2values(self, setting: str, text: str) -> float:
         """

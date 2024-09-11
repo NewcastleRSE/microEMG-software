@@ -33,12 +33,18 @@ def get_gui_style_sheet() -> str:
     return gui_style_sheet
 
 
-def get_formatted_gui_style_sheet() -> str:
+def get_formatted_gui_style_sheet(clr="teal") -> str:
     """
     Get and format style sheet (replaces variables defined in style sheet with
     corresponding values).
 
     Also defines values for variables in the style sheet.
+
+    Parameters
+    ----------
+    clr : TYPE, optional
+        String to specify primary colour (e.g., used for buttons). The default is
+        "teal".
 
     Returns
     -------
@@ -52,24 +58,29 @@ def get_formatted_gui_style_sheet() -> str:
 
     # Dictionary of terms to replace (all marked with {} ) in style sheet
     # Note on MacOS, background by default is #ececec -
-    # should have good contrast with that colour
+    # colours should have good contrast with that colour.
 
     # Primary colour, with variations for different states
 
-    # teal
-    clr_primary = "#30819C"
-    clr_primary_disabled = "#A4C1CB"
-    clr_primary_hover = "#276A7E"
-    clr_primary_pressed = "#1E5362"
-    clr_primary_dark = "#276A7E"
+    match clr:
+        case "teal":
+            # teal
+            clr_primary = "#30819C"
+            clr_primary_disabled = "#A4C1CB"
+            clr_primary_hover = "#276A7E"
+            clr_primary_pressed = "#1E5362"
+            clr_primary_dark = "#276A7E"
+        case "gold":
+            # golden brown
+            clr_primary = "#A77E28"
+            clr_primary_disabled = "#D1BF8A"
+            clr_primary_hover = "#8B671F"
+            clr_primary_pressed = "#705019"
+            clr_primary_dark = "#8C671E"
+        case _:
+            raise ValueError("Requested primary colour (clr) is not an option.")
 
-    # # golden brown
-    # clr_primary = "#A77E28"
-    # clr_primary_disabled = "#D1BF8A"
-    # clr_primary_hover = "#8B671F"
-    # clr_primary_pressed = "#705019"
-    # clr_primary_dark = "#8C671E"
-
+    # Other colors to consider:
     # dark purple: #4B0082
     # purple: #6A1B9A
     # forest green: #228B22
@@ -79,7 +90,7 @@ def get_formatted_gui_style_sheet() -> str:
     # more vibrant teal: "#1C7DA6"
 
     # Secondary colour (will set to same colour as primary, but use separate
-    # variable for flexibility; using purple to test)
+    # variable for flexibility)
     clr_secondary = clr_primary
 
     # Dictionary for defining different variables in style sheet
