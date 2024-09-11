@@ -9,6 +9,13 @@ from pymicroemg.emg_files import EMGFiles
 from pymicroemg.emg_preproc_settings import EMGPreprocSettings
 from pymicroemg import helper_config as cfg
 
+from pymicroemg.emg_reconstruct_settings import (
+    EMGAnalysisReconstructSettings,
+    EMGAnalysisMotorUnitSettings,
+    EMGAnalysisMotorUnitClusterSettings,
+    EMGAnalysisMotorUnitJitterSettings,
+)
+
 # increase figure resolution (needed for Spyder IDE)
 plt.rcParams["figure.dpi"] = 600
 
@@ -50,22 +57,19 @@ emg_data = emg_files.load_emg_data()
 # an instance of the EMGChannels class:
 print(type(emg_data.chan))
 
-# This class stores information about channel names and )x, y) coordinates (the latter
+# This class stores information about channel names and (x, y) coordinates (the latter
 # were previously stores as a "needle model" in the original software).
 print(emg_data.chan.chan_names)
 print(emg_data.chan.chan_xy)
 
 # %% Trimming and plotting example
-# There are two ways to "crop" the time period used for the analysis. The first is
-# the trim_emg_ts method. This method discards the data that is not used for the
-# analysis.
-# This method will not be the main method used in the GUI because it cannot be easily
-# undone since the data is discarded. However, it may be useful for any long recordings
-# if you do not want to keep the entire time series in memory.
+# You can "trim" the time period used for the analysis using the trim_emg_ts method.
+# This method discards the data that is not used for the analysis.
 
 # Plot 10 to 20 seconds in the original data
 start_t = 10
 stop_t = 20
+
 # "offset" controls the amount of space between the channels' signals (and thus their
 # apparent amplitude in the plot)
 fig, ax = emg_data.plot_emg_ts(start_t=start_t, stop_t=stop_t, offset=2000)
@@ -91,10 +95,8 @@ ax.set_title(f"{recording_id}, {start_t} to {stop_t} seconds of trimmed time ser
 # Create and specify preprocessing settings using EMGPreprocSettings object
 preproc_settings = EMGPreprocSettings()
 
-# Add filter
-# This is also the current default setting, but best to specify explicitly in case we
-# decide to modify the default.
-preproc_settings.add_butterworth_filter(cutoff_freq=[500, 2000], order=6, filter_type="bandpass")
+# Add filter (default settings)
+preproc_settings.add_butterworth_filter()
 
 # Add mains noise removal.
 # There are some optional paramaters that can be changed, but that option will not be
@@ -104,10 +106,6 @@ preproc_settings.add_remove_mains()
 # Apply the preprocessing settings to raw EMG data to generate preprocessed EMG data
 # (class EMGDataPreproc)
 emg_data_preproc = emg_data.preprocess(preproc_settings)
-
-# Unlike the original MATLAB pipeline, the intermediate preprocessing steps are not
-# saved. I've confirmed with SM that the above approach is suitable. Thus, we have two
-# versions of the EMG data - the raw data and the preprocessed data.
 
 # %% Plot part of segment, before and after preprocessing
 start_t = 3
@@ -134,6 +132,8 @@ ax.set_title(f"{recording_id} preprocessed")
 # It's more standard in EMG/EEG analysis to mark "bad" channels that should be removed
 # from the analysis, rather than "good" channels to use.
 # Bad channels are indicated by index (counting from zero), not name (counting from 1)
+# These channels are arbitrarily selected as an example - they are fine to use in the
+# analysis!
 bad_chan = list(np.arange(2, 13)) + [26] + [30] + list(np.arange(34, 53))
 emg_data_preproc.set_bad_chan(bad_chan)
 print("Channels to analyse: ")
@@ -141,21 +141,41 @@ for i in range(emg_data.n_chan):
     if emg_data_preproc.chan.analyse_chan[i]:
         print(f"{emg_data_preproc.chan.chan_names[i]} (idx {i})")
 
-# %% Misc
+# %% PSDs
 
 # There is also a class for representing power spectral densities (EMGPxx) - we can
 # use the corresponding visualisation to confirm that the preprocessing steps were
 # appropriate. This class should not be needed for the downstream analysis.
 
-pxx_win_size = 10
+pxx_win_size = 10  # window size for PSD calculations
 
-start_freq = 500
-stop_freq = 2500
-plot_chan = 2
+# PSD requencies to compute and plot
+start_freq = 0
+stop_freq = 5000
+plot_chan = 2  # channel to plot (index, counting from 0)
 
-# Compute and plot PSD
+# Compute and plot PSD before and after preprocessing
 emg_pxx = emg_data.compute_pxx(window_size=pxx_win_size)
 emg_pxx.plot_pxx(start_freq=start_freq, stop_freq=stop_freq, plot_chan=plot_chan)
-emg_pxx.plot_pxx()
 emg_pxx_preproc = emg_data_preproc.compute_pxx(window_size=pxx_win_size)
 emg_pxx_preproc.plot_pxx(start_freq=start_freq, stop_freq=stop_freq, plot_chan=plot_chan)
+
+# %% Motor units and fibres analyses
+
+# All downstream analyses are handled by the EMGAnalysisReconstruct class, which can be
+# created from the preprocessed data. See the example_pipeline.py script for examples of
+# these analyses.
+
+# Create settings for this part of the analysis
+mu_settings = EMGAnalysisMotorUnitSettings()
+recon_settings = EMGAnalysisReconstructSettings()
+
+# Create cluster settings and jitter analysis settings (needed later)
+mu_cluster_settings = EMGAnalysisMotorUnitClusterSettings()
+mu_jitter_settings = EMGAnalysisMotorUnitJitterSettings()
+
+# Create object for motor unit identification and fibre localisation ("reconstruction").
+# This object will be used for all downstream analysis.
+reconstruct = emg_data_preproc.set_up_reconstruct_analysis(
+    mu_settings, recon_settings, mu_cluster_settings, mu_jitter_settings
+)
