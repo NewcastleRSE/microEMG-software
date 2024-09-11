@@ -21,15 +21,11 @@ from PySide6.QtCore import Qt
 
 from pymicroemg.emg_reconstruct import EMGAnalysisReconstruct
 
-from microemggui.widgets.base import (
-    SectionTitle,
-    ExpandingVSpacer,
-)
-
 # Toolbars
 from microemggui.widgets.main.toolbars import AnalysisToolbar, TopToolbar
 
-# Widgets for each step
+# Widgets for each step/page
+from microemggui.widgets.home.home_page import HomeWidget
 from microemggui.widgets.load.load_step import LoadWidget
 from microemggui.widgets.preproc.preproc_step import PreprocWidget
 from microemggui.widgets.channels.channels_step import ChannelsWidget
@@ -52,28 +48,6 @@ logger = logging.getLogger("microemggui.main")
 # --- Widgets to put within main window ---
 
 
-class WelcomeWidget(QWidget):
-    """
-    Widget for welcome (home) page.
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        # Create widgets
-        self.widgets: dict[str, Any] = {
-            "title": SectionTitle("Welcome to the microEMG analysis GUI", parent=self)
-        }
-
-        # Add to layout
-        layout = QVBoxLayout()
-        for w in self.widgets.values():
-            layout.addWidget(w)
-        layout.addItem(ExpandingVSpacer())  # spacer
-        layout.setContentsMargins(20, 5, 20, 20)
-        self.setLayout(layout)
-
-
 class AnalysisStepsWidget(QWidget):
     """
     Stacked widgets for the different steps of the analysis.
@@ -85,9 +59,10 @@ class AnalysisStepsWidget(QWidget):
 
         # Make iniital widgets
         # Will use same names as AnalysisToolbar so easy to link buttons to corresponding pages:
-        # "home", "load", "preprocess", "channels", "motorunits", "fibres", "jitter","export"
+        # "home", "load", "preprocess", "channels", "findmu", "selectmu", "localise",
+        # "jitter","export"
         self.widgets: dict[str, Any] = {
-            "home": WelcomeWidget(parent=self),
+            "home": HomeWidget(parent=self),
             "load": LoadWidget(parent=self),
         }
 
