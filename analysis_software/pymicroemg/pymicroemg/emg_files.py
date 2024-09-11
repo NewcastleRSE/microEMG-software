@@ -26,10 +26,6 @@ class EMGFiles:
     https://intantech.com/files/Intan_RHD2000_data_file_formats.pdf
     We use the "One File Per Channel" format (pg. 10)
 
-    Intan provides Python software for reading RHD header files:
-    https://intantech.com/downloads.html?tabSelect=Software&yPos=212
-
-
     """
 
     def __init__(self, emg_dir: str):
@@ -77,6 +73,15 @@ class EMGFiles:
         self.n_chan = len(self.chan_fnames)
 
     def check_if_header_file(self) -> bool:
+        """
+        Check that directory contains a header file.
+
+        Returns
+        -------
+        bool
+            Whether the header file exists.
+
+        """
         # Full path to header file
         header_path = os.path.join(self.emg_dir, self.header_fname)
 
@@ -99,7 +104,6 @@ class EMGFiles:
             List of channel file names.
 
         """
-        # TODO: add check that channel name numbers go from 0 to n channels
 
         chan_prefix = "amp"  # recorded data is from amplifier channels
         chan_fnames = [f for f in os.listdir(self.emg_dir) if f.startswith(chan_prefix)]
@@ -143,7 +147,6 @@ class EMGFiles:
         INTAN2uV = 0.195
 
         # Get number of samples (assume same across all channels)
-        # TODO: consider adding check that number of samples is the same for all files
         chan_path = os.path.join(self.emg_dir, self.chan_fnames[0])
         finfo = os.stat(chan_path)
         n_samples = finfo.st_size // 2  # int16 data --> 2 bytes per sample

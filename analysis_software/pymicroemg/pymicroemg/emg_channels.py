@@ -12,10 +12,6 @@ class EMGChannels:
     """
     Class for representing EMG recording channels.
 
-    attributes to add:
-    low quality channels (automatic detection)
-    low quality channels (visual inspection)
-
     """
 
     def __init__(self, intan_chan_names: list[str]):

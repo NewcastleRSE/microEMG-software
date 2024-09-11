@@ -37,9 +37,6 @@ class EMGDataPreproc(EMGData):
 
     Inherits from EMGData.
 
-    Methods to add:
-    analysis of motor units
-
     """
 
     def __init__(
@@ -100,7 +97,6 @@ class EMGDataPreproc(EMGData):
         -------
         None.
 
-        TODO: consider adding method to Channels class that is called by this method.
         """
 
         # Mark bad channels that should not be analysed.
