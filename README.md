@@ -5,7 +5,7 @@ Software for recording and analysing microEMG recordings, developed for "Multi-c
 
 In clinical practice, electromyography (EMG) is performed using a single-channel electrode to capture motor unit and muscle fibre potentials. These recordings are subsequently analysed to detect abnormalities in motor unit function. Clinicians must currently obtain multiple single-channel recordings which is time-consuming and requires expertise. Additionally, a single-channel recording does not provide information about muscle fibre locations or motor unit sizes.
 
-To address these limitations, the microEMG team have developed:
+To address these limitations, the microEMG team has developed:
 
 1. A multichannel EMG (microEMG) electrode. Each electrode contains 32 or 64 channels, allowing clinicians to obtain a single, multivariate recording per muscle.
 2. An analytical pipeline that identifies motor units and localises muscle fibres. 
@@ -89,6 +89,8 @@ Subsections of the GUI can also be run using the other Python files in [`gui_dev
 GUI instructions are [here](analysis_software/microemggui/microemggui/docs/microemg_help_guide.pdf).
 
 The GUI has been developed on MacOS and may have some missing functionality or altered formats on other operating systems.
+
+The GUI produces log messages in a file `microemggui.log` (located in the directory from which the GUI is run). **This log file is overwritten each time the GUI is launched - if you experience issues, rename this file to save the logs.**
 
 #### MicroEMG analysis scripts
 
