@@ -436,7 +436,7 @@ class EMGAnalysisReconstruct:
         with open(filename) as json_file:
             fibre_local_dict = json.load(json_file)
 
-        # Set localisation results
+        # Set localisation results.
         self._set_mu_fibre_localisations_from_dict(fibre_local_dict)
 
     def _get_clustering_results_dict(self) -> dict:
@@ -652,6 +652,7 @@ class EMGAnalysisReconstruct:
 
         # Define settings dictionary.
         all_settings_dict = {
+            "preproc_settings": self.emg_data_preproc.preproc_settings.get_settings_dict(),
             "mu_settings": self.mu_settings.get_settings_dict(),
             "recon_settings": self.recon_settings.get_settings_dict(),
             "mu_cluster_settings": self.mu_cluster_settings.get_settings_dict(),
@@ -680,6 +681,11 @@ class EMGAnalysisReconstruct:
         # Opening JSON file.
         with open(filename) as json_file:
             all_settings_dict = json.load(json_file)
+
+        # Set preprocessing settings.
+        self.emg_data_preproc.preproc_settings.set_settings_from_dict(
+            all_settings_dict["preproc_settings"]
+        )
 
         # Set motor unit finding and reconstruction settings.
         self.mu_settings.set_settings_from_dict(all_settings_dict["mu_settings"])
@@ -710,6 +716,8 @@ class EMGAnalysisReconstruct:
 
         # Define all results and settings dictionary.
         all_results_and_settings_dict = {
+            "emg_info": self.emg_data_preproc.get_emg_info_dict(),
+            "preproc_settings": self.emg_data_preproc.preproc_settings.get_settings_dict(),
             "mu_settings": self.mu_settings.get_settings_dict(),
             "recon_settings": self.recon_settings.get_settings_dict(),
             "mu_cluster_settings": self.mu_cluster_settings.get_settings_dict(),
@@ -742,6 +750,14 @@ class EMGAnalysisReconstruct:
         # Opening JSON file.
         with open(filename) as json_file:
             all_results_and_settings_dict = json.load(json_file)
+
+        # Set preprocessing info used during preprocessing.
+        self.emg_data_preproc.set_emg_info_from_dict(all_results_and_settings_dict["emg_info"])
+
+        # Set preprocessing settings.
+        self.emg_data_preproc.preproc_settings.set_settings_from_dict(
+            all_results_and_settings_dict["preproc_settings"]
+        )
 
         # Set motor unit finding and reconstruction settings.
         self.mu_settings.set_settings_from_dict(all_results_and_settings_dict["mu_settings"])

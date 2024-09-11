@@ -6,7 +6,7 @@ Widget for finding motor units
 
 from typing import Any
 
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QGridLayout, QProgressDialog
+from PySide6.QtWidgets import QWidget, QHBoxLayout, QGridLayout, QProgressDialog, QProgressBar
 from PySide6.QtCore import Qt, Signal
 
 from microemggui.models.emg import EMGAnalysisReconstructModel
@@ -20,7 +20,9 @@ from microemggui.widgets.findmu.mu_results import MUResultsWidget
 
 
 class ApplyMUSettingsButton(LargePushButton):
-    # Button for applying motor unit settings and finding motor units
+    """
+    Button for applying motor unit settings and finding motor units.
+    """
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -32,14 +34,18 @@ class ApplyMUSettingsButton(LargePushButton):
         self.clicked.connect(self.button_clicked)
 
     def button_clicked(self):
-        # Update text and disable (will re-enable if settings updated)
+        """
+        Update text and disable (will re-enable if settings updated).
+        """
 
         self.setText("Re-apply")
         self.setEnabled(False)
 
 
 class NextButton(LargePushButton):
-    # Button for proceeding to the next step
+    """
+    Button for proceeding to the next step.
+    """
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -55,7 +61,10 @@ class NextButton(LargePushButton):
         self.setSizePolicy(size_policy)
 
     def show_button(self, mu_found: bool):
-        # Slot for showing/hiding next button depending on whether motor units are found
+        """
+        Slot for showing/hiding next button depending on whether motor units are found.
+        """
+
         if mu_found:
             self.show()
             self.setEnabled(True)  # ensure enabled, too
@@ -64,7 +73,9 @@ class NextButton(LargePushButton):
 
 
 class MainButtons(QWidget):
-    # Buttons for applying analysis step and continuing the analysis
+    """
+    Buttons for applying analysis step and continuing the analysis.
+    """
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -87,7 +98,9 @@ class MainButtons(QWidget):
 
 
 class FindMUWidget(QWidget):
-    # Widget for find motor units step
+    """
+    Widget for find motor units step.
+    """
 
     # Signal for whether motor units have been found
     motor_units_found = Signal(bool)
@@ -154,6 +167,12 @@ class FindMUWidget(QWidget):
         # but animation only works if use multithreading (had issues implementing for
         # finding motor units, so using this simpler implementation of empty bar)
         self.progress = QProgressDialog("Finding motor units...", None, 0, 100, parent=self)
+        bar = QProgressBar(self.progress)
+        bar.setMinimum(0)
+        bar.setMaximum(100)
+        bar.setTextVisible(False)
+        bar.setObjectName("findmuprogress")  # to hide in style sheet
+        self.progress.setBar(bar)
         # Ensure that progress dialog closes if GUI window is minimised
         # GUI window will pop up when process finishes and the progress bar closes
         self.progress.setAttribute(Qt.WA_DeleteOnClose, True)

@@ -106,7 +106,6 @@ class MotorUnitCheckBoxes(QWidget):
         """
         Slot for checking (= highlighting) button that matches motor unit index.
         Used when displayed motor unit is changed using another widget.
-
         """
 
         self.widgets[motor_unit_idx].widgets["button"].setChecked(True)
@@ -231,7 +230,6 @@ class SelectMUWidget(QWidget):
     def update_message(self):
         """
         Update displayed message based on the selected (checked) motor units.
-
         """
 
         # Determine message text based on number of motor units checked

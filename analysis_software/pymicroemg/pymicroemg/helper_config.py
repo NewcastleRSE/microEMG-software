@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Helper functions for getting config settings/info.
-TODO: consider creating class for saving recording info, esp. if add additional
-features (e.g., bad channels or plot settings)
 """
 
 import os
@@ -61,7 +59,7 @@ def get_control_recording_path_and_id(recording_num: int) -> (str, str):
     ----------
     recording_num : int
         Numeric label for the recording (arbitrarily assigned). Current options are 1 to
-        5.
+        5 (note this differs from get_recording_path_and_id, which counts from 0!)
 
     Raises
     ------

@@ -5,6 +5,7 @@ Widgets for selecting and loading recording in load step.
 """
 from typing import Any
 import re
+import logging
 
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QFileDialog
 from PySide6.QtCore import Signal
@@ -19,19 +20,21 @@ from microemggui.widgets.base import (
     LargePushButton,
     InputInlineText,
     InputInlineLabel,
-    HighlightedLabel,
     InputWarningLabel,
     InputComboBox,
     SubsectionTitle,
     ExpandingHSpacer,
 )
 
+logger = logging.getLogger("microemggui.load")
 
 # --- Widgets for selecting and loading a recording ---
 
 
 class SelectRecordingWidget(QWidget):
-    # Widget for selecting recording to load
+    """
+    Widget for selecting recording to load.
+    """
 
     # Signals for when recording file path and label are changed
     recording_path_changed = Signal(str)
@@ -52,7 +55,6 @@ class SelectRecordingWidget(QWidget):
         self.widgets["button"].setToolTip("Choose Intan recording files")
 
         # Demo options
-        # TODO: move to config file?
         self.demo_names = ["", "Demo Recording 1 (healthy)"]
         self.demo_recording_num = [-1, 0]  # < 0 means it is not a recording
         self.widgets["combobox"].addItems(self.demo_names)
@@ -70,9 +72,11 @@ class SelectRecordingWidget(QWidget):
         self.widgets["button"].clicked.connect(self.browse_for_recording_file)
 
     def demo_recording_changed(self, idx: int):
-        # Slot for when combobox option is changed; receives index of current selection.
-        # Uses index to determine demo recording number, then emits signal with
-        # recording file path and label.
+        """
+        Slot for when combobox option is changed; receives index of current selection.
+        Uses index to determine demo recording number, then emits signal with
+        recording file path and label.
+        """
 
         recording_num = self.demo_recording_num[idx]
 
@@ -89,9 +93,12 @@ class SelectRecordingWidget(QWidget):
         self.recording_label_changed.emit(self.widgets["combobox"].currentText())
 
     def browse_for_recording_file(self):
-        # Slot for button for choosing recording files; gets path to files
-        # TODO: best default location to open file browser?
-        # TODO: select folder or header file? currently select folder
+        """
+        Slot for button for choosing recording files; gets path to files (select folder
+        containing recording files).
+
+        May want to change default location for file browser in future versions.
+        """
 
         recording_path = QFileDialog.getExistingDirectory(self, "Select Intan recording files", "")
 
@@ -114,7 +121,9 @@ class SelectRecordingWidget(QWidget):
 
 
 class RecordingLabel(QWidget):
-    # Text indicating what data will be analysed
+    """
+    Text indicating what data will be analysed.
+    """
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -134,12 +143,17 @@ class RecordingLabel(QWidget):
         self.setLayout(layout)
 
     def update_recording(self, text: str):
-        # Update the recording name
+        """
+        Update the recording name.
+        """
+
         self.widgets["recording"].setText(text)
 
 
 class LoadRecordingButton(LargePushButton):
-    # Button for loading data
+    """
+    Button for loading data.
+    """
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -148,7 +162,10 @@ class LoadRecordingButton(LargePushButton):
 
 
 class LoadRecordingSection(QWidget):
-    # Widget for selecting a recording to analyse, with section headers and recording label
+    """
+    Widget for selecting a recording to analyse, with section headers and recording
+    label.
+    """
 
     # Signal for whether recording is loaded
     recording_loaded = Signal(bool)
@@ -169,7 +186,7 @@ class LoadRecordingSection(QWidget):
             "selectrecording": SelectRecordingWidget(parent=self),
             "label": RecordingLabel(parent=self),
             "load": LoadRecordingButton(parent=self),
-            "message": HighlightedLabel("", self),
+            "message": InputInlineText("", self),
             "errormessage": InputWarningLabel("", self),
         }
 
@@ -192,13 +209,17 @@ class LoadRecordingSection(QWidget):
         self.update_recording_path("")
 
     def update_recording_label(self, recording_label: str):
-        # Slot for updating recording label (attribute and label widget)
+        """
+        Slot for updating recording label (both the attribute and the label widget).
+        """
 
         self.emg_label = recording_label
         self.widgets["label"].update_recording(recording_label)
 
     def update_recording_path(self, recording_path: str):
-        # Slot for updating recording path
+        """
+        Slot for updating recording path.
+        """
 
         self.recording_path = recording_path
 
@@ -217,21 +238,25 @@ class LoadRecordingSection(QWidget):
         self.widgets["errormessage"].hide()
 
     def load_data(self):
-        # Load EMG data (slot for load button)
-        # TODO: continue adding to specific errors that can be caught (e.g., no header file)
-        # TODO: loading spinner or pop up window during loading
+        """
+        Load EMG data (slot for load button).
+        Also catches and displays specific load errors to help the user correct loading
+        problems.
+        """
 
         try:
             emg_files = EMGFiles(self.recording_path)
             emg_data = emg_files.load_emg_data()
-        except FileNotFoundError as e:
+        except FileNotFoundError as e:  # If file not found
             self.widgets["errormessage"].show()
             self.widgets["errormessage"].setText(
                 f"Could not load recording: recording files not found.\n{e}"
             )
-        except Exception as e:
+            logger.exception(f"Could not load recording: recording files not found.\n{e}")
+        except Exception as e:  # Other errors (don't display specific error message)
             self.widgets["errormessage"].show()
-            self.widgets["errormessage"].setText(f"Could not load recording.\n{e}")
+            self.widgets["errormessage"].setText("Could not load recording.")
+            logger.exception(f"Could not load recording.\n{e}")
         else:
             self.emg_model = EMGDataRawModel(emg_data)
             self.recording_changed.emit(self.emg_model)  # Must emit first
@@ -241,9 +266,13 @@ class LoadRecordingSection(QWidget):
             n_chan = self.emg_model.emg_data.n_chan
             emg_dur = self.emg_model.emg_data.emg_dur
             fs = self.emg_model.emg_data.fs
+
+            msg_chan = f"Channels: {n_chan}"
+            msg_dur = f"Duration: {int(emg_dur) // 60:02d}:{int(emg_dur) % 60:02d}"
+            msg_fs = f"Sampling frequency: {int(fs):,} Hz"
             self.widgets["message"].setText(
-                "<b>Recording loaded</b><br>"
-                + f"Channels: {n_chan}<br>"
-                + f"Duration: {int(emg_dur) // 60:02d}:{int(emg_dur) % 60:02d}<br>"
-                + f"Sampling frequency: {int(fs):,} Hz"  # formatted with commas
+                "<b>Recording loaded</b><br>" + msg_chan + "<br>" + msg_dur + "<br>" + msg_fs
             )
+
+            # log
+            logger.info("Recording loaded (" + msg_chan + ", " + msg_dur + ", " + msg_fs + ")")

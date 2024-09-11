@@ -7,15 +7,12 @@ Created on Wed Jul 31 11:01:39 2024
 """
 
 import sys
-import os
 
 from PySide6.QtWidgets import QApplication, QMainWindow
-from PySide6.QtCore import QFile
-
-import microemggui
 
 from microemggui.widgets.selectmu.select_mu_step import SelectMUWidget
 from microemggui.models.emg import EMGAnalysisReconstructModel
+from microemggui.styles.gui_style import get_formatted_gui_style_sheet
 
 from pymicroemg.emg_reconstruct_settings import (
     EMGAnalysisMotorUnitSettings,
@@ -73,22 +70,16 @@ class MainWindow(QMainWindow):
 
         # layout and size
         self.setCentralWidget(self.widget)
-        self.resize(1200, 850)
+        self.resize(1100, 750)
 
 
 app = QApplication(sys.argv)
 window = MainWindow()
 window.show()
 
-# style
-# TODO: create function for loading and applying style
-style_dir = microemggui.__file__
-style_dir = style_dir[:-11]  # remove init
-style_path = os.path.join(style_dir, "styles", "style.qss")
-gui_style_file = QFile(style_path)
-gui_style_file.open(QFile.OpenModeFlag.ReadOnly)
-gui_style = gui_style_file.readAll().toStdString()
-app.setStyleSheet(gui_style)
+# Apply style
+gui_style_sheet = get_formatted_gui_style_sheet()
+app.setStyleSheet(gui_style_sheet)
 
 
 app.exec()
