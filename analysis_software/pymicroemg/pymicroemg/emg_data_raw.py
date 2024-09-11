@@ -29,9 +29,10 @@ logger.setLevel(logging.INFO)
 
 
 class RecordContext:
-    # Class for storing context about the analysis for the logger
-    # TODO: docstring
-    # TODO: consider changing to a dataclass
+    """
+    Class for storing context about the analysis for the logger (used for GUI).
+
+    """
 
     def __init__(
         self,
@@ -47,8 +48,10 @@ class RecordContext:
 
 
 class EMGDataRawLoggerAdapter(logging.LoggerAdapter):
-    # Adapter to add additional, easily accessible context to the logger
-    # TODO: add docstring
+    """
+    Adapter to add additional, easily accessible context to the logger (used for GUI).
+
+    """
 
     def __init__(self, logger, extra=None):
         super().__init__(logger, extra)
@@ -66,12 +69,6 @@ class EMGDataRaw(EMGData):
     series.
 
     Inherits from EMGData.
-
-    Methods to add:
-    remove mains noise
-    detect low amplitude channels
-    detect high frequency noise
-    mark bad channels (based on visual inspection)
 
     """
 
@@ -110,8 +107,21 @@ class EMGDataRaw(EMGData):
         super().__init__(emg_ts, fs, chan, segment_of_recording)
 
     def preprocess(self, preproc_settings: EMGPreprocSettings) -> EMGDataPreproc:
-        # Creates preprocessed EMG data (EMGDataPreproc object) by applying
-        # preprocessing settings to raw EMG data
+        """
+        Creates preprocessed EMG data (EMGDataPreproc object) by applying the specified
+        preprocessing settings to the raw EMG data.
+
+        Parameters
+        ----------
+        preproc_settings : EMGPreprocSettings
+            Preprocessing settings to apply to the EMG.
+
+        Returns
+        -------
+        EMGDataPreproc
+            Preprocessed EMG data.
+
+        """
 
         # Deep copy of EMG time series so that original time series is retained
         emg_ts = self.emg_ts.copy()

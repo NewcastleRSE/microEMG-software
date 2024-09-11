@@ -1431,7 +1431,9 @@ class EMGMotorUnit:
             self.fibre_potential_times[fib_pot_pos2] - self.fibre_potential_times[fib_pot_pos1]
         )
 
-    def _jitter_analysis_between_two_fibres(self, fibre1_num: int, fibre2_num: int) -> tuple[
+    def _jitter_analysis_between_two_fibres(
+        self, fibre1_num: int, fibre2_num: int
+    ) -> tuple[
         float,
         float,
         npt.NDArray[np.int64],
@@ -2446,16 +2448,16 @@ class EMGMotorUnit:
         # First need to determine which fields in jitter_results to use for each fibre
         # Lower fibre number is stored in fibre1 results, while higher value is fibre2
         if fibre1 < fibre2:
-            fibre1_pot_used_idx_field = "fibre1_pot_used_idx"
-            fibre2_pot_used_idx_field = "fibre2_pot_used_idx"
+            fibre1_pots_used_idx_field = "fibre1_pots_used_idx"
+            fibre2_pots_used_idx_field = "fibre2_pots_used_idx"
         else:
-            fibre2_pot_used_idx_field = "fibre1_pot_used_idx"
-            fibre1_pot_used_idx_field = "fibre2_pot_used_idx"
+            fibre2_pots_used_idx_field = "fibre1_pots_used_idx"
+            fibre1_pots_used_idx_field = "fibre2_pots_used_idx"
 
         analysed_fibres_idx = np.vstack(
             (
-                jitter_results[fibre1_pot_used_idx_field][fibre_pair_idx, :],
-                jitter_results[fibre2_pot_used_idx_field][fibre_pair_idx, :],
+                jitter_results[fibre1_pots_used_idx_field][fibre_pair_idx, :],
+                jitter_results[fibre2_pots_used_idx_field][fibre_pair_idx, :],
             )
         )
         analysed_fibres_idx[:, ~analysed_mup] = np.nan  # Set to nan if fibre not analysed

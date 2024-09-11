@@ -22,8 +22,11 @@ from microemggui.widgets.base import SubsectionTitle, MatplotlibToolbar
 # --- Plot widget ---
 
 
-# TODO: fix axis limits and tick mark locations when only one MU
 class MURasterWidget(QWidget):
+    """
+    Widget for displaying motor units raster plot.
+    """
+
     def __init__(self, reconstruct_model: EMGAnalysisReconstructModel, parent=None):
         super().__init__(parent)
 
@@ -75,6 +78,10 @@ class MURasterWidget(QWidget):
 
 
 class MUResultsWidget(QWidget):
+    """
+    Widget for displaying results of the find motor units step.
+    """
+
     def __init__(self, reconstruct_model: EMGAnalysisReconstructModel, parent=None):
         super().__init__(parent)
 

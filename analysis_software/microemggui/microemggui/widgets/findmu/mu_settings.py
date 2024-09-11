@@ -20,7 +20,9 @@ from microemggui.widgets.base import (
 
 
 class MUSettingComboboxWidget(QWidget):
-    # Generic class for motor unit settings input with combobox and labels
+    """
+    Generic class for motor unit settings input with combobox and labels.
+    """
 
     def __init__(
         self,
@@ -68,6 +70,10 @@ class MUSettingComboboxWidget(QWidget):
 
 
 class MUSettingsWidget(QWidget):
+    """
+    Widget for modifying settings for finding motor units.
+    """
+
     def __init__(self, mu_settings: EMGAnalysisMotorUnitSettingsModel, parent=None):
         super().__init__(parent)
 
