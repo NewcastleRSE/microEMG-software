@@ -397,3 +397,9 @@ QTabWidget#muvistab::pane, QTabWidget#mufibretab::pane {
     border: 1px solid {clr_border};
     border-radius: 4px;
 }
+
+/* Width of text on home page */
+HomePageSectionWidget {
+    min-width: 400;
+    max-width: 600; 
+}
