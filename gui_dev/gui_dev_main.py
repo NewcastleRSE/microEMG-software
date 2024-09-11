@@ -20,8 +20,8 @@ app = QApplication(sys.argv)
 window = MicroEMGMain()
 window.show()
 
-# Apply style
-gui_style_sheet = get_formatted_gui_style_sheet()
+# Apply style (clr options are "teal" (default) or "gold")
+gui_style_sheet = get_formatted_gui_style_sheet(clr="teal")
 app.setStyleSheet(gui_style_sheet)
 
 app.exec()

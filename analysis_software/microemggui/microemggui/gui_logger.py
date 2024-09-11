@@ -16,13 +16,17 @@ from pymicroemg.emg_data_raw import EMGDataRawLoggerAdapter
 
 
 class LogRecordSignaller(QObject):
-    # QObject for passing log record signal
+    """
+    QObject for passing log record signal.
+    """
 
     signal = Signal(EMGDataRawLoggerAdapter)
 
 
 class QtHandler(logging.Handler):
-    # Logger handler for passing analysis info to GUI.
+    """
+    Logger handler for passing analysis info to GUI.
+    """
 
     def __init__(self, slot_func, *args, **kwargs):
         super().__init__(*args, **kwargs)

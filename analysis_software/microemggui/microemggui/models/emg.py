@@ -17,9 +17,6 @@ from pymicroemg.emg_reconstruct import EMGAnalysisReconstruct
 from pymicroemg.emg_preproc_settings import EMGPreprocSettings
 
 
-# TODO: consider creating abstract base class if any shared methods for EMG models
-
-
 class EMGDataRawModel:
     """
     Model for raw EMG data. Used as an interface between the pymicroemg data class,
