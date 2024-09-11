@@ -31,7 +31,6 @@ Newcastle University
 
 [Python 3.11](https://www.python.org/)  
 [PySide6](https://www.qt.io/qt-for-python)  
-[Framework 3](https://something.com)  
 
 The microEMG GUI uses  
 [Bootstrap Icons](https://icons.getbootstrap.com/)   
