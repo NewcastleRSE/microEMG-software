@@ -186,6 +186,16 @@ class ResultsLabel(QLabel):
         super().__init__(*args, **kwargs)
 
 
+class MessageLabel(QLabel):
+    """
+    Label for GUI message without prominent text.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setWordWrap(True)
+
+
 class TitleInputLabel(QLabel):
     """
     Label for an input field that also serves as a title.

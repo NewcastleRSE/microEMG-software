@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
 from microemggui.widgets.base import (
     SectionTitle,
     SubsectionTitle,
-    InputInlineText,
+    MessageLabel,
     ExpandingVSpacer,
 )
 
@@ -59,11 +59,8 @@ class HomePageSectionWidget(QWidget):
         # Create widgets - title and corresponding text underneath
         self.widgets: dict[str, Any] = {
             "title": SubsectionTitle(title, parent=self),
-            "text": InputInlineText(text, parent=self),
+            "text": MessageLabel(text, parent=self),
         }
-
-        # Wrap text
-        self.widgets["text"].setWordWrap(True)
 
         # Set to open hyperlinks
         self.widgets["text"].setOpenExternalLinks(True)

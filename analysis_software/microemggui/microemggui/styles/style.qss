@@ -302,6 +302,10 @@ InputInlineHighlightedText {
     max-height: 20;
 }
 
+MessageLabel {
+    color: {clr_text_light};
+}
+
 HighlightedLabel {
     color: {clr_primary_dark};
 }
