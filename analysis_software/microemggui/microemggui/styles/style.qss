@@ -347,6 +347,10 @@ InputLineEdit {
     max-width: 50;
 }
 
+InputLineEdit:disabled {
+    color: {clr_text_very_light};
+}
+
 /* Progress bars */
 QProgressBar {
      border: 1px solid {clr_border_light};

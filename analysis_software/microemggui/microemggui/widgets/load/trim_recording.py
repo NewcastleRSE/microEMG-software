@@ -10,6 +10,7 @@ import logging
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QMainWindow
 
 # from PySide6.QtCore import Signal
+from PySide6.QtGui import QIntValidator
 
 
 from microemggui.models.emg import EMGDataRawModel
@@ -55,9 +56,14 @@ class ViewEMGButton(SmallPushButton):
     def __init__(self, raw_emg_model: EMGDataRawModel, emg_clrs: list[str], parent=None):
         super().__init__(parent)
 
+        # Colours
+        self.emg_clrs = emg_clrs
+
+        # Button settings
         self.setText("View EMG")
         self.setToolTip("Open EMG viewer")
 
+        # Create viewer
         self.viewer = EMGViewerWindow(raw_emg_model, emg_clrs)
 
         # Connections
@@ -69,6 +75,16 @@ class ViewEMGButton(SmallPushButton):
 
         """
         self.viewer.show()
+
+    def update_emg(self, raw_emg_model):
+        """
+        Update EMG and recreate the viewer.
+        Ensures correct limits for time slider.
+        """
+
+        # Delete existing viewer
+        self.viewer.deleteLater()
+        self.viewer = EMGViewerWindow(raw_emg_model, self.emg_clrs)
 
 
 class TrimRecordingButton(LargePushButton):
@@ -114,10 +130,36 @@ class TrimFields(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
-        # Validate input
-        # set default text
+        # Set up for input fields
+        self.set_input_validators_and_text()
 
-    # def set_default_trim_text(self):
+    def set_input_validators_and_text(self):
+        """
+        Set default text and create validators for the trim inputs based on length of
+        EMG recording.
+
+        Note that the validator does not prevent all out-of-range values, so we also
+        check the validity in TrimRecordingSection.trim_emg
+
+        In order to keep the input to integer values, the EMG's duration is rounded down
+        to the nearest whole second, which means that <1 second of the recording may be
+        removed from the analysis even with the most lenient trim settings.
+
+        """
+        start_time = 0
+        end_time = int(self.emg_model.emg_data.emg_dur)  # convert duration to int
+
+        # Starting text
+        start_text = str(start_time)
+        end_text = str(end_time)
+        self.widgets["start_field"].setText(start_text)
+        self.widgets["end_field"].setText(end_text)
+
+        # Set validators
+        start_validator = QIntValidator(start_time, end_time)
+        self.widgets["start_field"].setValidator(start_validator)
+        end_validator = QIntValidator(start_time, end_time)
+        self.widgets["end_field"].setValidator(end_validator)
 
 
 # --- Trim widget ---
@@ -131,13 +173,16 @@ class TrimRecordingSection(QWidget):
     def __init__(self, raw_emg_model: EMGDataRawModel, emg_clrs: list[str], parent=None):
         super().__init__(parent)
 
+        # EMG
+        self.emg_model = raw_emg_model
+
         # Create widgets
         self.widgets: dict[str, Any] = {
-            "title": SubsectionTitle("Trim recording (optional)", self),
+            "title": SubsectionTitle("Trim recording segment", self),
             "fields": TrimFields(raw_emg_model, emg_clrs, parent=self),
             "warning": InputWarningLabel("", parent=self),
             "trim_button": TrimRecordingButton(parent=self),
-            "success_message": MessageLabel("Recording trimmed!", parent=self),
+            "success_message": MessageLabel("", parent=self),
         }
 
         # Hide messages
@@ -151,3 +196,89 @@ class TrimRecordingSection(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(10)
         self.setLayout(layout)
+
+        # Connections
+        self.widgets["trim_button"].clicked.connect(self.trim_emg)
+
+        w_names = self.widgets["fields"].input_fields
+        for name in w_names:
+            self.widgets["fields"].widgets[name].textChanged.connect(
+                lambda text: self.hide_warning_message()
+            )
+
+    def trim_emg(self):
+        """
+        Trim EMG based on widget input.
+
+        Will first check if times are valid (start time must be less than stop time).
+        If times are not valid, shows an error message instead.
+        """
+
+        # Get start and stop times for trim from input fields
+        start_t = int(self.widgets["fields"].widgets["start_field"].text())
+        end_t = int(self.widgets["fields"].widgets["end_field"].text())
+
+        # Check if start and stop times are in allowed range
+        min_t = 0
+        max_t = int(self.emg_model.emg_data.emg_dur)
+
+        start_valid = start_t >= min_t and start_t <= max_t
+        end_valid = end_t >= min_t and end_t <= max_t
+
+        if (not start_valid) or (not end_valid):  # Don't trim if not in valid range
+            # Show error message
+            self.widgets["warning"].setText(
+                f"The trim times must be between {min_t} and {max_t} seconds."
+            )
+            self.widgets["warning"].show()
+
+        elif start_t >= end_t:  # Don't trim if start time is >= end time
+            # Show error message
+            self.widgets["warning"].setText("The trim start time must be less than the stop time.")
+            self.widgets["warning"].show()
+
+        else:  # If valid ranges and relative values, trim
+            # Trim
+            print(self.emg_model.emg_data.emg_dur)
+            self.emg_model.emg_data.trim_emg_ts(start_t, end_t)
+            print(self.emg_model.emg_data.emg_dur)
+
+            # Update viewer
+            self.widgets["fields"].widgets["emg_button"].update_emg(self.emg_model)
+
+            # Update success message and show
+            self.widgets["success_message"].setText(
+                f"<b>Recording trimmed</b> to {start_t} to {end_t} seconds "
+                + f"({self.format_seconds(start_t)} to {self.format_seconds(end_t)})"
+            )
+            self.widgets["success_message"].show()
+
+            # Disable trim (can only trim once to make it easier to keep track of segment used)
+            self.widgets["trim_button"].setEnabled(False)
+            w_names = self.widgets["fields"].input_fields
+            for name in w_names:
+                self.widgets["fields"].widgets[name].setDisabled(True)
+
+    def hide_warning_message(self):
+        """
+        Slot for hiding warning (error) message when input is updated.
+        """
+
+        self.widgets["warning"].hide()
+
+    @staticmethod
+    def format_seconds(time_s: int) -> str:
+        """
+        Convert time in seconds to a mm:ss string.
+
+        Only use int input, so do not need to account for ms
+
+        """
+
+        S_TO_MIN = 60
+
+        n_min = int(time_s / S_TO_MIN)
+        n_sec = time_s - (n_min * S_TO_MIN)
+
+        time_label = f"{n_min:02d}:{int(n_sec):02d}"
+        return time_label
