@@ -196,6 +196,7 @@ class LoadRecordingSection(QWidget):
         for _, w in self.widgets.items():
             layout.addWidget(w)
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(10)
         self.setLayout(layout)
 
         # Connections
@@ -268,11 +269,11 @@ class LoadRecordingSection(QWidget):
             emg_dur = self.emg_model.emg_data.emg_dur
             fs = self.emg_model.emg_data.fs
 
-            msg_chan = f"Channels: {n_chan}"
-            msg_dur = f"Duration: {int(emg_dur) // 60:02d}:{int(emg_dur) % 60:02d}"
-            msg_fs = f"Sampling frequency: {int(fs):,} Hz"
+            msg_chan = f"channels: {n_chan}"
+            msg_dur = f"duration: {int(emg_dur) // 60:02d}:{int(emg_dur) % 60:02d}"
+            msg_fs = f"sampling frequency: {int(fs):,} Hz"
             self.widgets["message"].setText(
-                "<b>Recording loaded</b><br>" + msg_chan + "<br>" + msg_dur + "<br>" + msg_fs
+                "<b>Recording loaded: </b>" + msg_chan + ", " + msg_dur + ", " + msg_fs
             )
 
             # log

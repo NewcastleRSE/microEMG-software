@@ -54,7 +54,7 @@ class AnalysisStepsWidget(QWidget):
     Also includes the Welcome (home) page.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, emg_clrs: list[str], *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # Make iniital widgets
@@ -63,7 +63,7 @@ class AnalysisStepsWidget(QWidget):
         # "jitter","export"
         self.widgets: dict[str, Any] = {
             "home": HomeWidget(parent=self),
-            "load": LoadWidget(parent=self),
+            "load": LoadWidget(emg_clrs, parent=self),
         }
 
         # Add to layout
@@ -112,7 +112,7 @@ class MicroEMGMain(QMainWindow):
         self.widgets: dict[str, Any] = {
             "analysistoolbar": AnalysisToolbar("Analysis toolbar"),
             "toptoolbar": TopToolbar(parent=self),
-            "analysis": AnalysisStepsWidget(parent=self),
+            "analysis": AnalysisStepsWidget(self.emg_clrs, parent=self),
         }
 
         # Add analysis toolbar to window
