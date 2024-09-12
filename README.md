@@ -73,6 +73,7 @@ poetry install
 ```
 
 `poetry` will install both the Python package dependencies and set up paths to the local modules, [`pymicroemg`](analysis_software/pymicroemg/pymicroemg) and [`microemggui`](analysis_software/microemggui/microemggui).
+See the **Troubleshooting** section for more help with `poetry`.
 
 Example recording data needs to be manually added in a `recordings` folder at the root level (see the paths in [`helper_config.py`](analysis_software/pymicroemg/pymicroemg/helper_config.py)). These paths are the same as in the provided data, with the exception that the `64 channel` directory is replaced with `64-channel`. The recording needed as a demo recording for the GUI is `recordings/64-channel/Stuart_E2/raw`.
 
@@ -143,7 +144,7 @@ pytest analysis_software/microemggui/
  
 - If you ran the installation instructions outside of a virtual environment, poetry will have created one for you when you ran `poetry install`, however it won't have activated it automatically. You can activate the virtual environment with `poetry shell` and exit this with the command `exit`. Outside of this virtual environment you will not have the required installed dependencies so this can be a cause of errors.
 
-- For linux users an error has been noted when trying to run the GUI where the QT platform plugin fails to load. [This thread](https://stackoverflow.com/questions/77725761/from-6-5-0-xcb-cursor0-or-libxcb-cursor0-is-needed-to-load-the-qt-xcb-platform) proposes a solution that worked in our testing, to install libxcb-cursor-dev.
+- For Linux users, an error has been noted when trying to run the GUI where the QT platform plugin fails to load. [This thread](https://stackoverflow.com/questions/77725761/from-6-5-0-xcb-cursor0-or-libxcb-cursor0-is-needed-to-load-the-qt-xcb-platform) proposes a solution that worked in our testing, to install libxcb-cursor-dev.
 
 
 ## Usage
@@ -168,6 +169,9 @@ pytest analysis_software/microemggui/
 - [Package GUI](https://www.pythonguis.com/tutorials/packaging-pyside6-applications-windows-pyinstaller-installforge/)
 - Improve and test GUI implementation on Windows and Linux
 - Update CI to 1) automatically update documentation (GUI PDF and `pymicroemg` `pdoc` documentation) and the Qt resource system when necessary and 2) include testing and static type checking in pull request checks.
+
+### Suggested UI improvements
+- The home and load page have a lot of text and/or fields. The home page text could be moved to a separate window linked to a toolbar icon, and the load widget could be replaced with a separate load window with multiple pages.
 
 Additional potential features are organised using the associate project board and issues (see not planned issues).
 
