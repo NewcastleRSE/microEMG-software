@@ -17,6 +17,7 @@ from microemggui.widgets.base import (
 )
 
 from microemggui.widgets.load.load_recording import LoadRecordingSection
+from microemggui.widgets.load.trim_recording import TrimRecordingSection
 from microemggui.widgets.load.load_settings import LoadSettingsSection
 from microemggui.widgets.load.run_analysis import RunAnalysisSection
 
@@ -36,33 +37,37 @@ class LoadWidget(QWidget):
     # Signal for sending data from load step to main window
     load_data_changed = Signal(EMGDataRawModel, EMGSettingsModel)
 
-    def __init__(self, parent=None):
+    def __init__(self, emg_clrs: list[str], parent=None):
         super().__init__(parent)
 
         # Attributes for storing EMG recording and settings
         self.emg_model = None
         self.settings_model = None
 
+        # Colors for EMG viewer
+        self.emg_clrs = emg_clrs
+
         # Create widgets
-        self.title = SectionTitle("Load microEMG recording and choose settings", self)
+        self.title = SectionTitle("Load microEMG recording", self)
 
         self.widgets: dict[str, Any] = {
             "recording": LoadRecordingSection(parent=self),
+            "trim": QWidget(self),  # placeholder - need EMG to create
             "settings": LoadSettingsSection(parent=self),
             "run": RunAnalysisSection(parent=self),
         }
 
         # Add to section widgets layout
         # Separate layout for sections so easier to control spacing
-        sections_layout = QVBoxLayout()
+        self.sections_layout = QVBoxLayout()
         for _, w in self.widgets.items():
-            sections_layout.addWidget(w)
-        sections_layout.addItem(ExpandingVSpacer())
-        sections_layout.setSpacing(50)
-        sections_layout.setContentsMargins(0, 0, 0, 0)
+            self.sections_layout.addWidget(w)
+        self.sections_layout.addItem(ExpandingVSpacer())
+        self.sections_layout.setSpacing(30)
+        self.sections_layout.setContentsMargins(0, 0, 0, 0)
 
         sections_widget = QWidget(parent=self)
-        sections_widget.setLayout(sections_layout)
+        sections_widget.setLayout(self.sections_layout)
 
         # Full layout
         layout = QVBoxLayout()
@@ -73,6 +78,7 @@ class LoadWidget(QWidget):
         self.setLayout(layout)
 
         # Connections
+        # Note connection for trim widget is set up in method that updates the trim widget
         self.widgets["recording"].recording_loaded.connect(self.updates_after_loading_emg)
         self.widgets["recording"].recording_changed.connect(self.update_emg_model)
         self.widgets["settings"].settings_loaded.connect(self.updates_after_loading_settings)
@@ -89,8 +95,24 @@ class LoadWidget(QWidget):
         """
 
         if recording_loaded:
-            self.widgets["settings"].show()
+            # Update trim widget - first delete existing, then make new widget with
+            # updated EMG
+            self.sections_layout.removeWidget(self.widgets["trim"])  # remove from layout
+            self.widgets["trim"].deleteLater()  # delete
+            self.widgets["trim"] = TrimRecordingSection(self.emg_model, self.emg_clrs, parent=self)
+            self.sections_layout.insertWidget(1, self.widgets["trim"])  # add to layout
+            self.widgets["trim"].show()  # show
+
+            self.widgets["trim"].recording_trimmed.connect(self.updates_after_recording_trimmed)
+
+            # Ensure other widgets are hidden (may be shown by previous load) and set
+            # to default state
+            self.widgets["settings"].widgets["load"].widgets["combobox"].setCurrentIndex(0)
+            self.widgets["settings"].hide()
+            self.widgets["run"].hide()
+
         else:
+            self.widgets["trim"].hide()
             self.widgets["settings"].hide()
             self.widgets["run"].hide()
 
@@ -103,6 +125,15 @@ class LoadWidget(QWidget):
 
             # Signal to prevent next analysis steps
             self.load_finished.emit(False)
+
+    def updates_after_recording_trimmed(self):
+        """
+        Updates after trimming EMG (--> show settings selection section).
+        Slot for recording_trimmed signal.
+        """
+
+        # Show settings
+        self.widgets["settings"].show()
 
     def updates_after_loading_settings(self, settings_loaded: bool):
         """

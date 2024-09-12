@@ -3032,7 +3032,8 @@ class EMGMotorUnits:
                 mu_fibre_locations = None
 
             # Plot locations and compute max absolute y location
-            if mu_fibre_locations is not None:
+            # Must also check that fibres were found  before plotting
+            if (mu_fibre_locations is not None) and (len(mu_fibre_locations) > 0):
                 ax.scatter(
                     mu_fibre_locations[:, 0],
                     mu_fibre_locations[:, 1],

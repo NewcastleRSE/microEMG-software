@@ -225,8 +225,7 @@ class ChannelsWidget(QWidget):
             "next": NextButton(parent=self),
         }
 
-        # Properties of exclude message - word wrap, fixed height
-        self.widgets["exclude"].setWordWrap(True)
+        # Properties of exclude message - fixed height and width
         self.widgets["exclude"].setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.widgets["exclude"].setObjectName("channels_widget_exclude")
         self.update_exclude_message()

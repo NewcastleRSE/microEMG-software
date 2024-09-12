@@ -302,6 +302,10 @@ InputInlineHighlightedText {
     max-height: 20;
 }
 
+MessageLabel {
+    color: {clr_text_light};
+}
+
 HighlightedLabel {
     color: {clr_primary_dark};
 }
@@ -312,7 +316,6 @@ HighlightedLabel#channels_widget_exclude {
     max-height: 100;
     min-width: 250;
     max-width: 250;
-    color: {clr_primary_dark};
 }
 
 HighlightedLabel#select_mu_widget_message {
@@ -344,6 +347,10 @@ InputLineEdit {
     max-width: 50;
 }
 
+InputLineEdit:disabled {
+    color: {clr_text_very_light};
+}
+
 /* Progress bars */
 QProgressBar {
      border: 1px solid {clr_border_light};
@@ -368,7 +375,6 @@ QProgressBar#findmuprogress {
 
 EMGViewerWidget {
     background: {clr_background};
-    border: 1px solid {clr_border};
     border-radius: 4px;
 }
 
@@ -394,6 +400,11 @@ ChannelsCheckBoxes {
 QTabWidget#muvistab::pane, QTabWidget#mufibretab::pane {
     background: {clr_background};
     padding: 10px;
-    border: 1px solid {clr_border};
     border-radius: 4px;
+}
+
+/* Width of text on home page */
+HomePageSectionWidget {
+    min-width: 400;
+    max-width: 600; 
 }

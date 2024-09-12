@@ -220,7 +220,7 @@ mu.plot_jitter_fibre_pair_EMG_and_times(fibre1=fibre1, fibre2=fibre2)
 
 # %% Export results
 # Test saving all results and settings, and then test loading
-filename_json = "microEMG_results_and_settins.json"
+filename_json = "microEMG_results_and_settings.json"
 
 # Save results
 # By default, does not save EMG traces of MUPs or any EMG data (creates large files)

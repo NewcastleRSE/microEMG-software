@@ -173,8 +173,7 @@ class SelectMUWidget(QWidget):
         # Next button is initially disabled since no motor units selected
         self.widgets["next"].setEnabled(False)
 
-        # Update message and set properties - word wrap, fixed height
-        self.widgets["message"].setWordWrap(True)
+        # Update message and set properties - fixed height
         self.widgets["message"].setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.widgets["message"].setObjectName("select_mu_widget_message")
         self.update_message()  # based on number of motor units checked (initially none)

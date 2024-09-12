@@ -29,15 +29,13 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         # EMG data
-        recording_num = 1
-        emg_dir, _ = cfg.get_control_recording_path_and_id(recording_num)
+        recording_num = 0
+        emg_dir, _ = cfg.get_recording_path_and_id(recording_num)
         emg_files = EMGFiles(emg_dir)
         emg_data = emg_files.load_emg_data()
         raw_emg_data_model = EMGDataRawModel(emg_data)
 
         # Create preprocessing settings and model - will eventually add via method
-        # TODO: set default filter specification settings (and/or initial values for
-        # GUI widgets)
         settings = EMGPreprocSettings()
         settings.add_remove_mains()  # Remain mains noise
         settings.add_butterworth_filter(

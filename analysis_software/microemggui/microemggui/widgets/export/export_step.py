@@ -8,7 +8,7 @@ import logging
 import os
 from datetime import datetime
 
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QFileDialog, QSizePolicy
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QFileDialog
 from PySide6.QtCore import Qt
 
 from microemggui.models.emg import EMGAnalysisReconstructModel
@@ -16,8 +16,9 @@ from microemggui.models.emg import EMGAnalysisReconstructModel
 from microemggui.widgets.base import (
     SmallPushButton,
     LargePushButton,
-    InputInlineText,
     InputWarningLabel,
+    MessageLabel,
+    HighlightedLabel,
     SubsectionTitle,
     SectionTitle,
     ExpandingVSpacer,
@@ -61,12 +62,8 @@ class ExportSettingsWidget(QWidget):
                 "Save EMG of motor unit potentials (will create a large file!)", self
             ),
             "button_folder": SmallPushButton(self),
-            "text_path": InputInlineText("", self),
+            "text_path": MessageLabel("", self),
         }
-
-        # Allow wrap on text for export path
-        self.widgets["text_path"].setWordWrap(True)
-        self.widgets["text_path"].setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
         # Button settings
         self.widgets["button_folder"].setText("Choose folder")
@@ -114,7 +111,7 @@ class ExportWidget(QWidget):
         self.widgets: dict[str, Any] = {
             "title": SectionTitle("Export", self),
             "settings": ExportSettingsWidget(self),
-            "success": InputInlineText("Results saved!", self),
+            "success": HighlightedLabel("Results saved!", self),
             "fail": InputWarningLabel("", self),
             "button": ExportButton(self),
         }

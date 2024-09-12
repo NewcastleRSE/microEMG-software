@@ -32,8 +32,8 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         # EMG
-        recording_num = 1
-        emg_dir, _ = cfg.get_control_recording_path_and_id(recording_num)
+        recording_num = 0
+        emg_dir, _ = cfg.get_recording_path_and_id(recording_num)
         emg_files = EMGFiles(emg_dir)
         emg_data = emg_files.load_emg_data()
         emg_data.trim_emg_ts(0, 60)

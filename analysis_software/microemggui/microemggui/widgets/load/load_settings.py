@@ -24,7 +24,7 @@ from microemggui.widgets.base import (
     InputComboBox,
     SubsectionTitle,
     ExpandingHSpacer,
-    InputInlineText,
+    MessageLabel,
 )
 
 
@@ -83,7 +83,7 @@ class LoadSettingsSection(QWidget):
         self.widgets: dict[str, Any] = {
             "title": SubsectionTitle("Choose initial analysis settings", self),
             "load": LoadSettingsWidget(parent=self),
-            "settingstext": InputInlineText("", parent=self),
+            "settingstext": MessageLabel("", parent=self),
         }
 
         # Add to layout
