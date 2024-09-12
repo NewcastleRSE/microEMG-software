@@ -128,6 +128,7 @@ class InputWarningLabel(QLabel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setWordWrap(True)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
 
 class InputExplanationLabel(QLabel):
@@ -175,6 +176,8 @@ class HighlightedLabel(QLabel):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.setWordWrap(True)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
 
 class ResultsLabel(QLabel):
@@ -194,6 +197,7 @@ class MessageLabel(QLabel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setWordWrap(True)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
 
 class TitleInputLabel(QLabel):

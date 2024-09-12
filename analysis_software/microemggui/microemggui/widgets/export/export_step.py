@@ -8,7 +8,7 @@ import logging
 import os
 from datetime import datetime
 
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QFileDialog, QSizePolicy
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QFileDialog
 from PySide6.QtCore import Qt
 
 from microemggui.models.emg import EMGAnalysisReconstructModel
@@ -64,10 +64,6 @@ class ExportSettingsWidget(QWidget):
             "button_folder": SmallPushButton(self),
             "text_path": MessageLabel("", self),
         }
-
-        # Allow wrap on text for export path
-        self.widgets["text_path"].setWordWrap(True)
-        self.widgets["text_path"].setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
         # Button settings
         self.widgets["button_folder"].setText("Choose folder")
