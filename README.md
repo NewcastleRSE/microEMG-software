@@ -34,7 +34,7 @@ Newcastle University
 
 The microEMG GUI uses  
 [Bootstrap Icons](https://icons.getbootstrap.com/)   
-[CartoColors](https://carto.com/carto-colors/) (via the [palettable](https://jiffyclub.github.io/palettable/) Python package))
+[CartoColors](https://carto.com/carto-colors/) (via the [palettable](https://jiffyclub.github.io/palettable/) Python package)
 
 ## Getting Started
 
