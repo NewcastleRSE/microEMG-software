@@ -44,7 +44,7 @@ class LoadWidget(QWidget):
         self.settings_model = None
 
         # Create widgets
-        self.title = SectionTitle("Load microEMG recording and choose settings", self)
+        self.title = SectionTitle("Load microEMG recording", self)
 
         self.widgets: dict[str, Any] = {
             "recording": LoadRecordingSection(parent=self),
