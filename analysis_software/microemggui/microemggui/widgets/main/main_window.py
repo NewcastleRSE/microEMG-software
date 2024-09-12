@@ -191,10 +191,11 @@ class MicroEMGMain(QMainWindow):
                         logger.info("Reset found motor units")
 
                     # Reset motor unit settings (modified in this widget)
-                    self.settings_model.mu_settings = deepcopy(
-                        self.settings_model_original.mu_settings
-                    )
-                    logger.info("Reset motor unit settings")
+                    if self.settings_model:
+                        self.settings_model.mu_settings = deepcopy(
+                            self.settings_model_original.mu_settings
+                        )
+                        logger.info("Reset motor unit settings")
 
                 if w_name == "selectmu":
                     self.motor_units_to_analyse = []
@@ -207,10 +208,11 @@ class MicroEMGMain(QMainWindow):
                         logger.info("Reset fibre localisation and clustering")
 
                     # Reset motor unit clustering settings (modified in this widget)
-                    self.settings_model.mu_cluster_settings = deepcopy(
-                        self.settings_model_original.mu_cluster_settings
-                    )
-                    logger.info("Reset clustering settings")
+                    if self.settings_model:
+                        self.settings_model.mu_cluster_settings = deepcopy(
+                            self.settings_model_original.mu_cluster_settings
+                        )
+                        logger.info("Reset clustering settings")
 
                     # Also remove export widget if exists
                     export_w_name = "export"

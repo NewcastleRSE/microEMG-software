@@ -9,7 +9,7 @@ import logging
 
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QMainWindow
 
-# from PySide6.QtCore import Signal
+from PySide6.QtCore import Signal
 from PySide6.QtGui import QIntValidator
 
 
@@ -170,6 +170,9 @@ class TrimRecordingSection(QWidget):
     Widget for trimming the loaded recording, with section header.
     """
 
+    # Signal to emit when recording is trimmed
+    recording_trimmed = Signal()
+
     def __init__(self, raw_emg_model: EMGDataRawModel, emg_clrs: list[str], parent=None):
         super().__init__(parent)
 
@@ -258,6 +261,9 @@ class TrimRecordingSection(QWidget):
             w_names = self.widgets["fields"].input_fields
             for name in w_names:
                 self.widgets["fields"].widgets[name].setDisabled(True)
+
+            # Emit signal indicating that trim has been performed
+            self.recording_trimmed.emit()
 
     def hide_warning_message(self):
         """

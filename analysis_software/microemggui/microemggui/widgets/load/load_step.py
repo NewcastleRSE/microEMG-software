@@ -78,6 +78,7 @@ class LoadWidget(QWidget):
         self.setLayout(layout)
 
         # Connections
+        # Note connection for trim widget is set up in method that updates the trim widget
         self.widgets["recording"].recording_loaded.connect(self.updates_after_loading_emg)
         self.widgets["recording"].recording_changed.connect(self.update_emg_model)
         self.widgets["settings"].settings_loaded.connect(self.updates_after_loading_settings)
@@ -94,15 +95,22 @@ class LoadWidget(QWidget):
         """
 
         if recording_loaded:
-            # Update trim widget
+            # Update trim widget - first delete existing, then make new widget with
+            # updated EMG
             self.sections_layout.removeWidget(self.widgets["trim"])  # remove from layout
             self.widgets["trim"].deleteLater()  # delete
             self.widgets["trim"] = TrimRecordingSection(self.emg_model, self.emg_clrs, parent=self)
             self.sections_layout.insertWidget(1, self.widgets["trim"])  # add to layout
             self.widgets["trim"].show()  # show
 
-            # Show settings
-            self.widgets["settings"].show()
+            self.widgets["trim"].recording_trimmed.connect(self.updates_after_recording_trimmed)
+
+            # Ensure other widgets are hidden (may be shown by previous load) and set
+            # to default state
+            self.widgets["settings"].widgets["load"].widgets["combobox"].setCurrentIndex(0)
+            self.widgets["settings"].hide()
+            self.widgets["run"].hide()
+
         else:
             self.widgets["trim"].hide()
             self.widgets["settings"].hide()
@@ -117,6 +125,15 @@ class LoadWidget(QWidget):
 
             # Signal to prevent next analysis steps
             self.load_finished.emit(False)
+
+    def updates_after_recording_trimmed(self):
+        """
+        Updates after trimming EMG (--> show settings selection section).
+        Slot for recording_trimmed signal.
+        """
+
+        # Show settings
+        self.widgets["settings"].show()
 
     def updates_after_loading_settings(self, settings_loaded: bool):
         """
