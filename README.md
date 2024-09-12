@@ -170,9 +170,6 @@ pytest analysis_software/microemggui/
 - Improve and test GUI implementation on Windows and Linux
 - Update CI to 1) automatically update documentation (GUI PDF and `pymicroemg` `pdoc` documentation) and the Qt resource system when necessary and 2) include testing and static type checking in pull request checks.
 
-### Suggested UI improvements
-- The home and load page have a lot of text and/or fields. The home page text could be moved to a separate window linked to a toolbar icon, and the load widget could be replaced with a separate load window with multiple pages.
-
 Additional potential features are organised using the associate project board and issues (see not planned issues).
 
 ## Contributing
