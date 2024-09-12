@@ -375,7 +375,6 @@ QProgressBar#findmuprogress {
 
 EMGViewerWidget {
     background: {clr_background};
-    border: 1px solid {clr_border};
     border-radius: 4px;
 }
 
@@ -401,7 +400,6 @@ ChannelsCheckBoxes {
 QTabWidget#muvistab::pane, QTabWidget#mufibretab::pane {
     background: {clr_background};
     padding: 10px;
-    border: 1px solid {clr_border};
     border-radius: 4px;
 }
 
