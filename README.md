@@ -34,7 +34,7 @@ Newcastle University
 
 The microEMG GUI uses  
 [Bootstrap Icons](https://icons.getbootstrap.com/)   
-[CartoColors](https://carto.com/carto-colors/) (via the [palettable](https://jiffyclub.github.io/palettable/) Python package))
+[CartoColors](https://carto.com/carto-colors/) (via the [palettable](https://jiffyclub.github.io/palettable/) Python package)
 
 ## Getting Started
 
@@ -169,9 +169,6 @@ pytest analysis_software/microemggui/
 - [Package GUI](https://www.pythonguis.com/tutorials/packaging-pyside6-applications-windows-pyinstaller-installforge/)
 - Improve and test GUI implementation on Windows and Linux
 - Update CI to 1) automatically update documentation (GUI PDF and `pymicroemg` `pdoc` documentation) and the Qt resource system when necessary and 2) include testing and static type checking in pull request checks.
-
-### Suggested UI improvements
-- The home and load page have a lot of text and/or fields. The home page text could be moved to a separate window linked to a toolbar icon, and the load widget could be replaced with a separate load window with multiple pages.
 
 Additional potential features are organised using the associate project board and issues (see not planned issues).
 
