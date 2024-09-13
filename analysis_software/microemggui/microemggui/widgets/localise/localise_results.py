@@ -162,7 +162,7 @@ class MUFibreLocationsVisWidget(QWidget):
         _, self.ax = motor_units.plot_fibre_locations(
             "fibres", motor_unit_idx=motor_unit_idx, dpi=self.dpi, ax=self.ax, plot_legend=False
         )
-        self.fig.set_tight_layout(True)  # Prevents window from cutting off legend
+        self.fig.set_tight_layout(True)  # type: ignore # Prevents window from cutting off legend
         self.ax.set_title(
             f"Fibre locations in motor unit {motor_unit_idx + 1}", fontsize=14, fontweight="bold"
         )
@@ -222,7 +222,7 @@ class MUFibreClusters3DVisWidget(QWidget):
             axis_equal=False,
             cmap=Vivid_10.mpl_colors,
         )
-        self.fig.set_tight_layout(True)  # Prevents window from cutting off legend
+        self.fig.set_tight_layout(True)  # type: ignore # Prevents window from cutting off legend
         self.ax.set_title(
             f"Clustered fibre potentials in motor unit {motor_unit_idx + 1}",
             fontsize=14,

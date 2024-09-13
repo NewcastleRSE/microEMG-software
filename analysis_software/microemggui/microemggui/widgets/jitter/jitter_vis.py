@@ -44,7 +44,7 @@ class JitterAllFibrePlotsWidget(QWidget):
         # Create plot with two suplots and corresponding canvas
         self.fig, self.axs = plt.subplots(2, 1, figsize=(5, 10))
         self.fig.dpi = 100
-        self.fig.set_tight_layout(True)  # prevents overlap in subplots
+        self.fig.set_tight_layout(True)  # type: ignore # prevents overlap in subplots
         self.update_motor_unit(motor_unit_idx)  # add plots for specified motor unit
         canvas = FigureCanvasQTAgg(self.fig)
 

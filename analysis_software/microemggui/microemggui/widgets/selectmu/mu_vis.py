@@ -50,7 +50,7 @@ class MUEMGOneChannelWidget(QWidget):
 
         # Initialise blank plot
         self.fig, self.ax = plt.subplots()
-        self.fig.set_tight_layout(True)
+        self.fig.set_tight_layout(True)  # type: ignore
         canvas = FigureCanvasQTAgg(self.fig)
         self.widgets: dict[str, Any] = {
             "toolbar": MatplotlibToolbar(canvas, parent=self),
@@ -101,7 +101,7 @@ class MUEMGAllChannelsWidget(QWidget):
 
         # Initialise blank plot
         self.fig, self.ax = plt.subplots()
-        self.fig.set_tight_layout(True)
+        self.fig.set_tight_layout(True)  # type: ignore
         canvas = FigureCanvasQTAgg(self.fig)
         self.widgets: dict[str, Any] = {
             "toolbar": MatplotlibToolbar(canvas, parent=self),
