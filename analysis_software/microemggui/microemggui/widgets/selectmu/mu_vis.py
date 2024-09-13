@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QTabWidget,
 )
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QIcon, qt_set_sequence_auto_mnemonic
 from PySide6.QtCore import Qt, Signal
 
 from microemggui.models.emg import EMGAnalysisReconstructModel
@@ -30,6 +30,8 @@ from microemggui.widgets.base import SubsectionTitle, MatplotlibToolbar, WidgetC
 from microemggui.widgets.emg_viewer import EMGGainWidget
 from microemggui.icons import icons  # noqa - import allows icon references
 
+# Allow keyboard shortcuts for tabbed widget on MacOS
+qt_set_sequence_auto_mnemonic(True)
 
 # --- Plot widgets ---
 
@@ -205,7 +207,8 @@ class MUVisWidget(QWidget):
             "all": MUEMGAllChannelsWithGainWidget(reconstruct_model, motor_unit_idx, parent=self),
         }
 
-        tab_text = ["One channel", "All channels"]
+        # Ampersands set shortcuts for changing tabs
+        tab_text = ["One ch&annel", "All channel&s"]
 
         # Add to tab widget
         self.tab_widget = QTabWidget()
