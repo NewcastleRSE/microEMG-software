@@ -171,8 +171,8 @@ class LoadRecordingSection(QWidget):
     # Signal for whether recording is loaded
     recording_loaded = Signal(bool)
 
-    # Signal for sending new recording
-    recording_changed = Signal(EMGDataRawModel)
+    # Signal for sending new recording and the recording's path
+    recording_changed = Signal(EMGDataRawModel, str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -260,8 +260,14 @@ class LoadRecordingSection(QWidget):
             self.widgets["errormessage"].setText("Could not load recording.")
             logger.exception(f"Could not load recording.\n{e}")
         else:
+            # Create EMG model
             self.emg_model = EMGDataRawModel(emg_data)
-            self.recording_changed.emit(self.emg_model)  # Must emit first
+
+            # Emit signal with both model and recording path - allows recording path to
+            # be used for the export.
+            # Must emit signal to update the recording before the recording_loaded
+            # signal to ensure correct event order.
+            self.recording_changed.emit(self.emg_model, self.recording_path)
             self.recording_loaded.emit(True)
 
             # Message about data

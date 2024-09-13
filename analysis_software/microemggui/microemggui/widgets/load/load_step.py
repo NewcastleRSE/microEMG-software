@@ -35,13 +35,14 @@ class LoadWidget(QWidget):
     load_finished = Signal(bool)
 
     # Signal for sending data from load step to main window
-    load_data_changed = Signal(EMGDataRawModel, EMGSettingsModel)
+    load_data_changed = Signal(EMGDataRawModel, EMGSettingsModel, str)
 
     def __init__(self, emg_clrs: list[str], parent=None):
         super().__init__(parent)
 
         # Attributes for storing EMG recording and settings
         self.emg_model = None
+        self.recording_path = None  # path to the recording
         self.settings_model = None
 
         # Colors for EMG viewer
@@ -80,7 +81,7 @@ class LoadWidget(QWidget):
         # Connections
         # Note connection for trim widget is set up in method that updates the trim widget
         self.widgets["recording"].recording_loaded.connect(self.updates_after_loading_emg)
-        self.widgets["recording"].recording_changed.connect(self.update_emg_model)
+        self.widgets["recording"].recording_changed.connect(self.update_emg_model_and_path)
         self.widgets["settings"].settings_loaded.connect(self.updates_after_loading_settings)
         self.widgets["settings"].settings_changed.connect(self.update_settings_model)
 
@@ -118,6 +119,7 @@ class LoadWidget(QWidget):
 
             # Remove any previously saved EMG data and settings
             self.emg_model = None
+            self.recording_path = None
             self.settings_model = None
 
             # Remove any previously selected settings in combobox
@@ -146,25 +148,26 @@ class LoadWidget(QWidget):
 
             # Since this is the last load step, send data to main window and allow
             # next steps
-            self.load_data_changed.emit(self.emg_model, self.settings_model)
+            self.load_data_changed.emit(self.emg_model, self.settings_model, self.recording_path)
             self.load_finished.emit(True)
 
         else:
             self.widgets["run"].hide()
 
-            # Remove any previously saved EMG data and settings
+            # Remove any previously saved settings
             self.settings_model = None
 
             # Prevent next analysis steps
             self.load_finished.emit(False)
 
-    def update_emg_model(self, emg_model: EMGDataRawModel):
+    def update_emg_model_and_path(self, emg_model: EMGDataRawModel, recording_path: str):
         """
-        Update EMG data model (raw data).
+        Update EMG data model (raw data) and path to the recording.
         Slot for recording_changed signal.
         """
 
         self.emg_model = emg_model
+        self.recording_path = recording_path
 
     def update_settings_model(self, settings_model: EMGSettingsModel):
         """
