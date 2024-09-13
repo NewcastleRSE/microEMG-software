@@ -266,10 +266,12 @@ class MUEMGArrowsWidget(QWidget):
         self.button_increments = [-1, 1]
 
         # Set button icons and tooltip text
+        # Also set name for these arrows to allow custom formatting in style sheet
         for w, ic, txt, sc in zip(self.widgets.values(), my_icons, tooltip_text, shortcuts):
             w.setIcon(QIcon(":/bootstrap/" + ic))
             w.setToolTip(txt)
             w.setShortcut(sc)
+            w.setObjectName("selectmu_arrows")
 
         # Add to layout
         layout = QHBoxLayout()

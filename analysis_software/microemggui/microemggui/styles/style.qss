@@ -124,20 +124,24 @@ TabButton:disabled {
 WidgetControlButton {
     background-color: {clr_control_button};
     border: none;
-    color: {clr_primary};
     border-radius: {radius_button};
     padding: 3;
 }
 
-WidgetControlButton:hover {
+/* Exception is that the selectmu motor unit buttons should have lighter background */
+WidgetControlButton#selectmu_arrows {
+    background-color: {clr_background};
+}
+
+WidgetControlButton:hover, WidgetControlButton#selectmu_arrows:hover  {
     background-color: {clr_control_button_hover};
 }
 
-WidgetControlButton:pressed {
+WidgetControlButton:pressed, WidgetControlButton#selectmu_arrows:pressed  {
     background-color: {clr_control_button_pressed};
 }
 
-WidgetControlButton:disabled {
+WidgetControlButton:disabled, WidgetControlButton#selectmu_arrows:disabled {
     background-color: {clr_control_button_disabled};
 }
 
