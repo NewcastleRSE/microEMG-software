@@ -132,7 +132,6 @@ class HomeWidget(QWidget):
 
         # Names for corresponding widgets
         home_info_names = [k.lower().replace(" ", "_") for k in home_info.keys()]
-        print(home_info_names)
 
         # Create widgets
         self.widgets: dict[str, Any] = {

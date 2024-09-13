@@ -5,6 +5,7 @@ Widgets for selecting and loading analysis settings in load step.
 """
 
 from typing import Any
+import logging
 
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
 from PySide6.QtCore import Signal
@@ -27,6 +28,7 @@ from microemggui.widgets.base import (
     MessageLabel,
 )
 
+logger = logging.getLogger("microemggui.load")
 
 # --- Widgets for selecting and loading analysis settings ---
 
@@ -104,6 +106,7 @@ class LoadSettingsSection(QWidget):
         if not settings_name:  # No settings selected
             self.settings_model = None
             self.settings_loaded.emit(False)
+            logger.info("No initial settings selected.")
         else:  # Settings selected
             match settings_name:
                 case "Default":
@@ -135,6 +138,7 @@ class LoadSettingsSection(QWidget):
             )
             self.settings_changed.emit(self.settings_model)  # Must emit first
             self.settings_loaded.emit(True)
+            logger.info("Initial settings updated.")
 
         self.display_settings()
 
@@ -142,10 +146,13 @@ class LoadSettingsSection(QWidget):
         """
         Update settingstext widget to display summary of EMG settings that have been
         selected.
+        Also updates logs.
         """
 
         if not self.settings_model:
-            self.widgets["settingstext"].setText("")
+            settings_text = ""  # no settings selected
         else:
             settings_text = self.settings_model.get_formatted_settings_text()
-            self.widgets["settingstext"].setText(settings_text)
+            logger.info(f"Settings: {settings_text}")
+
+        self.widgets["settingstext"].setText(settings_text)
