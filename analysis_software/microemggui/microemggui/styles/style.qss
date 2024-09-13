@@ -1,0 +1,413 @@
+/* Titles */
+
+SectionTitle{
+    font-weight: bold;
+    font-size: 20pt;
+    min-height: 30;
+    max-height: 30;
+    qproperty-alignment: 'AlignTop | AlignLeft';
+    color: {clr_text_dark};
+}
+
+SubsectionTitle{
+    font-weight: bold;
+    font-size: 16pt;
+    qproperty-alignment: 'AlignTop | AlignLeft';
+    color: {clr_text_dark};
+}
+
+TitleInputLabel {
+    font-weight: bold;
+    font-size: 16pt;
+    color: {clr_text_dark};
+}
+
+/* Buttons */
+/* QPushButton will style buttons in matplotlib toolbar popups */
+
+QPushButton, SmallPushButton, MotorUnitButton {
+    color: {clr_primary};
+    background-color: {clr_small_button};
+    border-style: solid;
+    border-width: 1px;
+    border-color: {clr_primary};
+    padding: 4;
+    border-radius: {radius_button};
+}
+
+SmallPushButton {
+    font-size: 14pt;
+    min-width: 100px;
+    max-width: 100px;
+}
+
+MotorUnitButton {
+    font-size: 12pt;
+    min-width: 80px;
+    max-width: 80px;
+}
+
+MotorUnitButton:checked {
+    background-color: {clr_primary};
+    color: {clr_large_button_text};
+}
+
+QPushButton:hover, SmallPushButton:hover, MotorUnitButton:hover {
+    color: {clr_large_button_text};
+    border-color: {clr_primary};
+    background-color: {clr_primary};
+}
+
+QPushButton:pressed, SmallPushButton:pressed, MotorUnitButton:pressed {
+    color: {clr_large_button_text};
+    border-color: {clr_primary_pressed};
+    background-color: {clr_primary_pressed};
+}
+
+QPushButton:disabled, SmallPushButton:disabled, MotorUnitButton:disabled {
+    color: {clr_primary_disabled};
+    border-color: {clr_primary_disabled};
+}
+
+LargePushButton {
+    font-size: 16pt;
+    color: {clr_large_button_text};
+    background-color: {clr_primary};
+    border: none;
+    padding: 4;
+    min-width: 100px;
+    max-width: 100px;
+    border-radius: {radius_button};
+}
+
+LargePushButton:hover {
+    color: {clr_large_button_text};
+    border: none;
+    background-color: {clr_primary_hover};
+}
+
+LargePushButton:pressed {
+    color: {clr_large_button_text};
+    border: none;
+    background-color: {clr_primary_pressed};
+}
+
+LargePushButton:disabled {
+    color: {clr_large_button_text};
+    border: none;
+    background-color: {clr_primary_disabled};
+}
+
+TabButton {
+    font-size: 12pt;
+    border-style: solid;
+    border-width: 1px;
+    border-color: {clr_small_button_border};
+    padding: 4;
+    width: 150px;
+    border-radius: {radius_button};
+}
+
+TabButton:disabled {
+    background-color: {clr_background};
+    font-weight: bold;
+    color: 'black';
+    font-size: 12pt;
+    border-style: solid;
+    border-width: 1px;
+    border-color: {clr_small_button_border};
+    padding: 4;
+    width: 150px;
+    border-radius: {radius_button};
+}
+
+WidgetControlButton {
+    background-color: {clr_control_button};
+    border: none;
+    border-radius: {radius_button};
+    padding: 3;
+}
+
+/* Exception is that the selectmu motor unit buttons should have lighter background */
+WidgetControlButton#selectmu_arrows {
+    background-color: {clr_background};
+}
+
+WidgetControlButton:hover, WidgetControlButton#selectmu_arrows:hover  {
+    background-color: {clr_control_button_hover};
+}
+
+WidgetControlButton:pressed, WidgetControlButton#selectmu_arrows:pressed  {
+    background-color: {clr_control_button_pressed};
+}
+
+WidgetControlButton:disabled, WidgetControlButton#selectmu_arrows:disabled {
+    background-color: {clr_control_button_disabled};
+}
+
+/* Toolbars and toolbar widgets */
+
+TopToolbar {
+    padding: 5px;
+    background: {clr_background};
+    border-left: none;
+    border-top: none;
+    border-bottom: 1px solid {clr_border_light};
+    border-right: none;
+}
+
+AnalysisToolbar {
+    background: {clr_background};
+    border-left: none;
+    border-top: none;
+    border-bottom: none;
+    border-right: 1px solid {clr_border};
+    spacing: 0px;
+}
+
+AnalysisToolbarButton {
+    font-size: 14pt;
+    text-align: left;
+    color: {clr_text_dark};
+    background-color: {clr_background};
+    border-left: none;
+    border-top: none;
+    border-bottom: none;
+    border-right: 1px solid {clr_border};
+    padding: 10px;
+    width: 135px;
+    border-radius: 0;
+}
+
+AnalysisToolbarButton:hover {
+    background-color: {clr_primary};
+    color: {clr_large_button_text};
+    border-right: 1px solid {clr_border};
+}
+
+AnalysisToolbarButton:checked {
+    background-color: {clr_primary};
+    color: {clr_large_button_text};
+    border-right: 1px solid {clr_border};
+}
+
+AnalysisToolbarButton:disabled {
+    color: {clr_text_very_light};
+    border-right: 1px solid {clr_border};
+}
+
+AnalysisToolbarLabel {
+    color: {clr_text_light};
+    font-weight: bold;
+    font-size: 12pt;
+    padding-left: 5px;
+    padding-top: 20px;
+    padding-bottom: 5px;
+}
+
+RecordingLabel {
+    color: {clr_text_light};
+    font-size: 12pt;
+}
+
+MicroEMGLogo {
+    text-align: center;
+    background-color: {clr_background};
+    border-left: none;
+    border-top: none;
+    border-bottom: none;
+    border-right: 1px solid {clr_border};
+    padding-left: 10px;
+    padding-top: 0px;
+    padding-right: 10px;
+    padding-bottom: 0px;
+    width: 135px;
+    qproperty-iconSize: 100px;
+    border-radius: 0;
+}
+
+MicroEMGLogo:hover {
+    background-color: {clr_primary};
+}
+
+MicroEMGLogo:checked {
+    background-color: {clr_primary};
+}
+
+/* Settings input widgets - main section */
+
+CheckBoxMain {
+    font-weight: bold;
+    font-size: 14pt;
+    min-height: 35;
+    max-height: 35;
+    color: {clr_text_medium};
+}
+
+/* Settings input widgets */
+
+CheckBoxChannel {
+    font-size: 12pt;
+    font-weight: bold;
+    min-height: 18px;
+    max-height: 40px;
+}
+
+CheckBoxChannel::indicator {
+    width: 14px;
+    height: 14px;
+    border-radius: 2px;
+}
+
+CheckBoxChannel::indicator:unchecked {
+    background-color: {clr_background};
+    border: 1px solid {clr_border_light};
+}
+
+CheckBoxChannel::indicator:checked {
+    background-color: {clr_background};
+    border: 1px solid {clr_border_light};
+    image: url(:/bootstrap/check)
+}
+
+CheckBoxChannelLabel {
+    font-size: 12pt;
+    font-weight: bold;
+    min-height: 20;
+    max-height: 20;
+    padding: 0;
+}
+
+InputLabel {
+    qproperty-alignment: 'AlignBottom | AlignLeft';
+    min-height: 20;
+    max-height: 20;
+    font-weight: bold;
+    color: {clr_text_medium};
+}
+
+InputInlineLabel {
+    font-weight: bold;
+    color: {clr_text_medium};
+}
+
+InputInlineText {
+    color: {clr_text_light};
+}
+
+InputExplanationLabel {
+    color: {clr_text_light};
+}
+
+InputInlineHighlightedText {
+    color: {clr_primary_dark};
+    min-height: 20;
+    max-height: 20;
+}
+
+MessageLabel {
+    color: {clr_text_light};
+}
+
+HighlightedLabel {
+    color: {clr_primary_dark};
+}
+
+HighlightedLabel#channels_widget_exclude {
+    qproperty-alignment: 'AlignBottom | AlignLeft';
+    min-height: 100;
+    max-height: 100;
+    min-width: 250;
+    max-width: 250;
+}
+
+HighlightedLabel#select_mu_widget_message {
+    qproperty-alignment: 'AlignBottom | AlignLeft';
+    min-height: 100;
+    max-height: 100;
+    min-width: 175;
+    max-width: 175;
+    color: {clr_primary_dark};
+}
+
+InputWarningLabel {
+    color: {clr_warning};
+    font-size: 12pt;
+}
+
+InputComboBox {
+    min-width: 150;
+    max-width: 150;
+}
+
+InputSpinBox {
+    min-width: 100;
+    max-width: 100;
+}
+
+InputLineEdit {
+    min-width: 50;
+    max-width: 50;
+}
+
+InputLineEdit:disabled {
+    color: {clr_text_very_light};
+}
+
+/* Progress bars */
+QProgressBar {
+     border: 1px solid {clr_border_light};
+     border-radius: 4px;
+     background-color: {clr_background};
+     height: 8px;
+ }
+
+QProgressBar::chunk {
+    background-color: {clr_secondary};
+    border-radius: 4px;
+}
+
+QProgressBar#findmuprogress {
+    border: none;
+    height: 0px; /* hides bar */
+}
+
+/* Misc settings for specific widgets */
+
+/* EMG viewer */
+
+EMGViewerWidget {
+    background: {clr_background};
+    border-radius: 4px;
+}
+
+QLabel#amp{
+    min-height: 25;
+    max-height: 25;
+    min-width: 25;
+    max-width: 25;
+}
+
+/* Settings - set width */
+PreprocSettingsWidget, LocaliseSettingsWidget {
+    min-width: 250;
+    max-width: 250;
+}
+
+ChannelsCheckBoxes {
+    min-width: 220;
+    max-width: 220;
+}
+
+/* Background and border for visualisations */
+QTabWidget#muvistab::pane, QTabWidget#mufibretab::pane {
+    background: {clr_background};
+    padding: 10px;
+    border-radius: 4px;
+}
+
+/* Width of text on home page */
+HomePageSectionWidget {
+    min-width: 400;
+    max-width: 600; 
+}
