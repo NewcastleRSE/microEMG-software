@@ -2037,6 +2037,9 @@ class EMGMotorUnit:
         cmap: Any = "magma",
         vmax: float = 100,
         clr_background: Any = "dimgrey",
+        axis_label_size: float = 12,
+        title_size: float = 12,
+        tick_label_size: float = 10,
         ax: plt.axes.Axes | None = None,
     ) -> tuple[Figure | None, Axes]:
         """
@@ -2056,6 +2059,12 @@ class EMGMotorUnit:
         clr_background: colour specification, optional
             Colour for plot background (recommend similar darkness to low values of the
             colourmap). The default is "dimgrey".
+        axis_label_size : float, optional
+            Font size of the axis labels. The default is 12.
+        title_size : float, optional
+            Font size the titles. The default is 12.
+        tick_label_size : float, optional
+            Font size the axis tick labels. The default is 10.
         ax : plt.axes.Axes, optional
             Plot to add to. The default is None, in which case new axes are created.
 
@@ -2117,8 +2126,8 @@ class EMGMotorUnit:
             ax=ax,
         )
 
-        ax.set_xlabel("fibre number")
-        ax.set_ylabel("fibre number")
+        ax.set_xlabel("fibre number", fontsize=axis_label_size)
+        ax.set_ylabel("fibre number", fontsize=axis_label_size)
 
         # Titles (line break ensures that plot is the same size as plot_jitter_heat_plot,
         # which has a two line title)
@@ -2126,12 +2135,17 @@ class EMGMotorUnit:
             ax.set_title(
                 f"Median Consecutive Differences\n(motor unit {self.motor_unit_number + 1})",
                 fontweight="bold",
+                fontsize=title_size,
             )
         else:
             ax.set_title(
                 f"Mean Consecutive Differences\n(motor unit {self.motor_unit_number + 1})",
                 fontweight="bold",
+                fontsize=title_size,
             )
+
+        # Tick label sizes
+        ax.tick_params(labelsize=tick_label_size)
 
         # Ensure square, change background colour, and add frame
         ax.set_aspect("equal")
@@ -2199,6 +2213,9 @@ class EMGMotorUnit:
         percent: bool = False,
         cmap: Any = "viridis",
         clr_background: Any = "dimgrey",
+        axis_label_size: float = 12,
+        title_size: float = 12,
+        tick_label_size: float = 10,
         ax: plt.axes.Axes | None = None,
     ) -> tuple[Figure | None, Axes]:
         """
@@ -2215,6 +2232,12 @@ class EMGMotorUnit:
         clr_background: colour specification, optional
             Colour for plot background (recommend similar darkness to low values of the
             colourmap). The default is "dimgrey".
+        axis_label_size : float, optional
+            Font size of the axis labels. The default is 12.
+        title_size : float, optional
+            Font size the titles. The default is 12.
+        tick_label_size : float, optional
+            Font size the axis tick labels. The default is 10.
         ax : plt.axes.Axes, optional
             Plot to add to. The default is None, in which case new axes are created.
 
@@ -2284,21 +2307,26 @@ class EMGMotorUnit:
             ax=ax,
         )
 
-        ax.set_xlabel("fibre number")
-        ax.set_ylabel("fibre number")
+        ax.set_xlabel("fibre number", fontsize=axis_label_size)
+        ax.set_ylabel("fibre number", fontsize=axis_label_size)
 
         if percent:
             ax.set_title(
                 "Sample sizes (% of consecutive differences)\n"
                 + f"(motor unit {self.motor_unit_number + 1})",
                 fontweight="bold",
+                fontsize=title_size,
             )
         else:
             ax.set_title(
                 "Sample sizes (# consecutive differences)\n"
                 + f"(motor unit {self.motor_unit_number + 1})",
                 fontweight="bold",
+                fontsize=title_size,
             )
+
+        # Tick label sizes
+        ax.tick_params(labelsize=tick_label_size)
 
         # Ensure square, change background colour, and add frame
         ax.set_aspect("equal")
@@ -2478,6 +2506,7 @@ class EMGMotorUnit:
         figsize: tuple[float, float] = (10, 10),
         axis_label_size: float = 12,
         title_size: float = 12,
+        tick_label_size: float = 10,
         dpi: int = 100,
         downsample_factor: int = 1,
     ) -> tuple[Figure | None, Axes | None]:
@@ -2534,6 +2563,8 @@ class EMGMotorUnit:
             Font size of the axis labels. The default is 12.
         title_size : float, optional
             Font size the titles. The default is 12.
+        tick_label_size : float, optional
+            Font size the axis tick labels. The default is 10.
         dpi : int, optional
             Plot resolution (dots per inch). The default is 100.
         downsample_factor : int, optional
@@ -2670,6 +2701,7 @@ class EMGMotorUnit:
                 fontweight="bold",
             )
             axs[i].set_ylabel("\u03bcV", fontsize=axis_label_size)
+            axs[i].tick_params(labelsize=tick_label_size)
 
         # Link y-axes of two EMG plots
         axs[1].sharey(axs[0])
@@ -2707,6 +2739,7 @@ class EMGMotorUnit:
             fontweight="bold",
         )
         axs[ax_times].set_xlabel("time (ms)", fontsize=axis_label_size)
+        axs[ax_times].tick_params(labelsize=tick_label_size)
 
         return fig, axs
 

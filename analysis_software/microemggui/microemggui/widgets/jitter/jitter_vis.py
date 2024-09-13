@@ -80,6 +80,9 @@ class JitterAllFibrePlotsWidget(QWidget):
             ax=self.axs[0],
             cmap=carto_seq.Burg_7.mpl_colormap,
             clr_background="whitesmoke",
+            title_size=10,
+            axis_label_size=10,
+            tick_label_size=10,
         )
 
         # Second plot is sample sizes
@@ -91,6 +94,9 @@ class JitterAllFibrePlotsWidget(QWidget):
             ax=self.axs[1],
             cmap=carto_seq.Teal_7.mpl_colormap,
             clr_background="whitesmoke",
+            title_size=10,
+            axis_label_size=10,
+            tick_label_size=10,
         )
 
         self.fig.canvas.draw_idle()  # redraw
@@ -168,7 +174,12 @@ class JitterFibrePairPlotWidget(QWidget):
             and (self.fibres[0] != self.fibres[1])
         ):
             fig, _ = mu.plot_jitter_fibre_pair_EMG_and_times(
-                self.fibres[0], self.fibres[1], figsize=figsize
+                self.fibres[0],
+                self.fibres[1],
+                figsize=figsize,
+                title_size=10,
+                axis_label_size=10,
+                tick_label_size=8,
             )
 
             # Check if plotted (will not plot if jitter not computed for that pair)
