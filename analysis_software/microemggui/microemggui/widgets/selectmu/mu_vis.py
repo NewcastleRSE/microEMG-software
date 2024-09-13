@@ -96,7 +96,7 @@ class MUEMGAllChannelsWidget(QWidget):
         self.reconstruct_model = reconstruct_model
 
         # Original settings for plot
-        self.offset = 300
+        self.offset = 300.0  # use float to indicate float variable for type checks
         self.motor_unit_idx = motor_unit_idx
 
         # Initialise blank plot

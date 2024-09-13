@@ -145,10 +145,8 @@ class JitterFibrePairPlotWidget(QWidget):
 
         if fibre:  # if not an empty string, convert to int and store
             self.fibres[fibre_idx] = int(fibre) - 1  # subtract 1 to convert back to indices
-            print(self.fibres)
         else:
             self.fibres[fibre_idx] = None
-            print(self.fibres)
 
         # Trigger plot update
         self.update_plot()
@@ -190,10 +188,8 @@ class JitterFibrePairPlotWidget(QWidget):
 
         # New figure
         canvas = FigureCanvasQTAgg(self.fig)
-        self.widgets: dict[str, Any] = {
-            "toolbar": MatplotlibToolbar(canvas, parent=self),
-            "canvas": canvas,
-        }
+        self.widgets["toolbar"] = MatplotlibToolbar(canvas, parent=self)
+        self.widgets["canvas"] = canvas
 
         # Add plot to layout and set to expand to fill the available space
         for w in self.widgets.values():
@@ -240,8 +236,8 @@ class JitterFibrePairComboboxWidget(QWidget):
         # Get fibre options for that motor unit
         mu = self.reconstruct_model.reconstruct.found_motor_units.motor_units[motor_unit_idx]
         n_fibres = mu.fibre_clustering_results["n_fibre_clusters"]
-        fibre_list = list(range(n_fibres))
-        fibre_list = [str(i + 1) for i in fibre_list]  # + 1 for labels
+        fibre_list_int = list(range(n_fibres))
+        fibre_list = [str(i + 1) for i in fibre_list_int]  # + 1 for labels
         fibre_list = [""] + fibre_list  # include no selection - will be default
 
         # Add options to comboboxes
