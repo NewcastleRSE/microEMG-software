@@ -1242,7 +1242,7 @@ class EMGMotorUnit:
         plot_legend: bool = True,
         legend_pt_size: float = 50,
         legend_label_size: float = 10,
-        ax: plt.axes.Axes | None = None,
+        ax: Axes | None = None,
     ) -> tuple[Figure | None, Axes]:
         """
         Create scatter plot of fibre localisations estimated from all fibre potentials
@@ -1289,7 +1289,7 @@ class EMGMotorUnit:
             Size of points in legend. The default is 50.
         legend_label_size: float, optional
             Size of labels in legend. The default is 10.
-        ax : plt.axes.Axes, optional
+        ax : Axes, optional
             Plot to add to. The default is None, in which case new axes are created.
 
         Returns
@@ -2040,7 +2040,7 @@ class EMGMotorUnit:
         axis_label_size: float = 12,
         title_size: float = 12,
         tick_label_size: float = 10,
-        ax: plt.axes.Axes | None = None,
+        ax: Axes | None = None,
     ) -> tuple[Figure | None, Axes]:
         """
         Plot a heat map of mean consecutive differences (MCDs) between fibres.
@@ -2065,7 +2065,7 @@ class EMGMotorUnit:
             Font size the titles. The default is 12.
         tick_label_size : float, optional
             Font size the axis tick labels. The default is 10.
-        ax : plt.axes.Axes, optional
+        ax : Axes, optional
             Plot to add to. The default is None, in which case new axes are created.
 
         Returns
@@ -2216,7 +2216,7 @@ class EMGMotorUnit:
         axis_label_size: float = 12,
         title_size: float = 12,
         tick_label_size: float = 10,
-        ax: plt.axes.Axes | None = None,
+        ax: Axes | None = None,
     ) -> tuple[Figure | None, Axes]:
         """
         Plot a heat map of counts (= number of consecutive differences) used for jitter
@@ -2238,7 +2238,7 @@ class EMGMotorUnit:
             Font size the titles. The default is 12.
         tick_label_size : float, optional
             Font size the axis tick labels. The default is 10.
-        ax : plt.axes.Axes, optional
+        ax : Axes, optional
             Plot to add to. The default is None, in which case new axes are created.
 
         Returns
@@ -2896,7 +2896,7 @@ class EMGMotorUnits:
         cmap=None,
         max_y: float = 1,
         y_buff: float = 1.75,
-        ax: plt.axes.Axes | None = None,
+        ax: Axes | None = None,
     ) -> tuple[Figure | None, Axes]:
         """
         Create 2D scatter plot of either
@@ -2969,7 +2969,7 @@ class EMGMotorUnits:
             Factor by which to multiple the max absolute y axis location in order to
             determine y-axis limits (see max_y argument). Controls buffer around points
             along the y-axis. The default is 1.75, which provides room for larger points.
-        ax : plt.axes.Axes, optional
+        ax : Axes, optional
             Plot to add to. The default is None, in which case new axes are created.
 
         Returns

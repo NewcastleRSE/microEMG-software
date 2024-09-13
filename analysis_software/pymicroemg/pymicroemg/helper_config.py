@@ -8,7 +8,7 @@ import os
 
 
 # microEMG recordings that can be used for demos/testing
-def get_recording_path_and_id(recording_num: int) -> (str, str):
+def get_recording_path_and_id(recording_num: int) -> tuple[str, str]:
     """
     Get an EMG recording's path and string ID using a numeric label.
 
@@ -26,7 +26,7 @@ def get_recording_path_and_id(recording_num: int) -> (str, str):
 
     Returns
     -------
-    (str, str)
+    tuple[str, str]
         Path to recording data and string ID.
 
     """
