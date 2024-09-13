@@ -228,7 +228,6 @@ MicroEMGLogo {
 
 MicroEMGLogo:hover {
     background-color: {clr_primary};
-    opacity: 0.5;
 }
 
 MicroEMGLogo:checked {
