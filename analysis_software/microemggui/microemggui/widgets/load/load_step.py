@@ -41,9 +41,9 @@ class LoadWidget(QWidget):
         super().__init__(parent)
 
         # Attributes for storing EMG recording and settings
-        self.emg_model = None
-        self.recording_path = None  # path to the recording
-        self.settings_model = None
+        self.emg_model: EMGDataRawModel | None = None
+        self.recording_path: str | None = None  # path to the recording
+        self.settings_model: EMGSettingsModel | None = None
 
         # Colors for EMG viewer
         self.emg_clrs = emg_clrs
@@ -100,7 +100,16 @@ class LoadWidget(QWidget):
             # updated EMG
             self.sections_layout.removeWidget(self.widgets["trim"])  # remove from layout
             self.widgets["trim"].deleteLater()  # delete
-            self.widgets["trim"] = TrimRecordingSection(self.emg_model, self.emg_clrs, parent=self)
+            if self.emg_model:
+                self.widgets["trim"] = TrimRecordingSection(
+                    self.emg_model, self.emg_clrs, parent=self
+                )
+            else:
+                raise ValueError(
+                    "emg_model is None - cannot create trim recording section."
+                    + "Checked that events for loading recording have been processed "
+                    + "correctly."
+                )
             self.sections_layout.insertWidget(1, self.widgets["trim"])  # add to layout
             self.widgets["trim"].show()  # show
 

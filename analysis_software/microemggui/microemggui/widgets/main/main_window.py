@@ -766,13 +766,14 @@ class MicroEMGMain(QMainWindow):
             self.enable_analysis_toolbar_button(False, w_name)
 
         # Create widget
-        if self.reconstruct_model:
+        if self.reconstruct_model and self.recording_path:
             # Create widget and add to stack of analysis step widgets with toolbar connections
             w = ExportWidget(self.reconstruct_model, self.recording_path, parent=self)
         else:
             raise ValueError(
                 "GUI model for fibre reconstruction analysis must be created before "
-                + "creating widgets for this analysis."
+                + "creating widgets for this analysis, and recording_path should not "
+                + "be None."
             )
         self.add_widget_to_analysis_steps(w, w_name)
 
