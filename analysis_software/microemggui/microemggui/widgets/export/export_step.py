@@ -149,6 +149,9 @@ class ExportWidget(QWidget):
         """
         Choose folder in which to save results using file browser.
         Browser opens in folder containing the analysed recording.
+
+        Logger does not store file names in case directory names contain sensitive
+        information.
         """
 
         self.export_path = QFileDialog.getExistingDirectory(
@@ -157,7 +160,7 @@ class ExportWidget(QWidget):
 
         # Update widgets that depend on export path
         if self.export_path:
-            logger.info(f"Export path choosen: {self.export_path}")
+            logger.info("Export path choosen.")
 
             # Create name of export folder (will be saved as export_folder attribute)
             self.create_name_of_export_folder()
@@ -238,7 +241,7 @@ class ExportWidget(QWidget):
             )
 
             # Log
-            logger.info(f"Saved microEMG results and settings in JSON file {json_path}")
+            logger.info("Saved microEMG results and settings in JSON file.")
 
             # Create figure of fibre localisation
             motor_units = self.reconstruct_model.reconstruct.found_motor_units
@@ -254,10 +257,10 @@ class ExportWidget(QWidget):
             plot_path = os.path.join(full_export_path, plot_filename)
 
             fig.savefig(plot_path + ".png", dpi=png_dpi)
-            logger.info(f"Exported fibre localisation plot ({plot_path + '.png'})")
+            logger.info("Exported fibre localisation plot (png).")
 
             fig.savefig(plot_path + ".svg")
-            logger.info(f"Exported fibre localisation plot ({plot_path + '.svg'})")
+            logger.info("Exported fibre localisation plot (svg).")
 
             # More exports can be added here if needed - recommend adding logs for each one.
             # May need to check that results have been added before trying to plot certain
