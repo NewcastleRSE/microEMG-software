@@ -22,13 +22,16 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QTabWidget,
 )
-from PySide6.QtGui import QIcon
-from PySide6.QtCore import Signal
+from PySide6.QtGui import QIcon, qt_set_sequence_auto_mnemonic
+from PySide6.QtCore import Qt, Signal
 
 from microemggui.models.emg import EMGAnalysisReconstructModel
 from microemggui.widgets.base import SubsectionTitle, MatplotlibToolbar, WidgetControlButton
+from microemggui.widgets.emg_viewer import EMGGainWidget
 from microemggui.icons import icons  # noqa - import allows icon references
 
+# Allow keyboard shortcuts for tabbed widget on MacOS
+qt_set_sequence_auto_mnemonic(True)
 
 # --- Plot widgets ---
 
@@ -47,7 +50,7 @@ class MUEMGOneChannelWidget(QWidget):
 
         # Initialise blank plot
         self.fig, self.ax = plt.subplots()
-        self.fig.set_tight_layout(True)
+        self.fig.set_tight_layout(True)  # type: ignore
         canvas = FigureCanvasQTAgg(self.fig)
         self.widgets: dict[str, Any] = {
             "toolbar": MatplotlibToolbar(canvas, parent=self),
@@ -92,17 +95,21 @@ class MUEMGAllChannelsWidget(QWidget):
 
         self.reconstruct_model = reconstruct_model
 
+        # Original settings for plot
+        self.offset = 300.0  # use float to indicate float variable for type checks
+        self.motor_unit_idx = motor_unit_idx
+
         # Initialise blank plot
         self.fig, self.ax = plt.subplots()
-        self.fig.set_tight_layout(True)
+        self.fig.set_tight_layout(True)  # type: ignore
         canvas = FigureCanvasQTAgg(self.fig)
         self.widgets: dict[str, Any] = {
             "toolbar": MatplotlibToolbar(canvas, parent=self),
             "canvas": canvas,
         }
 
-        # Update plot with specified motor unit data
-        self.update_motor_unit(motor_unit_idx)
+        # Update plot with motor unit and offset
+        self.update_plot()
 
         # Add plot to layout and set to expand to fill the available space
         layout = QVBoxLayout()
@@ -118,12 +125,68 @@ class MUEMGAllChannelsWidget(QWidget):
         Motor unit index starts at 0.
         """
 
+        # Update motor unit
+        self.motor_unit_idx = motor_unit_idx
+
+        # Update plot
+        self.update_plot()
+
+    def scale_offset(self, scale: float):
+        """
+        Slot for buttons that scale amplitude of plotted lines (via offset parameter).
+        """
+
+        # Update offset by scaling by scale value
+        self.offset = self.offset / scale
+
+        # Update plot
+        self.update_plot()
+
+    def update_plot(self):
+        """
+        Update plot using specified motor unit and offset.
+        """
+
         # Create plot and replace existing axes
         self.ax.cla()  # clear axes
         _, self.ax = self.reconstruct_model.reconstruct.plot_average_motor_unit_potential(
-            motor_unit_idx, ax=self.ax, dpi=100, clrs=Prism_10.mpl_colors
+            self.motor_unit_idx, ax=self.ax, dpi=100, clrs=Prism_10.mpl_colors, offset=self.offset
         )
         self.fig.canvas.draw_idle()  # redraw
+
+
+class MUEMGAllChannelsWithGainWidget(QWidget):
+    """
+    MUEMGAllChannelsWidget with controls for modifying signal gain (amplitude).
+    """
+
+    def __init__(
+        self, reconstruct_model: EMGAnalysisReconstructModel, motor_unit_idx: int = 0, parent=None
+    ):
+        super().__init__(parent)
+
+        # Widgets
+        self.plot_widget = MUEMGAllChannelsWidget(reconstruct_model, motor_unit_idx, parent=self)
+        self.gain_widget = EMGGainWidget(self.plot_widget)
+
+        # Add to layout
+        layout = QHBoxLayout()
+        layout.addWidget(self.gain_widget)
+        layout.addWidget(self.plot_widget)
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(layout)
+
+        # Connections are create in gain widget
+        # Plot widget needs to have a scale_offset method for these connections
+
+    def update_motor_unit(self, motor_unit_idx: int):
+        """
+        Update plot to display the EMG traces of the specified motor unit.
+        Motor unit index starts at 0.
+        """
+
+        # Handled by method in plot widget
+        self.plot_widget.update_motor_unit(motor_unit_idx)
 
 
 class MUVisWidget(QWidget):
@@ -141,10 +204,11 @@ class MUVisWidget(QWidget):
         # Create widgets
         self.widgets: dict[str, Any] = {
             "one": MUEMGOneChannelWidget(reconstruct_model, motor_unit_idx, parent=self),
-            "all": MUEMGAllChannelsWidget(reconstruct_model, motor_unit_idx, parent=self),
+            "all": MUEMGAllChannelsWithGainWidget(reconstruct_model, motor_unit_idx, parent=self),
         }
 
-        tab_text = ["One channel", "All channels"]
+        # Ampersands set shortcuts for changing tabs
+        tab_text = ["One ch&annel", "All channel&s"]
 
         # Add to tab widget
         self.tab_widget = QTabWidget()
@@ -195,13 +259,19 @@ class MUEMGArrowsWidget(QWidget):
         # Tooltip text for each button
         tooltip_text = ["Previous motor unit", "Next motor unit"]
 
+        # Shortcut keys
+        shortcuts = [Qt.Key.Key_Left, Qt.Key.Key_Right]
+
         # Increment for each button
         self.button_increments = [-1, 1]
 
         # Set button icons and tooltip text
-        for w, ic, txt in zip(self.widgets.values(), my_icons, tooltip_text):
+        # Also set name for these arrows to allow custom formatting in style sheet
+        for w, ic, txt, sc in zip(self.widgets.values(), my_icons, tooltip_text, shortcuts):
             w.setIcon(QIcon(":/bootstrap/" + ic))
             w.setToolTip(txt)
+            w.setShortcut(sc)
+            w.setObjectName("selectmu_arrows")
 
         # Add to layout
         layout = QHBoxLayout()

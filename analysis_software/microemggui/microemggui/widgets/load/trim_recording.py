@@ -242,9 +242,11 @@ class TrimRecordingSection(QWidget):
 
         else:  # If valid ranges and relative values, trim
             # Trim
-            print(self.emg_model.emg_data.emg_dur)
             self.emg_model.emg_data.trim_emg_ts(start_t, end_t)
-            print(self.emg_model.emg_data.emg_dur)
+            logger.info(
+                f"EMG recording trimmed from {start_t} to {end_t} seconds - "
+                + f"duration now {self.emg_model.emg_data.emg_dur} seconds"
+            )
 
             # Update viewer
             self.widgets["fields"].widgets["emg_button"].update_emg(self.emg_model)

@@ -94,11 +94,16 @@ class ExportWidget(QWidget):
     have been run, because settings are added when EMGAnalysisReconstruct is created.
     """
 
-    def __init__(self, reconstruct_model: EMGAnalysisReconstructModel, parent=None):
+    def __init__(
+        self, reconstruct_model: EMGAnalysisReconstructModel, recording_path: str, parent=None
+    ):
         super().__init__(parent)
 
         # Analysis results
         self.reconstruct_model = reconstruct_model
+
+        # Path to recording - will open file browser in this folder
+        self.recording_path = recording_path
 
         # Folder in which to save results (none specified initially)
         self.export_path = ""
@@ -143,10 +148,11 @@ class ExportWidget(QWidget):
     def browse_for_export_folder(self):
         """
         Choose folder in which to save results using file browser.
+        Browser opens in folder containing the analysed recording.
         """
 
         self.export_path = QFileDialog.getExistingDirectory(
-            self, "Select folder for storing results", ""
+            self, "Select folder for storing results", self.recording_path
         )
 
         # Update widgets that depend on export path

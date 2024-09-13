@@ -1233,16 +1233,16 @@ class EMGMotorUnit:
         axis_equal: bool = True,
         lw: float = 0.5,
         figsize: tuple[float, float] = (10.0, 5.0),
-        axis_label_size: float = 14,
-        tick_label_size: float = 12,
+        axis_label_size: float = 12,
+        tick_label_size: float = 10,
         dpi: int = 100,
         cmap=None,
         max_y: float = 1,
         y_buff: float = 1.75,
         plot_legend: bool = True,
         legend_pt_size: float = 50,
-        legend_label_size: float = 12,
-        ax: plt.axes.Axes | None = None,
+        legend_label_size: float = 10,
+        ax: Axes | None = None,
     ) -> tuple[Figure | None, Axes]:
         """
         Create scatter plot of fibre localisations estimated from all fibre potentials
@@ -1268,9 +1268,9 @@ class EMGMotorUnit:
         figsize tuple[float, float], optional
             Size of figure. The default is (10, 5).
         axis_label_size : float, optional
-            size of axis label. The default is 14.
+            size of axis label. The default is 12.
         tick_label_size : float, optional
-            Size of tick labels. The default is 12.
+            Size of tick labels. The default is 10.
         dpi : int, optional
             Dots per inch. The default is 100.
         cmap : Any, optional
@@ -1288,8 +1288,8 @@ class EMGMotorUnit:
         legend_pt_size : float, optional
             Size of points in legend. The default is 50.
         legend_label_size: float, optional
-            Size of labels in legend. The default is 12.
-        ax : plt.axes.Axes, optional
+            Size of labels in legend. The default is 10.
+        ax : Axes, optional
             Plot to add to. The default is None, in which case new axes are created.
 
         Returns
@@ -2037,7 +2037,10 @@ class EMGMotorUnit:
         cmap: Any = "magma",
         vmax: float = 100,
         clr_background: Any = "dimgrey",
-        ax: plt.axes.Axes | None = None,
+        axis_label_size: float = 12,
+        title_size: float = 12,
+        tick_label_size: float = 10,
+        ax: Axes | None = None,
     ) -> tuple[Figure | None, Axes]:
         """
         Plot a heat map of mean consecutive differences (MCDs) between fibres.
@@ -2056,7 +2059,13 @@ class EMGMotorUnit:
         clr_background: colour specification, optional
             Colour for plot background (recommend similar darkness to low values of the
             colourmap). The default is "dimgrey".
-        ax : plt.axes.Axes, optional
+        axis_label_size : float, optional
+            Font size of the axis labels. The default is 12.
+        title_size : float, optional
+            Font size the titles. The default is 12.
+        tick_label_size : float, optional
+            Font size the axis tick labels. The default is 10.
+        ax : Axes, optional
             Plot to add to. The default is None, in which case new axes are created.
 
         Returns
@@ -2117,21 +2126,26 @@ class EMGMotorUnit:
             ax=ax,
         )
 
-        ax.set_xlabel("fibre number")
-        ax.set_ylabel("fibre number")
+        ax.set_xlabel("fibre number", fontsize=axis_label_size)
+        ax.set_ylabel("fibre number", fontsize=axis_label_size)
 
         # Titles (line break ensures that plot is the same size as plot_jitter_heat_plot,
         # which has a two line title)
         if median:
             ax.set_title(
-                f"Median Consecutive Differences\n(motor unit {self.motor_unit_number + 1})",
+                f"Motor unit {self.motor_unit_number + 1}\nMedian Consecutive Differences",
                 fontweight="bold",
+                fontsize=title_size,
             )
         else:
             ax.set_title(
-                f"Mean Consecutive Differences\n(motor unit {self.motor_unit_number + 1})",
+                f"Motor unit {self.motor_unit_number + 1}\nMean Consecutive Differences",
                 fontweight="bold",
+                fontsize=title_size,
             )
+
+        # Tick label sizes
+        ax.tick_params(labelsize=tick_label_size)
 
         # Ensure square, change background colour, and add frame
         ax.set_aspect("equal")
@@ -2199,7 +2213,10 @@ class EMGMotorUnit:
         percent: bool = False,
         cmap: Any = "viridis",
         clr_background: Any = "dimgrey",
-        ax: plt.axes.Axes | None = None,
+        axis_label_size: float = 12,
+        title_size: float = 12,
+        tick_label_size: float = 10,
+        ax: Axes | None = None,
     ) -> tuple[Figure | None, Axes]:
         """
         Plot a heat map of counts (= number of consecutive differences) used for jitter
@@ -2215,7 +2232,13 @@ class EMGMotorUnit:
         clr_background: colour specification, optional
             Colour for plot background (recommend similar darkness to low values of the
             colourmap). The default is "dimgrey".
-        ax : plt.axes.Axes, optional
+        axis_label_size : float, optional
+            Font size of the axis labels. The default is 12.
+        title_size : float, optional
+            Font size the titles. The default is 12.
+        tick_label_size : float, optional
+            Font size the axis tick labels. The default is 10.
+        ax : Axes, optional
             Plot to add to. The default is None, in which case new axes are created.
 
         Returns
@@ -2284,21 +2307,26 @@ class EMGMotorUnit:
             ax=ax,
         )
 
-        ax.set_xlabel("fibre number")
-        ax.set_ylabel("fibre number")
+        ax.set_xlabel("fibre number", fontsize=axis_label_size)
+        ax.set_ylabel("fibre number", fontsize=axis_label_size)
 
         if percent:
             ax.set_title(
-                "Sample sizes (% of consecutive differences)\n"
-                + f"(motor unit {self.motor_unit_number + 1})",
+                f"Motor unit {self.motor_unit_number + 1}\n"
+                + "Sample sizes (% of consecutive differences)",
                 fontweight="bold",
+                fontsize=title_size,
             )
         else:
             ax.set_title(
-                "Sample sizes (# consecutive differences)\n"
-                + f"(motor unit {self.motor_unit_number + 1})",
+                f"Motor unit {self.motor_unit_number + 1}\n"
+                + "Sample sizes (# consecutive differences)",
                 fontweight="bold",
+                fontsize=title_size,
             )
+
+        # Tick label sizes
+        ax.tick_params(labelsize=tick_label_size)
 
         # Ensure square, change background colour, and add frame
         ax.set_aspect("equal")
@@ -2478,6 +2506,7 @@ class EMGMotorUnit:
         figsize: tuple[float, float] = (10, 10),
         axis_label_size: float = 12,
         title_size: float = 12,
+        tick_label_size: float = 10,
         dpi: int = 100,
         downsample_factor: int = 1,
     ) -> tuple[Figure | None, Axes | None]:
@@ -2534,6 +2563,8 @@ class EMGMotorUnit:
             Font size of the axis labels. The default is 12.
         title_size : float, optional
             Font size the titles. The default is 12.
+        tick_label_size : float, optional
+            Font size the axis tick labels. The default is 10.
         dpi : int, optional
             Plot resolution (dots per inch). The default is 100.
         downsample_factor : int, optional
@@ -2670,6 +2701,7 @@ class EMGMotorUnit:
                 fontweight="bold",
             )
             axs[i].set_ylabel("\u03bcV", fontsize=axis_label_size)
+            axs[i].tick_params(labelsize=tick_label_size)
 
         # Link y-axes of two EMG plots
         axs[1].sharey(axs[0])
@@ -2707,6 +2739,7 @@ class EMGMotorUnit:
             fontweight="bold",
         )
         axs[ax_times].set_xlabel("time (ms)", fontsize=axis_label_size)
+        axs[ax_times].tick_params(labelsize=tick_label_size)
 
         return fig, axs
 
@@ -2854,16 +2887,16 @@ class EMGMotorUnits:
         pt_linewidth: float = 3,
         axis_equal: bool = True,
         figsize: tuple[float, float] = (10.0, 5.0),
-        axis_label_size: float = 14,
-        tick_label_size: float = 12,
+        axis_label_size: float = 12,
+        tick_label_size: float = 10,
         plot_legend: bool = True,
         min_legend_pt_size: float = 30,
-        legend_label_size: float = 12,
+        legend_label_size: float = 10,
         dpi: int = 100,
         cmap=None,
         max_y: float = 1,
         y_buff: float = 1.75,
-        ax: plt.axes.Axes | None = None,
+        ax: Axes | None = None,
     ) -> tuple[Figure | None, Axes]:
         """
         Create 2D scatter plot of either
@@ -2913,9 +2946,9 @@ class EMGMotorUnits:
         figsize tuple[float, float], optional
             Size of figure. The default is (10, 5).
         axis_label_size : float, optional
-            size of axis label. The default is 14.
+            size of axis label. The default is 12.
         tick_label_size : float, optional
-            Size of tick labels. The default is 12.
+            Size of tick labels. The default is 10.
         plot_legend : bool, optional
             Plot the legend or not. The default is True.
         min_legend_pt_size : float, optional
@@ -2923,7 +2956,7 @@ class EMGMotorUnits:
             than min_legend_pt_size, this value will be used for the legend point size.
             The default is 30.
         legend_label_size: float, optional
-            Size of labels in legend. The default is 12.
+            Size of labels in legend. The default is 10.
         dpi : int, optional, optional
             Dots per inch. The default is 300.
         cmap : Any, optional, optional
@@ -2936,7 +2969,7 @@ class EMGMotorUnits:
             Factor by which to multiple the max absolute y axis location in order to
             determine y-axis limits (see max_y argument). Controls buffer around points
             along the y-axis. The default is 1.75, which provides room for larger points.
-        ax : plt.axes.Axes, optional
+        ax : Axes, optional
             Plot to add to. The default is None, in which case new axes are created.
 
         Returns

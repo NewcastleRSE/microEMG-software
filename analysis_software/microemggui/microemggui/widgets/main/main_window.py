@@ -101,6 +101,7 @@ class MicroEMGMain(QMainWindow):
         # Initialise attributes for storing data needed for analysis
         self.emg_model = {}
         self.settings_model = None
+        self.recording_path = None  # Path to the loaded recording
         self.bad_chan_idx = []  # List of indices of bad channels
         self.reconstruct_model = None
         self.motor_units_to_analyse = []  # List of motor units to analyse
@@ -173,6 +174,7 @@ class MicroEMGMain(QMainWindow):
                 if w_name == "preprocess":
                     self.emg_model = {}
                     self.settings_model = None
+                    self.recording_path = None
                     logger.info("Reset EMG model and settings model in main window")
 
                 if w_name == "channels":
@@ -384,15 +386,16 @@ class MicroEMGMain(QMainWindow):
             logger.debug(f"Updated toolbar connection of {w_name} widget")
 
     def update_raw_emg_model_and_settings_model(
-        self, raw_emg_model: EMGDataRawModel, settings_model: EMGSettingsModel
+        self, raw_emg_model: EMGDataRawModel, settings_model: EMGSettingsModel, recording_path: str
     ):
         """
-        Slot for updating raw EMG model and settings model.
+        Slot for updating raw EMG model, settings model, and the path to the recording.
         Also updates the preprocess widget with this data.
         """
 
         self.emg_model["raw"] = raw_emg_model
         self.settings_model = settings_model
+        self.recording_path = recording_path
         logger.info("Updated raw EMG model and settings model in main window.")
 
         # Also save original settings model as a separate variable that will not be
@@ -763,13 +766,14 @@ class MicroEMGMain(QMainWindow):
             self.enable_analysis_toolbar_button(False, w_name)
 
         # Create widget
-        if self.reconstruct_model:
+        if self.reconstruct_model and self.recording_path:
             # Create widget and add to stack of analysis step widgets with toolbar connections
-            w = ExportWidget(self.reconstruct_model, parent=self)
+            w = ExportWidget(self.reconstruct_model, self.recording_path, parent=self)
         else:
             raise ValueError(
                 "GUI model for fibre reconstruction analysis must be created before "
-                + "creating widgets for this analysis."
+                + "creating widgets for this analysis, and recording_path should not "
+                + "be None."
             )
         self.add_widget_to_analysis_steps(w, w_name)
 

@@ -20,5 +20,6 @@
     </qresource>
     <qresource prefix="logo">
         <file alias="microemg">logo/MicroEMG.svg</file>
+	<file alias="microemg-white">logo/MicroEMG_white.svg</file>
     </qresource>
 </RCC>

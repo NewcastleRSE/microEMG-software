@@ -34,12 +34,34 @@ class MicroEMGLogo(QPushButton):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Button icon
-        logo_icon = "microemg"
+        # Button icons - white and black
+        logo_icons = ["microemg", "microemg-white"]
+        logo_names = ["black", "white"]
 
-        self.setIcon(QIcon(":/logo/" + logo_icon))
+        # Create both icon versions and store
+        self.logos: dict[str, QIcon] = {}
+        for name, ic in zip(logo_names, logo_icons):
+            self.logos[name] = QIcon(":/logo/" + ic)
+
+        # self.setIcon(self.logos["black"]) # set to black icon by default
         self.setStatusTip("Home")
         self.setCheckable(True)
+
+        # Connection to change to white when selected, black otherwise
+        self.toggled.connect(self.update_logo)
+
+    def update_logo(self, checked):
+        """
+        Update logo colour when clicked based on check state.
+        Note that this does not update the icon on hover.
+        (In style sheets, it appears that qproperty-icon can only be applied once, so
+        cannot use style sheet for hover behaviour.)
+        """
+
+        if checked:  # self.isChecked():
+            self.setIcon(self.logos["white"])
+        else:
+            self.setIcon(self.logos["black"])
 
 
 class RecordingLabel(QLabel):

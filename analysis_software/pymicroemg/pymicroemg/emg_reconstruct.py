@@ -795,12 +795,12 @@ class EMGAnalysisReconstruct:
         linewidths: float = 0.25,
         figsize: tuple[float, float] = (10, 5),
         dpi: int = 100,
-        axis_label_size: float = 14,
-        title_size: float = 14,
-        xtick_label_size: float = 12,
-        ytick_label_size: float = 12,
+        axis_label_size: float = 12,
+        title_size: float = 12,
+        xtick_label_size: float = 10,
+        ytick_label_size: float = 10,
         sort_by: str = "default",
-        ax: plt.axes.Axes | None = None,
+        ax: Axes | None = None,
     ) -> tuple[Optional[Figure], Axes]:
         """
         Create a raster plot of the potentials of each motor unit in the recording.
@@ -818,17 +818,17 @@ class EMGAnalysisReconstruct:
         dpi : int, optional
             Dots per Inch. The default is 100.
         axis_label_size : float, optional
-            Size of axis labels. The default is 14.
+            Size of axis labels. The default is 12.
         title_size : float, optional
-            Font size the titles. The default is 14.
+            Font size the titles. The default is 12.
         xtick_label_size : float, optional
-            size of x tick labels. The default is 12.
+            size of x tick labels. The default is 10.
         ytick_label_size : float, optional
-            Size of y tick labels. The default is 12.
+            Size of y tick labels. The default is 10.
         sort_by : str, optional
             How motor units should be ordered.
             The default is "default". Options are "default" and "n_potentials".
-        ax : plt.axes.Axes, optional
+        ax : Axes, optional
             Plot to add to. The default is None, in which case new axes are created.
 
         Raises
@@ -1017,7 +1017,7 @@ class EMGAnalysisReconstruct:
         ytick_label_size: float = 6,
         xtick_label_size: float = 10,
         dpi: int = 100,
-        ax: plt.axes.Axes | None = None,
+        ax: Axes | None = None,
     ) -> tuple[Figure, Axes]:
         """
         Plot the average (mean) time series of the motor unit's potential. The onset of
@@ -1050,7 +1050,7 @@ class EMGAnalysisReconstruct:
             Size of y tick labels. The default is 10.
         dpi : int, optional
             Dots per Inch. The default is 100.
-        ax : plt.axes.Axes, optional
+        ax : Axes, optional
             Plot to add to. The default is None, in which case new axes are created.
 
         Raises
@@ -1139,7 +1139,7 @@ class EMGAnalysisReconstruct:
         xtick_label_size: float = 10,
         ytick_label_size: float = 10,
         dpi: int = 100,
-        ax: plt.axes.Axes | None = None,
+        ax: Axes | None = None,
     ) -> tuple[Figure, Axes, int]:
         """
 
@@ -1189,7 +1189,7 @@ class EMGAnalysisReconstruct:
             Size of y tick labels. The default is 10.
         dpi : int, optional
             Dots per Inch. The default is 100.
-        ax : plt.axes.Axes, optional
+        ax : Axes, optional
             Plot to add to. The default is None, in which case new axes are created.
 
         Raises
@@ -1260,8 +1260,7 @@ class EMGAnalysisReconstruct:
 
         # Title
         ax.set_title(
-            f"Average potential (across time) of motor unit {motor_unit_idx + 1}"
-            + f" in channel {chan_idx}",
+            f"All potentials of motor unit {motor_unit_idx + 1}" + f" (channel {chan_idx})",
             fontweight="bold",
             fontsize=title_size,
         )

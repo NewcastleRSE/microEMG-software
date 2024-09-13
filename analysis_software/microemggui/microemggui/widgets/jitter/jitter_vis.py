@@ -44,7 +44,7 @@ class JitterAllFibrePlotsWidget(QWidget):
         # Create plot with two suplots and corresponding canvas
         self.fig, self.axs = plt.subplots(2, 1, figsize=(5, 10))
         self.fig.dpi = 100
-        self.fig.set_tight_layout(True)  # prevents overlap in subplots
+        self.fig.set_tight_layout(True)  # type: ignore # prevents overlap in subplots
         self.update_motor_unit(motor_unit_idx)  # add plots for specified motor unit
         canvas = FigureCanvasQTAgg(self.fig)
 
@@ -80,6 +80,9 @@ class JitterAllFibrePlotsWidget(QWidget):
             ax=self.axs[0],
             cmap=carto_seq.Burg_7.mpl_colormap,
             clr_background="whitesmoke",
+            title_size=10,
+            axis_label_size=10,
+            tick_label_size=10,
         )
 
         # Second plot is sample sizes
@@ -91,6 +94,9 @@ class JitterAllFibrePlotsWidget(QWidget):
             ax=self.axs[1],
             cmap=carto_seq.Teal_7.mpl_colormap,
             clr_background="whitesmoke",
+            title_size=10,
+            axis_label_size=10,
+            tick_label_size=10,
         )
 
         self.fig.canvas.draw_idle()  # redraw
@@ -145,10 +151,8 @@ class JitterFibrePairPlotWidget(QWidget):
 
         if fibre:  # if not an empty string, convert to int and store
             self.fibres[fibre_idx] = int(fibre) - 1  # subtract 1 to convert back to indices
-            print(self.fibres)
         else:
             self.fibres[fibre_idx] = None
-            print(self.fibres)
 
         # Trigger plot update
         self.update_plot()
@@ -170,7 +174,12 @@ class JitterFibrePairPlotWidget(QWidget):
             and (self.fibres[0] != self.fibres[1])
         ):
             fig, _ = mu.plot_jitter_fibre_pair_EMG_and_times(
-                self.fibres[0], self.fibres[1], figsize=figsize
+                self.fibres[0],
+                self.fibres[1],
+                figsize=figsize,
+                title_size=10,
+                axis_label_size=10,
+                tick_label_size=8,
             )
 
             # Check if plotted (will not plot if jitter not computed for that pair)
@@ -190,10 +199,8 @@ class JitterFibrePairPlotWidget(QWidget):
 
         # New figure
         canvas = FigureCanvasQTAgg(self.fig)
-        self.widgets: dict[str, Any] = {
-            "toolbar": MatplotlibToolbar(canvas, parent=self),
-            "canvas": canvas,
-        }
+        self.widgets["toolbar"] = MatplotlibToolbar(canvas, parent=self)
+        self.widgets["canvas"] = canvas
 
         # Add plot to layout and set to expand to fill the available space
         for w in self.widgets.values():
@@ -240,8 +247,8 @@ class JitterFibrePairComboboxWidget(QWidget):
         # Get fibre options for that motor unit
         mu = self.reconstruct_model.reconstruct.found_motor_units.motor_units[motor_unit_idx]
         n_fibres = mu.fibre_clustering_results["n_fibre_clusters"]
-        fibre_list = list(range(n_fibres))
-        fibre_list = [str(i + 1) for i in fibre_list]  # + 1 for labels
+        fibre_list_int = list(range(n_fibres))
+        fibre_list = [str(i + 1) for i in fibre_list_int]  # + 1 for labels
         fibre_list = [""] + fibre_list  # include no selection - will be default
 
         # Add options to comboboxes
