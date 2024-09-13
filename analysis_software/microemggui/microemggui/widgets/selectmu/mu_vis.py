@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (
     QTabWidget,
 )
 from PySide6.QtGui import QIcon
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Qt, Signal
 
 from microemggui.models.emg import EMGAnalysisReconstructModel
 from microemggui.widgets.base import SubsectionTitle, MatplotlibToolbar, WidgetControlButton
@@ -256,13 +256,17 @@ class MUEMGArrowsWidget(QWidget):
         # Tooltip text for each button
         tooltip_text = ["Previous motor unit", "Next motor unit"]
 
+        # Shortcut keys
+        shortcuts = [Qt.Key.Key_Left, Qt.Key.Key_Right]
+
         # Increment for each button
         self.button_increments = [-1, 1]
 
         # Set button icons and tooltip text
-        for w, ic, txt in zip(self.widgets.values(), my_icons, tooltip_text):
+        for w, ic, txt, sc in zip(self.widgets.values(), my_icons, tooltip_text, shortcuts):
             w.setIcon(QIcon(":/bootstrap/" + ic))
             w.setToolTip(txt)
+            w.setShortcut(sc)
 
         # Add to layout
         layout = QHBoxLayout()
