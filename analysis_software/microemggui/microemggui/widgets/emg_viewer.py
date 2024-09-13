@@ -194,8 +194,10 @@ class EMGPlotWidget(QWidget):
         # Compute stop time
         stop_t = self.compute_stop_time()
 
-        # If requested stop time > EMG duration, change to EMG duration
-        if stop_t > self.emg_model.emg_data.emg_dur:
+        # If requested stop time >= EMG duration, change to EMG duration and stop
+        # forward progression.
+        # Needs to be >= so that buttons disabled if exact match to duration.
+        if stop_t >= self.emg_model.emg_data.emg_dur:
             stop_t = self.emg_model.emg_data.emg_dur
 
             # Stop further progression
@@ -327,7 +329,16 @@ class EMGPlotWidget(QWidget):
         Compute maximum allowed start time given division size and number of divisions.
         """
 
-        max_start = self.emg_model.emg_data.emg_dur - (self.div_size * (self.n_div - 1))
+        # If the EMG's duration is evenly divisible by the div_size, can subtract the
+        # number of divisions. Otherwise, we need to subtract by (n_div - 1) so that the
+        # fractional division is visible.
+        emg_dur = self.emg_model.emg_data.emg_dur
+        emg_n_div = emg_dur * (1 / self.div_size)  # 1/div_size --> less floating point issues
+        is_evenly_divisible = np.abs(emg_n_div - np.round(emg_n_div)) < 1e-10
+        if is_evenly_divisible:
+            max_start = emg_dur - (self.div_size * self.n_div)
+        else:
+            max_start = emg_dur - (self.div_size * (self.n_div - 1))
         max_start = max(max_start, 0)  # Ensures min possible value is zero
         return max_start
 
@@ -618,8 +629,22 @@ class EMGStartTimeWidget(QWidget):
         # Get current plot time (may be changed when change slider max)
         start_t = self.plot_widget.start_t
 
-        # Set max start division and set slider to correct corresponding start time
-        max_start = int(self.emg_dur / self.plot_widget.div_size) - (self.plot_widget.n_div - 1)
+        # Set max start division and set slider to correct corresponding start time.
+        # If the EMG's duration is evenly divisible by the div_size, can subtract the
+        # number of divisions. Otherwise, we need to subtract by (n_div - 1) so that the
+        # fractional division is visible.
+
+        # Compute number of divisions using 1/div_size --> less floating point issues
+        emg_n_div = self.emg_dur * (1 / self.plot_widget.div_size)
+        is_evenly_divisible = np.abs(emg_n_div - np.round(emg_n_div)) < 1e-10
+        if is_evenly_divisible:
+            # In case of floating point issues, round emg_n_div to nearest whole number
+            # before changing to int
+            max_start = int(np.round(emg_n_div)) - self.plot_widget.n_div
+        else:
+            # If not evenly divisible, use int to round down number of divisions
+            max_start = int(emg_n_div) - (self.plot_widget.n_div - 1)
+
         max_start = max(max_start, 0)  # Ensures min possible value is zero
         self.widgets["slider"].setMaximum(max_start)  # Set maximum
         self.update_slider(start_t)
