@@ -53,7 +53,7 @@ class AllFibreLocationsVisWidget(QWidget):
             "fibres", motor_unit_idx=None, dpi=100, figsize=(10, 2)
         )
         self.fig.set_tight_layout(True)  # Prevents window from cutting off legend
-        self.ax.set_title("Fibre locations in all motor units", fontsize=14, fontweight="bold")
+        self.ax.set_title("Fibre locations in all motor units", fontsize=12, fontweight="bold")
         canvas = FigureCanvasQTAgg(self.fig)
 
         # Create widgets: toolbar and canvas
@@ -162,9 +162,9 @@ class MUFibreLocationsVisWidget(QWidget):
         _, self.ax = motor_units.plot_fibre_locations(
             "fibres", motor_unit_idx=motor_unit_idx, dpi=self.dpi, ax=self.ax, plot_legend=False
         )
-        self.fig.set_tight_layout(True)  # Prevents window from cutting off legend
+        self.fig.set_tight_layout(True)  # type: ignore # Prevents window from cutting off legend
         self.ax.set_title(
-            f"Fibre locations in motor unit {motor_unit_idx + 1}", fontsize=14, fontweight="bold"
+            f"Fibre locations in motor unit {motor_unit_idx + 1}", fontsize=12, fontweight="bold"
         )
         self.fig.canvas.draw_idle()  # redraw
 
@@ -216,16 +216,12 @@ class MUFibreClusters3DVisWidget(QWidget):
             motor_unit_idx
         ]
         _, self.ax = motor_unit.plot_3D_fibre_potential_clustering(
-            dpi=self.dpi,
-            ax=self.ax,
-            max_y=5,
-            axis_equal=False,
-            cmap=Vivid_10.mpl_colors,
+            dpi=self.dpi, ax=self.ax, max_y=5, axis_equal=False, cmap=Vivid_10.mpl_colors
         )
-        self.fig.set_tight_layout(True)  # Prevents window from cutting off legend
+        self.fig.set_tight_layout(True)  # type: ignore # Prevents window from cutting off legend
         self.ax.set_title(
             f"Clustered fibre potentials in motor unit {motor_unit_idx + 1}",
-            fontsize=14,
+            fontsize=12,
             fontweight="bold",
         )
         self.fig.canvas.draw_idle()  # redraw

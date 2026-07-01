@@ -21,6 +21,7 @@ from microemggui.widgets.base import (
     InputInlineText,
     InputInlineLabel,
     InputWarningLabel,
+    MessageLabel,
     InputComboBox,
     SubsectionTitle,
     ExpandingHSpacer,
@@ -170,8 +171,8 @@ class LoadRecordingSection(QWidget):
     # Signal for whether recording is loaded
     recording_loaded = Signal(bool)
 
-    # Signal for sending new recording
-    recording_changed = Signal(EMGDataRawModel)
+    # Signal for sending new recording and the recording's path
+    recording_changed = Signal(EMGDataRawModel, str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -186,7 +187,7 @@ class LoadRecordingSection(QWidget):
             "selectrecording": SelectRecordingWidget(parent=self),
             "label": RecordingLabel(parent=self),
             "load": LoadRecordingButton(parent=self),
-            "message": InputInlineText("", self),
+            "message": MessageLabel("", self),
             "errormessage": InputWarningLabel("", self),
         }
 
@@ -195,6 +196,7 @@ class LoadRecordingSection(QWidget):
         for _, w in self.widgets.items():
             layout.addWidget(w)
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(10)
         self.setLayout(layout)
 
         # Connections
@@ -258,8 +260,14 @@ class LoadRecordingSection(QWidget):
             self.widgets["errormessage"].setText("Could not load recording.")
             logger.exception(f"Could not load recording.\n{e}")
         else:
+            # Create EMG model
             self.emg_model = EMGDataRawModel(emg_data)
-            self.recording_changed.emit(self.emg_model)  # Must emit first
+
+            # Emit signal with both model and recording path - allows recording path to
+            # be used for the export.
+            # Must emit signal to update the recording before the recording_loaded
+            # signal to ensure correct event order.
+            self.recording_changed.emit(self.emg_model, self.recording_path)
             self.recording_loaded.emit(True)
 
             # Message about data
@@ -267,11 +275,11 @@ class LoadRecordingSection(QWidget):
             emg_dur = self.emg_model.emg_data.emg_dur
             fs = self.emg_model.emg_data.fs
 
-            msg_chan = f"Channels: {n_chan}"
-            msg_dur = f"Duration: {int(emg_dur) // 60:02d}:{int(emg_dur) % 60:02d}"
-            msg_fs = f"Sampling frequency: {int(fs):,} Hz"
+            msg_chan = f"channels: {n_chan}"
+            msg_dur = f"duration: {int(emg_dur) // 60:02d}:{int(emg_dur) % 60:02d}"
+            msg_fs = f"sampling frequency: {int(fs):,} Hz"
             self.widgets["message"].setText(
-                "<b>Recording loaded</b><br>" + msg_chan + "<br>" + msg_dur + "<br>" + msg_fs
+                "<b>Recording loaded: </b>" + msg_chan + ", " + msg_dur + ", " + msg_fs
             )
 
             # log

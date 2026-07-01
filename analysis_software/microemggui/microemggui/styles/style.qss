@@ -124,20 +124,24 @@ TabButton:disabled {
 WidgetControlButton {
     background-color: {clr_control_button};
     border: none;
-    color: {clr_primary};
     border-radius: {radius_button};
     padding: 3;
 }
 
-WidgetControlButton:hover {
+/* Exception is that the selectmu motor unit buttons should have lighter background */
+WidgetControlButton#selectmu_arrows {
+    background-color: {clr_background};
+}
+
+WidgetControlButton:hover, WidgetControlButton#selectmu_arrows:hover  {
     background-color: {clr_control_button_hover};
 }
 
-WidgetControlButton:pressed {
+WidgetControlButton:pressed, WidgetControlButton#selectmu_arrows:pressed  {
     background-color: {clr_control_button_pressed};
 }
 
-WidgetControlButton:disabled {
+WidgetControlButton:disabled, WidgetControlButton#selectmu_arrows:disabled {
     background-color: {clr_control_button_disabled};
 }
 
@@ -224,7 +228,6 @@ MicroEMGLogo {
 
 MicroEMGLogo:hover {
     background-color: {clr_primary};
-    opacity: 0.5;
 }
 
 MicroEMGLogo:checked {
@@ -302,6 +305,10 @@ InputInlineHighlightedText {
     max-height: 20;
 }
 
+MessageLabel {
+    color: {clr_text_light};
+}
+
 HighlightedLabel {
     color: {clr_primary_dark};
 }
@@ -312,7 +319,6 @@ HighlightedLabel#channels_widget_exclude {
     max-height: 100;
     min-width: 250;
     max-width: 250;
-    color: {clr_primary_dark};
 }
 
 HighlightedLabel#select_mu_widget_message {
@@ -344,6 +350,10 @@ InputLineEdit {
     max-width: 50;
 }
 
+InputLineEdit:disabled {
+    color: {clr_text_very_light};
+}
+
 /* Progress bars */
 QProgressBar {
      border: 1px solid {clr_border_light};
@@ -368,7 +378,6 @@ QProgressBar#findmuprogress {
 
 EMGViewerWidget {
     background: {clr_background};
-    border: 1px solid {clr_border};
     border-radius: 4px;
 }
 
@@ -394,6 +403,11 @@ ChannelsCheckBoxes {
 QTabWidget#muvistab::pane, QTabWidget#mufibretab::pane {
     background: {clr_background};
     padding: 10px;
-    border: 1px solid {clr_border};
     border-radius: 4px;
+}
+
+/* Width of text on home page */
+HomePageSectionWidget {
+    min-width: 400;
+    max-width: 600; 
 }

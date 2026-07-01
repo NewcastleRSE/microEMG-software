@@ -21,15 +21,11 @@ from PySide6.QtCore import Qt
 
 from pymicroemg.emg_reconstruct import EMGAnalysisReconstruct
 
-from microemggui.widgets.base import (
-    SectionTitle,
-    ExpandingVSpacer,
-)
-
 # Toolbars
 from microemggui.widgets.main.toolbars import AnalysisToolbar, TopToolbar
 
-# Widgets for each step
+# Widgets for each step/page
+from microemggui.widgets.home.home_page import HomeWidget
 from microemggui.widgets.load.load_step import LoadWidget
 from microemggui.widgets.preproc.preproc_step import PreprocWidget
 from microemggui.widgets.channels.channels_step import ChannelsWidget
@@ -52,43 +48,22 @@ logger = logging.getLogger("microemggui.main")
 # --- Widgets to put within main window ---
 
 
-class WelcomeWidget(QWidget):
-    """
-    Widget for welcome (home) page.
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        # Create widgets
-        self.widgets: dict[str, Any] = {
-            "title": SectionTitle("Welcome to the microEMG analysis GUI", parent=self)
-        }
-
-        # Add to layout
-        layout = QVBoxLayout()
-        for w in self.widgets.values():
-            layout.addWidget(w)
-        layout.addItem(ExpandingVSpacer())  # spacer
-        layout.setContentsMargins(20, 5, 20, 20)
-        self.setLayout(layout)
-
-
 class AnalysisStepsWidget(QWidget):
     """
     Stacked widgets for the different steps of the analysis.
     Also includes the Welcome (home) page.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, emg_clrs: list[str], *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # Make iniital widgets
         # Will use same names as AnalysisToolbar so easy to link buttons to corresponding pages:
-        # "home", "load", "preprocess", "channels", "motorunits", "fibres", "jitter","export"
+        # "home", "load", "preprocess", "channels", "findmu", "selectmu", "localise",
+        # "jitter","export"
         self.widgets: dict[str, Any] = {
-            "home": WelcomeWidget(parent=self),
-            "load": LoadWidget(parent=self),
+            "home": HomeWidget(parent=self),
+            "load": LoadWidget(emg_clrs, parent=self),
         }
 
         # Add to layout
@@ -126,6 +101,7 @@ class MicroEMGMain(QMainWindow):
         # Initialise attributes for storing data needed for analysis
         self.emg_model = {}
         self.settings_model = None
+        self.recording_path = None  # Path to the loaded recording
         self.bad_chan_idx = []  # List of indices of bad channels
         self.reconstruct_model = None
         self.motor_units_to_analyse = []  # List of motor units to analyse
@@ -137,7 +113,7 @@ class MicroEMGMain(QMainWindow):
         self.widgets: dict[str, Any] = {
             "analysistoolbar": AnalysisToolbar("Analysis toolbar"),
             "toptoolbar": TopToolbar(parent=self),
-            "analysis": AnalysisStepsWidget(parent=self),
+            "analysis": AnalysisStepsWidget(self.emg_clrs, parent=self),
         }
 
         # Add analysis toolbar to window
@@ -198,6 +174,7 @@ class MicroEMGMain(QMainWindow):
                 if w_name == "preprocess":
                     self.emg_model = {}
                     self.settings_model = None
+                    self.recording_path = None
                     logger.info("Reset EMG model and settings model in main window")
 
                 if w_name == "channels":
@@ -216,10 +193,11 @@ class MicroEMGMain(QMainWindow):
                         logger.info("Reset found motor units")
 
                     # Reset motor unit settings (modified in this widget)
-                    self.settings_model.mu_settings = deepcopy(
-                        self.settings_model_original.mu_settings
-                    )
-                    logger.info("Reset motor unit settings")
+                    if self.settings_model:
+                        self.settings_model.mu_settings = deepcopy(
+                            self.settings_model_original.mu_settings
+                        )
+                        logger.info("Reset motor unit settings")
 
                 if w_name == "selectmu":
                     self.motor_units_to_analyse = []
@@ -232,10 +210,11 @@ class MicroEMGMain(QMainWindow):
                         logger.info("Reset fibre localisation and clustering")
 
                     # Reset motor unit clustering settings (modified in this widget)
-                    self.settings_model.mu_cluster_settings = deepcopy(
-                        self.settings_model_original.mu_cluster_settings
-                    )
-                    logger.info("Reset clustering settings")
+                    if self.settings_model:
+                        self.settings_model.mu_cluster_settings = deepcopy(
+                            self.settings_model_original.mu_cluster_settings
+                        )
+                        logger.info("Reset clustering settings")
 
                     # Also remove export widget if exists
                     export_w_name = "export"
@@ -407,15 +386,16 @@ class MicroEMGMain(QMainWindow):
             logger.debug(f"Updated toolbar connection of {w_name} widget")
 
     def update_raw_emg_model_and_settings_model(
-        self, raw_emg_model: EMGDataRawModel, settings_model: EMGSettingsModel
+        self, raw_emg_model: EMGDataRawModel, settings_model: EMGSettingsModel, recording_path: str
     ):
         """
-        Slot for updating raw EMG model and settings model.
+        Slot for updating raw EMG model, settings model, and the path to the recording.
         Also updates the preprocess widget with this data.
         """
 
         self.emg_model["raw"] = raw_emg_model
         self.settings_model = settings_model
+        self.recording_path = recording_path
         logger.info("Updated raw EMG model and settings model in main window.")
 
         # Also save original settings model as a separate variable that will not be
@@ -786,13 +766,14 @@ class MicroEMGMain(QMainWindow):
             self.enable_analysis_toolbar_button(False, w_name)
 
         # Create widget
-        if self.reconstruct_model:
+        if self.reconstruct_model and self.recording_path:
             # Create widget and add to stack of analysis step widgets with toolbar connections
-            w = ExportWidget(self.reconstruct_model, parent=self)
+            w = ExportWidget(self.reconstruct_model, self.recording_path, parent=self)
         else:
             raise ValueError(
                 "GUI model for fibre reconstruction analysis must be created before "
-                + "creating widgets for this analysis."
+                + "creating widgets for this analysis, and recording_path should not "
+                + "be None."
             )
         self.add_widget_to_analysis_steps(w, w_name)
 

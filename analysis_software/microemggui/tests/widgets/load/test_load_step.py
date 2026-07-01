@@ -13,6 +13,14 @@ from microemggui.widgets.load.load_step import LoadWidget
 # --- Fixtures ---
 
 
+# Colors for EMG viewer
+@pytest.fixture
+def emg_clrs():
+    emg_clrs = ["#5F4690", "#1D6996"]
+
+    return emg_clrs
+
+
 # --- Reusable functions ---
 
 
@@ -32,9 +40,9 @@ def load_demo_recording(window, recording_num):
 # --- Tests for loading EMG recording ---
 
 
-def test_load_button_initially_disabled(qtbot):
+def test_load_button_initially_disabled(qtbot, emg_clrs):
     # Set up window
-    window = LoadWidget()
+    window = LoadWidget(emg_clrs)
     window.show()
     qtbot.addWidget(window)
 
@@ -47,9 +55,9 @@ def test_load_button_initially_disabled(qtbot):
 
 # Current just one demo recording, but test set up to add additional ones
 @pytest.mark.parametrize("recording_num", [0])
-def test_load_button_enabled_when_select_demo_recording(qtbot, recording_num):
+def test_load_button_enabled_when_select_demo_recording(qtbot, recording_num, emg_clrs):
     # Set up window
-    window = LoadWidget()
+    window = LoadWidget(emg_clrs)
     window.show()
     qtbot.addWidget(window)
 
@@ -66,9 +74,9 @@ def test_load_button_enabled_when_select_demo_recording(qtbot, recording_num):
 
 
 @pytest.mark.parametrize("recording_num", [0])
-def test_load_button_disabled_when_remove_demo_recording_selection(qtbot, recording_num):
+def test_load_button_disabled_when_remove_demo_recording_selection(qtbot, recording_num, emg_clrs):
     # Set up window
-    window = LoadWidget()
+    window = LoadWidget(emg_clrs)
     window.show()
     qtbot.addWidget(window)
 
@@ -93,9 +101,9 @@ def test_load_button_disabled_when_remove_demo_recording_selection(qtbot, record
 
 
 @pytest.mark.parametrize("recording_num", [0])
-def test_can_load_demo_recording(qtbot, recording_num):
+def test_can_load_demo_recording(qtbot, recording_num, emg_clrs):
     # Set up window
-    window = LoadWidget()
+    window = LoadWidget(emg_clrs)
     window.show()
     qtbot.addWidget(window)
 
@@ -121,9 +129,9 @@ def test_can_load_demo_recording(qtbot, recording_num):
 
 
 @pytest.mark.parametrize("recording_num", [0])
-def test_that_loading_demo_recording_sends_emg_data_to_load_widget(qtbot, recording_num):
+def test_that_loading_demo_recording_sends_emg_data_to_load_widget(qtbot, recording_num, emg_clrs):
     # Set up window
-    window = LoadWidget()  # Load step widget
+    window = LoadWidget(emg_clrs)  # Load step widget
     window.show()
     qtbot.addWidget(window)
 
@@ -148,10 +156,10 @@ def test_that_loading_demo_recording_sends_emg_data_to_load_widget(qtbot, record
 
 @pytest.mark.parametrize("recording_num", [0])
 def test_that_changing_recording_selection_deletes_loaded_recording_in_recording_widget(
-    qtbot, recording_num
+    qtbot, recording_num, emg_clrs
 ):
     # Set up window
-    window = LoadWidget()
+    window = LoadWidget(emg_clrs)
     window.show()
     qtbot.addWidget(window)
 
@@ -174,10 +182,10 @@ def test_that_changing_recording_selection_deletes_loaded_recording_in_recording
 
 @pytest.mark.parametrize("recording_num", [0])
 def test_that_changing_recording_selection_deletes_loaded_recording_in_load_widget(
-    qtbot, recording_num
+    qtbot, recording_num, emg_clrs
 ):
     # Set up window
-    window = LoadWidget()
+    window = LoadWidget(emg_clrs)
     window.show()
     qtbot.addWidget(window)
 
@@ -196,9 +204,11 @@ def test_that_changing_recording_selection_deletes_loaded_recording_in_load_widg
 
 
 @pytest.mark.parametrize("recording_num", [0])
-def test_that_changing_recording_path_to_empty_disables_load_button(qtbot, recording_num):
+def test_that_changing_recording_path_to_empty_disables_load_button(
+    qtbot, recording_num, emg_clrs
+):
     # Set up window
-    window = LoadWidget()
+    window = LoadWidget(emg_clrs)
     window.show()
     qtbot.addWidget(window)
 
@@ -224,10 +234,10 @@ def test_that_changing_recording_path_to_empty_disables_load_button(qtbot, recor
 
 @pytest.mark.parametrize("recording_label", ["testlabel", "test label", "Test_Label", ""])
 def test_that_changing_recording_label_updates_attribute_and_label_text_in_recording_widget(
-    qtbot, recording_label
+    qtbot, recording_label, emg_clrs
 ):
     # Set up window
-    window = LoadWidget()
+    window = LoadWidget(emg_clrs)
     window.show()
     qtbot.addWidget(window)
 
@@ -250,9 +260,11 @@ def test_that_changing_recording_label_updates_attribute_and_label_text_in_recor
 
 
 @pytest.mark.parametrize("recording_num", [0])
-def test_that_settings_model_is_initially_none_in_settings_and_load_widgets(qtbot, recording_num):
+def test_that_settings_model_is_initially_none_in_settings_and_load_widgets(
+    qtbot, recording_num, emg_clrs
+):
     # Set up window
-    window = LoadWidget()
+    window = LoadWidget(emg_clrs)
     window.show()
     qtbot.addWidget(window)
 
@@ -271,10 +283,10 @@ def test_that_settings_model_is_initially_none_in_settings_and_load_widgets(qtbo
 
 @pytest.mark.parametrize("recording_num", [0])
 def test_that_selecting_default_settings_changes_settings_model_in_settings_and_load_widgets(
-    qtbot, recording_num
+    qtbot, recording_num, emg_clrs
 ):
     # Set up window
-    window = LoadWidget()
+    window = LoadWidget(emg_clrs)
     window.show()
     qtbot.addWidget(window)
 
@@ -302,10 +314,10 @@ def test_that_selecting_default_settings_changes_settings_model_in_settings_and_
 
 @pytest.mark.parametrize("recording_num", [0])
 def test_that_removing_settings_selection_removes_settings_model_in_settings_and_load_widgets(
-    qtbot, recording_num
+    qtbot, recording_num, emg_clrs
 ):
     # Set up window
-    window = LoadWidget()
+    window = LoadWidget(emg_clrs)
     window.show()
     qtbot.addWidget(window)
 

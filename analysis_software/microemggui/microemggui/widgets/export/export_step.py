@@ -8,7 +8,7 @@ import logging
 import os
 from datetime import datetime
 
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QFileDialog, QSizePolicy
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QFileDialog
 from PySide6.QtCore import Qt
 
 from microemggui.models.emg import EMGAnalysisReconstructModel
@@ -16,8 +16,9 @@ from microemggui.models.emg import EMGAnalysisReconstructModel
 from microemggui.widgets.base import (
     SmallPushButton,
     LargePushButton,
-    InputInlineText,
     InputWarningLabel,
+    MessageLabel,
+    HighlightedLabel,
     SubsectionTitle,
     SectionTitle,
     ExpandingVSpacer,
@@ -61,12 +62,8 @@ class ExportSettingsWidget(QWidget):
                 "Save EMG of motor unit potentials (will create a large file!)", self
             ),
             "button_folder": SmallPushButton(self),
-            "text_path": InputInlineText("", self),
+            "text_path": MessageLabel("", self),
         }
-
-        # Allow wrap on text for export path
-        self.widgets["text_path"].setWordWrap(True)
-        self.widgets["text_path"].setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
         # Button settings
         self.widgets["button_folder"].setText("Choose folder")
@@ -97,11 +94,16 @@ class ExportWidget(QWidget):
     have been run, because settings are added when EMGAnalysisReconstruct is created.
     """
 
-    def __init__(self, reconstruct_model: EMGAnalysisReconstructModel, parent=None):
+    def __init__(
+        self, reconstruct_model: EMGAnalysisReconstructModel, recording_path: str, parent=None
+    ):
         super().__init__(parent)
 
         # Analysis results
         self.reconstruct_model = reconstruct_model
+
+        # Path to recording - will open file browser in this folder
+        self.recording_path = recording_path
 
         # Folder in which to save results (none specified initially)
         self.export_path = ""
@@ -114,7 +116,7 @@ class ExportWidget(QWidget):
         self.widgets: dict[str, Any] = {
             "title": SectionTitle("Export", self),
             "settings": ExportSettingsWidget(self),
-            "success": InputInlineText("Results saved!", self),
+            "success": HighlightedLabel("Results saved!", self),
             "fail": InputWarningLabel("", self),
             "button": ExportButton(self),
         }
@@ -146,15 +148,19 @@ class ExportWidget(QWidget):
     def browse_for_export_folder(self):
         """
         Choose folder in which to save results using file browser.
+        Browser opens in folder containing the analysed recording.
+
+        Logger does not store file names in case directory names contain sensitive
+        information.
         """
 
         self.export_path = QFileDialog.getExistingDirectory(
-            self, "Select folder for storing results", ""
+            self, "Select folder for storing results", self.recording_path
         )
 
         # Update widgets that depend on export path
         if self.export_path:
-            logger.info(f"Export path choosen: {self.export_path}")
+            logger.info("Export path choosen.")
 
             # Create name of export folder (will be saved as export_folder attribute)
             self.create_name_of_export_folder()
@@ -235,7 +241,7 @@ class ExportWidget(QWidget):
             )
 
             # Log
-            logger.info(f"Saved microEMG results and settings in JSON file {json_path}")
+            logger.info("Saved microEMG results and settings in JSON file.")
 
             # Create figure of fibre localisation
             motor_units = self.reconstruct_model.reconstruct.found_motor_units
@@ -251,10 +257,10 @@ class ExportWidget(QWidget):
             plot_path = os.path.join(full_export_path, plot_filename)
 
             fig.savefig(plot_path + ".png", dpi=png_dpi)
-            logger.info(f"Exported fibre localisation plot ({plot_path + '.png'})")
+            logger.info("Exported fibre localisation plot (png).")
 
             fig.savefig(plot_path + ".svg")
-            logger.info(f"Exported fibre localisation plot ({plot_path + '.svg'})")
+            logger.info("Exported fibre localisation plot (svg).")
 
             # More exports can be added here if needed - recommend adding logs for each one.
             # May need to check that results have been added before trying to plot certain
