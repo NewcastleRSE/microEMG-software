@@ -31,7 +31,6 @@ Newcastle University
 
 [Python 3.11](https://www.python.org/)  
 [PySide6](https://www.qt.io/qt-for-python)  
-[Framework 3](https://something.com)  
 
 The microEMG GUI uses  
 [Bootstrap Icons](https://icons.getbootstrap.com/)   
@@ -197,19 +196,30 @@ To add a package to a specific group, e.g. dev: `poetry add <package name> -G de
 
 ## License
 
+This project is licensed under the GNU General Public License v3.0 — see the [LICENSE](LICENSE) file for details.
+
+Third-party components bundled with this project retain their original licenses; see [NOTICE](NOTICE) for attributions.
+
 ## Citation
 
-Please cite the associated papers for this work if you use this code:
+Please cite the associated paper if you use this code:
+
+Stuart Maitland, Enrique Escobedo-Cousin, Ian Schofield, Anthony O'Neill, Stuart Baker, Roger Whittaker,
+*Electrical cross-sectional imaging of human motor units in vivo*,
+Clinical Neurophysiology, Volume 136, 2022, Pages 82-92, ISSN 1388-2457,
+https://doi.org/10.1016/j.clinph.2021.12.022
+([ScienceDirect link](https://www.sciencedirect.com/science/article/pii/S1388245722000244))
 
 ```
-@article{xxx2023paper,
-  title={Title},
-  author={Author},
-  journal={arXiv},
-  year={2023}
+@article{maitland2022electrical,
+  title   = {Electrical cross-sectional imaging of human motor units in vivo},
+  author  = {Maitland, Stuart and Escobedo-Cousin, Enrique and Schofield, Ian and O'Neill, Anthony and Baker, Stuart and Whittaker, Roger},
+  journal = {Clinical Neurophysiology},
+  volume  = {136},
+  pages   = {82--92},
+  year    = {2022},
+  issn    = {1388-2457},
+  doi     = {10.1016/j.clinph.2021.12.022}
 }
 ```
 
-
-## Acknowledgements
-This work was funded by a grant from the UK Research Councils, EPSRC grant ref. EP/L012345/1, “Example project title, please update”.
