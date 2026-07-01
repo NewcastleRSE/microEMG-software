@@ -119,7 +119,7 @@ class HomeWidget(QWidget):
         )
 
         legal_text = (
-            "The MicroEMG software is licensed under <b>TBA</b>"
+            "The MicroEMG software is licensed under <b>GNU General Public License v3.0</b>"
             + "<br><br>"
             + "The GUI uses "
             + make_hyperlink("Bootstrap Icons", "https://icons.getbootstrap.com/")
