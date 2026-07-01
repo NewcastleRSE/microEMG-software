@@ -1,0 +1,63 @@
+microEMG-software
+Copyright (C) 2024 Stuart Maitland, Newcastle University
+
+This product includes software developed by third parties. The following
+components are distributed under their original licenses; those licenses are
+reproduced (or referenced) below and continue to apply to the corresponding
+files even when this project as a whole is distributed under the GNU General
+Public License v3.0.
+
+--------------------------------------------------------------------------------
+1. Bootstrap Icons v1.11.3
+   Path: analysis_software/microemggui/microemggui/icons/bootstrap-icons-1.11.3/
+   Copyright (c) 2019-2024 The Bootstrap Authors
+   License: MIT
+   The full license text is included in the bundled LICENSE.txt file at the
+   path above.
+
+--------------------------------------------------------------------------------
+2. pyqtgraph (excerpted / modified)
+   Path: analysis_software/microemggui/microemggui/widgets/base_pyqtgraph.py
+   Copyright (c) 2012 University of North Carolina at Chapel Hill
+   Luke Campagnola
+   License: MIT
+   The full MIT license text is preserved inline in the module docstring at
+   the top of the file.
+
+--------------------------------------------------------------------------------
+3. detect_peaks
+   Path: analysis_software/pymicroemg/pymicroemg/detect_peaks.py
+   Copyright (c) Marcos Duarte, https://github.com/demotu
+   License: MIT
+
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included in
+   all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+
+--------------------------------------------------------------------------------
+4. CartoColors (via palettable)
+   Palettes used by this project via the palettable Python package.
+   CartoColors are provided under the Creative Commons Attribution license
+   by CARTO (https://carto.com/carto-colors/).
+   palettable is BSD-licensed.
+
+--------------------------------------------------------------------------------
+
+Runtime Python dependencies (numpy, scipy, matplotlib, scikit-learn,
+scikit-image, seaborn, pyqtgraph, palettable, PySide6) are installed via
+pip/poetry as separate packages and retain their upstream licenses. PySide6
+is provided under the GNU Lesser General Public License v3.0.

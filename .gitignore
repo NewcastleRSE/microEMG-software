@@ -5,6 +5,10 @@
 __pycache__/
 .spyproject/*
 
+# IDE
+.idea/
+.vscode/
+
 # Data
 data/*
 .sp
