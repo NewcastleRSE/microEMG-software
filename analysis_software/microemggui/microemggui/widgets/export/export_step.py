@@ -213,7 +213,10 @@ class ExportWidget(QWidget):
         self.save_mup_emg = checked
 
         # Also enable export button since settings have been changed
-        self.widgets["button"].setEnabled(True)
+        # (only if export path has been specified, otherwise button state does not change)
+        if self.export_path:
+            self.widgets["button"].setEnabled(True)
+        # Reset success/fail messages
         self.widgets["success"].hide()
         self.widgets["fail"].hide()
 
