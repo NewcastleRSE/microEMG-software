@@ -14,7 +14,7 @@ Adjust datas/hiddenimports as required for your environment.
 
 import os
 import subprocess
-from PyInstaller.utils.hooks import collect_submodules
+from PyInstaller.utils.hooks import collect_submodules, collect_data_files
 from PyInstaller.building.build_main import Analysis, PYZ, EXE, COLLECT
 
 block_cipher = None
@@ -39,8 +39,16 @@ ENTRY_SCRIPT = os.path.join("gui_dev", "gui_dev_main.py")
 datas = [
     (os.path.join("analysis_software", "microemggui", "microemggui", "styles", "style.qss"), "microemggui/styles"),
     (os.path.join("analysis_software", "microemggui", "microemggui", "docs", "microemg_help_guide.pdf"), "microemggui/docs"),
-    (os.path.join("recordings", "64-channel", "Stuart_E2", "raw"), "recordings/64-channel/Stuart_E2/raw"),
 ]
+
+# Collect package data for pymicroemg (e.g. demo recordings). This inlines the
+# hook logic so the build does not depend on a committed hooks/ directory.
+try:
+    datas.extend(collect_data_files('pymicroemg', include_py_files=False))
+except Exception:
+    # If collect_data_files fails for any reason, continue; PyInstaller will
+    # report missing files at build or runtime.
+    pass
 
 # Include generated icons.py if present
 if os.path.exists(ICONS_PY):
