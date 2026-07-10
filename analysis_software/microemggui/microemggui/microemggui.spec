@@ -6,13 +6,14 @@ This spec will run `pyside6-rcc` to generate the icons.py resource module
 from the Qt resource file before PyInstaller collects sources.
 
 Usage:
+    cd analysis_software/microemgui/microemggui
     poetry run pyinstaller microemggui.spec
-from the repository's root directory.
-
+    
 Adjust datas/hiddenimports as required for your environment.
 """
 
 import os
+import sys
 import subprocess
 from PyInstaller.utils.hooks import collect_submodules, collect_data_files
 from PyInstaller.building.build_main import Analysis, PYZ, EXE, COLLECT
@@ -20,9 +21,17 @@ from PyInstaller.building.build_main import Analysis, PYZ, EXE, COLLECT
 block_cipher = None
 
 # Paths
-HERE = os.getcwd()
-QRC_PATH = os.path.join("analysis_software", "microemggui", "microemggui", "icons", "icons.qrc")
-ICONS_PY = os.path.join("analysis_software", "microemggui", "microemggui", "icons", "icons.py")
+spec_path = next(
+    (os.path.abspath(arg) for arg in sys.argv[1:] if arg.lower().endswith('.spec')),
+    None,
+)
+if spec_path is None:
+    spec_path = os.path.abspath(os.path.join(os.getcwd(), 'microemggui.spec'))
+print(f"spec path: {spec_path}")
+HERE = os.path.dirname(spec_path)
+PACKAGE_ROOT = HERE
+QRC_PATH = os.path.join(PACKAGE_ROOT, "icons", "icons.qrc")
+ICONS_PY = os.path.join(PACKAGE_ROOT, "icons", "icons.py")
 
 # Generate icons.py from icons.qrc (best-effort; non-fatal if command missing)
 try:
@@ -33,12 +42,12 @@ except Exception:
     pass
 
 # Entry script
-ENTRY_SCRIPT = os.path.join("gui_dev", "gui_dev_main.py")
+ENTRY_SCRIPT = os.path.join(PACKAGE_ROOT, "main.py")
 
 # Data files to include (source, destination-relative-to-app)
 datas = [
-    (os.path.join("analysis_software", "microemggui", "microemggui", "styles", "style.qss"), "microemggui/styles"),
-    (os.path.join("analysis_software", "microemggui", "microemggui", "docs", "microemg_help_guide.pdf"), "microemggui/docs"),
+    (os.path.join(PACKAGE_ROOT, "styles", "style.qss"), "microemggui/styles"),
+    (os.path.join(PACKAGE_ROOT, "docs", "microemg_help_guide.pdf"), "microemggui/docs"),
 ]
 
 # Collect package data for pymicroemg (e.g. demo recordings). This inlines the
