@@ -51,7 +51,8 @@ def get_recording_path_and_id(recording_num: int) -> tuple[str, str]:
                 data_dir = data_dir_candidate
             else:
                 raise FileNotFoundError(
-                    "Packaged demo data not found. Ensure 'pymicroemg/data/recordings/64-channel/demo1/' is present"
+                    "Packaged demo data not found. "
+                    + "Ensure 'pymicroemg/data/recordings/64-channel/demo1/' is present"
                 )
 
     chan64_dir = os.path.join(data_dir, "64-channel")
@@ -64,7 +65,8 @@ def get_recording_path_and_id(recording_num: int) -> tuple[str, str]:
             recording_id = "demo1"
         else:
             raise ValueError(
-                "Demo recording not found in package data; ensure 'pymicroemg/data/recordings/64-channel/demo1/' is present"
+                "Demo recording not found in package data; ensure "
+                + "'pymicroemg/data/recordings/64-channel/demo1/' is present"
             )
     else:
         raise ValueError("Invalid recording number")
