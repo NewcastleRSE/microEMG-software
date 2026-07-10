@@ -5,6 +5,7 @@ Helper functions for getting config settings/info for the microEMG analysis.
 """
 
 import os
+import sys
 
 
 # microEMG recordings that can be used for demos/testing
@@ -30,7 +31,15 @@ def get_recording_path_and_id(recording_num: int) -> tuple[str, str]:
         Path to recording data and string ID.
 
     """
-    data_dir = "recordings"
+    # When running under PyInstaller, files are in sys._MEIPASS; otherwise use current dir
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        # Running as PyInstaller bundle
+        base_dir = sys._MEIPASS
+    else:
+        # Running as normal Python script
+        base_dir = os.getcwd()
+
+    data_dir = os.path.join(base_dir, "recordings")
     chan64_dir = "64-channel"
 
     if recording_num == 0:
