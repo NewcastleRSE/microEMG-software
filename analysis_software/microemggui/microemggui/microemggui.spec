@@ -6,9 +6,8 @@ This spec will run `pyside6-rcc` to generate the icons.py resource module
 from the Qt resource file before PyInstaller collects sources.
 
 Usage:
-    cd analysis_software/microemgui/microemggui
-    poetry run pyinstaller microemggui.spec
-    
+    cd analysis_software/microemggui/microemggui
+    poetry run pyinstaller --workpath ../../../build/microemggui --distpath ../../../dist/microemggui microemggui.spec
 Adjust datas/hiddenimports as required for your environment.
 """
 
@@ -21,15 +20,17 @@ from PyInstaller.building.build_main import Analysis, PYZ, EXE, COLLECT
 block_cipher = None
 
 # Paths
-spec_path = next(
-    (os.path.abspath(arg) for arg in sys.argv[1:] if arg.lower().endswith('.spec')),
-    None,
-)
-if spec_path is None:
-    spec_path = os.path.abspath(os.path.join(os.getcwd(), 'microemggui.spec'))
-print(f"spec path: {spec_path}")
-HERE = os.path.dirname(spec_path)
+HERE = os.getcwd()
 PACKAGE_ROOT = HERE
+
+# Verify we're in the microemggui package directory
+required_items = ["main.py", "icons", "styles", "docs"]
+if not all(os.path.exists(os.path.join(PACKAGE_ROOT, item)) for item in required_items):
+    raise RuntimeError(
+        f"microemggui.spec must be run from the microemggui package directory. "
+        f"Expected to find {required_items} in {PACKAGE_ROOT}"
+    )
+
 QRC_PATH = os.path.join(PACKAGE_ROOT, "icons", "icons.qrc")
 ICONS_PY = os.path.join(PACKAGE_ROOT, "icons", "icons.py")
 
