@@ -108,12 +108,12 @@ We developed two packages:
 
 #### pymicroemg module
 
-The `pymicroemg` module is documented using `pdoc` [here](docs/pymicroemg), and an overview of the methods is provided [here](docs/Analysis-report.docx). You can view this documentation by downloading the entire folder (or cloning the repository) and opening [pymicroemg.html](docs/pymicroemg/pymicroemg.html) - it will open in web browser.
+The `pymicroemg` module is documented using `pdoc` [in the docs directory](docs/), and an overview of the methods is provided [here](docs/Analysis-report.docx). You can view the `pdoc` documentation at the repository's GitHub page, [https://newcastlerse.github.io/microEMG-software/](https://newcastlerse.github.io/microEMG-software/). Alternatively, download the entire folder (or cloning the repository) and open [pymicroemg.html](docs/pymicroemg.html) - it will open in web browser.
 
 If you update the `pymicroemg` module, please update the documentation by running
 
 ```
-pdoc --docformat numpy pymicroemg -o ./docs/pymicroemg
+pdoc --docformat numpy pymicroemg -o ./docs
 ```
 
 from a terminal from the root directory.
@@ -167,7 +167,7 @@ poetry run pyinstaller --workpath ../../../build/microemggui --distpath ../../..
 
 ## Usage
 
-- [`pymicroemg` documentation](docs/pymicroemg) (must download entire folder and open [pymicroemg.html](docs/pymicroemg/pymicroemg.html) - will open in web browser)
+- [`pymicroemg` documentation](https://newcastlerse.github.io/microEMG-software/)
 - [GUI instructions](analysis_software/microemggui/microemggui/docs/microemg_help_guide.pdf)
 - [MicroEMG analysis methods](docs/Analysis-report.docx)
 - [Intan recording format](docs/Intan_RHD2000_data_file_formats.pdf)
