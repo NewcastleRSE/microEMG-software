@@ -148,6 +148,17 @@ pytest analysis_software/microemggui/
 
 ## Deployment
 
+### Building a GUI executable
+
+The GUI can be packaged into an executable using `pyinstaller` and the `microemggui.spec` file in the `microemggui` package - from the repository's root, run the terminal command
+
+```
+cd analysis_software/microemggui/microemggui
+poetry run pyinstaller --workpath ../../../build/microemggui --distpath ../../../dist/microemggui microemggui.spec
+```
+
+`pyinstaller` will create `build` and `dist` directories in the repository's root - the executable will be `dist/microemggui/microemggui`. It may take a minute or two to launch when opened.
+
 ### Troubleshooting
 
 - If you ran the installation instructions outside of a virtual environment, poetry will have created one for you when you ran `poetry install`, however it won't have activated it automatically. You can activate the virtual environment with `poetry shell` and exit this with the command `exit`. Outside of this virtual environment you will not have the required installed dependencies so this can be a cause of errors.
