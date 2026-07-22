@@ -19,6 +19,9 @@ from microemggui.models.emg import EMGDataRawModel
 from microemggui.widgets.preproc.preproc_step import PreprocWidget
 
 
+pytestmark = pytest.mark.demo_data
+
+
 # --- Fixtures for EMG data and preprocessing settings ---
 
 
@@ -57,7 +60,7 @@ def settings_model_limited(request):
 # Fixture for raw EMG data model
 # Currently only uses one EMG recording, but set up to add additional recordings
 @pytest.fixture(params=[0], ids=["demo EMG recording #0"])
-def emg_data_raw_model(request):
+def emg_data_raw_model(request, ensure_demo_data):
     # Load EMG data
     recording_num = request.param
     emg_dir, _ = cfg.get_recording_path_and_id(recording_num)

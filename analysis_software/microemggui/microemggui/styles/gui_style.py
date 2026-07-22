@@ -5,6 +5,7 @@ Functions for defining style settings (e.g., colours) and getting style sheet.
 """
 
 import os
+import sys
 from PySide6.QtCore import QFile
 import microemggui
 
@@ -21,9 +22,15 @@ def get_gui_style_sheet() -> str:
     """
 
     # Get path to style sheet
-    style_dir = microemggui.__file__
-    style_dir = style_dir[:-11]  # remove init
-    style_path = os.path.join(style_dir, "styles", "style.qss")
+    # When running under PyInstaller, files are in sys._MEIPASS; otherwise use module path
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        # Running as PyInstaller bundle
+        style_path = os.path.join(sys._MEIPASS, "microemggui", "styles", "style.qss")
+    else:
+        # Running as normal Python module
+        style_dir = microemggui.__file__
+        style_dir = style_dir[:-11]  # remove __init__.py
+        style_path = os.path.join(style_dir, "styles", "style.qss")
 
     # Load style sheet
     gui_style_file = QFile(style_path)

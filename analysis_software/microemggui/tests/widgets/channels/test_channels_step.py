@@ -14,6 +14,10 @@ import pymicroemg.helper_config as cfg
 from microemggui.models.emg import EMGDataRawModel, EMGDataPreprocModel
 from microemggui.widgets.channels.channels_step import ChannelsWidget
 
+
+pytestmark = pytest.mark.demo_data
+
+
 # --- Fixture ---
 
 
@@ -21,7 +25,7 @@ from microemggui.widgets.channels.channels_step import ChannelsWidget
 # Currently only uses one EMG recording, but set up to add additional recordings
 # Also only uses one preprocessing setting (= no preprocessing applied)
 @pytest.fixture(params=[0], ids=["demo EMG recording #0"])
-def emg_models(request):
+def emg_models(request, ensure_demo_data):
     # Load EMG data
     recording_num = request.param
     emg_dir, _ = cfg.get_recording_path_and_id(recording_num)
