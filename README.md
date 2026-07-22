@@ -75,7 +75,7 @@ poetry install
 `poetry` will install both the Python package dependencies and set up paths to the local packages, [`pymicroemg`](analysis_software/pymicroemg/pymicroemg) and [`microemggui`](analysis_software/microemggui/microemggui).
 See the **Troubleshooting** section for more help with `poetry`.
 
-An example EMG recording is provided in the `pymicroemg` package.
+An example EMG recording is available as a release asset and is downloaded on demand — see [Demo recording](#demo-recording) below.
 
 ### Running Locally
 
@@ -86,6 +86,8 @@ To launch the GUI from within the installed Python environment, use the terminal
 ```
 python -m microemggui
 ```
+
+On first launch, if the demo recording is not present, the GUI will prompt to download it (~1 GB) from the [v0.1.0 release](https://github.com/NewcastleRSE/microEMG-software/releases/tag/v0.1.0). The download is cancellable and the data is cached in the OS user data directory (`~/Library/Application Support/microEMG/` on macOS) so subsequent launches skip the prompt.
 
 Subsections of the GUI can also be run using the other Python files in [`gui_dev`](gui_dev) (e.g., from the repository's root, run `python gui_dev/gui_dev_main.py`).
 
@@ -98,6 +100,17 @@ The GUI produces log messages in a file `microemggui.log` (located in the direct
 #### MicroEMG analysis scripts
 
 Alternatively, you can develop your own analysis scripts using the `pymicroemg` module for additional control over analysis settings and steps. See [`data_analysis/example_pipeline.py`](data_analysis/example_pipeline.py) for an example pipeline.
+
+#### Demo recording
+
+The demo recording is downloaded on demand rather than shipped in the repository. If you are running an analysis script (not the GUI) and want to fetch it programmatically:
+
+```python
+from pymicroemg.demo_data import download_and_extract_demo
+download_and_extract_demo()
+```
+
+`pymicroemg.helper_config.get_recording_path_and_id(0)` raises `DemoDataMissingError` if the demo has not yet been downloaded.
 
 ### Software structure
 
