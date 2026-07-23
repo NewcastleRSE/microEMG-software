@@ -60,6 +60,24 @@ See pyproject.toml file for list of Python package dependencies.
 
 ### Installation
 
+#### External users (pip install from GitHub)
+
+Install the GUI and analysis library together (recommended):
+
+```
+pip install "git+https://github.com/NewcastleRSE/microEMG-software.git@v0.2.0#subdirectory=analysis_software/microemggui"
+```
+
+Or install the analysis library only (no GUI):
+
+```
+pip install "git+https://github.com/NewcastleRSE/microEMG-software.git@v0.2.0#subdirectory=analysis_software/pymicroemg"
+```
+
+Requires Python 3.11 or 3.12.
+
+#### Contributors / developers (clone + poetry)
+
 Install `poetry` in your global environment - we used version 1.4.0:
 
 ```

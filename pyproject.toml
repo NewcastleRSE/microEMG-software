@@ -1,7 +1,10 @@
+# Dev-only workspace config. External users should install the sub-packages directly:
+#   pip install "git+https://github.com/NewcastleRSE/microEMG-software.git@v0.2.0#subdirectory=analysis_software/microemggui"
+#   pip install "git+https://github.com/NewcastleRSE/microEMG-software.git@v0.2.0#subdirectory=analysis_software/pymicroemg"
 [tool.poetry]
 name = "microemg-software"
 version = "0.1.0"
-description = ""
+description = "Development workspace for microEMG-software — see sub-packages pymicroemg and microemggui for installable distributions"
 authors = ["Gabrielle M. Schroeder <8205451+gmschroe@users.noreply.github.com>"]
 readme = "README.md"
 
