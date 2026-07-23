@@ -9,6 +9,10 @@ Based on https://docs.python.org/3/howto/logging-cookbook.html
 """
 
 import logging
+import logging.handlers
+import pathlib
+
+import platformdirs
 from PySide6.QtCore import Signal, QObject
 from pymicroemg.emg_data_raw import EMGDataRawLoggerAdapter
 
@@ -47,18 +51,24 @@ class QtHandler(logging.Handler):
 
 def set_up_gui_logging():
     """
-    Set up logging for GUI. Includes console output at INFO level and file logging at
-    DEBUG level.
+    Set up logging for GUI. Includes console output at INFO level and rotating file
+    logging at INFO level.
 
-    Log file will be overwritten every time the microEMG GUI is restarted.
-
+    Log file is written to the OS user log directory and rotated automatically
+    (max 10 MB per file, 3 backups kept).
     """
     # Handler for console
     ch = logging.StreamHandler()
     ch.setLevel(logging.INFO)
 
-    # Handler for file
-    fh = logging.FileHandler(filename="microemggui.log", mode="w")
+    # Handler for file — write to user log dir so it works regardless of CWD
+    log_dir = pathlib.Path(platformdirs.user_log_dir("microEMG", "NewcastleRSE"))
+    log_dir.mkdir(parents=True, exist_ok=True)
+    fh = logging.handlers.RotatingFileHandler(
+        log_dir / "microemggui.log",
+        maxBytes=10_000_000,
+        backupCount=3,
+    )
     fh.setLevel(logging.INFO)
 
     # format

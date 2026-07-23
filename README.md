@@ -101,7 +101,7 @@ GUI instructions are [here](analysis_software/microemggui/microemggui/docs/micro
 
 The GUI has been developed on MacOS and may have some missing functionality or altered formats on other operating systems.
 
-The GUI produces log messages in a file `microemggui.log` (located in the directory from which the GUI is run). **This log file is overwritten each time the GUI is launched - if you experience issues, rename this file to save the logs.**
+The GUI produces log messages in `microemggui.log`, written to the OS user log directory (`~/Library/Logs/NewcastleRSE/microEMG/` on macOS). The log is rotated automatically so previous sessions are preserved.
 
 #### MicroEMG analysis scripts
 
