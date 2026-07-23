@@ -84,6 +84,12 @@ An example EMG recording is available as a release asset and is downloaded on de
 To launch the GUI from within the installed Python environment, use the terminal command
 
 ```
+microemggui
+```
+
+If you are running from a cloned repo with `poetry install`, you can also use:
+
+```
 python -m microemggui
 ```
 
