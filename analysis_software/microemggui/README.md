@@ -5,8 +5,10 @@ PySide6 GUI wizard for analysing multi-channel microEMG recordings. Wraps the [`
 ## Install
 
 ```
-pip install "git+https://github.com/NewcastleRSE/microEMG-software.git@v0.2.0#subdirectory=analysis_software/microemggui"
+pip install "git+https://github.com/NewcastleRSE/microEMG-software.git@main#subdirectory=analysis_software/microemggui"
 ```
+
+The @main tag can be replaced with a different branch name if you would like to install a different version.
 
 Requires Python 3.11 or 3.12. `pymicroemg` is installed automatically as a dependency.
 
