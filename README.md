@@ -127,7 +127,15 @@ Alternatively, you can develop your own analysis scripts using the `pymicroemg` 
 
 #### Demo recording
 
-The demo recording is downloaded on demand rather than shipped in the repository. If you are running an analysis script (not the GUI) and want to fetch it programmatically:
+The demo recording (~1 GB) is downloaded on demand rather than shipped in the repository. It is stored in the OS user data directory under `recordings/64-channel/demo1/`:
+
+| OS      | Location                                                        |
+|---------|-----------------------------------------------------------------|
+| macOS   | `~/Library/Application Support/microEMG/recordings/64-channel/demo1/` |
+| Linux   | `~/.local/share/microEMG/recordings/64-channel/demo1/`          |
+| Windows | `C:\Users\<user>\AppData\Local\NewcastleRSE\microEMG\recordings\64-channel\demo1\` |
+
+To fetch it programmatically (outside the GUI):
 
 ```python
 from pymicroemg.demo_data import download_and_extract_demo
@@ -135,6 +143,8 @@ download_and_extract_demo()
 ```
 
 `pymicroemg.helper_config.get_recording_path_and_id(0)` raises `DemoDataMissingError` if the demo has not yet been downloaded.
+
+To remove the demo data and free disk space, delete the `demo1/` folder at the path above (e.g. `rm -rf "~/Library/Application Support/microEMG/recordings/64-channel/demo1"` on macOS). The GUI will prompt to re-download it on next launch.
 
 ### Software structure
 
