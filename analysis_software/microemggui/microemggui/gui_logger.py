@@ -55,7 +55,7 @@ def set_up_gui_logging():
     logging at INFO level.
 
     Log file is written to the OS user log directory and rotated automatically
-    (max 10 MB per file, 3 backups kept).
+    (max 250 KB per file, 10 backups kept).
     """
     # Handler for console
     ch = logging.StreamHandler()
@@ -66,8 +66,8 @@ def set_up_gui_logging():
     log_dir.mkdir(parents=True, exist_ok=True)
     fh = logging.handlers.RotatingFileHandler(
         log_dir / "microemggui.log",
-        maxBytes=10_000_000,
-        backupCount=3,
+        maxBytes=250_000,
+        backupCount=10,
     )
     fh.setLevel(logging.INFO)
 
