@@ -12,6 +12,7 @@ from datetime import datetime
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QFileDialog
 from PySide6.QtCore import Qt
 
+from pymicroemg.demo_data import get_demo_data_dir
 from microemggui.models.emg import EMGAnalysisReconstructModel
 
 from microemggui.widgets.base import (
@@ -158,17 +159,18 @@ class ExportWidget(QWidget):
         information.
         """
 
-        # Check if recording is from demo data in bundle
-        if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
-            # Running as PyInstaller bundle; check if recording is inside it
-            if sys._MEIPASS in self.recording_path:
-                # Demo data; use home directory as default
-                default_dir = os.path.expanduser("~")
-            else:
-                # User-loaded data; use recording folder
-                default_dir = self.recording_path
+        # Check if recording is from demo data (bundled or downloaded)
+        demo_data_dir = str(get_demo_data_dir())
+        is_bundled_demo = (
+            getattr(sys, "frozen", False)
+            and hasattr(sys, "_MEIPASS")
+            and sys._MEIPASS in self.recording_path
+        )
+        is_downloaded_demo = demo_data_dir in self.recording_path
+
+        if is_bundled_demo or is_downloaded_demo:
+            default_dir = os.path.expanduser("~")
         else:
-            # Running normally; use recording folder
             default_dir = self.recording_path
 
         self.export_path = QFileDialog.getExistingDirectory(
