@@ -5,8 +5,10 @@ Python analysis library for multi-channel microEMG recordings. Provides a pipeli
 ## Install
 
 ```
-pip install "git+https://github.com/NewcastleRSE/microEMG-software.git@v0.2.0#subdirectory=analysis_software/pymicroemg"
+pip install "git+https://github.com/NewcastleRSE/microEMG-software.git@main#subdirectory=analysis_software/pymicroemg"
 ```
+
+The @main tag can be replaced with a different branch name if you would like to install a different version.
 
 Requires Python 3.11 or 3.12.
 

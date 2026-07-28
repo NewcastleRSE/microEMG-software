@@ -31,7 +31,7 @@ Newcastle University
 
 ## Built With
 
-[Python 3.11+](https://www.python.org/)
+[Python 3.11](https://www.python.org/)  
 [PySide6](https://www.qt.io/qt-for-python)
 
 The microEMG GUI uses  
@@ -42,7 +42,7 @@ The microEMG GUI uses
 
 ### Prerequisites
 
-Developed and tested using Python 3.11. Requires Python 3.11 or later.
+Developed and tested using Python 3.11
 
 Dependencies are managed using Python package [Poetry](https://python-poetry.org/), version 1.4.0
 
@@ -65,20 +65,23 @@ See pyproject.toml file for list of Python package dependencies.
 Install the GUI and analysis library together (recommended):
 
 ```
-pip install "git+https://github.com/NewcastleRSE/microEMG-software.git@v0.2.0#subdirectory=analysis_software/microemggui"
+pip install "git+https://github.com/NewcastleRSE/microEMG-software.git@main#subdirectory=analysis_software/pymicroemg"
+pip install "git+https://github.com/NewcastleRSE/microEMG-software.git@main#subdirectory=analysis_software/microemggui"
 ```
 
 Or install the analysis library only (no GUI):
 
 ```
-pip install "git+https://github.com/NewcastleRSE/microEMG-software.git@v0.2.0#subdirectory=analysis_software/pymicroemg"
+pip install "git+https://github.com/NewcastleRSE/microEMG-software.git@main#subdirectory=analysis_software/pymicroemg"
 ```
+
+The @main tag can be replaced with a different branch name if you would like to install a different version.
 
 Requires Python 3.11 or later.
 
 #### Contributors / developers (clone + poetry)
 
-Install `poetry` in your global environment - we used version 1.4.0:
+Clone the repository from GitHub, then install `poetry` in your global environment - we used version 1.4.0:
 
 ```
 pip install poetry==1.4.0
@@ -111,7 +114,7 @@ If you are running from a cloned repo with `poetry install`, you can also use:
 python -m microemggui
 ```
 
-On first launch, if the demo recording is not present, the GUI will prompt to download it (~1 GB) from the [demo-data-v1 release](https://github.com/NewcastleRSE/microEMG-software/releases/tag/demo-data-v1). The download is cancellable and the data is cached in the OS user data directory (`~/Library/Application Support/microEMG/` on macOS) so subsequent launches skip the prompt.
+On first launch, if the demo recording is not present, the GUI will prompt to download it (~1 GB) from the [v0.1.0 release](https://github.com/NewcastleRSE/microEMG-software/releases/tag/v0.1.0). The download is cancellable and the data is cached in the OS user data directory (`~/Library/Application Support/microEMG/` on macOS) so subsequent launches skip the prompt.
 
 Subsections of the GUI can also be run using the other Python files in [`gui_dev`](gui_dev) (e.g., from the repository's root, run `python gui_dev/gui_dev_main.py`).
 
