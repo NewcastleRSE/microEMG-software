@@ -2,7 +2,10 @@
 name = "microemggui"
 version = "0.1.0"
 description = "PySide6 GUI wizard for microEMG analysis: motor unit identification, localisation, and jitter analysis"
-authors = ["Gabrielle M. Schroeder <8205451+gmschroe@users.noreply.github.com>"]
+authors = [
+    "Stuart Maitland <stu.maitland@newcastle.ac.uk>",
+    "Gabrielle M. Schroeder <gabrielle.schroeder@newcastle.ac.uk>",
+]
 license = "GPL-3.0-or-later"
 readme = "README.md"
 homepage = "https://github.com/NewcastleRSE/microEMG-software"
