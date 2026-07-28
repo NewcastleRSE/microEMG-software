@@ -31,7 +31,7 @@ Newcastle University
 
 ## Built With
 
-[Python 3.11](https://www.python.org/)  
+[Python 3.11+](https://www.python.org/)
 [PySide6](https://www.qt.io/qt-for-python)
 
 The microEMG GUI uses  
@@ -42,7 +42,7 @@ The microEMG GUI uses
 
 ### Prerequisites
 
-Developed and tested using Python 3.11
+Developed and tested using Python 3.11. Requires Python 3.11 or later.
 
 Dependencies are managed using Python package [Poetry](https://python-poetry.org/), version 1.4.0
 
@@ -74,7 +74,7 @@ Or install the analysis library only (no GUI):
 pip install "git+https://github.com/NewcastleRSE/microEMG-software.git@v0.2.0#subdirectory=analysis_software/pymicroemg"
 ```
 
-Requires Python 3.11 or 3.12.
+Requires Python 3.11 or later.
 
 #### Contributors / developers (clone + poetry)
 
@@ -84,7 +84,7 @@ Install `poetry` in your global environment - we used version 1.4.0:
 pip install poetry==1.4.0
 ```
 
-Create a Python 3.11 environment and [install the packages using poetry](https://python-poetry.org/docs/basic-usage/#installing-dependencies) (run from within the project directory):
+Create a Python 3.11+ environment and [install the packages using poetry](https://python-poetry.org/docs/basic-usage/#installing-dependencies) (run from within the project directory):
 
 ```
 poetry install

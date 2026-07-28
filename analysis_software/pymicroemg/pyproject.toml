@@ -16,7 +16,7 @@ documentation = "https://newcastlerse.github.io/microEMG-software/"
 keywords = ["EMG", "electromyography", "motor unit", "neuromuscular", "jitter"]
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.13"
+python = ">=3.11"
 platformdirs = "^4.0"
 numpy = "^1.26.3"
 scipy = "^1.11.4"
