@@ -111,7 +111,7 @@ If you are running from a cloned repo with `poetry install`, you can also use:
 python -m microemggui
 ```
 
-On first launch, if the demo recording is not present, the GUI will prompt to download it (~1 GB) from the [v0.1.0 release](https://github.com/NewcastleRSE/microEMG-software/releases/tag/v0.1.0). The download is cancellable and the data is cached in the OS user data directory (`~/Library/Application Support/microEMG/` on macOS) so subsequent launches skip the prompt.
+On first launch, if the demo recording is not present, the GUI will prompt to download it (~1 GB) from the [demo-data-v1 release](https://github.com/NewcastleRSE/microEMG-software/releases/tag/demo-data-v1). The download is cancellable and the data is cached in the OS user data directory (`~/Library/Application Support/microEMG/` on macOS) so subsequent launches skip the prompt.
 
 Subsections of the GUI can also be run using the other Python files in [`gui_dev`](gui_dev) (e.g., from the repository's root, run `python gui_dev/gui_dev_main.py`).
 

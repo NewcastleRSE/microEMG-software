@@ -25,7 +25,7 @@ from platformdirs import user_data_dir
 
 
 DEMO_URL = (
-    "https://github.com/NewcastleRSE/microEMG-software/releases/download/v0.1.0/demo-data.tar"
+    "https://github.com/NewcastleRSE/microEMG-software/releases/download/demo-data-v1/demo-data.tar"
 )
 
 # Marker file used to detect a successfully-extracted demo directory.
