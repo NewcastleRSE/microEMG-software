@@ -17,9 +17,11 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QStackedLayout,
 )
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 
 from pymicroemg.emg_reconstruct import EMGAnalysisReconstruct
+
+from microemggui.demo_data_ui import prompt_and_maybe_download
 
 # Toolbars
 from microemggui.widgets.main.toolbars import AnalysisToolbar, TopToolbar
@@ -98,6 +100,9 @@ class MicroEMGMain(QMainWindow):
 
         logger.info("Setting up microEMG GUI.")
 
+        # Guard so the launch-time demo-data prompt fires only once.
+        self._demo_prompt_done = False
+
         # Initialise attributes for storing data needed for analysis
         self.emg_model = {}
         self.settings_model = None
@@ -141,6 +146,13 @@ class MicroEMGMain(QMainWindow):
 
         # Connections to signals from loading data
         self.add_load_connections()
+
+    def showEvent(self, event):
+        """Trigger the demo-data prompt once the window is first shown."""
+        super().showEvent(event)
+        if not self._demo_prompt_done:
+            self._demo_prompt_done = True
+            QTimer.singleShot(0, lambda: prompt_and_maybe_download(self))
 
     def reset_downstream_steps_of_gui(self, last_w_name: str):
         """

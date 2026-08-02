@@ -6,6 +6,7 @@ Widget for exporting results of the microEMG analysis.
 from typing import Any
 import logging
 import os
+import sys
 from datetime import datetime
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QFileDialog
@@ -148,14 +149,30 @@ class ExportWidget(QWidget):
     def browse_for_export_folder(self):
         """
         Choose folder in which to save results using file browser.
-        Browser opens in folder containing the analysed recording.
+
+        If the loaded recording is from bundled demo data (inside a PyInstaller bundle),
+        defaults to user's home directory. Otherwise defaults to the recording's folder
+        to keep results alongside the data.
 
         Logger does not store file names in case directory names contain sensitive
         information.
         """
 
+        # Check if recording is from demo data in bundle
+        if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+            # Running as PyInstaller bundle; check if recording is inside it
+            if sys._MEIPASS in self.recording_path:
+                # Demo data; use home directory as default
+                default_dir = os.path.expanduser("~")
+            else:
+                # User-loaded data; use recording folder
+                default_dir = self.recording_path
+        else:
+            # Running normally; use recording folder
+            default_dir = self.recording_path
+
         self.export_path = QFileDialog.getExistingDirectory(
-            self, "Select folder for storing results", self.recording_path
+            self, "Select folder for storing results", default_dir
         )
 
         # Update widgets that depend on export path
@@ -213,7 +230,10 @@ class ExportWidget(QWidget):
         self.save_mup_emg = checked
 
         # Also enable export button since settings have been changed
-        self.widgets["button"].setEnabled(True)
+        # (only if export path has been specified, otherwise button state does not change)
+        if self.export_path:
+            self.widgets["button"].setEnabled(True)
+        # Reset success/fail messages
         self.widgets["success"].hide()
         self.widgets["fail"].hide()
 

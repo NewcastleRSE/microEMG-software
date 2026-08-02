@@ -13,11 +13,7 @@ __pycache__/
 data/*
 .sp
 .mat
-recordings/**/*.csv
-recordings/**/*.txt
-recordings/**/board-*.dat
-recordings/**/aux-*.dat
-recordings/**/vdd-*.dat
+recordings/**
 analysis_software/analysis/
 
 # Images
@@ -25,8 +21,12 @@ analysis_software/analysis/
 *.jpg
 *.jpeg
 
-# Remove below to easily add new demo recordings
-recordings/**
-
 # Logs
 *.log
+
+# GUI build
+build/
+dist/
+
+# Local demo tarball (uploaded to GitHub releases; downloaded on first launch)
+demo-data.tar

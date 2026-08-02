@@ -181,9 +181,9 @@ class EMGPlotWidget(QWidget):
         self.set_x_ticks_and_range()
 
         # Tick label fonts
-        font = QFont("Lucida Sans Typewriter", self.y_font_size)
+        font = QFont("Courier New", self.y_font_size)
         self.plot_w.getAxis("left").setStyle(tickFont=font)
-        font = QFont("Lucida Sans Typewriter", self.x_font_size)
+        font = QFont("Courier New", self.x_font_size)
         self.plot_w.getAxis("bottom").setStyle(tickFont=font)
 
     def update_plot(self):

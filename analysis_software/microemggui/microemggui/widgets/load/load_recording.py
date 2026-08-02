@@ -11,8 +11,10 @@ from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QFileDialog
 from PySide6.QtCore import Signal
 
 from pymicroemg.emg_files import EMGFiles
+from pymicroemg.demo_data import demo_data_exists
 import pymicroemg.helper_config as emg_cfg
 
+from microemggui.demo_data_ui import prompt_and_maybe_download
 from microemggui.models.emg import EMGDataRawModel
 
 from microemggui.widgets.base import (
@@ -77,14 +79,28 @@ class SelectRecordingWidget(QWidget):
         Slot for when combobox option is changed; receives index of current selection.
         Uses index to determine demo recording number, then emits signal with
         recording file path and label.
+
+        If the demo data has not yet been downloaded, re-prompts the user; on decline
+        (or download failure) the combobox resets and an empty path is emitted so the
+        Load section surfaces its usual "no recording" state.
         """
 
         recording_num = self.demo_recording_num[idx]
 
         if recording_num < 0:  # Signifies that no recording is selected
             recording_path = ""
-        else:  # Otherwise, use recording number to retrieve path to recording
-            recording_path, _ = emg_cfg.get_recording_path_and_id(recording_num)
+        else:
+            if not demo_data_exists():
+                prompt_and_maybe_download(self)
+            if demo_data_exists():
+                recording_path, _ = emg_cfg.get_recording_path_and_id(recording_num)
+            else:
+                logger.info("Demo data unavailable after prompt; resetting selection.")
+                combobox = self.widgets["combobox"]
+                combobox.blockSignals(True)
+                combobox.setCurrentIndex(0)
+                combobox.blockSignals(False)
+                recording_path = ""
 
         # Emit signals with new recording path and label
         # Label could also be passed to other widgets using combobox signal, but we use
