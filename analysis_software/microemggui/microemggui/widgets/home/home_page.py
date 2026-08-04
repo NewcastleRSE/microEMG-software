@@ -101,8 +101,6 @@ class HomeWidget(QWidget):
                 "https://github.com/NewcastleRSE/microEMG-software/",
             )
             + "<br><br>"
-            + "<b>Version:</b> 1.0.0"
-            + "<br><br>"
             + "This research software was developed at Newcastle University's "
             + "Translational and Clinical Research Institute in collaboration with the "
             + make_hyperlink(

@@ -1101,10 +1101,13 @@ class EMGAnalysisReconstruct:
         for i in range(self.n_chan):
             ax.plot(potentials_t, potentials_avg[i, :] - offset * i, lw=lw, color=clrs[i])
 
-        # Channel labels.
+        # Channel labels — mark every 5th channel to avoid crowding.
         chan_y = np.arange(0, self.n_chan * offset * -1, offset * -1)
-        ax.set_yticks(chan_y)
-        ax.set_yticklabels(self.emg_data_preproc.chan.chan_names)
+        every_5th = np.arange(0, self.n_chan, 5)
+        ax.set_yticks(chan_y[every_5th])
+        ax.set_yticklabels(
+            [self.emg_data_preproc.chan.chan_names[i] for i in every_5th]
+        )
         ax.tick_params(axis="y", which="major", labelsize=ytick_label_size)
         ax.set_ylabel("", fontsize=axis_label_size)  # set font for any gui label changes
 

@@ -32,7 +32,7 @@ def get_recording_path_and_id(recording_num: int) -> tuple[str, str]:
     DemoDataMissingError
         Raised if the demo recording has not been downloaded. Call
         :func:`pymicroemg.demo_data.download_and_extract_demo` to fetch it,
-        or launch the GUI (`python -m microemggui`) and accept the prompt.
+        or launch the GUI (`microemggui`) and accept the prompt.
 
     Returns
     -------

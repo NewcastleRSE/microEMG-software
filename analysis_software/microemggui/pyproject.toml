@@ -1,12 +1,29 @@
 [tool.poetry]
 name = "microemggui"
 version = "0.1.0"
-description = ""
-authors = ["Gabrielle M. Schroeder <8205451+gmschroe@users.noreply.github.com>"]
+description = "PySide6 GUI wizard for microEMG analysis: motor unit identification, localisation, and jitter analysis"
+authors = [
+    "Stuart Maitland <stu.maitland@newcastle.ac.uk>",
+    "Gabrielle M. Schroeder <gabrielle.schroeder@newcastle.ac.uk>",
+]
+license = "GPL-3.0-or-later"
 readme = "README.md"
+homepage = "https://github.com/NewcastleRSE/microEMG-software"
+repository = "https://github.com/NewcastleRSE/microEMG-software"
+documentation = "https://newcastlerse.github.io/microEMG-software/"
+keywords = ["EMG", "electromyography", "motor unit", "neuromuscular", "GUI"]
+
+[tool.poetry.scripts]
+microemggui = "microemggui.main:main"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+# Note that this package also requires pymicroemg to be installed manually - cannot
+# pin the version here due to incompatibility with development environment.
+python = ">=3.11"
+PySide6 = "^6.6.1"
+pyqtgraph = "^0.13.4"
+palettable = "^3.3.3"
+matplotlib = "^3.8.2"
 
 
 [build-system]

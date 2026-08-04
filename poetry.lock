@@ -388,20 +388,6 @@ files = [
 ]
 
 [[package]]
-name = "intanutil"
-version = "0.1.0"
-description = ""
-category = "main"
-optional = false
-python-versions = "^3.11"
-files = []
-develop = true
-
-[package.source]
-type = "directory"
-url = "analysis_software/intanutil"
-
-[[package]]
 name = "jinja2"
 version = "3.1.4"
 description = "A very fast and expressive template engine."
@@ -714,12 +700,18 @@ files = [
 [[package]]
 name = "microemggui"
 version = "0.1.0"
-description = ""
+description = "PySide6 GUI wizard for microEMG analysis: motor unit identification, localisation, and jitter analysis"
 category = "main"
 optional = false
-python-versions = "^3.11"
+python-versions = ">=3.11,<3.13"
 files = []
 develop = true
+
+[package.dependencies]
+matplotlib = "^3.8.2"
+palettable = "^3.3.3"
+pyqtgraph = "^0.13.4"
+PySide6 = "^6.6.1"
 
 [package.source]
 type = "directory"
@@ -1095,7 +1087,7 @@ xmp = ["defusedxml"]
 name = "platformdirs"
 version = "4.1.0"
 description = "A small Python package for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.8"
 files = [
@@ -1235,12 +1227,21 @@ setuptools = ">=42.0.0"
 [[package]]
 name = "pymicroemg"
 version = "0.1.0"
-description = ""
+description = "Analysis library for multi-channel EMG recordings: motor unit identification, localisation, and jitter analysis"
 category = "main"
 optional = false
-python-versions = "^3.11"
+python-versions = ">=3.11,<3.13"
 files = []
 develop = true
+
+[package.dependencies]
+matplotlib = "^3.8.2"
+numpy = "^1.26.3"
+platformdirs = "^4.0"
+scikit-image = "^0.24.0"
+scikit-learn = "^1.5.0"
+scipy = "^1.11.4"
+seaborn = "^0.13.2"
 
 [package.source]
 type = "directory"
@@ -1767,4 +1768,4 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "c5f0d90fdd1630506162f7e935568d2e1aac171d9ae458fb988d42a2a3c006c4"
+content-hash = "1c56d5f40b04417fd6d63c8a575b2c97c4a9188d18fc739a98c85e5045020856"

@@ -1,13 +1,29 @@
 [tool.poetry]
 name = "pymicroemg"
 version = "0.1.0"
-description = ""
-authors = ["Gabrielle M. Schroeder <8205451+gmschroe@users.noreply.github.com>"]
+description = "Analysis library for multi-channel EMG recordings: motor unit identification, localisation, and jitter analysis"
+authors = [
+    "Stuart Maitland <stu.maitland@newcastle.ac.uk>",
+    "Gabrielle M. Schroeder <gabrielle.schroeder@newcastle.ac.uk>",
+    "Richard Howey <richard.howey@ncl.ac.uk>",
+    "Frances Turner <frances.hutchings@ncl.ac.uk>",
+]
+license = "GPL-3.0-or-later"
 readme = "README.md"
+homepage = "https://github.com/NewcastleRSE/microEMG-software"
+repository = "https://github.com/NewcastleRSE/microEMG-software"
+documentation = "https://newcastlerse.github.io/microEMG-software/"
+keywords = ["EMG", "electromyography", "motor unit", "neuromuscular", "jitter"]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = ">=3.11"
 platformdirs = "^4.0"
+numpy = "^1.26.3"
+scipy = "^1.11.4"
+matplotlib = "^3.8.2"
+scikit-learn = "^1.5.0"
+scikit-image = "^0.24.0"
+seaborn = "^0.13.2"
 
 
 [build-system]

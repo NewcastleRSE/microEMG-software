@@ -94,13 +94,34 @@ See pyproject.toml file for list of Python package dependencies.
 
 ### Installation
 
-Install `poetry` in your global environment - we used version 1.4.0:
+#### External users (pip install from GitHub)
+
+Install the GUI and analysis library together (recommended):
+
+```
+pip install "git+https://github.com/NewcastleRSE/microEMG-software.git@main#subdirectory=analysis_software/pymicroemg"
+pip install "git+https://github.com/NewcastleRSE/microEMG-software.git@main#subdirectory=analysis_software/microemggui"
+```
+
+Or install the analysis library only (no GUI):
+
+```
+pip install "git+https://github.com/NewcastleRSE/microEMG-software.git@main#subdirectory=analysis_software/pymicroemg"
+```
+
+The @main tag can be replaced with a different branch name if you would like to install a different version.
+
+Requires Python 3.11 or later.
+
+#### Contributors / developers (clone + poetry)
+
+Clone the repository from GitHub, then install `poetry` in your global environment - we used version 1.4.0:
 
 ```
 pip install poetry==1.4.0
 ```
 
-Create a Python 3.11 environment and [install the packages using poetry](https://python-poetry.org/docs/basic-usage/#installing-dependencies) (run from within the project directory):
+Create a Python 3.11+ environment and [install the packages using poetry](https://python-poetry.org/docs/basic-usage/#installing-dependencies) (run from within the project directory):
 
 ```
 poetry install
@@ -118,6 +139,12 @@ An example EMG recording is available as a release asset and is downloaded on de
 To launch the GUI from within the installed Python environment, use the terminal command
 
 ```
+microemggui
+```
+
+If you are running from a cloned repo with `poetry install`, you can also use:
+
+```
 python -m microemggui
 ```
 
@@ -129,7 +156,7 @@ GUI instructions are [here](analysis_software/microemggui/microemggui/docs/micro
 
 The GUI has been developed on MacOS and may have some missing functionality or altered formats on other operating systems.
 
-The GUI produces log messages in a file `microemggui.log` (located in the directory from which the GUI is run). **This log file is overwritten each time the GUI is launched - if you experience issues, rename this file to save the logs.**
+The GUI produces log messages in `microemggui.log`, written to the OS user log directory (`~/Library/Logs/NewcastleRSE/microEMG/` on macOS). The log is rotated automatically so previous sessions are preserved.
 
 #### MicroEMG analysis scripts
 
@@ -137,7 +164,15 @@ Alternatively, you can develop your own analysis scripts using the `pymicroemg` 
 
 #### Demo recording
 
-The demo recording is downloaded on demand rather than shipped in the repository. If you are running an analysis script (not the GUI) and want to fetch it programmatically:
+The demo recording (~1 GB) is downloaded on demand rather than shipped in the repository. It is stored in the OS user data directory under `recordings/64-channel/demo1/`:
+
+| OS      | Location                                                        |
+|---------|-----------------------------------------------------------------|
+| macOS   | `~/Library/Application Support/microEMG/recordings/64-channel/demo1/` |
+| Linux   | `~/.local/share/microEMG/recordings/64-channel/demo1/`          |
+| Windows | `C:\Users\<user>\AppData\Local\NewcastleRSE\microEMG\recordings\64-channel\demo1\` |
+
+To fetch it programmatically (outside the GUI):
 
 ```python
 from pymicroemg.demo_data import download_and_extract_demo
@@ -145,6 +180,8 @@ download_and_extract_demo()
 ```
 
 `pymicroemg.helper_config.get_recording_path_and_id(0)` raises `DemoDataMissingError` if the demo has not yet been downloaded.
+
+To remove the demo data and free disk space, delete the `demo1/` folder at the path above (e.g. `rm -rf "~/Library/Application Support/microEMG/recordings/64-channel/demo1"` on macOS). The GUI will prompt to re-download it on next launch.
 
 ### Software structure
 

@@ -4,7 +4,6 @@
 Main window toolbars and widgets placed in toolbars (e.g., logo button)
 """
 import os
-import subprocess
 
 from PySide6.QtWidgets import (
     QToolBar,
@@ -13,8 +12,8 @@ from PySide6.QtWidgets import (
     QButtonGroup,
     QSizePolicy,
 )
-from PySide6.QtCore import Qt, QSize
-from PySide6.QtGui import QAction, QIcon
+from PySide6.QtCore import Qt, QSize, QUrl
+from PySide6.QtGui import QAction, QIcon, QDesktopServices
 
 import microemggui
 from microemggui.widgets.base import (
@@ -202,5 +201,5 @@ class TopToolbar(QToolBar):
         # Path to PDF
         pdf_file_path = os.path.join(module_path, "docs", "microemg_help_guide.pdf")
 
-        # Open
-        subprocess.Popen(["open", pdf_file_path])
+        # Open using Qt so the correct viewer is used on macOS, Linux, and Windows
+        QDesktopServices.openUrl(QUrl.fromLocalFile(pdf_file_path))
