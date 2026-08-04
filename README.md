@@ -13,6 +13,40 @@ To address these limitations, the microEMG team has developed:
 
 These Python modules provide classes and a user interface for analysing microEMG recordings.
 
+_Examples using the microEMG GUI to analyse 60s of data from the demo recording - see [docs/gui_screenshots](docs/gui_screenshots) for more steps._
+
+<p align="center">
+  <a href="docs/gui_screenshots/04_preprocess02.png">
+    <img
+      src="docs/gui_screenshots/04_preprocess02.png"
+      alt="Preprocessing page of the microEMG GUI, showing a preprocessed recording and preprocessing settings."
+      width="360">
+  </a>
+  &nbsp;
+  <a href="docs/gui_screenshots/07_selectmu.png">
+    <img
+      src="docs/gui_screenshots/07_selectmu.png"
+      alt="Page for selecting motor units in the microEMG GUI, showing four motor units and the potentials of motor unit 2."
+      width="360">
+  </a>
+</p>
+
+<p align="center">
+  <a href="docs/gui_screenshots/08_localise02.png">
+    <img
+      src="docs/gui_screenshots/08_localise02.png"
+      alt="Page for localising muscle fibres in the microEMG GUI, showing localisation of five fibres for motor unit 3."
+      width="360">
+  </a>
+  &nbsp;
+  <a href="docs/gui_screenshots/09_jitter02.png">
+    <img
+      src="docs/gui_screenshots/09_jitter02.png"
+      alt="Page for analysing jitter in the microEMG GUI, showing two muscle fibres in motor unit 2 with a mean consecutive difference of 37 microseconds."
+      width="360">
+  </a>
+</p>
+
 ### Project Team
 
 Dr Roger Whittaker, Newcastle University ([roger.whittaker@newcastle.ac.uk](mailto:roger.whittaker@newcastle.ac.uk))  
